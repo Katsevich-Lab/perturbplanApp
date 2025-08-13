@@ -2,26 +2,23 @@ Package: perturbplanApp
 Title: Constraint-Driven Experimental Design for CRISPR Perturb-seq
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "Ziang",
-           family = "Niu",
-           role = c("aut", "cre"),
-           email = "zniu@wharton.upenn.edu")
-Description: Golem-based Shiny application for constraint-driven experimental design 
-    and power analysis in CRISPR perturb-seq experiments. Provides intuitive interface
-    for optimization objectives, parameter constraints, and workflow-specific analysis.
+    person("Ziang", "Niu", , "zniu@wharton.upenn.edu", role = c("aut", "cre"))
+Description: Golem-based Shiny application for constraint-driven
+    experimental design and power analysis in CRISPR perturb-seq
+    experiments. Provides intuitive interface for optimization objectives,
+    parameter constraints, and workflow-specific analysis.
 License: MIT + file LICENSE
 Imports: 
     config (>= 0.3.1),
     golem (>= 0.3.5),
+    scales,
     shiny (>= 1.7.4),
     shinydashboard,
     shinyjs,
-    DT,
-    htmltools,
-    bslib
+    tools
 Suggests:
     testthat (>= 3.0.0)
+Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
-Config/testthat/edition: 3

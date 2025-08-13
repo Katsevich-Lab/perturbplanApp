@@ -49,7 +49,7 @@ mod_design_options_ui <- function(id) {
                    choices = list(
                      "Minimize total cells per target" = "cells",
                      "Minimize reads per cell" = "reads", 
-                     "Minimize total cost (cells × reads)" = "cost",
+                     "Minimize total cost (cells x reads)" = "cost",
                      "Minimize TPM analysis threshold" = "tpm_threshold",
                      "Minimize minimum fold change" = "fold_change"
                    ),
@@ -181,7 +181,7 @@ mod_design_options_server <- function(id) {
                          choices = list(
                            "Minimize total cells per target" = "cells",
                            "Minimize reads per cell" = "reads", 
-                           "Minimize total cost (cells × reads)" = "cost",
+                           "Minimize total cost (cells x reads)" = "cost",
                            "Minimize TPM analysis threshold" = "tpm_threshold",
                            "Minimize minimum fold change" = "fold_change"
                          ))

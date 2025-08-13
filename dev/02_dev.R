@@ -18,31 +18,64 @@
 ## install.packages('attachment') # if needed.
 attachment::att_amend_desc()
 
-## Add modules ----
-## Create a module infrastructure in R/
-golem::add_module(name = "name_of_module1", with_test = TRUE) # Name of the module
-golem::add_module(name = "name_of_module2", with_test = TRUE) # Name of the module
+## Modules Created ----
+## These modules have been implemented for the constraint-driven workflow:
 
-## Add helper functions ----
-## Creates fct_* and utils_*
-golem::add_fct("helpers", with_test = TRUE)
-golem::add_utils("helpers", with_test = TRUE)
+# Core sidebar modules (created manually for modular architecture)
+# golem::add_module(name = "design_options", with_test = TRUE)     # Constraint-driven workflow
+# golem::add_module(name = "experimental_setup", with_test = TRUE) # Data uploads and system selection
+# golem::add_module(name = "analysis_choices", with_test = TRUE)   # Test parameters and gene pairs  
+# golem::add_module(name = "effect_sizes", with_test = TRUE)       # Assumed effect size parameters
+# golem::add_module(name = "sidebar", with_test = TRUE)            # Main sidebar composition
 
-## External resources
-## Creates .js and .css files at inst/app/www
-golem::add_js_file("script")
-golem::add_js_handler("handlers")
-golem::add_css_file("custom")
-golem::add_sass_file("custom")
-golem::add_any_file("file.json")
+## Helper functions Created ----
+## Business logic and utility functions following Golem patterns:
 
-## Add internal datasets ----
-## If you have data in your package
-usethis::use_data_raw(name = "my_dataset", open = FALSE)
+# Workflow detection and validation
+golem::add_fct("workflow_detection", with_test = TRUE)   # Detect 11 workflow types
+golem::add_fct("parameter_helpers", with_test = TRUE)    # Parameter grid creation and validation
 
-## Tests ----
-## Add one line by test you want to create
-usethis::use_test("app")
+# Validation utilities  
+golem::add_utils("validation", with_test = TRUE)         # File upload and data validation
+golem::add_utils("ui_helpers", with_test = TRUE)         # UI component creation helpers
+
+## External resources ----
+## Assets have been created and configured for proper Golem asset management:
+
+# CSS and JavaScript files (created manually to preserve original perturbplan styling)
+# golem::add_css_file("perturbplan_styles")      # Main styling (copied from original app)
+# golem::add_js_file("perturbplan_interactions") # Collapsible sections functionality
+
+# Files created at:
+# - inst/app/www/perturbplan_styles.css      # Complete styling from original app
+# - inst/app/www/perturbplan_interactions.js # JavaScript for UI interactions
+# - inst/app/www/favicon.ico                 # Application icon
+
+## Asset Management ----
+## Using proper Golem asset loading in golem_add_external_resources():
+# - bundle_resources() automatically includes CSS files
+# - JavaScript manually included with tags$script(src = "www/perturbplan_interactions.js")
+# - Favicon loaded with favicon()
+# - Resource path configured with add_resource_path("www", app_sys("app/www"))
+
+## Tests Created ----
+## Comprehensive test suite following Golem best practices:
+
+# Basic app infrastructure
+usethis::use_test("app")                       # Main app testing
+
+# Module tests (created manually with testServer patterns)
+# test-mod_design_options.R     # Constraint-driven workflow testing
+# test-mod_experimental_setup.R # Data upload and system selection testing
+# test-mod_analysis_choices.R   # Analysis parameter testing
+# test-mod_effect_sizes.R       # Effect size parameter testing
+# test-mod_sidebar.R            # Integrated sidebar testing
+
+# Helper function tests (created by Golem)
+# test-fct_workflow_detection.R # Workflow detection and validation testing
+# test-fct_parameter_helpers.R  # Parameter grid and formatting testing
+# test-utils_validation.R       # File upload and data validation testing
+# test-utils_ui_helpers.R       # UI component helper testing
 
 # Documentation
 
