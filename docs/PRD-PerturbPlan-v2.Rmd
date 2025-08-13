@@ -1,0 +1,492 @@
+---
+title: "PerturbPlan Shiny App v2 - Product Requirements Document"
+author: "Ziang Niu"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(knitr)
+```
+
+# Executive Summary
+
+## Problem Statement
+
+Current PerturbPlan app forces users through a generic workflow that doesn't align with their specific experimental constraints and decision-making process. Users need to specify their design priorities (power vs cost optimization) and parameter constraints upfront to get relevant guidance.
+
+## Solution Overview
+
+PerturbPlan v2 redesigns the user workflow around **constraint-driven experimental design**. Users first specify their optimization objective and parameter constraints, then the app presents tailored analysis options based on their specific design problem.
+
+## Key Objectives
+
+1. **User-centric workflow**: Design process starts with user's specific constraints and objectives
+2. **Flexible parameter control**: Users specify which parameters to vary vs. fix based on their experimental reality
+3. **Optimization-focused**: Clear distinction between power optimization vs. cost optimization scenarios
+4. **Streamlined interface**: Consolidate parameter selection into logical design module
+
+# User Stories & Personas
+
+## Primary Users
+
+**Experimental Biologists** planning CRISPR perturb-seq experiments who need to balance:
+- Limited budget (cost constraints)
+- Required statistical power (detection constraints)
+- Technical limitations (cell availability, sequencing capacity)
+
+## User Goals
+
+1. **Optimize experimental design** within their specific constraints
+2. **Make informed trade-offs** between power and cost
+3. **Focus analysis** on parameters they can actually control
+4. **Get actionable recommendations** for their specific situation
+
+## Current Pain Points
+
+- Generic workflow doesn't match user's specific constraints
+- Parameter selection scattered across multiple UI sections
+- No clear optimization framework (power vs. cost)
+- Users must mentally translate generic results to their specific situation
+
+# Functional Requirements
+
+## Core Features
+
+### Module 1: Design Options (NEW)
+
+#### 1.1 Optimization Objective Selection
+**Power is always constrained. User specifies whether to include cost considerations:**
+- **Power-only optimization**: "Optimize power without cost constraints"
+- **Power + cost optimization**: "Optimize power while considering cost constraints"
+
+#### 1.2 Minimization Target Selection
+**User selects what to minimize (all parameters available regardless of optimization type):**
+
+- [ ] Minimize total cells per target
+- [ ] Minimize reads per cell
+- [ ] Minimize total cost (computed from cells × reads)
+- [ ] Minimize TPM analysis threshold (maximize gene coverage)
+- [ ] Minimize minimum fold change (maximize sensitivity)
+
+**Note**: When **Power + cost optimization** is selected, **total cost** will not be used as an optimization target since cost is already being considered as a constraint. All individual parameters remain available for optimization.
+
+#### 1.3 Parameter Control Panel
+**For each parameter, user specifies: Varying, Fixed, or Minimizing**
+
+| Parameter | Control Type | Fixed Options |
+|-----------|--------------|---------------|
+| Cells per target | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
+| Reads per cell | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
+| TPM analysis threshold | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
+| Minimum fold change | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
+
+**Business Logic:**
+- When a parameter is selected in "Minimization Target Selection", its status in Parameter Control Panel is automatically set to "Minimizing" and grayed out (non-editable)
+- **Only one parameter can have "Minimizing" status** at any time (the selected minimization target)
+- **All other parameters are grayed out** when one parameter is in "Minimizing" status
+- **Fixed parameters**: Provide fixed values as constraints - system holds these constant
+- **Varying parameters**: Interact with the minimizing parameter during optimization
+- Valid configurations include: one parameter minimizing with all others fixed (achieves desired power at fixed conditions)
+
+### Modules 2+: Analysis Modules (INHERITED/MODIFIED)
+
+#### Inherited from Current App
+- **Experimental Setup**: Pilot data, library parameters (minus TPM/fold change controls)
+- **Results Visualization**: TBD - plotting functionality to be specified in later development phases
+- **Results Export**: Excel downloads, data export functionality
+
+#### Key Changes
+- **Remove duplicate controls**: TPM threshold and minimum fold change now controlled in Module 1
+- **Context-aware analysis**: Analysis respects constraints from Design Options module
+- **Optimization-focused results**: Results emphasize minimization targets specified in Module 1
+- **Deferred visualization**: Specific plotting and visualization components will be designed separately
+
+#### Visualization Specifications
+
+##### Power-Only Optimization Plots (5 designs)
+
+**Single Parameter Power Curves (Workflows 1-4: Cell/Read/TPM/FC minimization)**
+- **Y-axis**: Power 
+- **X-axis**: Parameter being minimized (cells per target, reads per cell, TPM threshold, or minimum fold change)
+- **Gray-out region**: Power values below required threshold
+- **Dashed vertical line**: Indicates minimizer value (intersects x-axis)
+- **Example**: Minimize cells per target → power curve over cells, gray out power < target, dashed line at optimal cell count
+
+**Cost-Power Trade-off Plots (Workflow 5: Total cost minimization)**
+- **Equi-power curve**: Hyperbolic curve (y = 1/x style) showing constant power combinations
+- **Equi-cost curve**: Linear tangent line (y = C - c/x style) representing cost constraint
+- **Axes**: Cells per target (x) vs. Reads per cell (y)
+- **Triangle marker**: Indicates optimal design at tangent point
+- **Dashed lines**: Vertical and horizontal reference lines through optimal design point
+
+##### Power + Cost Optimization Plots (6 designs)
+
+**Two-Parameter Varying Plots (Workflows 8, 11: Cells + Reads varying)**
+- **Equi-power curve**: Shows combinations achieving optimal TPM/FC target
+- **Equi-cost curve**: Shows cost constraint boundary
+- **Axes**: Cells per target (x) vs. Reads per cell (y)
+- **Intersection point**: Optimal design balancing power and cost constraints
+
+**Single Parameter Varying Plots (Workflows 6, 7, 9, 10: One parameter varies)**
+- **Y-axis**: Power
+- **X-axis**: Parameter being optimized (TPM threshold or minimum fold change)
+- **Gray-out region**: Power values below required threshold  
+- **Dashed vertical line**: Indicates optimal parameter value
+- **Note**: Similar to single parameter power curves but within cost constraints
+
+## User Workflows
+
+### Power-Only Optimization Routes (5 workflows)
+
+#### Workflow 1: Minimize Cells per Target
+- **Optimization**: Power-only 
+- **Target**: Minimize cells per target
+- **Parameter Control**: 
+  - Cells per target: Varying
+  - Reads per cell: Fixed
+  - TPM threshold: Fixed  
+  - Min fold change: Fixed
+
+#### Workflow 2: Minimize Reads per Cell
+- **Optimization**: Power-only
+- **Target**: Minimize reads per cell  
+- **Parameter Control**:
+  - Cells per target: Fixed
+  - Reads per cell: Varying
+  - TPM threshold: Fixed
+  - Min fold change: Fixed
+
+#### Workflow 3: Minimize TPM Threshold
+- **Optimization**: Power-only
+- **Target**: Minimize TPM analysis threshold
+- **Parameter Control**:
+  - Cells per target: Fixed
+  - Reads per cell: Fixed
+  - TPM threshold: Varying
+  - Min fold change: Fixed
+
+#### Workflow 4: Minimize Fold Change
+- **Optimization**: Power-only
+- **Target**: Minimize minimum fold change
+- **Parameter Control**:
+  - Cells per target: Fixed
+  - Reads per cell: Fixed
+  - TPM threshold: Fixed
+  - Min fold change: Varying
+
+#### Workflow 5: Minimize Total Cost
+- **Optimization**: Power-only
+- **Target**: Minimize total cost
+- **Parameter Control**:
+  - Cells per target: Varying
+  - Reads per cell: Varying
+  - TPM threshold: Fixed
+  - Min fold change: Fixed
+
+### Power + Cost Optimization Routes (6 workflows)
+
+#### Workflow 6: Minimize TPM with TPM + Cells Varying
+- **Optimization**: Power + cost
+- **Target**: Minimize TPM analysis threshold
+- **Parameter Control**:
+  - Cells per target: Varying
+  - Reads per cell: Fixed
+  - TPM threshold: Varying
+  - Min fold change: Fixed
+
+#### Workflow 7: Minimize TPM with TPM + Reads Varying
+- **Optimization**: Power + cost
+- **Target**: Minimize TPM analysis threshold
+- **Parameter Control**:
+  - Cells per target: Fixed
+  - Reads per cell: Varying
+  - TPM threshold: Varying
+  - Min fold change: Fixed
+
+#### Workflow 8: Minimize TPM with TPM + Cells + Reads Varying
+- **Optimization**: Power + cost
+- **Target**: Minimize TPM analysis threshold
+- **Parameter Control**:
+  - Cells per target: Varying
+  - Reads per cell: Varying
+  - TPM threshold: Varying
+  - Min fold change: Fixed
+
+#### Workflow 9: Minimize Fold Change with FC + Cells Varying
+- **Optimization**: Power + cost
+- **Target**: Minimize minimum fold change
+- **Parameter Control**:
+  - Cells per target: Varying
+  - Reads per cell: Fixed
+  - TPM threshold: Fixed
+  - Min fold change: Varying
+
+#### Workflow 10: Minimize Fold Change with FC + Reads Varying
+- **Optimization**: Power + cost
+- **Target**: Minimize minimum fold change
+- **Parameter Control**:
+  - Cells per target: Fixed
+  - Reads per cell: Varying
+  - TPM threshold: Fixed
+  - Min fold change: Varying
+
+#### Workflow 11: Minimize Fold Change with FC + Cells + Reads Varying
+- **Optimization**: Power + cost
+- **Target**: Minimize minimum fold change
+- **Parameter Control**:
+  - Cells per target: Varying
+  - Reads per cell: Varying
+  - TPM threshold: Fixed
+  - Min fold change: Varying
+
+# UI/UX Requirements
+
+## Design Requirements
+
+### Visual Continuity
+- **Preserve existing color scheme, typography, and layout patterns**
+- **Reuse current UI components**: buttons, input controls, plot styling
+- **Maintain familiar navigation structure** where possible
+- **Keep existing visual hierarchy and branding**
+
+### User Experience Continuity
+- **Progressive disclosure**: Build on existing mental models
+- **Consistent terminology**: Preserve established parameter names
+- **Familiar interaction patterns**: Keep successful UI elements from v1
+
+## Navigation Structure
+
+### Module-Based Navigation
+```
+┌─ Design Options (NEW PRIMARY MODULE)
+│   ├─ Optimization Objective
+│   ├─ Minimization Target  
+│   └─ Parameter Controls
+│
+├─ Experimental Setup (INHERITED, MODIFIED)  
+│   ├─ Pilot Data Upload
+│   ├─ Library Parameters
+│   └─ [TPM/Fold Change REMOVED - now in Design Options]
+│
+├─ Analysis Results (NEW/MODIFIED)
+│   ├─ Optimization Results Display
+│   └─ Placeholder Visualization (power curves, cost curves)
+│
+└─ Export Results (INHERITED)
+    ├─ Excel Downloads
+    └─ Data Export
+```
+
+## Information Architecture
+
+### Design Options Module Layout
+
+#### Section 1: Optimization Framework
+```
+┌─ Include cost considerations in optimization?
+│  ○ Power-only optimization: "Optimize power without cost constraints"
+│  ○ Power + cost optimization: "Optimize power while considering cost constraints"
+└─
+```
+
+#### Section 2: Optimization Target
+```
+┌─ What should we minimize?
+│  ☐ Minimize total cells per target
+│  ☐ Minimize reads per cell  
+│  ☐ Minimize total cost (computed from cells × reads)
+│  ☐ Minimize TPM analysis threshold (maximize gene coverage)
+│  ☐ Minimize minimum fold change (maximize sensitivity)
+│
+│  Note: "Total cost" optimization target not available when "Power + cost" 
+│        is selected (cost already considered as constraint)
+└─
+```
+
+#### Section 3: Parameter Control Matrix
+```
+┌─ Parameter Control
+│  ┌─ Cells per target     [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]
+│  ├─ Reads per cell       [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]  
+│  ├─ TPM threshold        [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]
+│  └─ Min fold change      [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]
+│
+│  Note: Only one parameter can be "Minimizing" (auto-set from target selection).
+│        All other parameters are grayed out when one is "Minimizing".
+└─
+```
+
+## Interaction Patterns
+
+### Progressive Disclosure
+1. **Optimization objective selection** → reveals relevant minimization targets
+2. **Minimization target selection** → automatically sets corresponding parameter to "Minimizing" status (grayed out)
+3. **Parameter control selection** → reveals input fields for fixed values
+4. **Complete design specification** → enables analysis modules
+
+### Validation & Feedback
+- **Real-time validation**: Ensure at least one varying parameter
+- **Smart defaults**: Suggest reasonable parameter ranges
+- **Clear error messages**: Guide users to valid configurations
+
+# Technical Requirements
+
+## Golem Architecture
+
+### Planned Module Structure
+
+```r
+# Module 1: New Design-Centric Module
+mod_design_options.R
+├─ mod_design_options_ui()
+├─ mod_design_options_server()
+└─ Sub-components:
+   ├─ optimization_objective_ui/server
+   ├─ minimization_target_ui/server  
+   └─ parameter_control_ui/server
+
+# Modules 2+: Adapted from Current App
+mod_experimental_setup.R   # Modified: remove TPM/fold change
+mod_analysis_results.R     # NEW: optimization results display
+mod_results_export.R      # Inherited: downloads and data export
+```
+
+### Data Flow Architecture
+
+```r
+# Design Options Module outputs
+design_config <- list(
+  optimization_type = "power_plus_cost",  # or "power_only"
+  minimization_target = "total_cost", 
+  parameter_controls = list(
+    cells_per_target = list(type = "varying", range = c(100, 2000)),
+    reads_per_cell = list(type = "varying", range = c(500, 5000)),
+    tmp_threshold = list(type = "fixed", values = c(10, 20)),
+    min_fold_change = list(type = "fixed", values = c(1.5))
+  )
+)
+
+# Consumed by downstream modules
+```
+
+## UI Framework Continuity
+
+### Asset Migration Strategy
+- **Copy existing CSS** from `inst/shiny/www/` to `inst/app/www/`
+- **Preserve JavaScript** customizations and interactions
+- **Maintain responsive layouts** and accessibility patterns
+- **Reuse plot themes** and color schemes
+
+### Component Reuse
+- **Form controls**: Leverage existing input styling
+- **Navigation elements**: Adapt current tab/module structure  
+- **Data tables**: Preserve existing DT configurations
+- **Results display**: Reuse table and summary formatting patterns
+- **Note**: Plot styling deferred until visualization requirements specified
+
+## Performance Requirements
+
+- **Fast parameter updates**: Real-time validation and preview
+- **Efficient grid computation**: Handle varying parameter optimization
+- **Responsive UI**: Sub-second feedback for design option changes
+
+# Success Metrics
+
+## User Experience Improvements
+
+- **Reduced time to first meaningful result**: Users get relevant analysis faster
+- **Higher task completion rate**: More users successfully design experiments
+- **Improved user satisfaction**: Workflow matches user mental model
+
+## Feature Adoption
+
+- **Design Options usage**: Track optimization objective selections
+- **Parameter control patterns**: Monitor varying vs. fixed parameter choices
+- **Analysis depth**: Measure progression through analysis modules
+
+# Implementation Plan
+
+## Phase 1: Design Options Module (2-3 weeks)
+- [ ] Create `mod_design_options.R` with three sub-components
+- [ ] Implement optimization objective selection logic
+- [ ] Build parameter control matrix interface
+- [ ] Add validation and business logic
+
+## Phase 2: Module Integration (1-2 weeks)
+
+### Design Config Data Flow
+- [ ] Create reactive design config output from `mod_design_options`
+- [ ] Structure config to capture optimization type, minimization target, and parameter controls
+- [ ] Pass design config between modules: Design Options → Analysis Results → Export Results
+
+### Module Communication Setup
+- [ ] Implement design config consumption in `mod_analysis_results`
+- [ ] Create workflow detection logic to identify which of 11 scenarios user has configured
+- [ ] Route to appropriate visualization type based on workflow pattern
+- [ ] Remove duplicate TPM/fold change controls from `mod_experimental_setup`
+
+### Workflow Routing Logic
+- [ ] Implement scenario detection:
+  - Power-only + single parameter varying → single parameter power curve
+  - Power-only + cost minimization → cost-power trade-off plot
+  - Power + cost + two parameters varying → equi-power/equi-cost intersection
+  - Power + cost + single parameter varying → constrained power curve
+- [ ] Create parameter passing logic for each visualization type
+- [ ] Validate parameter control consistency (one minimizing parameter auto-set, all others grayed out)
+
+### End-to-End Integration Testing
+- [ ] Test all 11 workflow configurations can be set up through Design Options
+- [ ] Verify correct visualization type is displayed for each workflow
+- [ ] Test parameter control panel auto-updates (one minimizing status, all others grayed out)
+- [ ] Validate data flow integrity across all modules
+
+## Phase 3: Placeholder Visualization (1-2 weeks)
+- [ ] Create placeholder power curve plots for 5 power-only designs
+- [ ] Create placeholder cost-power trade-off plots (equi-power/equi-cost curves)
+- [ ] Create placeholder power + cost optimization plots for 6 designs
+- [ ] Implement gray-out regions, dashed lines, and triangle markers
+- [ ] Add interactive plot features and styling
+
+## Phase 4: Analysis Engine Updates (2-3 weeks)  
+- [ ] Adapt power analysis functions for optimization scenarios
+- [ ] Implement cost minimization algorithms  
+- [ ] Update analysis for varying vs. fixed parameters
+- [ ] Create results display module (tables, summaries)
+- [ ] Enhance results interpretation
+
+## Phase 5: UI Polish & Testing (1-2 weeks)
+- [ ] Apply visual continuity requirements
+- [ ] User testing with constraint-based scenarios
+- [ ] Performance optimization
+- [ ] Documentation updates
+
+# Appendices
+
+## Business Logic Validation Rules
+
+### Parameter Control Constraints
+- **At least one varying parameter** required
+- **Maximum 2 fixed values** per parameter
+- **Logical parameter ranges** enforced
+- **Optimization objective consistency** validated
+
+## Current App Reference
+
+### UI Elements to Preserve
+- Color scheme and typography
+- Button and input styling  
+- Navigation patterns
+- Table and results formatting
+- **Note**: Plot themes and layouts TBD when visualization is specified
+
+### Controls to Migrate
+- TPM analysis threshold → Design Options Module
+- Minimum fold change → Design Options Module
+- All other controls remain in current locations
