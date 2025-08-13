@@ -10,7 +10,46 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     fluidPage(
-      golem::golem_welcome_page() # Remove this line to start building your UI
+      titlePanel("PerturbPlan v2: Constraint-Driven Experimental Design"),
+      
+      # Main navigation tabs
+      navbarPage(
+        title = "",
+        id = "main_nav",
+        
+        # Tab 1: Design Options (Core module)
+        tabPanel(
+          "Design Options",
+          value = "design_options",
+          mod_design_options_ui("design_options")
+        ),
+        
+        # Tab 2: Experimental Setup (placeholder)
+        tabPanel(
+          "Experimental Setup", 
+          value = "experimental_setup",
+          h3("Experimental Setup"),
+          p("Pilot data upload and library parameters will be implemented here."),
+          p("This will be adapted from the original app, removing TPM/fold change controls.")
+        ),
+        
+        # Tab 3: Analysis Results (placeholder) 
+        tabPanel(
+          "Analysis Results",
+          value = "analysis_results", 
+          h3("Analysis Results"),
+          p("Workflow-specific visualizations will be displayed here."),
+          p("Plots will be generated based on the design configuration from the Design Options tab.")
+        ),
+        
+        # Tab 4: Export Results (placeholder)
+        tabPanel(
+          "Export Results",
+          value = "export_results",
+          h3("Export Results"), 
+          p("Excel downloads and data export functionality will be implemented here.")
+        )
+      )
     )
   )
 }
