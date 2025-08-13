@@ -18,20 +18,21 @@
 ## either re-run this function, call golem::set_golem_name(), or don't forget
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
-golem::fill_desc(
-  pkg_name = "perturbplanApp", # The name of the golem package containing the app (typically lowercase, no underscore or periods)
-  pkg_title = "PKG_TITLE", # What the Package Does (One Line, Title Case, No Period)
-  pkg_description = "PKG_DESC.", # What the package does (one paragraph).
-  authors = person(
-    given = "AUTHOR_FIRST", # Your First Name
-    family = "AUTHOR_LAST", # Your Last Name
-    email = "AUTHOR@MAIL.COM", # Your email
-    role = c("aut", "cre") # Your role (here author/creator)
-  ),
-  repo_url = NULL, # The URL of the GitHub repo (optional),
-  pkg_version = "0.0.0.9000", # The version of the package containing the app
-  set_options = TRUE # Set the global golem options
-)
+## Already configured - DESCRIPTION file properly filled out ✅
+# golem::fill_desc(
+#   pkg_name = "perturbplanApp",
+#   pkg_title = "Constraint-Driven Experimental Design for CRISPR Perturb-seq",
+#   pkg_description = "Golem-based Shiny application for constraint-driven experimental design and power analysis in CRISPR perturb-seq experiments.",
+#   authors = person(
+#     given = "Ziang",
+#     family = "Niu", 
+#     email = "zniu@wharton.upenn.edu",
+#     role = c("aut", "cre")
+#   ),
+#   repo_url = "https://github.com/Katsevich-Lab/perturbplanApp",
+#   pkg_version = "0.0.0.9000",
+#   set_options = TRUE
+# )
 
 ## Install the required dev dependencies ----
 golem::install_dev_deps()
