@@ -19,7 +19,7 @@ library(knitr)
 
 ## Problem Statement
 
-Current PerturbPlan app forces users through a generic workflow that doesn't align with their specific experimental constraints and decision-making process. Users need to specify their design priorities (power vs cost optimization) and parameter constraints upfront to get relevant guidance.
+The original PerturbPlan Shiny app (located in the `perturbplan` R package at `inst/shiny/`) forces users through a generic workflow that doesn't align with their specific experimental constraints and decision-making process. Users need to specify their design priorities (power vs cost optimization) and parameter constraints upfront to get relevant guidance.
 
 ## Solution Overview
 
@@ -48,7 +48,7 @@ PerturbPlan v2 redesigns the user workflow around **constraint-driven experiment
 3. **Focus analysis** on parameters they can actually control
 4. **Get actionable recommendations** for their specific situation
 
-## Current Pain Points
+## Current Pain Points (Original App in `perturbplan` Package)
 
 - Generic workflow doesn't match user's specific constraints
 - Parameter selection scattered across multiple UI sections
@@ -95,14 +95,14 @@ PerturbPlan v2 redesigns the user workflow around **constraint-driven experiment
 - **Varying parameters**: Interact with the minimizing parameter during optimization
 - Valid configurations include: one parameter minimizing with all others fixed (achieves desired power at fixed conditions)
 
-### Modules 2+: Analysis Modules (INHERITED/MODIFIED)
+### Modules 2+: Analysis Modules (ADAPTED FROM ORIGINAL APP)
 
-#### Inherited from Current App
-- **Experimental Setup**: Pilot data, library parameters (minus TPM/fold change controls)
+#### Adapted from Original App (`perturbplan` package `inst/shiny/`)
+- **Experimental Setup**: Pilot data, library parameters (minus TPM/fold change controls moved to Module 1)
 - **Results Visualization**: TBD - plotting functionality to be specified in later development phases
 - **Results Export**: Excel downloads, data export functionality
 
-#### Key Changes
+#### Key Changes from Original App
 - **Remove duplicate controls**: TPM threshold and minimum fold change now controlled in Module 1
 - **Context-aware analysis**: Analysis respects constraints from Design Options module
 - **Optimization-focused results**: Results emphasize minimization targets specified in Module 1
@@ -379,16 +379,16 @@ design_config <- list(
 ## UI Framework Continuity
 
 ### Asset Migration Strategy
-- **Copy existing CSS** from `inst/shiny/www/` to `inst/app/www/`
-- **Preserve JavaScript** customizations and interactions
+- **Copy existing CSS** from `../perturbplan/inst/shiny/www/` to `inst/app/www/`
+- **Preserve JavaScript** customizations and interactions from original app
 - **Maintain responsive layouts** and accessibility patterns
-- **Reuse plot themes** and color schemes
+- **Reuse plot themes** and color schemes from original app
 
-### Component Reuse
-- **Form controls**: Leverage existing input styling
-- **Navigation elements**: Adapt current tab/module structure  
-- **Data tables**: Preserve existing DT configurations
-- **Results display**: Reuse table and summary formatting patterns
+### Component Reuse from Original App
+- **Form controls**: Leverage existing input styling from `perturbplan` app
+- **Navigation elements**: Adapt tab/module structure from original app
+- **Data tables**: Preserve existing DT configurations from original app
+- **Results display**: Reuse table and summary formatting patterns from original app
 - **Note**: Plot styling deferred until visualization requirements specified
 
 ## Performance Requirements
@@ -430,7 +430,7 @@ design_config <- list(
 - [ ] Implement design config consumption in `mod_analysis_results`
 - [ ] Create workflow detection logic to identify which of 11 scenarios user has configured
 - [ ] Route to appropriate visualization type based on workflow pattern
-- [ ] Remove duplicate TPM/fold change controls from `mod_experimental_setup`
+- [ ] Adapt `mod_experimental_setup` from original app, removing duplicate TPM/fold change controls
 
 ### Workflow Routing Logic
 - [ ] Implement scenario detection:
@@ -477,16 +477,17 @@ design_config <- list(
 - **Logical parameter ranges** enforced
 - **Optimization objective consistency** validated
 
-## Current App Reference
+## Original App Reference (`perturbplan` Package)
 
-### UI Elements to Preserve
-- Color scheme and typography
-- Button and input styling  
-- Navigation patterns
-- Table and results formatting
+### UI Elements to Preserve from Original App
+- Color scheme and typography from `perturbplan/inst/shiny/ui/ui_styles.R`
+- Button and input styling from original app
+- Navigation patterns from `perturbplan/inst/shiny/ui/ui_main.R`
+- Table and results formatting from original app
 - **Note**: Plot themes and layouts TBD when visualization is specified
 
-### Controls to Migrate
-- TPM analysis threshold → Design Options Module
-- Minimum fold change → Design Options Module
-- All other controls remain in current locations
+### Controls to Migrate from Original App
+- TPM analysis threshold (move from Experimental Setup → Design Options Module)
+- Minimum fold change (move from Experimental Setup → Design Options Module)  
+- All other controls adapted from original app structure
+- Pilot data upload functionality from `perturbplan/inst/shiny/server/server_main.R`
