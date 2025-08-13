@@ -1,258 +1,245 @@
-#' Design Options UI Function
+#' Design Options Module UI
 #'
-#' @description Core module for constraint-driven experimental design.
-#' Provides 3-section interface for optimization framework, minimization targets,
-#' and parameter control matrix.
+#' @description Creates the Design Options section with constraint-driven workflow:
+#' Step 1: Optimization Framework, Step 2: Minimization Target, Step 3: Parameter Control
 #'
 #' @param id Module namespace ID
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList h3 h4 h5 p div radioButtons checkboxGroupInput
-#' @importFrom shiny fluidRow column wellPanel textInput conditionalPanel
-#' @importFrom shiny updateRadioButtons updateCheckboxGroupInput moduleServer
-#' @importFrom shiny observe req reactive reactiveValues
+#' @importFrom shiny NS tagList tags div strong selectInput numericInput conditionalPanel
 mod_design_options_ui <- function(id) {
   ns <- NS(id)
-  tagList(
-    h3("Design Options", class = "module-header"),
-    
-    # Section 1: Optimization Framework
-    wellPanel(
-      h4("1. Optimization Framework"),
-      p("Include cost considerations in optimization?"),
-      radioButtons(
-        inputId = ns("optimization_type"),
-        label = NULL,
-        choices = list(
-          "Power-only optimization: Optimize power without cost constraints" = "power_only",
-          "Power + cost optimization: Optimize power while considering cost constraints" = "power_cost"
+  
+  # Design Options (collapsible) - NEW CONSTRAINT-DRIVEN SECTION
+  tags$div(
+    style = "border-radius: 4px; margin-bottom: 5px;",
+    tags$div(
+      id = ns("design-header"),
+      style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
+      onclick = paste0("toggleSection('", ns("design-content"), "', '", ns("design-chevron"), "')"),
+      tags$i(id = ns("design-chevron"), class = "fa fa-chevron-down", style = "margin-right: 8px;"),
+      tags$strong("Design Options")
+    ),
+    tags$div(
+      id = ns("design-content"),
+      style = "padding: 15px;",
+      
+      # Step 1: Optimization Framework
+      tags$div(
+        id = ns("step1"),
+        tags$h5("Step 1: Optimization Framework", style = "color: #4A6B82; margin-bottom: 10px;"),
+        tags$p("Include cost considerations in optimization?", style = "font-size: 12px; margin-bottom: 8px;"),
+        selectInput(ns("optimization_type"), NULL,
+                   choices = list(
+                     "Power-only optimization" = "power_only",
+                     "Power + cost optimization" = "power_cost"
+                   ),
+                   selected = "power_only"),
+        style = "margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;"
+      ),
+      
+      # Step 2: Minimization Target
+      tags$div(
+        id = ns("step2"),
+        style = "display: none; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;",
+        tags$h5("Step 2: Optimization Target", style = "color: #4A6B82; margin-bottom: 10px;"),
+        tags$p("What should we minimize?", style = "font-size: 12px; margin-bottom: 8px;"),
+        selectInput(ns("minimization_target"), NULL,
+                   choices = list(
+                     "Minimize total cells per target" = "cells",
+                     "Minimize reads per cell" = "reads", 
+                     "Minimize total cost (cells × reads)" = "cost",
+                     "Minimize TPM analysis threshold" = "tpm_threshold",
+                     "Minimize minimum fold change" = "fold_change"
+                   ),
+                   selected = NULL),
+        # Dynamic note about cost availability
+        tags$div(id = ns("cost_note"), 
+                style = "color: #6C757D; font-style: italic; font-size: 11px; margin-top: 5px; display: none;",
+                "Note: Cost minimization not available with Power + cost optimization")
+      ),
+      
+      # Step 3: Parameter Control
+      tags$div(
+        id = ns("step3"),
+        style = "display: none;",
+        tags$h5("Step 3: Parameter Control", style = "color: #4A6B82; margin-bottom: 10px;"),
+        tags$p("Specify how each parameter should be handled:", style = "font-size: 12px; margin-bottom: 8px;"),
+        
+        # Cells per target
+        tags$div(
+          style = "margin-bottom: 8px;",
+          tags$strong("Cells per target:", style = "font-size: 13px;"),
+          selectInput(ns("cells_control"), NULL,
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     selected = "varying"),
+          conditionalPanel(
+            condition = paste0("input['", ns("cells_control"), "'] == 'fixed'"),
+            numericInput(ns("cells_fixed"), "Fixed value:", value = 1000, min = 50, max = 5000, step = 50)
+          )
         ),
-        selected = "power_only"
+        
+        # Reads per cell  
+        tags$div(
+          style = "margin-bottom: 8px;",
+          tags$strong("Reads per cell:", style = "font-size: 13px;"),
+          selectInput(ns("reads_control"), NULL,
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     selected = "varying"),
+          conditionalPanel(
+            condition = paste0("input['", ns("reads_control"), "'] == 'fixed'"),
+            numericInput(ns("reads_fixed"), "Fixed value:", value = 5000, min = 500, max = 20000, step = 500)
+          )
+        ),
+        
+        # TPM threshold
+        tags$div(
+          style = "margin-bottom: 8px;",
+          tags$strong("TPM threshold:", style = "font-size: 13px;"),
+          selectInput(ns("tpm_control"), NULL,
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     selected = "varying"),
+          conditionalPanel(
+            condition = paste0("input['", ns("tpm_control"), "'] == 'fixed'"),
+            numericInput(ns("tpm_fixed"), "Fixed value:", value = 10, min = 0, max = 100, step = 1)
+          )
+        ),
+        
+        # Min fold change
+        tags$div(
+          style = "margin-bottom: 8px;",
+          tags$strong("Min fold change:", style = "font-size: 13px;"),
+          selectInput(ns("fc_control"), NULL,
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     selected = "varying"),
+          conditionalPanel(
+            condition = paste0("input['", ns("fc_control"), "'] == 'fixed'"),
+            numericInput(ns("fc_fixed"), "Fixed value:", value = 1.5, min = 1.1, max = 10, step = 0.1)
+          )
+        ),
+        
+        # Business rule note
+        tags$div(style = "color: #6C757D; font-style: italic; font-size: 11px; margin-top: 10px;",
+                "Note: Only one parameter can be 'Minimizing' (auto-set from target selection)")
       )
-    ),
-    
-    # Section 2: Minimization Target
-    wellPanel(
-      h4("2. Optimization Target"),
-      p("What should we minimize?"),
-      checkboxGroupInput(
-        inputId = ns("minimization_target"),
-        label = NULL,
-        choices = list(
-          "Minimize total cells per target" = "cells",
-          "Minimize reads per cell" = "reads", 
-          "Minimize total cost (computed from cells × reads)" = "cost",
-          "Minimize TPM analysis threshold (maximize gene coverage)" = "tpm_threshold",
-          "Minimize minimum fold change (maximize sensitivity)" = "fold_change"
-        ),
-        selected = NULL
-      ),
-      # Dynamic note about cost availability
-      div(id = ns("cost_note"), 
-          style = "color: #666; font-style: italic; margin-top: 10px;",
-          "Note: 'Total cost' optimization target not available when 'Power + cost' is selected (cost already considered as constraint)")
-    ),
-    
-    # Section 3: Parameter Control Matrix
-    wellPanel(
-      h4("3. Parameter Control"),
-      p("For each parameter, specify how it should be handled in the optimization:"),
-      
-      # Simplified parameter control for now - will enhance in next iteration
-      div(class = "parameter-control-matrix",
-        h5("Cells per target:"),
-        radioButtons(ns("cells_control"), NULL, 
-                    choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"), 
-                    selected = "varying", inline = TRUE),
-        conditionalPanel(
-          condition = paste0("input['", ns("cells_control"), "'] == 'fixed'"),
-          textInput(ns("cells_fixed_1"), "Fixed value 1:", placeholder = "e.g., 1000")
-        ),
-        
-        h5("Reads per cell:"),
-        radioButtons(ns("reads_control"), NULL, 
-                    choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"), 
-                    selected = "varying", inline = TRUE),
-        conditionalPanel(
-          condition = paste0("input['", ns("reads_control"), "'] == 'fixed'"),
-          textInput(ns("reads_fixed_1"), "Fixed value 1:", placeholder = "e.g., 5000")
-        ),
-        
-        h5("TPM threshold:"),
-        radioButtons(ns("tpm_control"), NULL, 
-                    choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"), 
-                    selected = "varying", inline = TRUE),
-        conditionalPanel(
-          condition = paste0("input['", ns("tmp_control"), "'] == 'fixed'"),
-          textInput(ns("tpm_fixed_1"), "Fixed value 1:", placeholder = "e.g., 10")
-        ),
-        
-        h5("Min fold change:"),
-        radioButtons(ns("fc_control"), NULL, 
-                    choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"), 
-                    selected = "varying", inline = TRUE),
-        conditionalPanel(
-          condition = paste0("input['", ns("fc_control"), "'] == 'fixed'"),
-          textInput(ns("fc_fixed_1"), "Fixed value 1:", placeholder = "e.g., 1.5")
-        )
-      ),
-      
-      # Business rule note
-      div(style = "color: #666; font-style: italic; margin-top: 15px;",
-          "Note: Only one parameter can be 'Minimizing' (auto-set from target selection). All other parameters are grayed out when one is 'Minimizing'.")
-    ),
-    
-    # Validation summary
-    div(id = ns("validation_summary"), 
-        class = "alert alert-info",
-        style = "margin-top: 20px;",
-        "Select optimization objective and minimization target to begin...")
+    )
   )
 }
 
-#' Design Options Server Function
+#' Design Options Module Server
 #'
-#' @description Server logic for design options module.
-#' Handles business rules, parameter control logic, and returns design configuration.
+#' @description Server logic for constraint-driven design options with progressive disclosure
+#' and business rule enforcement
 #'
 #' @param id Module namespace ID
-#'
-#' @return Reactive list containing design configuration
 #'
 #' @noRd
 mod_design_options_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    # Reactive values for tracking state
-    values <- reactiveValues(
-      current_minimizing = NULL,
-      validation_errors = character()
-    )
+    # Progressive disclosure: Show steps sequentially
+    observe({
+      # Step 2 appears when optimization type is selected
+      if (!is.null(input$optimization_type)) {
+        shinyjs::show("step2")
+      } else {
+        shinyjs::hide("step2")
+        shinyjs::hide("step3")
+      }
+    })
+    
+    observe({
+      # Step 3 appears when minimization target is selected
+      if (!is.null(input$minimization_target) && input$minimization_target != "") {
+        shinyjs::show("step3")
+      } else {
+        shinyjs::hide("step3")
+      }
+    })
+    
+    # Business Logic: Update cost availability based on optimization type
+    observe({
+      if (!is.null(input$optimization_type) && input$optimization_type == "power_cost") {
+        # Show cost restriction note
+        shinyjs::show("cost_note")
+        
+        # Update choices to disable cost option
+        updateSelectInput(session, "minimization_target",
+                         choices = list(
+                           "Minimize total cells per target" = "cells",
+                           "Minimize reads per cell" = "reads", 
+                           "Minimize TPM analysis threshold" = "tmp_threshold",
+                           "Minimize minimum fold change" = "fold_change"
+                         ))
+      } else {
+        shinyjs::hide("cost_note")
+        
+        # Include cost option
+        updateSelectInput(session, "minimization_target",
+                         choices = list(
+                           "Minimize total cells per target" = "cells",
+                           "Minimize reads per cell" = "reads", 
+                           "Minimize total cost (cells × reads)" = "cost",
+                           "Minimize TPM analysis threshold" = "tpm_threshold",
+                           "Minimize minimum fold change" = "fold_change"
+                         ))
+      }
+    })
     
     # Business Logic: Auto-set parameter to "Minimizing" when selected as target
     observe({
       target <- input$minimization_target
       
-      if (length(target) == 1) {
-        # Single target selected - auto-set corresponding parameter
-        values$current_minimizing <- target
+      if (!is.null(target) && target != "") {
+        # Reset all parameters to varying first
+        updateSelectInput(session, "cells_control", selected = "varying")
+        updateSelectInput(session, "reads_control", selected = "varying")
+        updateSelectInput(session, "tpm_control", selected = "varying")
+        updateSelectInput(session, "fc_control", selected = "varying")
         
-        # Update parameter control based on target
+        # Set the selected target to minimizing
         if (target == "cells") {
-          updateRadioButtons(session, "cells_control", selected = "minimizing")
+          updateSelectInput(session, "cells_control", selected = "minimizing")
         } else if (target == "reads") {
-          updateRadioButtons(session, "reads_control", selected = "minimizing")
+          updateSelectInput(session, "reads_control", selected = "minimizing")
         } else if (target == "tpm_threshold") {
-          updateRadioButtons(session, "tmp_control", selected = "minimizing")
+          updateSelectInput(session, "tpm_control", selected = "minimizing")
         } else if (target == "fold_change") {
-          updateRadioButtons(session, "fc_control", selected = "minimizing")
+          updateSelectInput(session, "fc_control", selected = "minimizing")
         }
-        
-      } else if (length(target) == 0) {
-        # No target selected - reset all to varying
-        values$current_minimizing <- NULL
-        updateRadioButtons(session, "cells_control", selected = "varying")
-        updateRadioButtons(session, "reads_control", selected = "varying")
-        updateRadioButtons(session, "tmp_control", selected = "varying")
-        updateRadioButtons(session, "fc_control", selected = "varying")
-      } else {
-        # Multiple targets selected - not allowed, keep only first
-        updateCheckboxGroupInput(session, "minimization_target", selected = target[1])
       }
     })
     
-    # Validation logic
-    observe({
-      errors <- character()
-      
-      # Check if at least one target is selected
-      if (is.null(input$minimization_target) || length(input$minimization_target) == 0) {
-        errors <- c(errors, "Please select one minimization target")
-      }
-      
-      # Check for multiple targets
-      if (length(input$minimization_target) > 1) {
-        errors <- c(errors, "Only one minimization target allowed")
-      }
-      
-      # Check cost target restriction
-      if (!is.null(input$optimization_type) && input$optimization_type == "power_cost" && 
-          !is.null(input$minimization_target) && "cost" %in% input$minimization_target) {
-        errors <- c(errors, "Cost minimization not available with Power + cost optimization")
-      }
-      
-      values$validation_errors <- errors
-    })
-    
-    # Update validation summary display
-    observe({
-      if (length(values$validation_errors) == 0 && 
-          !is.null(input$minimization_target) && length(input$minimization_target) == 1) {
-        # Valid configuration
-        target_name <- switch(input$minimization_target,
-                             "cells" = "cells per target",
-                             "reads" = "reads per cell", 
-                             "cost" = "total cost",
-                             "tmp_threshold" = "TPM threshold",
-                             "fold_change" = "fold change")
-        
-        message <- paste0("✓ Configuration valid: Minimizing ", target_name, 
-                         " with ", input$optimization_type, " optimization")
-      } else if (length(values$validation_errors) > 0) {
-        # Has errors
-        message <- paste("⚠ Issues:", paste(values$validation_errors, collapse = "; "))
-      } else {
-        # Incomplete
-        message <- "Select optimization objective and minimization target to begin..."
-      }
-      
-      # Update the div content (note: this is a simplified approach)
-      session$sendCustomMessage("updateValidation", list(id = ns("validation_summary"), message = message))
-    })
-    
-    # Return design configuration reactive
+    # Return structured design configuration
     design_config <- reactive({
-      req(input$optimization_type, input$minimization_target)
-      
-      # Return structured configuration
       list(
+        # Design Options
         optimization_type = input$optimization_type,
         minimization_target = input$minimization_target,
         parameter_controls = list(
           cells_per_target = list(
             type = input$cells_control %||% "varying",
-            fixed_values = if(!is.null(input$cells_fixed_1) && input$cells_fixed_1 != "") input$cells_fixed_1 else NULL
+            fixed_value = if(!is.null(input$cells_fixed)) input$cells_fixed else NULL
           ),
           reads_per_cell = list(
             type = input$reads_control %||% "varying",
-            fixed_values = if(!is.null(input$reads_fixed_1) && input$reads_fixed_1 != "") input$reads_fixed_1 else NULL
+            fixed_value = if(!is.null(input$reads_fixed)) input$reads_fixed else NULL
           ),
-          tmp_threshold = list(
-            type = input$tpm_control %||% "varying",
-            fixed_values = if(!is.null(input$tpm_fixed_1) && input$tpm_fixed_1 != "") input$tmp_fixed_1 else NULL
+          tpm_threshold = list(
+            type = input$tmp_control %||% "varying",
+            fixed_value = if(!is.null(input$tmp_fixed)) input$tmp_fixed else NULL
           ),
           min_fold_change = list(
             type = input$fc_control %||% "varying",
-            fixed_values = if(!is.null(input$fc_fixed_1) && input$fc_fixed_1 != "") input$fc_fixed_1 else NULL
+            fixed_value = if(!is.null(input$fc_fixed)) input$fc_fixed else NULL
           )
-        ),
-        validation_status = list(
-          is_valid = length(values$validation_errors) == 0,
-          errors = values$validation_errors
         ),
         timestamp = Sys.time()
       )
     })
     
-    # Return the reactive configuration
     return(design_config)
   })
 }
-    
-## To be copied in the UI
-# mod_design_options_ui("design_options_1")
-    
-## To be copied in the server
-# mod_design_options_server("design_options_1")
