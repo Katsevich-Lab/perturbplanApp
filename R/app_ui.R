@@ -3,51 +3,58 @@
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @importFrom shinydashboard dashboardPage dashboardHeader dashboardBody
 #' @noRd
 app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
-    # Your application UI logic
-    fluidPage(
-      titlePanel("PerturbPlan v2: Constraint-Driven Experimental Design"),
+    
+    # Dashboard page layout (matching original perturbplan app exactly)
+    dashboardPage(
+      header = dashboardHeader(
+        title = "PerturbPlan v2",
+        tags$li(
+          class = "dropdown",
+          style = "float: right; margin-right: 20px;",
+          # Placeholder for download button (will be conditionally shown later)
+          tags$div()
+        )
+      ),
       
-      # Main navigation tabs
-      navbarPage(
-        title = "",
-        id = "main_nav",
+      sidebar = mod_sidebar_ui("sidebar"),
+      
+      body = dashboardBody(
+        # Add the exact same styles from original perturbplan app
+        create_styles(),
         
-        # Tab 1: Design Options (Core module)
-        tabPanel(
-          "Design Options",
-          value = "design_options",
-          mod_design_options_ui("design_options")
-        ),
-        
-        # Tab 2: Experimental Setup (placeholder)
-        tabPanel(
-          "Experimental Setup", 
-          value = "experimental_setup",
-          h3("Experimental Setup"),
-          p("Pilot data upload and library parameters will be implemented here."),
-          p("This will be adapted from the original app, removing TPM/fold change controls.")
-        ),
-        
-        # Tab 3: Analysis Results (placeholder) 
-        tabPanel(
-          "Analysis Results",
-          value = "analysis_results", 
-          h3("Analysis Results"),
-          p("Workflow-specific visualizations will be displayed here."),
-          p("Plots will be generated based on the design configuration from the Design Options tab.")
-        ),
-        
-        # Tab 4: Export Results (placeholder)
-        tabPanel(
-          "Export Results",
-          value = "export_results",
-          h3("Export Results"), 
-          p("Excel downloads and data export functionality will be implemented here.")
+        # Main content area - placeholder for results visualization
+        tags$div(
+          style = "padding: 20px;",
+          h3("PerturbPlan v2: Constraint-Driven Experimental Design"),
+          
+          # Instruction message before planning
+          tags$div(
+            id = "need_plan_message",
+            class = "alert alert-info",
+            style = "margin: 20px 0;",
+            tags$h4("Welcome to PerturbPlan v2!"),
+            tags$p("Configure your experimental design parameters in the left sidebar, then click 'Plan' to begin analysis."),
+            tags$ul(
+              tags$li(tags$strong("Design Options:"), " Specify your optimization objective and constraints"),
+              tags$li(tags$strong("Experimental Setup:"), " Choose biological system and reference data"),
+              tags$li(tags$strong("Analysis Choices:"), " Configure perturbation-gene pairs and statistical parameters"),
+              tags$li(tags$strong("Effect Sizes:"), " Set assumed effect size parameters")
+            )
+          ),
+          
+          # Placeholder for results (will be populated after planning)
+          tags$div(
+            id = "results_placeholder",
+            style = "display: none;",
+            h4("Analysis Results"),
+            p("Results will be displayed here after clicking 'Plan' in the sidebar.")
+          )
         )
       )
     )
