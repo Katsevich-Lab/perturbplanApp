@@ -171,26 +171,26 @@ mod_design_options_server <- function(id){
       # Generate UI controls only for non-minimizing parameters
       param_uis <- list()
       
-      # Only show parameters that are not being minimized
-      if (param_configs$cells_per_target$type != "minimizing") {
+      # Only show parameters that are not being minimized or optimized automatically
+      if (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
           create_param_ui(ns, "cells", "Cells per target:", param_configs$cells_per_target, 1000, 50, 5000, 50)
         ))
       }
       
-      if (param_configs$reads_per_cell$type != "minimizing") {
+      if (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
           create_param_ui(ns, "reads", "Reads per cell:", param_configs$reads_per_cell, 5000, 500, 20000, 500)
         ))
       }
       
-      if (param_configs$tmp_threshold$type != "minimizing") {
+      if (!param_configs$tmp_threshold$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
           create_param_ui(ns, "tmp", "TPM threshold:", param_configs$tmp_threshold, 10, 0, 100, 1)
         ))
       }
       
-      if (param_configs$min_fold_change$type != "minimizing") {
+      if (!param_configs$min_fold_change$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
           create_param_ui(ns, "fc", "Minimum fold change:", param_configs$min_fold_change, 1.5, 1.1, 10, 0.1)
         ))
@@ -220,9 +220,9 @@ mod_design_options_server <- function(id){
           configs$tmp_threshold$type <- if (target == "tpm_threshold") "minimizing" else "fixed"
           configs$min_fold_change$type <- if (target == "fold_change") "minimizing" else "fixed"
         } else if (target == "cost") {
-          # Cost minimization: cells/reads vary, tpm/fc fixed
-          configs$cells_per_target$type <- "varying"
-          configs$reads_per_cell$type <- "varying"
+          # Cost minimization: cells/reads vary simultaneously (omit both), tpm/fc fixed
+          configs$cells_per_target$type <- "optimizing"
+          configs$reads_per_cell$type <- "optimizing"
           configs$tmp_threshold$type <- "fixed"
           configs$min_fold_change$type <- "fixed"
         }
@@ -455,13 +455,13 @@ mod_design_options_server <- function(id){
         parameter_controls = list(
           cells_per_target = list(
             type = if(!is.null(target) && target == "cells") "minimizing" 
-                   else if(!is.null(target) && target == "cost") "varying"
+                   else if(!is.null(target) && target == "cost") "optimizing"
                    else (input$cells_control %||% "varying"),
             fixed_value = if(!is.null(input$cells_fixed)) input$cells_fixed else NULL
           ),
           reads_per_cell = list(
             type = if(!is.null(target) && target == "reads") "minimizing" 
-                   else if(!is.null(target) && target == "cost") "varying"
+                   else if(!is.null(target) && target == "cost") "optimizing"
                    else (input$reads_control %||% "varying"),
             fixed_value = if(!is.null(input$reads_fixed)) input$reads_fixed else NULL
           ),
