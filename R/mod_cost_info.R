@@ -1,19 +1,19 @@
-#' Cost Information Module UI
+#' cost_info UI Function
 #'
 #' @description Creates the Cost Information section with cost per cell and cost per million reads inputs.
 #' Appears conditionally when Design Options involve power + cost optimization or cost minimization.
 #'
-#' @param id Module namespace ID
+#' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd
+#' @noRd 
 #'
 #' @importFrom shiny NS tagList tags div strong numericInput
-#' @importFrom shinyjs show hide
 mod_cost_info_ui <- function(id) {
   ns <- NS(id)
   
   # Cost Information (collapsible) - CONDITIONAL SECTION
-  tags$div(
+  tagList(
+    tags$div(
     id = ns("cost-info-container"),
     style = "border-radius: 4px; margin-bottom: 5px; display: none;",
     tags$div(
@@ -64,19 +64,22 @@ mod_cost_info_ui <- function(id) {
         )
       )
     )
+    )
   )
 }
-
-#' Cost Information Module Server
+    
+#' cost_info Server Functions
 #'
 #' @description Server logic for cost information parameters with conditional display
 #'
 #' @param id Module namespace ID
 #' @param design_config Reactive containing design options configuration
 #'
-#' @noRd
-mod_cost_info_server <- function(id, design_config) {
-  moduleServer(id, function(input, output, session) {
+#' @noRd 
+#'
+#' @importFrom shinyjs show hide
+mod_cost_info_server <- function(id, design_config){
+  moduleServer(id, function(input, output, session){
     ns <- session$ns
     
     # Conditional display logic based on design options
@@ -115,3 +118,9 @@ mod_cost_info_server <- function(id, design_config) {
     return(cost_config)
   })
 }
+    
+## To be copied in the UI
+# mod_cost_info_ui("cost_info_1")
+    
+## To be copied in the server
+# mod_cost_info_server("cost_info_1")
