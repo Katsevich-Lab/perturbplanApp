@@ -130,7 +130,11 @@ generate_placeholder_analysis <- function(config, workflow_info) {
     parameter_ranges = extract_all_parameter_ranges(config),
     
     # Cost calculations (if applicable)
-    cost_data = if (!is.null(cost_budget)) power_results$cost_data else NULL,
+    cost_data = if (!is.null(cost_budget) || workflow_info$plot_type == "cost_tradeoff_curves") {
+      power_results$cost_data
+    } else {
+      NULL
+    },
     
     # Results summary
     summary = create_results_summary(power_results, workflow_info, config),
