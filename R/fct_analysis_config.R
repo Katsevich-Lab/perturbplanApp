@@ -66,6 +66,21 @@ detect_workflow_scenario <- function(workflow_config) {
   param_controls <- design_config$parameter_controls
   cost_budget <- design_config$cost_budget
   
+  # VALIDATION: Check for missing essential values
+  if (is.null(opt_type) || opt_type == "" || is.null(target) || target == "") {
+    cat("WORKFLOW DETECTION ERROR: Missing essential values\n")
+    cat("  opt_type:", opt_type, "\n")
+    cat("  target:", target, "\n")
+    return(list(
+      workflow_id = "incomplete_configuration",
+      plot_type = "single_parameter_curve",
+      category = "unknown",
+      minimizing_parameter = "cells",
+      title = "Incomplete Configuration",
+      description = "Missing optimization type or minimization target"
+    ))
+  }
+  
   # FALLBACK: If optimization_type is missing but cost_budget is present, assume power_cost
   if ((is.null(opt_type) || opt_type == "") && !is.null(cost_budget) && cost_budget > 0) {
     opt_type <- "power_cost"
