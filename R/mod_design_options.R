@@ -451,7 +451,7 @@ mod_design_options_server <- function(id){
         
         # Power and Cost Requirements
         target_power = input$target_power,
-        cost_budget = input$cost_budget,
+        cost_budget = if (input$optimization_type == "power_cost") input$cost_budget else NULL,
         parameter_controls = list(
           cells_per_target = list(
             type = if(!is.null(target) && target == "cells") "minimizing" 

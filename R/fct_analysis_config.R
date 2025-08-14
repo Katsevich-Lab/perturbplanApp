@@ -1,10 +1,5 @@
-#' Analysis Configuration and Utilities
-#'
-#' @description Configuration functions that control analysis behavior
-#' and provide utilities for processing workflow configurations.
-#'
-#' @noRd
-
+# ============================================================================
+# ANALYSIS CONFIGURATION AND UTILITIES
 # ============================================================================
 # PLACEHOLDER VS REAL MODE CONTROL
 # ============================================================================
@@ -309,6 +304,6 @@ create_analysis_metadata <- function(workflow_config, workflow_info) {
     cost_budget = workflow_config$design_options$cost_budget,
     analysis_timestamp = Sys.time(),
     app_version = golem::get_golem_version(),
-    user_session_id = session$token  # If available
+    user_session_id = "placeholder_session"  # Session tracking placeholder
   )
 }
