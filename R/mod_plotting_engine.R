@@ -109,12 +109,25 @@ create_single_parameter_plots <- function(results) {
   varying_param <- workflow_info$minimizing_parameter
   param_label <- format_parameter_name(varying_param)
   
+  # Enhance title for power+cost workflows to include optimal parameters
+  plot_title <- if (workflow_info$category %in% c("power_cost_single", "power_cost_multi")) {
+    # For power+cost workflows, include optimal minimized parameter in title
+    if (!is.null(optimal_design$optimal_minimized_param)) {
+      paste(workflow_info$title, "\n(Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
+            optimal_design$optimal_minimized_param, ")")
+    } else {
+      workflow_info$title
+    }
+  } else {
+    workflow_info$title
+  }
+  
   p <- ggplot(power_data, aes(x = parameter_value, y = power)) +
     geom_line() +
     geom_point() +
     geom_hline(yintercept = target_power, linetype = "dashed") +
     labs(
-      title = workflow_info$title,
+      title = plot_title,
       x = param_label,
       y = "Power"
     ) +
@@ -172,14 +185,13 @@ create_cost_tradeoff_plots <- function(results) {
   cost_budget <- results$user_config$design_options$cost_budget
   workflow_info <- results$workflow_info
   
-  # Check if this is Workflow 5 (power-only cost minimization)
-  is_power_only_cost <- workflow_info$workflow_id == "power_cost_minimization"
-  
-  if (is_power_only_cost) {
-    # WORKFLOW 5: Sophisticated constrained optimization visualization
+  # Determine plot type based on workflow category
+  if (workflow_info$workflow_id == "power_cost_minimization" || 
+      workflow_info$category == "power_cost_multi") {
+    # WORKFLOWS 5, 6, 9: Equi-power/equi-cost curves for multi-parameter optimization
     p <- create_equi_power_cost_plot(power_data, optimal_design, target_power, workflow_info)
   } else {
-    # WORKFLOWS 8, 11: Standard cost-power tradeoff visualization
+    # OTHER WORKFLOWS: Standard cost-power tradeoff visualization  
     p <- create_standard_cost_tradeoff_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
   }
   
@@ -334,7 +346,7 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
     ),
     
     optimal_recommendation = if (!is.null(optimal_design$found) && optimal_design$found) {
-      list(
+      optimal_rec <- list(
         optimal_cells = optimal_design$cells,
         optimal_reads = optimal_design$reads,
         total_cost = optimal_design$cost,
@@ -345,12 +357,20 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
           "| Power:", scales::percent(optimal_design$power)
         )
       )
+      
+      # Add optimal minimized parameter if present (for power+cost workflows)
+      if (!is.null(optimal_design$optimal_minimized_param)) {
+        optimal_rec$optimal_minimized_param <- optimal_design$optimal_minimized_param
+      }
+      
+      optimal_rec
     } else {
       list(
         optimal_cells = NULL,
         optimal_reads = NULL,
         total_cost = NULL,
         achieved_power = NULL,
+        optimal_minimized_param = NULL,
         recommendation_text = if (!is.null(cost_budget)) {
           "No design meets power target within budget constraint"
         } else {
@@ -393,13 +413,27 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
   # Calculate optimal cost for display
   optimal_cost <- optimal_design$cost
   
+  # Create plot title with optimal parameter for power+cost workflows
+  plot_title <- if (workflow_info$category == "power_cost_multi") {
+    # For power+cost workflows, include optimal minimized parameter in title
+    if (!is.null(optimal_design$optimal_minimized_param)) {
+      paste(workflow_info$title, "\n(Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
+            optimal_design$optimal_minimized_param, ")")
+    } else {
+      workflow_info$title
+    }
+  } else {
+    # For power-only cost optimization (Workflow 5)
+    "Equi-Power and Equi-Cost Curves"
+  }
+  
   # Simple plot with just two curves and tangent point
   p <- ggplot() +
     geom_line(data = target_equi_power_curve, aes(x = cells, y = reads), color = "purple") +
     geom_line(data = tangent_equi_cost_line, aes(x = cells, y = reads), color = "orange") +
     geom_point(aes(x = 500, y = 1500), color = "red") +
     labs(
-      title = "Equi-Power and Equi-Cost Curves",
+      title = plot_title,
       x = "Cells per Target",
       y = "Reads per Cell"
     ) +

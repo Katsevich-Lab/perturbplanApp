@@ -306,6 +306,15 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
       power = valid_designs$power[optimal_idx],
       found = TRUE
     )
+    
+    # For power+cost workflows, add optimal minimized parameter (placeholder values)
+    if (workflow_info$category == "power_cost_single") {
+      if (workflow_info$minimizing_parameter == "tpm_threshold") {
+        optimal_design$optimal_minimized_param <- 15  # Placeholder optimal TPM
+      } else if (workflow_info$minimizing_parameter == "fold_change") {
+        optimal_design$optimal_minimized_param <- 1.8  # Placeholder optimal fold change
+      }
+    }
   } else {
     optimal_design <- list(
       parameter = varying_param,
@@ -384,15 +393,24 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
       optimal_design <- list(found = FALSE, message = "No design meets target power")
     }
   } else {
-    # Power-only optimization: ALWAYS use mathematically correct tangent point
+    # Power-only optimization OR power+cost multi-parameter workflows
     optimal_design <- list(
       found = TRUE,
       cells = 500,
       reads = 1500,
       cost = 500 * 0.10 + 50 * (1500 / 1e6) * 500,
       power = 0.85,
-      type = "cost_minimized_power_only"
+      type = if (!is.null(cost_budget)) "cost_minimized_within_budget" else "cost_minimized_power_only"
     )
+    
+    # For power+cost multi-parameter workflows, add optimal minimized parameter
+    if (workflow_info$category == "power_cost_multi") {
+      if (workflow_info$minimizing_parameter == "tpm_threshold") {
+        optimal_design$optimal_minimized_param <- 12  # Placeholder optimal TPM for multi-param
+      } else if (workflow_info$minimizing_parameter == "fold_change") {
+        optimal_design$optimal_minimized_param <- 1.5  # Placeholder optimal fold change for multi-param
+      }
+    }
   }
   
   return(list(

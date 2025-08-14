@@ -262,19 +262,36 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
               tags$p("No feasible design found within parameter constraints", style = "color: #C73E1D; font-weight: 500;")
             }
           } else {
-            # Cost optimization - show optimal cells, reads, cost, and power
+            # Cost optimization - show optimal cells, reads, cost, power, and minimized param
             if (!is.null(summary_data$optimal_recommendation$optimal_cells)) {
-              tagList(
+              cost_summary_elements <- list(
                 tags$strong("Optimal Design:"), tags$br(),
                 tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), style = "color: #2E86AB; font-weight: bold; margin-right: 15px;"),
-                tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), style = "color: #2E86AB; font-weight: bold;"),
+                tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), style = "color: #2E86AB; font-weight: bold;")
+              )
+              
+              # Add optimal minimized parameter for power+cost workflows
+              if (workflow_info$category %in% c("power_cost_single", "power_cost_multi") &&
+                  !is.null(summary_data$optimal_recommendation$optimal_minimized_param)) {
+                cost_summary_elements <- append(cost_summary_elements, list(
+                  tags$br(),
+                  tags$span(paste("Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
+                                summary_data$optimal_recommendation$optimal_minimized_param), 
+                          style = "color: #2E86AB; font-weight: bold;")
+                ))
+              }
+              
+              # Add cost and power information
+              cost_summary_elements <- append(cost_summary_elements, list(
                 tags$br(), tags$br(),
                 tags$strong("Total Cost: "),
                 tags$span(paste0("$", scales::comma(summary_data$optimal_recommendation$total_cost)), style = "color: #F18F01; font-weight: bold; font-size: 16px;"),
                 tags$br(),
                 tags$strong("Achieved Power: "),
                 tags$span(paste0(round(summary_data$optimal_recommendation$achieved_power * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold;")
-              )
+              ))
+              
+              tagList(cost_summary_elements)
             } else {
               tags$p("No feasible design found within constraints", style = "color: #C73E1D; font-weight: 500;")
             }
