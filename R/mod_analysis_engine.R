@@ -1,0 +1,489 @@
+#' Analysis Engine Module UI Function
+#'
+#' @description Backend-only module that generates analysis data.
+#' No UI components needed - this is a pure server-side module.
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#'
+#' @noRd 
+#'
+#' @importFrom shiny NS tagList 
+mod_analysis_engine_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    # No UI - this is a backend analysis module
+  )
+}
+    
+#' Analysis Engine Server Functions
+#'
+#' @description THE critical swap point: generates placeholder data that matches
+#' user configuration and can be easily replaced with real perturbplan calculations.
+#' This is where placeholder vs real analysis mode is determined.
+#'
+#' @param id Module namespace ID
+#' @param workflow_config Reactive containing complete user configuration
+#' 
+#' @return Reactive list containing analysis results data
+#' @noRd 
+#' 
+#' @importFrom shiny moduleServer reactive req
+mod_analysis_engine_server <- function(id, workflow_config) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+    
+    # ========================================================================
+    # MAIN ANALYSIS REACTIVE - THE SWAP POINT
+    # ========================================================================
+    
+    analysis_results <- reactive({
+      req(workflow_config())
+      
+      config <- workflow_config()
+      
+      # Skip analysis if plan not clicked
+      if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
+        return(NULL)
+      }
+      
+      # Validate configuration
+      validation <- validate_workflow_config(config)
+      if (!validation$is_valid) {
+        return(list(
+          error = paste("Configuration Error:", paste(validation$errors, collapse = ", ")),
+          metadata = list(
+            analysis_mode = get_analysis_mode(),
+            timestamp = Sys.time()
+          )
+        ))
+      }
+      
+      # Detect workflow scenario
+      workflow_info <- detect_workflow_scenario(config)
+      
+      # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis
+      if (use_placeholder_mode()) {
+        # PLACEHOLDER MODE: Generate realistic fake data
+        return(generate_placeholder_analysis(config, workflow_info))
+      } else {
+        # REAL MODE: Call perturbplan package functions
+        return(generate_real_analysis(config, workflow_info))
+      }
+    })
+    
+    return(analysis_results)
+  })
+}
+
+
+# ============================================================================
+# PLACEHOLDER DATA GENERATION (Current Implementation)
+# ============================================================================
+
+#' Generate placeholder analysis results
+#'
+#' @description Creates realistic placeholder data that uses actual user inputs
+#' and follows the same data structure as real perturbplan results.
+#' THIS IS WHERE PLACEHOLDER DATA IS GENERATED.
+#'
+#' @param config User configuration from sidebar modules
+#' @param workflow_info Detected workflow information
+#' 
+#' @return List containing placeholder analysis results
+#' @noRd
+generate_placeholder_analysis <- function(config, workflow_info) {
+  
+  # Extract user parameters for realistic placeholder data
+  design_config <- config$design_options
+  target_power <- design_config$target_power
+  cost_budget <- design_config$cost_budget
+  
+  # Create parameter grid based on user configuration
+  param_grid <- create_parameter_grid(config, workflow_info)
+  
+  # Generate power calculations based on workflow type
+  if (workflow_info$plot_type == "single_parameter_curve") {
+    power_results <- generate_single_parameter_power_curve(param_grid, workflow_info, target_power)
+  } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
+    power_results <- generate_cost_tradeoff_curves(param_grid, workflow_info, target_power, cost_budget)
+  } else {
+    # Fallback for unknown plot types
+    power_results <- list(
+      error = paste("Unknown plot type:", workflow_info$plot_type)
+    )
+  }
+  
+  # Create comprehensive results object
+  results <- list(
+    # Core data for plotting
+    power_data = power_results$power_data,
+    optimal_design = power_results$optimal_design,
+    
+    # Workflow and user configuration
+    workflow_info = workflow_info,
+    user_config = config,
+    
+    # Parameter information
+    parameter_grid = param_grid,
+    parameter_ranges = extract_all_parameter_ranges(config),
+    
+    # Cost calculations (if applicable)
+    cost_data = if (!is.null(cost_budget)) power_results$cost_data else NULL,
+    
+    # Results summary
+    summary = create_results_summary(power_results, workflow_info, config),
+    
+    # Analysis metadata
+    metadata = create_analysis_metadata(config, workflow_info),
+    
+    # Success status
+    success = is.null(power_results$error),
+    error = power_results$error
+  )
+  
+  return(results)
+}
+
+
+# ============================================================================
+# PARAMETER GRID CREATION
+# ============================================================================
+
+#' Create parameter grid for analysis
+#'
+#' @description Creates parameter combinations based on user configuration.
+#' Uses actual user inputs for fixed parameters and reasonable ranges for varying ones.
+#'
+#' @param config User configuration
+#' @param workflow_info Detected workflow information
+#' 
+#' @return Data frame with parameter combinations
+#' @noRd
+create_parameter_grid <- function(config, workflow_info) {
+  
+  # Extract parameter controls
+  param_controls <- config$design_options$parameter_controls
+  
+  # Initialize parameter values
+  grid_params <- list()
+  
+  # Process each parameter based on control type
+  for (param_name in c("cells", "reads", "tpm_threshold", "fold_change")) {
+    param_control <- param_controls[[param_name]]
+    
+    if (is.null(param_control)) {
+      # Use defaults if not specified
+      grid_params[[param_name]] <- get_default_parameter_range(param_name)[1]
+    } else if (param_control$type == "fixed") {
+      # Use user-specified fixed value
+      grid_params[[param_name]] <- param_control$fixed_value
+    } else if (param_control$type %in% c("varying", "minimizing", "optimizing")) {
+      # Use range for varying parameters
+      grid_params[[param_name]] <- get_default_parameter_range(param_name)
+    }
+  }
+  
+  # Create combinations based on workflow type
+  if (workflow_info$plot_type == "single_parameter_curve") {
+    # Single parameter varies, others fixed
+    varying_param <- workflow_info$minimizing_parameter
+    
+    # Create grid with one varying parameter
+    grid <- expand.grid(
+      cells = if (varying_param == "cells") grid_params$cells else grid_params$cells[1],
+      reads = if (varying_param == "reads") grid_params$reads else grid_params$reads[1], 
+      tpm_threshold = if (varying_param == "tpm_threshold") grid_params$tpm_threshold else grid_params$tpm_threshold[1],
+      fold_change = if (varying_param == "fold_change") grid_params$fold_change else grid_params$fold_change[1],
+      stringsAsFactors = FALSE
+    )
+    
+  } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
+    # Multiple parameters vary (typically cells and reads)
+    grid <- expand.grid(
+      cells = grid_params$cells[seq(1, length(grid_params$cells), by = 3)],  # Sample for performance
+      reads = grid_params$reads[seq(1, length(grid_params$reads), by = 5)],   # Sample for performance
+      tpm_threshold = grid_params$tpm_threshold[1],
+      fold_change = grid_params$fold_change[1],
+      stringsAsFactors = FALSE
+    )
+  }
+  
+  return(grid)
+}
+
+
+# ============================================================================
+# SINGLE PARAMETER POWER CURVE GENERATION (8 workflows)
+# ============================================================================
+
+#' Generate single parameter power curve data
+#'
+#' @description Creates realistic power curve for workflows 1-4, 6-7, 9-10
+#' where one parameter varies and others are fixed.
+#'
+#' @param param_grid Parameter combinations
+#' @param workflow_info Workflow information  
+#' @param target_power User's target power threshold
+#' 
+#' @return List with power_data and optimal_design
+#' @noRd
+generate_single_parameter_power_curve <- function(param_grid, workflow_info, target_power) {
+  
+  varying_param <- workflow_info$minimizing_parameter
+  
+  # Extract the varying parameter values
+  varying_values <- param_grid[[varying_param]]
+  
+  # Generate realistic power curve (sigmoid-like)
+  if (varying_param %in% c("cells", "reads")) {
+    # More cells/reads = higher power, diminishing returns
+    power_values <- 1 - exp(-0.0005 * varying_values)
+    power_values <- pmin(power_values, 0.95)  # Cap at 95%
+  } else if (varying_param == "tpm_threshold") {
+    # Higher TPM threshold = lower power (harder to detect)
+    power_values <- 0.95 - 0.02 * (varying_values - min(varying_values))
+    power_values <- pmax(power_values, 0.1)  # Floor at 10%
+  } else if (varying_param == "fold_change") {
+    # Higher fold change = lower power (harder to detect small effects)  
+    power_values <- 0.95 - 0.3 * (varying_values - min(varying_values))
+    power_values <- pmax(power_values, 0.1)  # Floor at 10%
+  }
+  
+  # Add realistic noise
+  power_values <- power_values + rnorm(length(power_values), 0, 0.02)
+  power_values <- pmax(pmin(power_values, 0.99), 0.01)  # Keep in bounds
+  
+  # Create power data
+  power_data <- data.frame(
+    parameter_name = varying_param,
+    parameter_value = varying_values,
+    power = power_values,
+    meets_threshold = power_values >= target_power,
+    stringsAsFactors = FALSE
+  )
+  
+  # Find optimal design (minimum parameter value that meets power threshold)
+  valid_designs <- power_data[power_data$meets_threshold, ]
+  if (nrow(valid_designs) > 0) {
+    optimal_idx <- which.min(valid_designs$parameter_value)
+    optimal_design <- list(
+      parameter = varying_param,
+      value = valid_designs$parameter_value[optimal_idx],
+      power = valid_designs$power[optimal_idx],
+      found = TRUE
+    )
+  } else {
+    optimal_design <- list(
+      parameter = varying_param,
+      value = NA,
+      power = NA,
+      found = FALSE,
+      message = "No design meets target power within parameter range"
+    )
+  }
+  
+  return(list(
+    power_data = power_data,
+    optimal_design = optimal_design,
+    error = NULL
+  ))
+}
+
+
+# ============================================================================  
+# COST TRADEOFF CURVES GENERATION (3 workflows)
+# ============================================================================
+
+#' Generate cost-power tradeoff curve data  
+#'
+#' @description Creates cost-power optimization data for workflows 5, 8, 11
+#' where cells and reads vary simultaneously.
+#'
+#' @param param_grid Parameter combinations with cells and reads varying
+#' @param workflow_info Workflow information
+#' @param target_power User's target power threshold 
+#' @param cost_budget User's cost budget (NULL for power-only)
+#' 
+#' @return List with power_data, cost_data, and optimal_design
+#' @noRd
+generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_power, cost_budget) {
+  
+  # Calculate power for each combination (cells × reads interaction)
+  param_grid$power <- with(param_grid, {
+    # Realistic power calculation: more total effort (cells × reads) = higher power
+    total_effort <- cells * reads / 1000  # Scale for realistic values
+    power <- 1 - exp(-0.001 * total_effort)
+    power <- pmax(pmin(power, 0.95), 0.05)  # Keep in realistic bounds
+    
+    # Add noise and ensure variability
+    power + rnorm(nrow(param_grid), 0, 0.03)
+  })
+  
+  # Calculate costs (using default cost structure)
+  cost_per_cell <- 0.10      # $0.10 per cell
+  cost_per_million_reads <- 50   # $50 per million reads
+  
+  param_grid$cost <- with(param_grid, {
+    cost_per_cell * cells + cost_per_million_reads * (reads / 1e6) * cells
+  })
+  
+  # Find designs that meet power threshold
+  valid_designs <- param_grid[param_grid$power >= target_power, ]
+  
+  # Find optimal design
+  if (nrow(valid_designs) > 0) {
+    if (!is.null(cost_budget)) {
+      # Power + cost optimization: minimize cost while meeting power, within budget
+      budget_feasible <- valid_designs[valid_designs$cost <= cost_budget, ]
+      if (nrow(budget_feasible) > 0) {
+        optimal_idx <- which.min(budget_feasible$cost)
+        optimal_design <- budget_feasible[optimal_idx, ]
+        optimal_design$found <- TRUE
+        optimal_design$type <- "cost_minimized_within_budget"
+      } else {
+        optimal_design <- list(found = FALSE, message = "No design meets power target within budget")
+      }
+    } else {
+      # Power-only optimization: minimize cost among designs meeting power
+      optimal_idx <- which.min(valid_designs$cost) 
+      optimal_design <- valid_designs[optimal_idx, ]
+      optimal_design$found <- TRUE
+      optimal_design$type <- "cost_minimized_power_only"
+    }
+  } else {
+    optimal_design <- list(found = FALSE, message = "No design meets target power")
+  }
+  
+  return(list(
+    power_data = param_grid,
+    cost_data = param_grid,  # Same data, used for cost-focused plots
+    optimal_design = optimal_design,
+    error = NULL
+  ))
+}
+
+
+# ============================================================================
+# REAL ANALYSIS PLACEHOLDER (Future Integration Point)  
+# ============================================================================
+
+#' Generate real analysis results using perturbplan package
+#'
+#' @description THIS IS THE FUTURE INTEGRATION POINT.
+#' When ready to integrate with perturbplan package, implement here.
+#' The function signature and return structure should match generate_placeholder_analysis().
+#'
+#' @param config User configuration from sidebar modules
+#' @param workflow_info Detected workflow information
+#' 
+#' @return List containing real analysis results (same structure as placeholder)
+#' @noRd
+generate_real_analysis <- function(config, workflow_info) {
+  # TODO: Implement real perturbplan integration
+  # Example implementation pattern:
+  # 
+  # library_params <- extract_library_parameters(config$experimental_setup)
+  # analysis_params <- extract_analysis_parameters(config$analysis_choices)
+  # 
+  # if (workflow_info$plot_type == "single_parameter_curve") {
+  #   results <- perturbplan::calculate_power_grid(
+  #     varying_param = workflow_info$minimizing_parameter,
+  #     fixed_params = extract_fixed_parameters(config),
+  #     target_power = config$design_options$target_power,
+  #     ...
+  #   )
+  # } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
+  #   results <- perturbplan::optimize_cost_power_tradeoff(
+  #     cost_budget = config$design_options$cost_budget,
+  #     target_power = config$design_options$target_power,
+  #     ...  
+  #   )
+  # }
+  #
+  # return(standardize_perturbplan_results(results, config, workflow_info))
+  
+  # For now, return error indicating real mode not implemented
+  return(list(
+    error = "Real analysis mode not yet implemented. Please use placeholder mode.",
+    metadata = list(
+      analysis_mode = "Real Analysis (Not Available)",
+      timestamp = Sys.time()
+    )
+  ))
+}
+
+
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+#' Extract all parameter ranges from configuration
+#'
+#' @param config User configuration
+#' @return Named list of parameter ranges
+#' @noRd  
+extract_all_parameter_ranges <- function(config) {
+  param_names <- c("cells", "reads", "tpm_threshold", "fold_change")
+  ranges <- list()
+  
+  for (param_name in param_names) {
+    ranges[[param_name]] <- extract_parameter_range(config, param_name)
+  }
+  
+  return(ranges)
+}
+
+#' Create results summary
+#'
+#' @param power_results Power analysis results
+#' @param workflow_info Workflow information  
+#' @param config User configuration
+#' @return List with summary information
+#' @noRd
+create_results_summary <- function(power_results, workflow_info, config) {
+  
+  if (!is.null(power_results$error)) {
+    return(list(
+      success = FALSE,
+      error = power_results$error
+    ))
+  }
+  
+  optimal <- power_results$optimal_design
+  target_power <- config$design_options$target_power
+  
+  summary <- list(
+    workflow_type = workflow_info$workflow_id,
+    workflow_description = workflow_info$description,
+    target_power = target_power,
+    optimal_design_found = if (is.list(optimal)) optimal$found else !is.na(optimal),
+    
+    # Workflow-specific summary
+    optimization_summary = if (workflow_info$plot_type == "single_parameter_curve") {
+      if (is.list(optimal) && optimal$found) {
+        list(
+          minimized_parameter = optimal$parameter,
+          optimal_value = optimal$value,
+          achieved_power = optimal$power,
+          recommendation = paste("Minimize", format_parameter_name(optimal$parameter), "to", optimal$value)
+        )
+      } else {
+        list(recommendation = "No feasible design found within parameter constraints")
+      }
+    } else {
+      if (is.list(optimal) && optimal$found) {
+        list(
+          optimal_cells = optimal$cells,
+          optimal_reads = optimal$reads, 
+          total_cost = optimal$cost,
+          achieved_power = optimal$power,
+          recommendation = paste("Use", optimal$cells, "cells and", optimal$reads, "reads per cell")
+        )
+      } else {
+        list(recommendation = "No feasible design found within constraints")  
+      }
+    }
+  )
+  
+  return(summary)
+}
