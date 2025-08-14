@@ -23,7 +23,6 @@ mod_effect_sizes_ui <- function(id) {
     tags$div(
       id = ns("effects-content"),
       style = "padding: 15px;",
-      numericInput(ns("fc_mean"), "Minimum fold change:", 0.85, 1.1, 10, 0.05),
       numericInput(ns("fc_sd"), "gRNA variability:", 0.15, 0.1, 5, 0.05),
       numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
     )
@@ -44,7 +43,6 @@ mod_effect_sizes_server <- function(id) {
     # Return effect sizes configuration
     effect_sizes_config <- reactive({
       list(
-        fc_mean = input$fc_mean,
         fc_sd = input$fc_sd,
         prop_non_null = input$prop_non_null,
         timestamp = Sys.time()

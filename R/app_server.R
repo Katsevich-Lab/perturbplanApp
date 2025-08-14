@@ -12,7 +12,7 @@ app_server <- function(input, output, session) {
   observe({
     config <- combined_config()
     if (!is.null(config) && length(config) > 0) {
-      cat("=== PerturbPlan v2 Modular Configuration Updated ===\n")
+      cat("=== PerturbPlan Modular Configuration Updated ===\n")
       
       # Design Options
       if (!is.null(config$design_options)) {
@@ -63,8 +63,8 @@ app_server <- function(input, output, session) {
       # Effect Sizes
       if (!is.null(config$effect_sizes)) {
         effects <- config$effect_sizes
-        if (!is.null(effects$fc_mean)) {
-          cat("Fold Change Mean:", effects$fc_mean, "\n")
+        if (!is.null(effects$fc_sd)) {
+          cat("gRNA Variability:", effects$fc_sd, "\n")
         }
       }
       

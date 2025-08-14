@@ -1,4 +1,4 @@
-# CLAUDE.md - PerturbPlan Shiny App v2
+# CLAUDE.md - PerturbPlan Shiny App
 
 This file provides guidance to Claude Code when working with the PerturbPlan Shiny application built using the Golem framework.
 

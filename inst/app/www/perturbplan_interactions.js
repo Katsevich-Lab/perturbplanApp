@@ -1,4 +1,4 @@
-// PerturbPlan v2 JavaScript - Collapsible sections functionality
+// PerturbPlan JavaScript - Collapsible sections functionality
 
 function toggleSection(contentId, chevronId) {
   console.log('toggleSection called with:', contentId, chevronId);
@@ -40,7 +40,7 @@ function toggleSection(contentId, chevronId) {
 
 // Initialize on page load
 $(document).ready(function() {
-  console.log('PerturbPlan v2 JavaScript loaded');
+  console.log('PerturbPlan JavaScript loaded');
   
   // Set initial states after a delay to ensure Shiny is loaded
   setTimeout(function() {
@@ -66,6 +66,6 @@ $(document).ready(function() {
       chevron.className = 'fa fa-chevron-right';
     });
     
-    console.log('Initial states set for PerturbPlan v2');
+    console.log('Initial states set for PerturbPlan');
   }, 1000);
 });

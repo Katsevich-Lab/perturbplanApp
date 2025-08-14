@@ -7,7 +7,8 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput numericInput conditionalPanel
+#' @importFrom shiny NS tagList tags div strong selectInput numericInput conditionalPanel moduleServer observe reactive updateSelectInput
+#' @importFrom shinyjs show hide html disable enable
 mod_design_options_ui <- function(id) {
   ns <- NS(id)
   
@@ -28,8 +29,7 @@ mod_design_options_ui <- function(id) {
       # Step 1: Optimization Framework
       tags$div(
         id = ns("step1"),
-        tags$h5("Step 1: Optimization Framework", style = "color: #4A6B82; margin-bottom: 10px;"),
-        tags$p("Include cost considerations in optimization?", style = "font-size: 12px; margin-bottom: 8px;"),
+        tags$h5("Step 1: Optimization Framework", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
         selectInput(ns("optimization_type"), NULL,
                    choices = list(
                      "Select optimization type..." = "",
@@ -44,8 +44,7 @@ mod_design_options_ui <- function(id) {
       tags$div(
         id = ns("step2"),
         style = "display: none; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;",
-        tags$h5("Step 2: Optimization Target", style = "color: #4A6B82; margin-bottom: 10px;"),
-        tags$p("What should we minimize?", style = "font-size: 12px; margin-bottom: 8px;"),
+        tags$h5("Step 2: Minimization Target", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
         selectInput(ns("minimization_target"), NULL,
                    choices = list(
                      "Select what to minimize..." = "",
@@ -56,34 +55,19 @@ mod_design_options_ui <- function(id) {
                      "Minimize minimum fold change" = "fold_change"
                    ),
                    selected = ""),
-        # Dynamic note about cost availability
-        tags$div(id = ns("cost_note"), 
-                style = "color: #6C757D; font-style: italic; font-size: 11px; margin-top: 5px; display: none;",
-                "Note: Cost minimization not available with Power + cost optimization")
       ),
       
       # Step 3: Parameter Control (initially hidden)
       tags$div(
         id = ns("step3"),
         style = "display: none;",
-        tags$h5("Step 3: Parameter Control", style = "color: #4A6B82; margin-bottom: 10px;"),
-        tags$p("Specify how each parameter should be handled:", style = "font-size: 12px; margin-bottom: 8px;"),
+        tags$h5("Step 3: Power-determining Parameters Setup", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
         
-        # Show the selected minimization target parameter as minimizing
-        tags$div(
-          id = ns("minimizing_parameter"),
-          style = "display: none; margin-bottom: 12px; padding: 8px; background-color: #E8F4FD; border-radius: 4px; border-left: 4px solid #2E5D8A;",
-          tags$strong(id = ns("minimizing_param_name"), "Parameter:", style = "font-size: 13px; color: #2E5D8A;"),
-          tags$div("Status: Minimizing", style = "color: #2E5D8A; font-weight: bold; margin-top: 3px; font-size: 12px;")
-        ),
-        
-        # Cells per target
+        # Parameter controls - all parameters treated equally
         tags$div(
           id = ns("cells_control_div"),
-          style = "margin-bottom: 8px;",
-          tags$strong("Cells per target:", style = "font-size: 13px;"),
-          selectInput(ns("cells_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
+          selectInput(ns("cells_control"), "Cells per target:",
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("cells_control"), "'] == 'fixed'"),
@@ -91,13 +75,10 @@ mod_design_options_ui <- function(id) {
           )
         ),
         
-        # Reads per cell  
         tags$div(
           id = ns("reads_control_div"),
-          style = "margin-bottom: 8px;",
-          tags$strong("Reads per cell:", style = "font-size: 13px;"),
-          selectInput(ns("reads_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
+          selectInput(ns("reads_control"), "Reads per cell:",
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("reads_control"), "'] == 'fixed'"),
@@ -105,13 +86,10 @@ mod_design_options_ui <- function(id) {
           )
         ),
         
-        # TPM threshold
         tags$div(
           id = ns("tpm_control_div"),
-          style = "margin-bottom: 8px;",
-          tags$strong("TPM threshold:", style = "font-size: 13px;"),
-          selectInput(ns("tpm_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
+          selectInput(ns("tpm_control"), "TPM threshold:",
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("tpm_control"), "'] == 'fixed'"),
@@ -119,13 +97,10 @@ mod_design_options_ui <- function(id) {
           )
         ),
         
-        # Min fold change
         tags$div(
           id = ns("fc_control_div"),
-          style = "margin-bottom: 8px;",
-          tags$strong("Min fold change:", style = "font-size: 13px;"),
-          selectInput(ns("fc_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
+          selectInput(ns("fc_control"), "Minimum fold change:",
+                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("fc_control"), "'] == 'fixed'"),
@@ -133,9 +108,6 @@ mod_design_options_ui <- function(id) {
           )
         ),
         
-        # Business rule note
-        tags$div(style = "color: #6C757D; font-style: italic; font-size: 11px; margin-top: 10px;",
-                "Note: The minimizing parameter is automatically set based on your target selection above.")
       )
     )
   )
@@ -176,21 +148,21 @@ mod_design_options_server <- function(id) {
     # Business Logic: Update cost availability based on optimization type
     observe({
       if (!is.null(input$optimization_type) && input$optimization_type == "power_cost") {
-        # Show cost restriction note
-        shinyjs::show("cost_note")
-        
         # Update choices to disable cost option
+        # Power+cost: Only TPM and FC can be minimized
         updateSelectInput(session, "minimization_target",
                          choices = list(
                            "Select what to minimize..." = "",
-                           "Minimize total cells per target" = "cells",
-                           "Minimize reads per cell" = "reads", 
                            "Minimize TPM analysis threshold" = "tpm_threshold",
                            "Minimize minimum fold change" = "fold_change"
                          ))
-      } else {
-        shinyjs::hide("cost_note")
         
+        # Update cells/reads dropdowns to remove "Minimizing" option for Power+Cost
+        updateSelectInput(session, "cells_control",
+                         choices = list("Varying" = "varying", "Fixed" = "fixed"))
+        updateSelectInput(session, "reads_control", 
+                         choices = list("Varying" = "varying", "Fixed" = "fixed"))
+      } else {
         # Include cost option
         updateSelectInput(session, "minimization_target",
                          choices = list(
@@ -201,6 +173,12 @@ mod_design_options_server <- function(id) {
                            "Minimize TPM analysis threshold" = "tpm_threshold",
                            "Minimize minimum fold change" = "fold_change"
                          ))
+        
+        # Restore full choices for cells/reads dropdowns when not Power+Cost
+        updateSelectInput(session, "cells_control",
+                         choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"))
+        updateSelectInput(session, "reads_control", 
+                         choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"))
       }
     })
     
@@ -209,45 +187,133 @@ mod_design_options_server <- function(id) {
       target <- input$minimization_target
       
       if (!is.null(target) && target != "") {
-        # Show the minimizing parameter display
-        shinyjs::show("minimizing_parameter")
+        # Set minimizing parameter dropdown to "Minimizing"
         
-        # Hide all parameter control divs first
-        shinyjs::hide("cells_control_div")
-        shinyjs::hide("reads_control_div")
-        shinyjs::hide("tpm_control_div")
-        shinyjs::hide("fc_control_div")
+        # Set the selected parameter to "Minimizing"
         
         # Show the minimizing parameter name and show other parameter controls
         if (target == "cells") {
-          shinyjs::html("minimizing_param_name", "Cells per target:")
-          shinyjs::show("reads_control_div")
-          shinyjs::show("tpm_control_div")
-          shinyjs::show("fc_control_div")
+          updateSelectInput(session, "cells_control", selected = "minimizing")
+          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "tpm_control", selected = "varying")
+          updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "reads") {
-          shinyjs::html("minimizing_param_name", "Reads per cell:")
-          shinyjs::show("cells_control_div")
-          shinyjs::show("tpm_control_div")
-          shinyjs::show("fc_control_div")
+          updateSelectInput(session, "cells_control", selected = "varying")
+          updateSelectInput(session, "reads_control", selected = "minimizing")
+          updateSelectInput(session, "tpm_control", selected = "varying")
+          updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "cost") {
-          shinyjs::html("minimizing_param_name", "Total cost:")
-          shinyjs::show("tpm_control_div")
-          shinyjs::show("fc_control_div")
-          # Note: For cost minimization, both cells and reads are varying (handled in return config)
+          # For cost minimization: cells/reads = varying, tpm/fc = fixed
+          updateSelectInput(session, "cells_control", selected = "varying")
+          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "tpm_control", selected = "fixed")
+          updateSelectInput(session, "fc_control", selected = "fixed")
         } else if (target == "tpm_threshold") {
-          shinyjs::html("minimizing_param_name", "TPM threshold:")
-          shinyjs::show("cells_control_div")
-          shinyjs::show("reads_control_div")
-          shinyjs::show("fc_control_div")
+          updateSelectInput(session, "cells_control", selected = "varying")
+          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "tpm_control", selected = "minimizing")
+          updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "fold_change") {
-          shinyjs::html("minimizing_param_name", "Min fold change:")
-          shinyjs::show("cells_control_div")
-          shinyjs::show("reads_control_div")
-          shinyjs::show("tpm_control_div")
+          updateSelectInput(session, "cells_control", selected = "varying")
+          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "tpm_control", selected = "varying")
+          updateSelectInput(session, "fc_control", selected = "minimizing")
         }
-      } else {
-        # Hide minimizing parameter display
-        shinyjs::hide("minimizing_parameter")
+      }
+    })
+    
+    # PRD Business Rule: Power-only + non-cost minimization = all other params must be Fixed
+    observe({
+      opt_type <- input$optimization_type
+      target <- input$minimization_target
+      
+      # Only apply rule if both inputs are available
+      if (!is.null(opt_type) && !is.null(target) && opt_type != "" && target != "") {
+        
+        # PRD Rule: Power-only optimization + non-cost minimization target
+        if (opt_type == "power_only" && target %in% c("cells", "reads", "tpm_threshold", "fold_change")) {
+          
+          # Force all non-minimizing parameters to be "Fixed"
+          if (target != "cells") {
+            updateSelectInput(session, "cells_control", selected = "fixed")
+          }
+          if (target != "reads") {
+            updateSelectInput(session, "reads_control", selected = "fixed")
+          }
+          if (target != "tpm_threshold") {
+            updateSelectInput(session, "tpm_control", selected = "fixed")
+          }
+          if (target != "fold_change") {
+            updateSelectInput(session, "fc_control", selected = "fixed")
+          }
+          
+          # Disable all dropdowns (non-clickable)
+          shinyjs::disable("cells_control")
+          shinyjs::disable("reads_control")
+          shinyjs::disable("tpm_control")
+          shinyjs::disable("fc_control")
+        } else if (target == "cost") {
+          # Cost minimization = all parameters disabled (cells/reads varying, tmp/fc fixed)
+          shinyjs::disable("cells_control")
+          shinyjs::disable("reads_control")
+          shinyjs::disable("tpm_control")
+          shinyjs::disable("fc_control")
+        } else if (opt_type == "power_cost" && target == "tpm_threshold") {
+          # Power+cost + TPM minimization: TPM=minimizing+disabled, FC=fixed+disabled, cells/reads=varying/fixed with constraint
+          updateSelectInput(session, "tpm_control", selected = "minimizing")
+          updateSelectInput(session, "fc_control", selected = "fixed")
+          shinyjs::disable("tmp_control")
+          shinyjs::disable("fc_control")
+          # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
+          shinyjs::enable("cells_control")
+          shinyjs::enable("reads_control")
+        } else if (opt_type == "power_cost" && target == "fold_change") {
+          # Power+cost + FC minimization: FC=minimizing+disabled, TPM=fixed+disabled, cells/reads=varying/fixed with constraint
+          updateSelectInput(session, "fc_control", selected = "minimizing")
+          updateSelectInput(session, "tpm_control", selected = "fixed")
+          shinyjs::disable("fc_control")
+          shinyjs::disable("tpm_control")
+          # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
+          shinyjs::enable("cells_control")
+          shinyjs::enable("reads_control")
+        } else {
+          # Re-enable all dropdowns for other scenarios
+          shinyjs::enable("cells_control")
+          shinyjs::enable("reads_control")
+          shinyjs::enable("tpm_control")
+          shinyjs::enable("fc_control")
+        }
+      }
+    })
+    
+    # Cells/reads constraint logic for Power+Cost optimization
+    observe({
+      opt_type <- input$optimization_type
+      target <- input$minimization_target
+      
+      # Only apply constraint for Power+Cost optimization with TPM or FC minimization
+      if (!is.null(opt_type) && !is.null(target) && 
+          opt_type == "power_cost" && target %in% c("tpm_threshold", "fold_change")) {
+        
+        # When cells is set to fixed, auto-set reads to varying and disable it
+        if (!is.null(input$cells_control) && input$cells_control == "fixed") {
+          updateSelectInput(session, "reads_control", selected = "varying")
+          shinyjs::disable("reads_control")
+        }
+        
+        # When reads is set to fixed, auto-set cells to varying and disable it
+        if (!is.null(input$reads_control) && input$reads_control == "fixed") {
+          updateSelectInput(session, "cells_control", selected = "varying")
+          shinyjs::disable("cells_control")
+        }
+        
+        # When cells or reads is set back to varying, enable the other
+        if (!is.null(input$cells_control) && input$cells_control == "varying") {
+          shinyjs::enable("reads_control")
+        }
+        if (!is.null(input$reads_control) && input$reads_control == "varying") {
+          shinyjs::enable("cells_control")
+        }
       }
     })
     

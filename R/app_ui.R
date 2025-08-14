@@ -13,7 +13,7 @@ app_ui <- function(request) {
     # Dashboard page layout (matching original perturbplan app exactly)
     dashboardPage(
       header = dashboardHeader(
-        title = "PerturbPlan v2",
+        title = "PerturbPlan",
         tags$li(
           class = "dropdown",
           style = "float: right; margin-right: 20px;",
@@ -31,14 +31,14 @@ app_ui <- function(request) {
         # Main content area - placeholder for results visualization
         tags$div(
           style = "padding: 20px;",
-          h3("PerturbPlan v2: Constraint-Driven Experimental Design"),
+          h3("PerturbPlan: Constraint-Driven Experimental Design"),
           
           # Instruction message before planning
           tags$div(
             id = "need_plan_message",
             class = "alert alert-info",
             style = "margin: 20px 0;",
-            tags$h4("Welcome to PerturbPlan v2!"),
+            tags$h4("Welcome to PerturbPlan!"),
             tags$p("Configure your experimental design parameters in the left sidebar, then click 'Plan' to begin analysis."),
             tags$ul(
               tags$li(tags$strong("Design Options:"), " Specify your optimization objective and constraints"),
