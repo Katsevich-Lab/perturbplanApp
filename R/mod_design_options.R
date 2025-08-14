@@ -32,14 +32,15 @@ mod_design_options_ui <- function(id) {
         tags$p("Include cost considerations in optimization?", style = "font-size: 12px; margin-bottom: 8px;"),
         selectInput(ns("optimization_type"), NULL,
                    choices = list(
+                     "Select optimization type..." = "",
                      "Power-only optimization" = "power_only",
                      "Power + cost optimization" = "power_cost"
                    ),
-                   selected = "power_only"),
+                   selected = ""),
         style = "margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;"
       ),
       
-      # Step 2: Minimization Target
+      # Step 2: Minimization Target (initially hidden)
       tags$div(
         id = ns("step2"),
         style = "display: none; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;",
@@ -47,32 +48,42 @@ mod_design_options_ui <- function(id) {
         tags$p("What should we minimize?", style = "font-size: 12px; margin-bottom: 8px;"),
         selectInput(ns("minimization_target"), NULL,
                    choices = list(
+                     "Select what to minimize..." = "",
                      "Minimize total cells per target" = "cells",
                      "Minimize reads per cell" = "reads", 
                      "Minimize total cost (cells x reads)" = "cost",
                      "Minimize TPM analysis threshold" = "tpm_threshold",
                      "Minimize minimum fold change" = "fold_change"
                    ),
-                   selected = NULL),
+                   selected = ""),
         # Dynamic note about cost availability
         tags$div(id = ns("cost_note"), 
                 style = "color: #6C757D; font-style: italic; font-size: 11px; margin-top: 5px; display: none;",
                 "Note: Cost minimization not available with Power + cost optimization")
       ),
       
-      # Step 3: Parameter Control
+      # Step 3: Parameter Control (initially hidden)
       tags$div(
         id = ns("step3"),
         style = "display: none;",
         tags$h5("Step 3: Parameter Control", style = "color: #4A6B82; margin-bottom: 10px;"),
         tags$p("Specify how each parameter should be handled:", style = "font-size: 12px; margin-bottom: 8px;"),
         
+        # Show the selected minimization target parameter as minimizing
+        tags$div(
+          id = ns("minimizing_parameter"),
+          style = "display: none; margin-bottom: 12px; padding: 8px; background-color: #E8F4FD; border-radius: 4px; border-left: 4px solid #2E5D8A;",
+          tags$strong(id = ns("minimizing_param_name"), "Parameter:", style = "font-size: 13px; color: #2E5D8A;"),
+          tags$div("Status: Minimizing", style = "color: #2E5D8A; font-weight: bold; margin-top: 3px; font-size: 12px;")
+        ),
+        
         # Cells per target
         tags$div(
+          id = ns("cells_control_div"),
           style = "margin-bottom: 8px;",
           tags$strong("Cells per target:", style = "font-size: 13px;"),
           selectInput(ns("cells_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("cells_control"), "'] == 'fixed'"),
@@ -82,10 +93,11 @@ mod_design_options_ui <- function(id) {
         
         # Reads per cell  
         tags$div(
+          id = ns("reads_control_div"),
           style = "margin-bottom: 8px;",
           tags$strong("Reads per cell:", style = "font-size: 13px;"),
           selectInput(ns("reads_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("reads_control"), "'] == 'fixed'"),
@@ -95,10 +107,11 @@ mod_design_options_ui <- function(id) {
         
         # TPM threshold
         tags$div(
+          id = ns("tpm_control_div"),
           style = "margin-bottom: 8px;",
           tags$strong("TPM threshold:", style = "font-size: 13px;"),
           selectInput(ns("tpm_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("tpm_control"), "'] == 'fixed'"),
@@ -108,10 +121,11 @@ mod_design_options_ui <- function(id) {
         
         # Min fold change
         tags$div(
+          id = ns("fc_control_div"),
           style = "margin-bottom: 8px;",
           tags$strong("Min fold change:", style = "font-size: 13px;"),
           selectInput(ns("fc_control"), NULL,
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                     choices = list("Varying" = "varying", "Fixed" = "fixed"),
                      selected = "varying"),
           conditionalPanel(
             condition = paste0("input['", ns("fc_control"), "'] == 'fixed'"),
@@ -121,7 +135,7 @@ mod_design_options_ui <- function(id) {
         
         # Business rule note
         tags$div(style = "color: #6C757D; font-style: italic; font-size: 11px; margin-top: 10px;",
-                "Note: Only one parameter can be 'Minimizing' (auto-set from target selection)")
+                "Note: The minimizing parameter is automatically set based on your target selection above.")
       )
     )
   )
@@ -142,7 +156,7 @@ mod_design_options_server <- function(id) {
     # Progressive disclosure: Show steps sequentially
     observe({
       # Step 2 appears when optimization type is selected
-      if (!is.null(input$optimization_type)) {
+      if (!is.null(input$optimization_type) && input$optimization_type != "") {
         shinyjs::show("step2")
       } else {
         shinyjs::hide("step2")
@@ -168,9 +182,10 @@ mod_design_options_server <- function(id) {
         # Update choices to disable cost option
         updateSelectInput(session, "minimization_target",
                          choices = list(
+                           "Select what to minimize..." = "",
                            "Minimize total cells per target" = "cells",
                            "Minimize reads per cell" = "reads", 
-                           "Minimize TPM analysis threshold" = "tmp_threshold",
+                           "Minimize TPM analysis threshold" = "tpm_threshold",
                            "Minimize minimum fold change" = "fold_change"
                          ))
       } else {
@@ -179,6 +194,7 @@ mod_design_options_server <- function(id) {
         # Include cost option
         updateSelectInput(session, "minimization_target",
                          choices = list(
+                           "Select what to minimize..." = "",
                            "Minimize total cells per target" = "cells",
                            "Minimize reads per cell" = "reads", 
                            "Minimize total cost (cells x reads)" = "cost",
@@ -188,51 +204,82 @@ mod_design_options_server <- function(id) {
       }
     })
     
-    # Business Logic: Auto-set parameter to "Minimizing" when selected as target
+    # Business Logic: Show minimizing parameter and control other parameters
     observe({
       target <- input$minimization_target
       
       if (!is.null(target) && target != "") {
-        # Reset all parameters to varying first
-        updateSelectInput(session, "cells_control", selected = "varying")
-        updateSelectInput(session, "reads_control", selected = "varying")
-        updateSelectInput(session, "tpm_control", selected = "varying")
-        updateSelectInput(session, "fc_control", selected = "varying")
+        # Show the minimizing parameter display
+        shinyjs::show("minimizing_parameter")
         
-        # Set the selected target to minimizing
+        # Hide all parameter control divs first
+        shinyjs::hide("cells_control_div")
+        shinyjs::hide("reads_control_div")
+        shinyjs::hide("tpm_control_div")
+        shinyjs::hide("fc_control_div")
+        
+        # Show the minimizing parameter name and show other parameter controls
         if (target == "cells") {
-          updateSelectInput(session, "cells_control", selected = "minimizing")
+          shinyjs::html("minimizing_param_name", "Cells per target:")
+          shinyjs::show("reads_control_div")
+          shinyjs::show("tpm_control_div")
+          shinyjs::show("fc_control_div")
         } else if (target == "reads") {
-          updateSelectInput(session, "reads_control", selected = "minimizing")
+          shinyjs::html("minimizing_param_name", "Reads per cell:")
+          shinyjs::show("cells_control_div")
+          shinyjs::show("tpm_control_div")
+          shinyjs::show("fc_control_div")
+        } else if (target == "cost") {
+          shinyjs::html("minimizing_param_name", "Total cost:")
+          shinyjs::show("tpm_control_div")
+          shinyjs::show("fc_control_div")
+          # Note: For cost minimization, both cells and reads are varying (handled in return config)
         } else if (target == "tpm_threshold") {
-          updateSelectInput(session, "tpm_control", selected = "minimizing")
+          shinyjs::html("minimizing_param_name", "TPM threshold:")
+          shinyjs::show("cells_control_div")
+          shinyjs::show("reads_control_div")
+          shinyjs::show("fc_control_div")
         } else if (target == "fold_change") {
-          updateSelectInput(session, "fc_control", selected = "minimizing")
+          shinyjs::html("minimizing_param_name", "Min fold change:")
+          shinyjs::show("cells_control_div")
+          shinyjs::show("reads_control_div")
+          shinyjs::show("tpm_control_div")
         }
+      } else {
+        # Hide minimizing parameter display
+        shinyjs::hide("minimizing_parameter")
       }
     })
     
     # Return structured design configuration
     design_config <- reactive({
+      
+      # Safe access to input values with NULL checking
+      target <- input$minimization_target %||% ""
+      
       list(
         # Design Options
         optimization_type = input$optimization_type,
         minimization_target = input$minimization_target,
         parameter_controls = list(
           cells_per_target = list(
-            type = input$cells_control %||% "varying",
+            type = if(!is.null(target) && target == "cells") "minimizing" 
+                   else if(!is.null(target) && target == "cost") "varying"
+                   else (input$cells_control %||% "varying"),
             fixed_value = if(!is.null(input$cells_fixed)) input$cells_fixed else NULL
           ),
           reads_per_cell = list(
-            type = input$reads_control %||% "varying",
+            type = if(!is.null(target) && target == "reads") "minimizing" 
+                   else if(!is.null(target) && target == "cost") "varying"
+                   else (input$reads_control %||% "varying"),
             fixed_value = if(!is.null(input$reads_fixed)) input$reads_fixed else NULL
           ),
           tpm_threshold = list(
-            type = input$tmp_control %||% "varying",
-            fixed_value = if(!is.null(input$tmp_fixed)) input$tmp_fixed else NULL
+            type = if(!is.null(target) && target == "tpm_threshold") "minimizing" else (input$tpm_control %||% "varying"),
+            fixed_value = if(!is.null(input$tpm_fixed)) input$tpm_fixed else NULL
           ),
           min_fold_change = list(
-            type = input$fc_control %||% "varying",
+            type = if(!is.null(target) && target == "fold_change") "minimizing" else (input$fc_control %||% "varying"),
             fixed_value = if(!is.null(input$fc_fixed)) input$fc_fixed else NULL
           )
         ),

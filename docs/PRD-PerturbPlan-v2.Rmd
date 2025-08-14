@@ -419,47 +419,60 @@ design_config <- list(
 - [ ] Build parameter control matrix interface
 - [ ] Add validation and business logic
 
-## Phase 2: Module Integration (1-2 weeks)
+## Phase 2: Placeholder Visualization & Module Integration (2-3 weeks)
 
 ### Design Config Data Flow
-- [ ] Create reactive design config output from `mod_design_options`
-- [ ] Structure config to capture optimization type, minimization target, and parameter controls
-- [ ] Pass design config between modules: Design Options → Analysis Results → Export Results
+- [x] Create reactive design config output from `mod_design_options`
+- [x] Structure config to capture optimization type, minimization target, and parameter controls
+- [x] Pass design config between modules: Design Options → Analysis Results → Export Results
 
 ### Module Communication Setup
-- [ ] Implement design config consumption in `mod_analysis_results`
-- [ ] Create workflow detection logic to identify which of 11 scenarios user has configured
+- [x] Implement design config consumption in `mod_analysis_results`
+- [x] Create workflow detection logic to identify which of 11 scenarios user has configured
 - [ ] Route to appropriate visualization type based on workflow pattern
-- [ ] Adapt `mod_experimental_setup` from original app, removing duplicate TPM/fold change controls
+- [x] Adapt `mod_experimental_setup` from original app, removing duplicate TPM/fold change controls
+
+### Placeholder Visualization Implementation
+- [ ] Create placeholder power curve plots for 5 power-only designs:
+  - Single parameter power curves (Workflows 1-4: Cell/Read/TPM/FC minimization)
+  - Cost-power trade-off plots (Workflow 5: Total cost minimization)
+- [ ] Create placeholder power + cost optimization plots for 6 designs:
+  - Two-parameter varying plots (Workflows 8, 11: Cells + Reads varying)
+  - Single parameter varying plots (Workflows 6, 7, 9, 10: One parameter varies)
+- [ ] Implement interactive plot elements:
+  - Gray-out regions for power values below threshold
+  - Dashed vertical/horizontal lines indicating optimal values
+  - Triangle markers for optimal design points
+  - Equi-power and equi-cost curves with intersection points
 
 ### Workflow Routing Logic
-- [ ] Implement scenario detection:
+- [x] Implement scenario detection:
   - Power-only + single parameter varying → single parameter power curve
   - Power-only + cost minimization → cost-power trade-off plot
   - Power + cost + two parameters varying → equi-power/equi-cost intersection
   - Power + cost + single parameter varying → constrained power curve
 - [ ] Create parameter passing logic for each visualization type
-- [ ] Validate parameter control consistency (one minimizing parameter auto-set, all others grayed out)
+- [x] Validate parameter control consistency (one minimizing parameter auto-set, all others grayed out)
 
 ### End-to-End Integration Testing
-- [ ] Test all 11 workflow configurations can be set up through Design Options
+- [x] Test all 11 workflow configurations can be set up through Design Options
 - [ ] Verify correct visualization type is displayed for each workflow
-- [ ] Test parameter control panel auto-updates (one minimizing status, all others grayed out)
-- [ ] Validate data flow integrity across all modules
+- [x] Test parameter control panel auto-updates (one minimizing status, all others grayed out)
+- [x] Validate data flow integrity across all modules
 
-## Phase 3: Placeholder Visualization (1-2 weeks)
-- [ ] Create placeholder power curve plots for 5 power-only designs
-- [ ] Create placeholder cost-power trade-off plots (equi-power/equi-cost curves)
-- [ ] Create placeholder power + cost optimization plots for 6 designs
-- [ ] Implement gray-out regions, dashed lines, and triangle markers
-- [ ] Add interactive plot features and styling
+### Results Display Framework
+- [ ] Create `mod_analysis_results.R` module with placeholder visualizations
+- [ ] Implement conditional rendering based on workflow detection
+- [ ] Add results summary tables with placeholder data
+- [ ] Create export functionality for placeholder results
 
-## Phase 4: Analysis Engine Updates (2-3 weeks)  
-- [ ] Adapt power analysis functions for optimization scenarios
-- [ ] Implement cost minimization algorithms  
-- [ ] Update analysis for varying vs. fixed parameters
-- [ ] Create results display module (tables, summaries)
-- [ ] Enhance results interpretation
+## Phase 3: Analysis Engine Integration (3-4 weeks) - DEFERRED
+- [ ] Adapt power analysis functions from perturbplan package for optimization scenarios
+- [ ] Implement cost minimization algorithms using perturbplan backend
+- [ ] Update analysis for varying vs. fixed parameters with real calculations
+- [ ] Replace placeholder data with real power analysis results
+- [ ] Create results display module with real data (tables, summaries)
+- [ ] Enhance results interpretation with perturbplan function outputs
 
 ## Phase 5: UI Polish & Testing (1-2 weeks)
 - [ ] Apply visual continuity requirements
