@@ -8,6 +8,7 @@
 #'
 #' @return List with is_valid (logical), data (if valid), and errors (character vector)
 #'
+#' @importFrom tools file_ext
 #' @importFrom utils read.csv
 #'
 #' @noRd
@@ -24,7 +25,7 @@ validate_file_upload <- function(file_info, expected_format, max_size_mb = 50) {
   }
   
   # Check file extension
-  file_ext <- tools::file_ext(file_info$name)
+  file_ext <- file_ext(file_info$name)
   if (tolower(file_ext) != tolower(expected_format)) {
     errors <- c(errors, paste("Expected", expected_format, "file, got", file_ext))
   }
