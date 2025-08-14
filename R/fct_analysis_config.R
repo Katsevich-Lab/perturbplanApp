@@ -66,14 +66,6 @@ detect_workflow_scenario <- function(workflow_config) {
   param_controls <- design_config$parameter_controls
   cost_budget <- design_config$cost_budget
   
-  # DEBUG: Print configuration for troubleshooting
-  cat("DEBUG workflow detection:\n")
-  cat("  opt_type:", opt_type, "\n")
-  cat("  target:", target, "\n")
-  cat("  param_controls:\n")
-  print(param_controls)
-  cat("  cost_budget:", cost_budget, "\n")
-  
   # FALLBACK: If optimization_type is missing but cost_budget is present, assume power_cost
   if ((is.null(opt_type) || opt_type == "") && !is.null(cost_budget) && cost_budget > 0) {
     opt_type <- "power_cost"
@@ -104,7 +96,18 @@ detect_workflow_scenario <- function(workflow_config) {
   
   # Power+cost workflows (6-11)
   if (opt_type == "power_cost") {
+    # Add null check for param_controls
+    if (is.null(param_controls)) {
+      cat("WARNING: param_controls is NULL\n")
+      param_controls <- list()
+    }
+    
     varying_params <- get_varying_parameters(param_controls)
+    
+    # Debug output
+    cat("Power+cost workflow detection:\n")
+    cat("  target:", target, "\n")
+    cat("  varying_params count:", length(varying_params), "\n")
     cat("  varying_params:", paste(varying_params, collapse = ", "), "\n")
     
     if (target == "tpm_threshold") {
