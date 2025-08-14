@@ -12,35 +12,33 @@
 mod_sidebar_ui <- function(id) {
   ns <- NS(id)
   
-  tagList(
-    dashboardSidebar(
-      # Parameter panels - make scrollable with collapsible sections
+  dashboardSidebar(
+    # Parameter panels - make scrollable with collapsible sections
+    tags$div(
+      style = "padding: 10px; max-height: 90vh; overflow-y: auto;",
+      
+      # Design Options Module
+      mod_design_options_ui(ns("design_options")),
+      
+      # Cost Information Module (conditional)
+      mod_cost_info_ui(ns("cost_info")),
+      
+      # Experimental Setup Module  
+      mod_experimental_setup_ui(ns("experimental_setup")),
+      
+      # Analysis Choices Module
+      mod_analysis_choices_ui(ns("analysis_choices")),
+      
+      # Effect Sizes Module
+      mod_effect_sizes_ui(ns("effect_sizes")),
+      
+      # Horizontal separator line
+      tags$hr(class = "sidebar-separator"),
+      
+      # Plan button
       tags$div(
-        style = "padding: 10px; max-height: 90vh; overflow-y: auto;",
-        
-        # Design Options Module
-        mod_design_options_ui(ns("design_options")),
-        
-        # Cost Information Module (conditional)
-        mod_cost_info_ui(ns("cost_info")),
-        
-        # Experimental Setup Module  
-        mod_experimental_setup_ui(ns("experimental_setup")),
-        
-        # Analysis Choices Module
-        mod_analysis_choices_ui(ns("analysis_choices")),
-        
-        # Effect Sizes Module
-        mod_effect_sizes_ui(ns("effect_sizes")),
-        
-        # Horizontal separator line
-        tags$hr(class = "sidebar-separator"),
-        
-        # Plan button
-        tags$div(
-          style = "text-align: center; padding: 0 20px;",
-          actionButton(ns("plan_btn"), "Plan", class = "btn-success", style = "width: 200px; max-width: 90%;")
-        )
+        style = "text-align: center; padding: 0 20px;",
+        actionButton(ns("plan_btn"), "Plan", class = "btn-success", style = "width: 200px; max-width: 90%;")
       )
     )
   )

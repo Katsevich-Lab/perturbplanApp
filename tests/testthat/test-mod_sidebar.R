@@ -28,7 +28,8 @@ testServer(
  
 test_that("module ui works", {
   ui <- mod_sidebar_ui(id = "test")
-  golem::expect_shinytaglist(ui)
+  # Sidebar returns dashboardSidebar directly (shiny.tag), not tagList
+  expect_true(inherits(ui, "shiny.tag"))
   # Check that formals have not been removed
   fmls <- formals(mod_sidebar_ui)
   for (i in c("id")){
