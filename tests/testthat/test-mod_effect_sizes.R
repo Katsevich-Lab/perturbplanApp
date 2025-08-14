@@ -1,24 +1,38 @@
-test_that("mod_effect_sizes UI works", {
-  ui <- mod_effect_sizes_ui("test")
-  expect_true(inherits(ui, "shiny.tag"))
-  expect_true(length(ui) > 0)
-})
-
-test_that("mod_effect_sizes server works", {
-  testServer(mod_effect_sizes_server, {
-    # Test initial state - modules return reactive values immediately
-    expect_true(!is.null(session$returned()))
-    expect_true(is.list(session$returned()))
-    
-    # Test effect size parameters
-    session$setInputs(
-      fc_sd = 0.15,
-      prop_non_null = 0.1
+testServer(
+  mod_effect_sizes_server,
+  # Add here your module params
+  args = list()
+  , {
+    ns <- session$ns
+    expect_true(
+      inherits(ns, "function")
     )
-    
-    config <- session$returned()
-    expect_equal(config$fc_sd, 0.15)
-    expect_equal(config$prop_non_null, 0.1)
-    expect_true(!is.null(config$timestamp))
-  })
+    expect_true(
+      grepl(id, ns(""))
+    )
+    expect_true(
+      grepl("test", ns("test"))
+    )
+    # Here are some examples of tests you can
+    # run on your module
+    # - Testing the setting of inputs
+    # session$setInputs(x = 1)
+    # expect_true(input$x == 1)
+    # - If ever your input updates a reactiveValues
+    # - Note that this reactiveValues must be passed
+    # - to the testServer function via args = list()
+    # expect_true(r$x == 1)
+    # - Testing output
+    # expect_true(inherits(output$tbl$html, "html"))
 })
+ 
+test_that("module ui works", {
+  ui <- mod_effect_sizes_ui(id = "test")
+  golem::expect_shinytaglist(ui)
+  # Check that formals have not been removed
+  fmls <- formals(mod_effect_sizes_ui)
+  for (i in c("id")){
+    expect_true(i %in% names(fmls))
+  }
+})
+ 

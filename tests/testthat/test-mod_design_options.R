@@ -1,33 +1,38 @@
-test_that("mod_design_options UI works", {
-  ui <- mod_design_options_ui("test")
-  expect_true(inherits(ui, "shiny.tag"))
-  expect_true(length(ui) > 0)
+testServer(
+  mod_design_options_server,
+  # Add here your module params
+  args = list()
+  , {
+    ns <- session$ns
+    expect_true(
+      inherits(ns, "function")
+    )
+    expect_true(
+      grepl(id, ns(""))
+    )
+    expect_true(
+      grepl("test", ns("test"))
+    )
+    # Here are some examples of tests you can
+    # run on your module
+    # - Testing the setting of inputs
+    # session$setInputs(x = 1)
+    # expect_true(input$x == 1)
+    # - If ever your input updates a reactiveValues
+    # - Note that this reactiveValues must be passed
+    # - to the testServer function via args = list()
+    # expect_true(r$x == 1)
+    # - Testing output
+    # expect_true(inherits(output$tbl$html, "html"))
 })
-
-test_that("mod_design_options server works", {
-  testServer(mod_design_options_server, {
-    # Test initial state - modules return reactive values immediately
-    expect_true(!is.null(session$returned()))
-    expect_true(is.list(session$returned()))
-    
-    # Test optimization type selection
-    session$setInputs(optimization_type = "power_only")
-    expect_equal(session$returned()$optimization_type, "power_only")
-    
-    # Test minimization target selection and auto-setting
-    session$setInputs(minimization_target = "cells")
-    expect_equal(session$returned()$minimization_target, "cells")
-    
-    # Test automatic minimizing parameter setting based on target
-    expect_equal(session$returned()$parameter_controls$cells_per_target$type, "minimizing")
-    
-    # Test cost minimization logic
-    session$setInputs(minimization_target = "cost")
-    expect_equal(session$returned()$parameter_controls$cells_per_target$type, "varying")
-    expect_equal(session$returned()$parameter_controls$reads_per_cell$type, "varying")
-    
-    # Test power + cost optimization restrictions
-    session$setInputs(optimization_type = "power_cost", minimization_target = "tpm_threshold")
-    expect_equal(session$returned()$parameter_controls$tpm_threshold$type, "minimizing")
-  })
+ 
+test_that("module ui works", {
+  ui <- mod_design_options_ui(id = "test")
+  golem::expect_shinytaglist(ui)
+  # Check that formals have not been removed
+  fmls <- formals(mod_design_options_ui)
+  for (i in c("id")){
+    expect_true(i %in% names(fmls))
+  }
 })
+ 

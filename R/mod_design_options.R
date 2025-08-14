@@ -1,11 +1,11 @@
-#' Design Options Module UI
+#' design_options UI Function
 #'
 #' @description Creates the Design Options section with constraint-driven workflow:
 #' Step 1: Optimization Framework, Step 2: Minimization Target, Step 3: Parameter Control
 #'
-#' @param id Module namespace ID
+#' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd
+#' @noRd 
 #'
 #' @importFrom shiny NS tagList tags div strong selectInput numericInput conditionalPanel moduleServer observe reactive updateSelectInput
 #' @importFrom shinyjs show hide html disable enable
@@ -13,116 +13,112 @@ mod_design_options_ui <- function(id) {
   ns <- NS(id)
   
   # Design Options (collapsible) - NEW CONSTRAINT-DRIVEN SECTION
-  tags$div(
-    style = "border-radius: 4px; margin-bottom: 5px;",
+  tagList(
     tags$div(
-      id = ns("design-header"),
-      style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
-      onclick = paste0("toggleSection('", ns("design-content"), "', '", ns("design-chevron"), "')"),
-      tags$i(id = ns("design-chevron"), class = "fa fa-chevron-down", style = "margin-right: 8px;"),
-      tags$strong("Design Options")
-    ),
-    tags$div(
-      id = ns("design-content"),
-      style = "padding: 15px;",
-      
-      # Step 1: Optimization Framework
+      style = "border-radius: 4px; margin-bottom: 5px;",
       tags$div(
-        id = ns("step1"),
-        tags$h5("Step 1: Optimization Framework", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
-        selectInput(ns("optimization_type"), NULL,
-                   choices = list(
-                     "Select optimization type..." = "",
-                     "Power-only optimization" = "power_only",
-                     "Power + cost optimization" = "power_cost"
-                   ),
-                   selected = ""),
-        style = "margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;"
+        id = ns("design-header"),
+        style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
+        onclick = paste0("toggleSection('", ns("design-content"), "', '", ns("design-chevron"), "')"),
+        tags$i(id = ns("design-chevron"), class = "fa fa-chevron-down", style = "margin-right: 8px;"),
+        tags$strong("Design Options")
       ),
-      
-      # Step 2: Minimization Target (initially hidden)
       tags$div(
-        id = ns("step2"),
-        style = "display: none; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;",
-        tags$h5("Step 2: Minimization Target", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
-        selectInput(ns("minimization_target"), NULL,
-                   choices = list(
-                     "Select what to minimize..." = "",
-                     "Minimize total cells per target" = "cells",
-                     "Minimize reads per cell" = "reads", 
-                     "Minimize total cost (cells x reads)" = "cost",
-                     "Minimize TPM analysis threshold" = "tpm_threshold",
-                     "Minimize minimum fold change" = "fold_change"
-                   ),
-                   selected = ""),
-      ),
-      
-      # Step 3: Parameter Control (initially hidden)
-      tags$div(
-        id = ns("step3"),
-        style = "display: none;",
-        tags$h5("Step 3: Power-determining Parameters Setup", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+        id = ns("design-content"),
+        style = "padding: 15px;",
         
-        # Parameter controls - all parameters treated equally
+        # Step 1: Optimization Framework
         tags$div(
-          id = ns("cells_control_div"),
-          selectInput(ns("cells_control"), "Cells per target:",
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
-                     selected = "varying"),
-          conditionalPanel(
-            condition = paste0("input['", ns("cells_control"), "'] == 'fixed'"),
-            numericInput(ns("cells_fixed"), "Fixed value:", value = 1000, min = 50, max = 5000, step = 50)
-          )
+          id = ns("step1"),
+          tags$h5("Step 1: Optimization Framework", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+          selectInput(ns("optimization_type"), NULL,
+                     choices = list(
+                       "Select optimization type..." = "",
+                       "Power-only optimization" = "power_only",
+                       "Power + cost optimization" = "power_cost"
+                     ),
+                     selected = ""),
+          style = "margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;"
         ),
         
+        # Step 2: Minimization Target (initially hidden)
         tags$div(
-          id = ns("reads_control_div"),
-          selectInput(ns("reads_control"), "Reads per cell:",
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
-                     selected = "varying"),
-          conditionalPanel(
-            condition = paste0("input['", ns("reads_control"), "'] == 'fixed'"),
-            numericInput(ns("reads_fixed"), "Fixed value:", value = 5000, min = 500, max = 20000, step = 500)
-          )
+          id = ns("step2"),
+          style = "display: none; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;",
+          tags$h5("Step 2: Minimization Target", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+          selectInput(ns("minimization_target"), NULL,
+                     choices = list(
+                       "Select what to minimize..." = "",
+                       "Minimize total cells per target" = "cells",
+                       "Minimize reads per cell" = "reads", 
+                       "Minimize total cost (cells x reads)" = "cost",
+                       "Minimize TPM analysis threshold" = "tpm_threshold",
+                       "Minimize minimum fold change" = "fold_change"
+                     ),
+                     selected = "")
         ),
         
+        # Step 3: Parameter Control (initially hidden)
         tags$div(
-          id = ns("tpm_control_div"),
-          selectInput(ns("tpm_control"), "TPM threshold:",
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
-                     selected = "varying"),
-          conditionalPanel(
-            condition = paste0("input['", ns("tpm_control"), "'] == 'fixed'"),
-            numericInput(ns("tpm_fixed"), "Fixed value:", value = 10, min = 0, max = 100, step = 1)
+          id = ns("step3"),
+          style = "display: none;",
+          tags$h5("Step 3: Power-determining Parameters Setup", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+          
+          # Parameter controls - all parameters treated equally
+          tags$div(
+            id = ns("cells_control_div"),
+            selectInput(ns("cells_control"), "Cells per target:",
+                       choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                       selected = "varying"),
+            conditionalPanel(
+              condition = paste0("input['", ns("cells_control"), "'] == 'fixed'"),
+              numericInput(ns("cells_fixed"), "Fixed value:", value = 1000, min = 50, max = 5000, step = 50)
+            )
+          ),
+          
+          tags$div(
+            id = ns("reads_control_div"),
+            selectInput(ns("reads_control"), "Reads per cell:",
+                       choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                       selected = "varying"),
+            conditionalPanel(
+              condition = paste0("input['", ns("reads_control"), "'] == 'fixed'"),
+              numericInput(ns("reads_fixed"), "Fixed value:", value = 5000, min = 500, max = 20000, step = 500)
+            )
+          ),
+          
+          tags$div(
+            id = ns("tpm_control_div"),
+            selectInput(ns("tpm_control"), "TPM threshold:",
+                       choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                       selected = "varying"),
+            conditionalPanel(
+              condition = paste0("input['", ns("tpm_control"), "'] == 'fixed'"),
+              numericInput(ns("tpm_fixed"), "Fixed value:", value = 10, min = 0, max = 100, step = 1)
+            )
+          ),
+          
+          tags$div(
+            id = ns("fc_control_div"),
+            selectInput(ns("fc_control"), "Minimum fold change:",
+                       choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
+                       selected = "varying"),
+            conditionalPanel(
+              condition = paste0("input['", ns("fc_control"), "'] == 'fixed'"),
+              numericInput(ns("fc_fixed"), "Fixed value:", value = 1.5, min = 1.1, max = 10, step = 0.1)
+            )
           )
-        ),
-        
-        tags$div(
-          id = ns("fc_control_div"),
-          selectInput(ns("fc_control"), "Minimum fold change:",
-                     choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"),
-                     selected = "varying"),
-          conditionalPanel(
-            condition = paste0("input['", ns("fc_control"), "'] == 'fixed'"),
-            numericInput(ns("fc_fixed"), "Fixed value:", value = 1.5, min = 1.1, max = 10, step = 0.1)
-          )
-        ),
-        
+        )
       )
     )
   )
 }
-
-#' Design Options Module Server
+    
+#' design_options Server Functions
 #'
-#' @description Server logic for constraint-driven design options with progressive disclosure
-#' and business rule enforcement
-#'
-#' @param id Module namespace ID
-#'
-#' @noRd
-mod_design_options_server <- function(id) {
-  moduleServer(id, function(input, output, session) {
+#' @noRd 
+mod_design_options_server <- function(id){
+  moduleServer(id, function(input, output, session){
     ns <- session$ns
     
     # Progressive disclosure: Show steps sequentially
@@ -187,11 +183,7 @@ mod_design_options_server <- function(id) {
       target <- input$minimization_target
       
       if (!is.null(target) && target != "") {
-        # Set minimizing parameter dropdown to "Minimizing"
-        
         # Set the selected parameter to "Minimizing"
-        
-        # Show the minimizing parameter name and show other parameter controls
         if (target == "cells") {
           updateSelectInput(session, "cells_control", selected = "minimizing")
           updateSelectInput(session, "reads_control", selected = "varying")
@@ -253,7 +245,7 @@ mod_design_options_server <- function(id) {
           shinyjs::disable("tpm_control")
           shinyjs::disable("fc_control")
         } else if (target == "cost") {
-          # Cost minimization = all parameters disabled (cells/reads varying, tmp/fc fixed)
+          # Cost minimization = all parameters disabled (cells/reads varying, tpm/fc fixed)
           shinyjs::disable("cells_control")
           shinyjs::disable("reads_control")
           shinyjs::disable("tpm_control")
@@ -262,7 +254,7 @@ mod_design_options_server <- function(id) {
           # Power+cost + TPM minimization: TPM=minimizing+disabled, FC=fixed+disabled, cells/reads=varying/fixed with constraint
           updateSelectInput(session, "tpm_control", selected = "minimizing")
           updateSelectInput(session, "fc_control", selected = "fixed")
-          shinyjs::disable("tmp_control")
+          shinyjs::disable("tpm_control")
           shinyjs::disable("fc_control")
           # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
           shinyjs::enable("cells_control")
@@ -340,7 +332,7 @@ mod_design_options_server <- function(id) {
                    else (input$reads_control %||% "varying"),
             fixed_value = if(!is.null(input$reads_fixed)) input$reads_fixed else NULL
           ),
-          tpm_threshold = list(
+          tmp_threshold = list(
             type = if(!is.null(target) && target == "tpm_threshold") "minimizing" else (input$tpm_control %||% "varying"),
             fixed_value = if(!is.null(input$tpm_fixed)) input$tpm_fixed else NULL
           ),
@@ -356,3 +348,9 @@ mod_design_options_server <- function(id) {
     return(design_config)
   })
 }
+    
+## To be copied in the UI
+# mod_design_options_ui("design_options_1")
+    
+## To be copied in the server
+# mod_design_options_server("design_options_1")
