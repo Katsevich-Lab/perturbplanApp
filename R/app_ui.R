@@ -28,33 +28,14 @@ app_ui <- function(request) {
         # Add the exact same styles from original perturbplan app
         create_styles(),
         
-        # Main content area - placeholder for results visualization
+        # Main content area with results display module
         tags$div(
           style = "padding: 20px;",
-          h3("PerturbPlan: Constraint-Driven Experimental Design"),
+          h2("PerturbPlan: Constraint-Driven Experimental Design", 
+             style = "color: #2E4A62; margin-bottom: 20px; text-align: center;"),
           
-          # Instruction message before planning
-          tags$div(
-            id = "need_plan_message",
-            class = "alert alert-info",
-            style = "margin: 20px 0;",
-            tags$h4("Welcome to PerturbPlan!"),
-            tags$p("Configure your experimental design parameters in the left sidebar, then click 'Plan' to begin analysis."),
-            tags$ul(
-              tags$li(tags$strong("Design Options:"), " Specify your optimization objective and constraints"),
-              tags$li(tags$strong("Experimental Setup:"), " Choose biological system and reference data"),
-              tags$li(tags$strong("Analysis Choices:"), " Configure perturbation-gene pairs and statistical parameters"),
-              tags$li(tags$strong("Effect Sizes:"), " Set assumed effect size parameters")
-            )
-          ),
-          
-          # Placeholder for results (will be populated after planning)
-          tags$div(
-            id = "results_placeholder",
-            style = "display: none;",
-            h4("Analysis Results"),
-            p("Results will be displayed here after clicking 'Plan' in the sidebar.")
-          )
+          # Results Display Module - handles both welcome state and results
+          mod_results_display_ui("display")
         )
       )
     )

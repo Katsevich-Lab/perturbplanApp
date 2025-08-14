@@ -1,94 +1,80 @@
 #' The application server-side
 #'
+#' Clean 3-module architecture: Input → Analysis → Plotting → Display
+#'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-  # Sidebar Module - Contains all parameter inputs using modular components
-  combined_config <- mod_sidebar_server("sidebar")
   
-  # Debug: Print combined config when it changes (for development)
+  # ========================================================================
+  # MODULE 1: INPUT COLLECTION
+  # ========================================================================
+  # Collect all user inputs through sidebar (unchanged)
+  user_workflow_config <- mod_sidebar_server("sidebar")
+  
+  # ========================================================================  
+  # MODULE 2: ANALYSIS ENGINE (Placeholder vs Real Swap Point)
+  # ========================================================================
+  # Generate analysis results data (this is where placeholder/real happens)
+  analysis_results <- mod_analysis_engine_server("analysis", user_workflow_config)
+  
+  # ========================================================================
+  # MODULE 3: PLOTTING ENGINE (Always Same)
+  # ========================================================================
+  # Convert analysis data into plot objects
+  plot_objects <- mod_plotting_engine_server("plotting", analysis_results)
+  
+  # ========================================================================
+  # MODULE 4: RESULTS DISPLAY (Always Same)  
+  # ========================================================================
+  # Handle UI presentation of plots and tables
+  mod_results_display_server("display", plot_objects, analysis_results)
+  
+  # ========================================================================
+  # APP STATE MANAGEMENT
+  # ========================================================================
+  
+  # Handle loading states
   observe({
-    config <- combined_config()
-    if (!is.null(config) && length(config) > 0) {
-      cat("=== PerturbPlan Modular Configuration Updated ===\n")
-      
-      # Design Options
-      if (!is.null(config$design_options)) {
-        design <- config$design_options
-        if (!is.null(design$optimization_type)) {
-          cat("Optimization Type:", design$optimization_type, "\n")
-        }
-        if (!is.null(design$minimization_target)) {
-          cat("Minimization Target:", design$minimization_target, "\n")
-        }
-        
-        # Parameter Controls
-        if (!is.null(design$parameter_controls)) {
-          cat("Parameter Controls:\n")
-          for (param_name in names(design$parameter_controls)) {
-            param_info <- design$parameter_controls[[param_name]]
-            cat("  ", param_name, ":", param_info$type)
-            if (!is.null(param_info$fixed_value)) {
-              cat(" (fixed =", param_info$fixed_value, ")")
-            }
-            cat("\n")
-          }
-        }
-      }
-      
-      # Experimental Setup
-      if (!is.null(config$experimental_setup)) {
-        exp <- config$experimental_setup
-        if (!is.null(exp$biological_system)) {
-          cat("Biological System:", exp$biological_system, "\n")
-        }
-        if (!is.null(exp$pilot_data_choice)) {
-          cat("Pilot Data Choice:", exp$pilot_data_choice, "\n")
-        }
-      }
-      
-      # Analysis Choices
-      if (!is.null(config$analysis_choices)) {
-        analysis <- config$analysis_choices
-        if (!is.null(analysis$side)) {
-          cat("Test Side:", analysis$side, "\n")
-        }
-        if (!is.null(analysis$fdr_target)) {
-          cat("FDR Target:", analysis$fdr_target, "\n")
-        }
-      }
-      
-      # Cost Information
-      if (!is.null(config$cost_info)) {
-        cost <- config$cost_info
-        if (!is.null(cost$cost_per_cell)) {
-          cat("Cost per Cell: $", cost$cost_per_cell, "\n")
-        }
-        if (!is.null(cost$cost_per_million_reads)) {
-          cat("Cost per Million Reads: $", cost$cost_per_million_reads, "\n")
-        }
-      }
-      
-      # Effect Sizes
-      if (!is.null(config$effect_sizes)) {
-        effects <- config$effect_sizes
-        if (!is.null(effects$fc_sd)) {
-          cat("gRNA Variability:", effects$fc_sd, "\n")
-        }
-      }
-      
-      # Plan button status
-      if (!is.null(config$plan_clicked) && config$plan_clicked > 0) {
-        cat("Plan Button Clicked:", config$plan_clicked, "times\n")
-      }
-      
-      cat("--- End Modular Configuration ---\n")
+    config <- user_workflow_config()
+    analysis <- analysis_results()
+    
+    if (!is.null(config) && config$plan_clicked > 0 && is.null(analysis)) {
+      # Show loading notification when Plan clicked but analysis not ready
+      showNotification(
+        "Analyzing your experimental design...", 
+        type = "message", 
+        duration = 2
+      )
     }
   })
   
-  # Future modules for implementation:
-  # analysis_results_module <- mod_analysis_results_server("analysis_results", combined_config)
-  # export_results_module <- mod_export_results_server("export_results", combined_config)
+  # Handle analysis errors
+  observe({
+    analysis <- analysis_results()
+    if (!is.null(analysis) && !is.null(analysis$error)) {
+      showNotification(
+        paste("Analysis Error:", analysis$error), 
+        type = "error",
+        duration = 5
+      )
+    }
+  })
+  
+  # Development debug output (optional - can remove in production)
+  if (getOption("perturbplan.debug", FALSE)) {
+    observe({
+      config <- user_workflow_config()
+      if (!is.null(config) && config$plan_clicked > 0) {
+        cat("=== Plan Executed ===\n")
+        cat("Workflow Type:", config$design_options$optimization_type, "\n")
+        cat("Target Power:", config$design_options$target_power, "\n")
+        cat("Analysis Mode:", ifelse(use_placeholder_mode(), "Placeholder", "Real"), "\n")
+        cat("Timestamp:", as.character(Sys.time()), "\n")
+        cat("--- End Debug ---\n")
+      }
+    })
+  }
 }

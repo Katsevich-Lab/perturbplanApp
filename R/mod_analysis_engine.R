@@ -231,22 +231,34 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
   
   varying_param <- workflow_info$minimizing_parameter
   
-  # Extract the varying parameter values
-  varying_values <- param_grid[[varying_param]]
+  # Extract the varying parameter values from the grid
+  if (varying_param == "cells") {
+    varying_values <- param_grid$cells
+  } else if (varying_param == "reads") {
+    varying_values <- param_grid$reads
+  } else if (varying_param == "tpm_threshold") {
+    varying_values <- param_grid$tpm_threshold
+  } else if (varying_param == "fold_change") {
+    varying_values <- param_grid$fold_change
+  } else {
+    stop(paste("Unknown varying parameter:", varying_param))
+  }
   
   # Generate realistic power curve (sigmoid-like)
   if (varying_param %in% c("cells", "reads")) {
     # More cells/reads = higher power, diminishing returns
-    power_values <- 1 - exp(-0.0005 * varying_values)
+    power_values <- 1 - exp(-0.002 * varying_values)  # Increased coefficient for higher power
     power_values <- pmin(power_values, 0.95)  # Cap at 95%
   } else if (varying_param == "tpm_threshold") {
-    # Higher TPM threshold = lower power (harder to detect)
-    power_values <- 0.95 - 0.02 * (varying_values - min(varying_values))
-    power_values <- pmax(power_values, 0.1)  # Floor at 10%
+    # For optimization plots: show increasing power curve (lower TPM = easier detection)
+    # Plot from high TPM to low TPM to show increasing power
+    normalized_values <- (varying_values - min(varying_values)) / (max(varying_values) - min(varying_values))
+    power_values <- 0.1 + 0.8 * (1 - normalized_values)  # Reverse so higher index = higher power
+    power_values <- pmin(power_values, 0.95)  # Cap at 95%
   } else if (varying_param == "fold_change") {
-    # Higher fold change = lower power (harder to detect small effects)  
-    power_values <- 0.95 - 0.3 * (varying_values - min(varying_values))
-    power_values <- pmax(power_values, 0.1)  # Floor at 10%
+    # Higher minimum fold change = easier to detect = higher power
+    power_values <- 0.1 + 0.8 * (varying_values - min(varying_values)) / (max(varying_values) - min(varying_values))
+    power_values <- pmin(power_values, 0.95)  # Cap at 95%
   }
   
   # Add realistic noise
