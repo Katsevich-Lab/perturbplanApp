@@ -61,12 +61,26 @@ PerturbPlan v2 redesigns the user workflow around **constraint-driven experiment
 
 ### Module 1: Design Options (NEW)
 
-#### 1.1 Optimization Objective Selection
+#### 1.1 Optimization Constraints Selection
 **Power is always constrained. User specifies whether to include cost considerations:**
-- **Power-only optimization**: "Optimize power without cost constraints"
-- **Power + cost optimization**: "Optimize power while considering cost constraints"
+- **Constrain power only**: "Optimize power without cost constraints"
+- **Constrain power and cost**: "Optimize power while considering cost constraints"
 
-#### 1.2 Minimization Target Selection
+#### 1.2 Power and Cost Requirements
+**After selecting optimization constraints, user must specify:**
+
+- **Target Power**: Required statistical power (e.g., 0.8 for 80% power)
+  - Always required for all optimization scenarios
+  - Numeric input with range 0.1 to 0.99, step 0.05, default 0.8
+
+- **Cost Budget**: Maximum budget constraint (only for "Constrain power and cost")
+  - Required when cost constraints are included
+  - Numeric input in dollars, range $100 to $1,000,000, step $500, default $10,000
+  - Hidden when "Constrain power only" is selected
+
+**Progressive Disclosure**: Step 2 (Minimization Target) only appears after required power/cost inputs are provided.
+
+#### 1.3 Minimization Target Selection
 **User selects what to minimize (all parameters available regardless of optimization type):**
 
 - [ ] Minimize total cells per target
@@ -75,25 +89,24 @@ PerturbPlan v2 redesigns the user workflow around **constraint-driven experiment
 - [ ] Minimize TPM analysis threshold (maximize gene coverage)
 - [ ] Minimize minimum fold change (maximize sensitivity)
 
-**Note**: When **Power + cost optimization** is selected, **total cost** will not be used as an optimization target since cost is already being considered as a constraint. All individual parameters remain available for optimization.
+**Note**: When **Constrain power and cost** is selected, **total cost** will not be used as an optimization target since cost is already being considered as a constraint. All individual parameters remain available for optimization.
 
-#### 1.3 Parameter Control Panel
-**For each parameter, user specifies: Varying, Fixed, or Minimizing**
+#### 1.4 Parameter Control Panel
+**Dynamically displays only parameters relevant for user configuration. Parameter types:**
 
-| Parameter | Control Type | Fixed Options |
-|-----------|--------------|---------------|
-| Cells per target | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
-| Reads per cell | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
-| TPM analysis threshold | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
-| Minimum fold change | [Varying] [Fixed] [Minimizing] | If Fixed: specify up to 2 values |
+- **Minimizing parameters**: Completely omitted from Step 3 (redundant since already selected as target)
+- **Optimizing parameters**: Omitted when varying simultaneously (e.g., cells+reads in cost minimization)
+- **Fixed parameters**: Show only input box (no dropdown) for specifying constraint values
+- **Varying parameters**: Show dropdown to choose "Varying" or "Fixed", with conditional input for fixed values
 
-**Business Logic:**
-- When a parameter is selected in "Minimization Target Selection", its status in Parameter Control Panel is automatically set to "Minimizing" and grayed out (non-editable)
-- **Only one parameter can have "Minimizing" status** at any time (the selected minimization target)
-- **All other parameters are grayed out** when one parameter is in "Minimizing" status
-- **Fixed parameters**: Provide fixed values as constraints - system holds these constant
-- **Varying parameters**: Interact with the minimizing parameter during optimization
-- Valid configurations include: one parameter minimizing with all others fixed (achieves desired power at fixed conditions)
+**Current Implementation Logic:**
+- **Step 3 shows only configurable parameters** - parameters being minimized or optimized automatically are omitted entirely
+- **Fixed parameters get streamlined UI** - no unnecessary dropdown, just the value input
+- **Space-efficient design** - eliminates redundant controls and focuses on user-controllable aspects
+- **Smart parameter detection** based on selected workflow:
+  - Single parameter minimization: Show all others as fixed
+  - Cost minimization: Show only TPM/FC as fixed (cells/reads optimized together)
+  - Power+cost scenarios: Show relevant parameter combinations based on target
 
 ### Modules 2+: Analysis Modules (ADAPTED FROM ORIGINAL APP)
 
@@ -142,6 +155,8 @@ PerturbPlan v2 redesigns the user workflow around **constraint-driven experiment
 - **Note**: Similar to single parameter power curves but within cost constraints
 
 ## User Workflows
+
+**Important Note**: The current PerturbPlan implementation does not support other functionalities beyond the 11 workflows specified below. These 11 workflows represent all supported parameter control combinations and optimization scenarios.
 
 ### Power-Only Optimization Routes (5 workflows)
 
@@ -288,48 +303,61 @@ PerturbPlan v2 redesigns the user workflow around **constraint-driven experiment
 
 ### Design Options Module Layout
 
-#### Section 1: Optimization Framework
+#### Step 1: Optimization Constraints
 ```
-┌─ Include cost considerations in optimization?
-│  ○ Power-only optimization: "Optimize power without cost constraints"
-│  ○ Power + cost optimization: "Optimize power while considering cost constraints"
+┌─ Step 1: Optimization Constraints
+│  ○ Constrain power only
+│  ○ Constrain power and cost
 └─
 ```
 
-#### Section 2: Optimization Target
+#### Power and Cost Requirements (appears after Step 1)
 ```
-┌─ What should we minimize?
+┌─ Power and Cost Requirements
+│  ┌─ Target Power: [0.8_____] (0.1-0.99, always shown)
+│  └─ Cost Budget ($): [10000___] (only for power+cost, hidden otherwise)
+└─
+```
+
+#### Step 2: Minimization Target (appears after requirements)
+```
+┌─ Step 2: Minimization Target
 │  ☐ Minimize total cells per target
 │  ☐ Minimize reads per cell  
-│  ☐ Minimize total cost (computed from cells × reads)
-│  ☐ Minimize TPM analysis threshold (maximize gene coverage)
-│  ☐ Minimize minimum fold change (maximize sensitivity)
-│
-│  Note: "Total cost" optimization target not available when "Power + cost" 
-│        is selected (cost already considered as constraint)
+│  ☐ Minimize total cost (hidden for power+cost constraints)
+│  ☐ Minimize TPM analysis threshold
+│  ☐ Minimize minimum fold change
 └─
 ```
 
-#### Section 3: Parameter Control Matrix
+#### Step 3: Parameter Control (dynamic, workflow-based)
 ```
-┌─ Parameter Control
-│  ┌─ Cells per target     [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]
-│  ├─ Reads per cell       [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]  
-│  ├─ TPM threshold        [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]
-│  └─ Min fold change      [○ Varying] [○ Fixed] [○ Minimizing] [___] [___]
-│
-│  Note: Only one parameter can be "Minimizing" (auto-set from target selection).
-│        All other parameters are grayed out when one is "Minimizing".
+┌─ Step 3: Power-determining Parameters Setup
+│  [Shows only configurable parameters - minimizing/optimizing ones omitted]
+│  
+│  Example scenarios:
+│  • Single param minimization: Show 3 others as fixed-only inputs
+│  • Cost minimization: Show only TPM/FC as fixed-only inputs  
+│  • Power+cost: Show relevant varying/fixed combinations
+│  
+│  Fixed parameters: [Label] [____input____] (no dropdown)
+│  Varying parameters: [Label] [Varying▼Fixed] [conditional_input]
 └─
 ```
 
 ## Interaction Patterns
 
 ### Progressive Disclosure
-1. **Optimization objective selection** → reveals relevant minimization targets
-2. **Minimization target selection** → automatically sets corresponding parameter to "Minimizing" status (grayed out)
-3. **Parameter control selection** → reveals input fields for fixed values
-4. **Complete design specification** → enables analysis modules
+1. **Step 1: Optimization constraints selection** → reveals power/cost requirements section
+2. **Power/cost requirements completion** → reveals Step 2 (minimization targets)
+3. **Step 2: Minimization target selection** → reveals Step 3 (parameter controls) 
+4. **Step 3: Dynamic parameter display** → shows only configurable parameters based on workflow
+5. **Complete design specification** → enables analysis modules
+
+### Reset Behavior
+- **Changing Step 1**: Resets power/cost inputs to defaults, hides subsequent steps
+- **Changing power/cost inputs**: Validates requirements before showing Step 2
+- **Changing Step 2**: Regenerates Step 3 parameter controls based on new workflow
 
 ### Validation & Feedback
 - **Real-time validation**: Ensure at least one varying parameter
@@ -363,13 +391,15 @@ mod_results_export.R      # Inherited: downloads and data export
 ```r
 # Design Options Module outputs
 design_config <- list(
-  optimization_type = "power_plus_cost",  # or "power_only"
-  minimization_target = "total_cost", 
+  optimization_type = "power_cost",  # or "power_only"
+  target_power = 0.8,  # Required statistical power
+  cost_budget = 10000,  # Budget constraint (NULL for power_only)
+  minimization_target = "tpm_threshold", 
   parameter_controls = list(
-    cells_per_target = list(type = "varying", range = c(100, 2000)),
-    reads_per_cell = list(type = "varying", range = c(500, 5000)),
-    tmp_threshold = list(type = "fixed", values = c(10, 20)),
-    min_fold_change = list(type = "fixed", values = c(1.5))
+    cells_per_target = list(type = "varying", fixed_value = NULL),
+    reads_per_cell = list(type = "fixed", fixed_value = 5000),
+    tpm_threshold = list(type = "minimizing", fixed_value = NULL),
+    min_fold_change = list(type = "fixed", fixed_value = 1.5)
   )
 )
 

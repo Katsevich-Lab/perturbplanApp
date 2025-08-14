@@ -184,9 +184,9 @@ mod_design_options_server <- function(id){
         ))
       }
       
-      if (!param_configs$tmp_threshold$type %in% c("minimizing", "optimizing")) {
+      if (!param_configs$tpm_threshold$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "tmp", "TPM threshold:", param_configs$tmp_threshold, 10, 0, 100, 1)
+          create_param_ui(ns, "tpm", "TPM threshold:", param_configs$tpm_threshold, 10, 0, 100, 1)
         ))
       }
       
@@ -208,7 +208,7 @@ mod_design_options_server <- function(id){
       configs <- list(
         cells_per_target = list(type = "varying", enabled = TRUE),
         reads_per_cell = list(type = "varying", enabled = TRUE),
-        tmp_threshold = list(type = "varying", enabled = TRUE),
+        tpm_threshold = list(type = "varying", enabled = TRUE),
         min_fold_change = list(type = "varying", enabled = TRUE)
       )
       
@@ -217,13 +217,13 @@ mod_design_options_server <- function(id){
           # Power-only + single parameter minimization: minimize target, fix all others
           configs$cells_per_target$type <- if (target == "cells") "minimizing" else "fixed"
           configs$reads_per_cell$type <- if (target == "reads") "minimizing" else "fixed"
-          configs$tmp_threshold$type <- if (target == "tpm_threshold") "minimizing" else "fixed"
+          configs$tpm_threshold$type <- if (target == "tpm_threshold") "minimizing" else "fixed"
           configs$min_fold_change$type <- if (target == "fold_change") "minimizing" else "fixed"
         } else if (target == "cost") {
           # Cost minimization: cells/reads vary simultaneously (omit both), tpm/fc fixed
           configs$cells_per_target$type <- "optimizing"
           configs$reads_per_cell$type <- "optimizing"
-          configs$tmp_threshold$type <- "fixed"
+          configs$tpm_threshold$type <- "fixed"
           configs$min_fold_change$type <- "fixed"
         }
       } else if (opt_type == "power_cost") {
@@ -231,13 +231,13 @@ mod_design_options_server <- function(id){
           # Power+cost + TPM minimization: TPM minimizing, FC fixed, cells/reads constrained varying/fixed
           configs$cells_per_target$type <- "varying"
           configs$reads_per_cell$type <- "varying"
-          configs$tmp_threshold$type <- "minimizing"
+          configs$tpm_threshold$type <- "minimizing"
           configs$min_fold_change$type <- "fixed"
         } else if (target == "fold_change") {
           # Power+cost + FC minimization: FC minimizing, TPM fixed, cells/reads constrained varying/fixed
           configs$cells_per_target$type <- "varying"
           configs$reads_per_cell$type <- "varying"
-          configs$tmp_threshold$type <- "fixed"
+          configs$tpm_threshold$type <- "fixed"
           configs$min_fold_change$type <- "minimizing"
         }
       }
@@ -465,7 +465,7 @@ mod_design_options_server <- function(id){
                    else (input$reads_control %||% "varying"),
             fixed_value = if(!is.null(input$reads_fixed)) input$reads_fixed else NULL
           ),
-          tmp_threshold = list(
+          tpm_threshold = list(
             type = if(!is.null(target) && target == "tpm_threshold") "minimizing" else (input$tpm_control %||% "varying"),
             fixed_value = if(!is.null(input$tpm_fixed)) input$tpm_fixed else NULL
           ),
