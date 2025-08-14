@@ -176,6 +176,8 @@ create_cost_tradeoff_plots <- function(results) {
   workflow_info <- results$workflow_info
   
   # Determine plot type based on workflow category
+  is_power_only_cost <- (workflow_info$workflow_id == "power_cost_minimization")
+  
   if (workflow_info$workflow_id == "power_cost_minimization" || 
       workflow_info$category == "power_cost_multi") {
     # WORKFLOWS 5, 6, 9: Equi-power/equi-cost curves for multi-parameter optimization

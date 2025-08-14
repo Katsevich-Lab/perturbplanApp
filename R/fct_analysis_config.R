@@ -64,6 +64,12 @@ detect_workflow_scenario <- function(workflow_config) {
   opt_type <- design_config$optimization_type
   target <- design_config$minimization_target
   param_controls <- design_config$parameter_controls
+  cost_budget <- design_config$cost_budget
+  
+  # FALLBACK: If optimization_type is missing but cost_budget is present, assume power_cost
+  if ((is.null(opt_type) || opt_type == "") && !is.null(cost_budget) && cost_budget > 0) {
+    opt_type <- "power_cost"
+  }
   
   # Power-only workflows (1-5)
   if (opt_type == "power_only") {
