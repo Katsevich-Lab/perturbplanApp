@@ -307,12 +307,26 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
       found = TRUE
     )
     
-    # For power+cost workflows, add optimal minimized parameter (placeholder values)
+    # For power+cost workflows, add optimal minimized parameter and computed cells/reads
     if (workflow_info$category == "power_cost_single") {
       if (workflow_info$minimizing_parameter == "tpm_threshold") {
-        optimal_design$optimal_minimized_param <- 15  # Placeholder optimal TPM
+        optimal_design$optimal_minimized_param <- optimal_design$value  # Use the actual optimal value
       } else if (workflow_info$minimizing_parameter == "fold_change") {
-        optimal_design$optimal_minimized_param <- 1.8  # Placeholder optimal fold change
+        optimal_design$optimal_minimized_param <- optimal_design$value  # Use the actual optimal value
+      }
+      
+      # Compute cells and reads values based on cost constraint + optimal TPM/FC
+      if (!is.null(workflow_info$varying_parameter)) {
+        if (workflow_info$varying_parameter == "cells") {
+          # reads is fixed, cells is computed
+          optimal_design$cells <- 600  # Placeholder computed cells value
+          optimal_design$reads <- 1200  # Fixed value from sidebar
+        } else if (workflow_info$varying_parameter == "reads") {
+          # cells is fixed, reads is computed  
+          optimal_design$cells <- 500  # Fixed value from sidebar
+          optimal_design$reads <- 1400  # Placeholder computed reads value
+        }
+        optimal_design$cost <- optimal_design$cells * 0.10 + 50 * (optimal_design$reads / 1e6) * optimal_design$cells
       }
     }
   } else {

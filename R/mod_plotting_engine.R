@@ -109,18 +109,8 @@ create_single_parameter_plots <- function(results) {
   varying_param <- workflow_info$minimizing_parameter
   param_label <- format_parameter_name(varying_param)
   
-  # Enhance title for power+cost workflows to include optimal parameters
-  plot_title <- if (workflow_info$category %in% c("power_cost_single", "power_cost_multi")) {
-    # For power+cost workflows, include optimal minimized parameter in title
-    if (!is.null(optimal_design$optimal_minimized_param)) {
-      paste(workflow_info$title, "\n(Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
-            optimal_design$optimal_minimized_param, ")")
-    } else {
-      workflow_info$title
-    }
-  } else {
-    workflow_info$title
-  }
+  # Use clean titles from workflow_info (no optimal parameter info in titles)
+  plot_title <- workflow_info$title
   
   p <- ggplot(power_data, aes(x = parameter_value, y = power)) +
     geom_line() +
@@ -413,18 +403,13 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
   # Calculate optimal cost for display
   optimal_cost <- optimal_design$cost
   
-  # Create plot title with optimal parameter for power+cost workflows
-  plot_title <- if (workflow_info$category == "power_cost_multi") {
-    # For power+cost workflows, include optimal minimized parameter in title
-    if (!is.null(optimal_design$optimal_minimized_param)) {
-      paste(workflow_info$title, "\n(Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
-            optimal_design$optimal_minimized_param, ")")
-    } else {
-      workflow_info$title
-    }
-  } else {
-    # For power-only cost optimization (Workflow 5)
+  # Create plot title (clean titles for all workflows)
+  plot_title <- if (workflow_info$workflow_id == "power_cost_minimization") {
+    # For power-only cost optimization (Workflow 5) 
     "Equi-Power and Equi-Cost Curves"
+  } else {
+    # For power+cost workflows, use clean title from workflow_info
+    workflow_info$title
   }
   
   # Simple plot with just two curves and tangent point

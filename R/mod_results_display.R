@@ -262,26 +262,60 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
               tags$p("No feasible design found within parameter constraints", style = "color: #C73E1D; font-weight: 500;")
             }
           } else {
-            # Cost optimization - show optimal cells, reads, cost, power, and minimized param
+            # Cost optimization - different displays based on workflow type
             if (!is.null(summary_data$optimal_recommendation$optimal_cells)) {
-              cost_summary_elements <- list(
-                tags$strong("Optimal Design:"), tags$br(),
-                tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), style = "color: #2E86AB; font-weight: bold; margin-right: 15px;"),
-                tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), style = "color: #2E86AB; font-weight: bold;")
-              )
               
-              # Add optimal minimized parameter for power+cost workflows
-              if (workflow_info$category %in% c("power_cost_single", "power_cost_multi") &&
-                  !is.null(summary_data$optimal_recommendation$optimal_minimized_param)) {
-                cost_summary_elements <- append(cost_summary_elements, list(
-                  tags$br(),
-                  tags$span(paste("Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
-                                summary_data$optimal_recommendation$optimal_minimized_param), 
-                          style = "color: #2E86AB; font-weight: bold;")
-                ))
+              if (workflow_info$category == "power_cost_single") {
+                # Single parameter power+cost: Show optimal TPM/FC + varying parameter only
+                cost_summary_elements <- list(
+                  tags$strong("Optimal Design:"), tags$br()
+                )
+                
+                # Always show optimal TPM/FC first
+                if (!is.null(summary_data$optimal_recommendation$optimal_minimized_param)) {
+                  cost_summary_elements <- append(cost_summary_elements, list(
+                    tags$span(paste("Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
+                                  summary_data$optimal_recommendation$optimal_minimized_param), 
+                            style = "color: #2E86AB; font-weight: bold;"),
+                    tags$br()
+                  ))
+                }
+                
+                # Show only the varying parameter (cells OR reads, not both)
+                if (!is.null(workflow_info$varying_parameter)) {
+                  if (workflow_info$varying_parameter == "cells") {
+                    cost_summary_elements <- append(cost_summary_elements, list(
+                      tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), 
+                              style = "color: #2E86AB; font-weight: bold;")
+                    ))
+                  } else if (workflow_info$varying_parameter == "reads") {
+                    cost_summary_elements <- append(cost_summary_elements, list(
+                      tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), 
+                              style = "color: #2E86AB; font-weight: bold;")
+                    ))
+                  }
+                }
+              } else {
+                # Multi-parameter power+cost OR power-only cost: Show both cells and reads
+                cost_summary_elements <- list(
+                  tags$strong("Optimal Design:"), tags$br(),
+                  tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), style = "color: #2E86AB; font-weight: bold; margin-right: 15px;"),
+                  tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), style = "color: #2E86AB; font-weight: bold;")
+                )
+                
+                # Add optimal minimized parameter for power+cost multi workflows
+                if (workflow_info$category == "power_cost_multi" &&
+                    !is.null(summary_data$optimal_recommendation$optimal_minimized_param)) {
+                  cost_summary_elements <- append(cost_summary_elements, list(
+                    tags$br(),
+                    tags$span(paste("Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
+                                  summary_data$optimal_recommendation$optimal_minimized_param), 
+                            style = "color: #2E86AB; font-weight: bold;")
+                  ))
+                }
               }
               
-              # Add cost and power information
+              # Add cost and power information for all cases
               cost_summary_elements <- append(cost_summary_elements, list(
                 tags$br(), tags$br(),
                 tags$strong("Total Cost: "),

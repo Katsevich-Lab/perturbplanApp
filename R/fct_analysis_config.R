@@ -100,18 +100,19 @@ detect_workflow_scenario <- function(workflow_config) {
           plot_type = "cost_tradeoff_curves",
           category = "power_cost_multi",
           minimizing_parameter = "tpm_threshold",
-          title = "Minimize TPM Threshold (Cells + Reads Varying)",
+          title = "Minimize TPM Threshold",
           description = "Power+cost optimization with TPM, cells, and reads varying"
         ))
       } else if (length(varying_params) == 1) {
         # Workflows 6-7: TPM + one other parameter
         other_param <- varying_params[1]
         return(list(
-          workflow_id = paste0("power_cost_tmp_", other_param),
+          workflow_id = paste0("power_cost_tpm_", other_param),
           plot_type = "single_parameter_curve",
           category = "power_cost_single", 
           minimizing_parameter = "tpm_threshold",
-          title = paste("Minimize TPM Threshold (", format_parameter_name(other_param), "Varying)"),
+          varying_parameter = other_param,  # Track which cells/reads parameter is varying
+          title = "Minimize TPM Threshold",  # Clean title without varying parameter info
           description = paste("Power+cost optimization with TPM and", format_parameter_name(other_param), "varying")
         ))
       }
@@ -123,7 +124,7 @@ detect_workflow_scenario <- function(workflow_config) {
           plot_type = "cost_tradeoff_curves",
           category = "power_cost_multi",
           minimizing_parameter = "fold_change", 
-          title = "Minimize Fold Change (Cells + Reads Varying)",
+          title = "Minimize Fold Change",
           description = "Power+cost optimization with fold change, cells, and reads varying"
         ))
       } else if (length(varying_params) == 1) {
@@ -133,7 +134,8 @@ detect_workflow_scenario <- function(workflow_config) {
           plot_type = "single_parameter_curve",
           category = "power_cost_single",
           minimizing_parameter = "fold_change",
-          title = paste("Minimize Fold Change (", format_parameter_name(other_param), "Varying)"),
+          varying_parameter = other_param,  # Track which cells/reads parameter is varying
+          title = "Minimize Fold Change",  # Clean title without varying parameter info
           description = paste("Power+cost optimization with fold change and", format_parameter_name(other_param), "varying")
         ))
       }
@@ -143,8 +145,9 @@ detect_workflow_scenario <- function(workflow_config) {
   # Fallback for unknown configurations
   return(list(
     workflow_id = "unknown",
-    plot_type = "error",
+    plot_type = "single_parameter_curve",  # Default to safe plot type
     category = "unknown",
+    minimizing_parameter = "cells",  # Safe default
     title = "Unknown Workflow Configuration",
     description = "Unable to detect workflow from configuration"
   ))
