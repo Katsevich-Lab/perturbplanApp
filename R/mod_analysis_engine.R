@@ -364,9 +364,9 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
   valid_designs <- param_grid[param_grid$meets_threshold, ]
   
   # Find optimal design
-  if (nrow(valid_designs) > 0) {
-    if (!is.null(cost_budget)) {
-      # Power + cost optimization: minimize cost while meeting power, within budget
+  if (!is.null(cost_budget)) {
+    # Power + cost optimization: minimize cost while meeting power, within budget
+    if (nrow(valid_designs) > 0) {
       budget_feasible <- valid_designs[valid_designs$cost <= cost_budget, ]
       if (nrow(budget_feasible) > 0) {
         optimal_idx <- which.min(budget_feasible$cost)
@@ -377,18 +377,18 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
         optimal_design <- list(found = FALSE, message = "No design meets power target within budget")
       }
     } else {
-      # Power-only optimization: use mathematically correct tangent point
-      optimal_design <- list(
-        found = TRUE,
-        cells = 500,
-        reads = 1500,
-        cost = 500 * 0.10 + 50 * (1500 / 1e6) * 500,
-        power = 0.85,
-        type = "cost_minimized_power_only"
-      )
+      optimal_design <- list(found = FALSE, message = "No design meets target power")
     }
   } else {
-    optimal_design <- list(found = FALSE, message = "No design meets target power")
+    # Power-only optimization: ALWAYS use mathematically correct tangent point
+    optimal_design <- list(
+      found = TRUE,
+      cells = 500,
+      reads = 1500,
+      cost = 500 * 0.10 + 50 * (1500 / 1e6) * 500,
+      power = 0.85,
+      type = "cost_minimized_power_only"
+    )
   }
   
   return(list(

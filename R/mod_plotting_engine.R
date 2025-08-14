@@ -30,7 +30,7 @@ mod_plotting_engine_ui <- function(id) {
 #' 
 #' @importFrom shiny moduleServer reactive req
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline geom_area
-#' @importFrom ggplot2 labs theme_minimal theme element_text element_blank scale_color_manual
+#' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate
 #' @importFrom plotly ggplotly layout config
 #' @importFrom magrittr %>%
@@ -110,51 +110,16 @@ create_single_parameter_plots <- function(results) {
   param_label <- format_parameter_name(varying_param)
   
   p <- ggplot(power_data, aes(x = parameter_value, y = power)) +
-    # Power curve line (connecting the data points)
-    geom_line(color = "#2E86AB", linewidth = 1.2) +
-    # Data points showing actual power calculations
-    geom_point(
-      aes(color = meets_threshold),
-      size = 2.5, alpha = 0.8
-    ) +
-    # Target power line (horizontal line at 0.8)
-    geom_hline(
-      yintercept = target_power, 
-      linetype = "dashed", 
-      color = "#A23B72", 
-      linewidth = 1.2
-    ) +
-    # Intersection point marker (where power curve crosses target)
-    {if (optimal_design$found) {
-      geom_point(
-        aes(x = optimal_design$value, y = optimal_design$power),
-        color = "#F18F01",
-        size = 4,
-        shape = 21,
-        fill = "white",
-        stroke = 2
-      )
-    }} +
-    # Styling
-    scale_color_manual(
-      values = c("TRUE" = "#2E86AB", "FALSE" = "#C73E1D"),
-      labels = c("TRUE" = "Meets Target", "FALSE" = "Below Target"),
-      name = "Power Status"
-    ) +
+    geom_line() +
+    geom_point() +
+    geom_hline(yintercept = target_power, linetype = "dashed") +
     labs(
       title = workflow_info$title,
-      subtitle = workflow_info$description,
       x = param_label,
-      y = "Statistical Power",
-      caption = paste("Target Power:", scales::percent(target_power))
+      y = "Power"
     ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(size = 14, face = "bold", color = "#2E4A62"),
-      plot.subtitle = element_text(size = 12, color = "#5A6B73"),
-      axis.title = element_text(size = 11, face = "bold"),
-      legend.position = "bottom"
-    )
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5))
   
   # Convert to interactive plotly with minimal functionality
   p_interactive <- ggplotly(p, tooltip = c("x", "y")) %>%
@@ -335,6 +300,19 @@ create_power_curve_summary <- function(power_data, optimal_design, target_power)
 #' @noRd
 create_cost_analysis_summary <- function(cost_data, optimal_design, target_power, cost_budget) {
   
+  # Check if cost_data is NULL or doesn't have cost column
+  if (is.null(cost_data) || is.null(cost_data$cost)) {
+    return(list(
+      total_designs_evaluated = 0,
+      power_feasible_designs = 0,
+      budget_feasible_designs = 0,
+      cost_range = list(min = NA, max = NA, mean = NA),
+      optimal_recommendation = list(
+        recommendation_text = "Cost analysis not applicable for this workflow"
+      )
+    ))
+  }
+  
   # Calculate cost metrics
   feasible_designs <- cost_data[cost_data$power >= target_power, ]
   
@@ -411,50 +389,18 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
   # Calculate optimal cost for display
   optimal_cost <- optimal_design$cost
   
-  # Clean minimal plot - just two curves and tangent point
+  # Simple plot with just two curves and tangent point
   p <- ggplot() +
-    
-    # 1. Equi-power curve (hyperbolic)
-    geom_line(
-      data = target_equi_power_curve, 
-      aes(x = cells, y = reads),
-      color = "purple", 
-      linewidth = 2,
-      alpha = 1.0
-    ) +
-    
-    # 2. Equi-cost line (linear)
-    geom_line(
-      data = tangent_equi_cost_line,
-      aes(x = cells, y = reads),
-      color = "orange",
-      linewidth = 2,
-      alpha = 1.0
-    ) +
-    
-    # 3. Tangent point (fixed at mathematical tangent)
-    geom_point(
-      aes(x = 500, y = 1500),
-      color = "red",
-      size = 4
-    ) +
-    
-    # Minimal styling with annotations moved to caption
+    geom_line(data = target_equi_power_curve, aes(x = cells, y = reads), color = "purple") +
+    geom_line(data = tangent_equi_cost_line, aes(x = cells, y = reads), color = "orange") +
+    geom_point(aes(x = 500, y = 1500), color = "red") +
     labs(
       title = "Equi-Power and Equi-Cost Curves",
       x = "Cells per Target",
-      y = "Reads per Cell",
-      caption = paste(
-        "Target Power:", scales::percent(target_power), 
-        "| Optimal Cost: $", round(optimal_cost, 0),
-        "| Purple: Equi-power curve | Orange: Equi-cost line"
-      )
+      y = "Reads per Cell"
     ) +
-    theme_minimal() +
-    theme(
-      legend.position = "none",
-      panel.grid.minor = element_blank()
-    )
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5))
   
   return(p)
 }
@@ -535,67 +481,16 @@ generate_tangent_equi_cost_line <- function(cells_range, reads_range, optimal_de
 #' @importFrom scales percent_format comma
 create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
   
-  # Create base ggplot for cost-power tradeoff
+  # Simple cost-power tradeoff plot
   p <- ggplot(power_data, aes(x = cells, y = reads)) +
-    # Power contour/surface (colored by power achievement)
-    geom_point(
-      aes(color = power, size = meets_threshold),
-      alpha = 0.7
-    ) +
-    # Cost contour lines (if budget specified)
-    {if (!is.null(cost_budget)) {
-      # Add budget constraint line
-      geom_abline(
-        slope = -cost_budget / (50 * 1e-6),  # Simplified cost line
-        intercept = cost_budget / 0.10,
-        linetype = "dashed",
-        color = "#A23B72",
-        linewidth = 1
-      )
-    }} +
-    # Optimal design point (if found)
-    {if (optimal_design$found) {
-      geom_point(
-        data = data.frame(cells = optimal_design$cells, reads = optimal_design$reads),
-        aes(x = cells, y = reads),
-        color = "#F18F01",
-        size = 4,
-        shape = 17  # Triangle
-      )
-    }} +
-    # Styling
-    scale_color_gradient2(
-      low = "#C73E1D", 
-      mid = "#F7B32B", 
-      high = "#2E86AB",
-      midpoint = target_power,
-      name = "Power",
-      labels = scales::percent_format()
-    ) +
-    scale_size_manual(
-      values = c("TRUE" = 3, "FALSE" = 1.5),
-      labels = c("TRUE" = "Meets Target", "FALSE" = "Below Target"),
-      name = "Power Status"
-    ) +
+    geom_point() +
     labs(
       title = workflow_info$title,
-      subtitle = workflow_info$description,
       x = "Cells per Target",
-      y = "Reads per Cell",
-      caption = if (!is.null(cost_budget)) {
-        paste("Target Power:", scales::percent(target_power), 
-              "| Budget: $", scales::comma(cost_budget))
-      } else {
-        paste("Target Power:", scales::percent(target_power))
-      }
+      y = "Reads per Cell"
     ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(size = 14, face = "bold", color = "#2E4A62"),
-      plot.subtitle = element_text(size = 12, color = "#5A6B73"),
-      axis.title = element_text(size = 11, face = "bold"),
-      legend.position = "right"
-    )
+    theme_bw() +
+    theme(plot.title = element_text(hjust = 0.5))
   
   return(p)
 }
