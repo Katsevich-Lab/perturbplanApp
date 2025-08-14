@@ -20,6 +20,9 @@ mod_sidebar_ui <- function(id) {
       # Design Options Module
       mod_design_options_ui(ns("design_options")),
       
+      # Cost Information Module (conditional)
+      mod_cost_info_ui(ns("cost_info")),
+      
       # Experimental Setup Module  
       mod_experimental_setup_ui(ns("experimental_setup")),
       
@@ -54,6 +57,7 @@ mod_sidebar_server <- function(id) {
     
     # Initialize module servers
     design_config <- mod_design_options_server("design_options")
+    cost_config <- mod_cost_info_server("cost_info", design_config)
     experimental_config <- mod_experimental_setup_server("experimental_setup")
     analysis_config <- mod_analysis_choices_server("analysis_choices")
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes")
@@ -68,6 +72,7 @@ mod_sidebar_server <- function(id) {
     combined_config <- reactive({
       list(
         design_options = design_config(),
+        cost_info = cost_config(),
         experimental_setup = experimental_config(),
         analysis_choices = analysis_config(),
         effect_sizes = effect_sizes_config(),

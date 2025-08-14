@@ -60,6 +60,17 @@ app_server <- function(input, output, session) {
         }
       }
       
+      # Cost Information
+      if (!is.null(config$cost_info)) {
+        cost <- config$cost_info
+        if (!is.null(cost$cost_per_cell)) {
+          cat("Cost per Cell: $", cost$cost_per_cell, "\n")
+        }
+        if (!is.null(cost$cost_per_million_reads)) {
+          cat("Cost per Million Reads: $", cost$cost_per_million_reads, "\n")
+        }
+      }
+      
       # Effect Sizes
       if (!is.null(config$effect_sizes)) {
         effects <- config$effect_sizes

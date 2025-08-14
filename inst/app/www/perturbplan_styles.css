@@ -334,3 +334,23 @@ html, body {
   border: 1px solid var(--success-color) !important;
   color: #2E5C3A !important;
 }
+
+/* Cost input styling with dollar sign prefix */
+.cost-input-container {
+  position: relative;
+}
+
+.cost-input-container .form-control {
+  padding-left: 20px !important;
+}
+
+.cost-input-container .dollar-sign {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-weight: bold;
+  z-index: 10;
+  pointer-events: none;
+}
