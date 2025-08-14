@@ -298,21 +298,25 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
               } else {
                 # Multi-parameter power+cost OR power-only cost: Show both cells and reads
                 cost_summary_elements <- list(
-                  tags$strong("Optimal Design:"), tags$br(),
-                  tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), style = "color: #2E86AB; font-weight: bold; margin-right: 15px;"),
-                  tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), style = "color: #2E86AB; font-weight: bold;")
+                  tags$strong("Optimal Design:"), tags$br()
                 )
                 
-                # Add optimal minimized parameter for power+cost multi workflows
+                # ALWAYS show optimal TPM/FC FIRST for power+cost multi workflows
                 if (workflow_info$category == "power_cost_multi" &&
                     !is.null(summary_data$optimal_recommendation$optimal_minimized_param)) {
                   cost_summary_elements <- append(cost_summary_elements, list(
-                    tags$br(),
                     tags$span(paste("Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
                                   summary_data$optimal_recommendation$optimal_minimized_param), 
-                            style = "color: #2E86AB; font-weight: bold;")
+                            style = "color: #2E86AB; font-weight: bold;"),
+                    tags$br()
                   ))
                 }
+                
+                # Then show cells and reads
+                cost_summary_elements <- append(cost_summary_elements, list(
+                  tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), style = "color: #2E86AB; font-weight: bold; margin-right: 15px;"),
+                  tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), style = "color: #2E86AB; font-weight: bold;")
+                ))
               }
               
               # Add cost and power information for all cases
