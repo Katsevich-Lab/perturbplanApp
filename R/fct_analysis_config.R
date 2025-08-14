@@ -93,7 +93,7 @@ detect_workflow_scenario <- function(workflow_config) {
     varying_params <- get_varying_parameters(param_controls)
     
     if (target == "tpm_threshold") {
-      if (length(varying_params) == 2 && all(c("cells", "reads") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
         # Workflow 8: TPM + cells + reads varying
         return(list(
           workflow_id = "power_cost_tpm_cells_reads",
@@ -105,7 +105,13 @@ detect_workflow_scenario <- function(workflow_config) {
         ))
       } else if (length(varying_params) == 1) {
         # Workflows 6-7: TPM + one other parameter
-        other_param <- varying_params[1]
+        other_param_ui <- varying_params[1]
+        # Map UI control name to internal name
+        other_param <- switch(other_param_ui,
+          "cells_per_target" = "cells",
+          "reads_per_cell" = "reads",
+          other_param_ui  # fallback
+        )
         return(list(
           workflow_id = paste0("power_cost_tpm_", other_param),
           plot_type = "single_parameter_curve",
@@ -118,7 +124,7 @@ detect_workflow_scenario <- function(workflow_config) {
       }
     } else if (target == "fold_change") {
       # Similar logic for fold change workflows 9-11
-      if (length(varying_params) == 2 && all(c("cells", "reads") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
         return(list(
           workflow_id = "power_cost_fc_cells_reads",
           plot_type = "cost_tradeoff_curves",
@@ -128,7 +134,13 @@ detect_workflow_scenario <- function(workflow_config) {
           description = "Power+cost optimization with fold change, cells, and reads varying"
         ))
       } else if (length(varying_params) == 1) {
-        other_param <- varying_params[1]
+        other_param_ui <- varying_params[1]
+        # Map UI control name to internal name
+        other_param <- switch(other_param_ui,
+          "cells_per_target" = "cells",
+          "reads_per_cell" = "reads",
+          other_param_ui  # fallback
+        )
         return(list(
           workflow_id = paste0("power_cost_fc_", other_param),
           plot_type = "single_parameter_curve",
