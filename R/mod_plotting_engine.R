@@ -333,7 +333,7 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
       mean = mean(cost_data$cost, na.rm = TRUE)
     ),
     
-    optimal_recommendation = if (optimal_design$found) {
+    optimal_recommendation = if (!is.null(optimal_design$found) && optimal_design$found) {
       list(
         optimal_cells = optimal_design$cells,
         optimal_reads = optimal_design$reads,
@@ -347,6 +347,10 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
       )
     } else {
       list(
+        optimal_cells = NULL,
+        optimal_reads = NULL,
+        total_cost = NULL,
+        achieved_power = NULL,
         recommendation_text = if (!is.null(cost_budget)) {
           "No design meets power target within budget constraint"
         } else {
