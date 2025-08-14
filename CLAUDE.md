@@ -65,20 +65,55 @@ The app follows a constraint-driven design where users specify:
 
 ## Development Workflow
 
-### Golem Development Commands
+### Golem Development Commands (Current Best Practices)
 
 ```r
-# Load and test the app during development
-golem::run_dev()
+# Primary development workflow
+golem::run_dev()              # Launch app in development mode
+devtools::test()              # Run all tests (40 tests should pass)
+devtools::check()             # Full package check (should show 0 errors/warnings)
 
-# Document the package
-devtools::document()
+# Documentation and dependencies
+devtools::document()          # Update NAMESPACE and man files
+golem::install_dev_deps()     # Install all development dependencies
 
-# Check the package
-devtools::check()
+# For new modules (ALWAYS use Golem):
+golem::add_module(name = "module_name", with_test = TRUE, open = FALSE)
 
-# Install development dependencies
-golem::install_dev_deps()
+# For new assets (ALWAYS use Golem):
+golem::add_css_file("filename")      # Add CSS files
+golem::add_js_file("filename")       # Add JavaScript files
+
+# For new dependencies (ALWAYS use usethis):
+usethis::use_package("package_name") # Add to DESCRIPTION
+```
+
+### ⚠️ Critical Golem Rules
+
+**NEVER do these** (violations of Golem best practices):
+```r
+# ❌ Manual module creation
+# Create files manually in R/ directory
+
+# ❌ Manual asset inclusion  
+tags$script(src = "file.js")
+tags$link(rel = "stylesheet", href = "file.css")
+
+# ❌ Missing dependency declarations
+# Using package::function without declaring in DESCRIPTION
+```
+
+**ALWAYS do these** (proper Golem practices):
+```r
+# ✅ Proper module creation
+golem::add_module(name = "module_name", with_test = TRUE)
+
+# ✅ Proper asset management
+# Assets automatically bundled by bundle_resources() in golem_add_external_resources()
+
+# ✅ Proper dependency management  
+usethis::use_package("package_name")     # Adds to DESCRIPTION
+#' @importFrom package function          # Adds to NAMESPACE via devtools::document()
 ```
 
 ### File Organization
@@ -253,27 +288,112 @@ Copy CSS/JS from original app:
 cp ../perturbplan/inst/shiny/ui/* inst/app/www/
 ```
 
-## Placeholder Development Approach
+## Golem Compliance Completed ✅
 
-### Phase 1: Structure Setup
-- Create module skeletons with placeholder content
-- Implement navigation and basic UI layout
-- Focus on constraint-driven workflow logic
+This app now follows **strict Golem best practices** after systematic compliance work. All violations have been addressed:
 
-### Phase 2: Business Logic  
-- Implement parameter control panel logic
-- Add workflow detection (identify which of 11 scenarios)
-- Create design config data structure
+### Priority 1: Module Recreation ✅ COMPLETE
+**Issue**: All modules were manually created instead of using `golem::add_module()`
+**Resolution**: Systematically recreated all modules using proper Golem commands:
 
-### Phase 3: Placeholder Visualizations
-- Static placeholder plots for each workflow type
-- Power curves, cost curves, equi-power/equi-cost plots
-- Interactive elements (gray-out regions, dashed lines, markers)
+```bash
+# Pattern followed for each module:
+Rscript -e "golem::add_module(name = 'design_options', with_test = TRUE, open = FALSE)"
+Rscript -e "golem::add_module(name = 'cost_info', with_test = TRUE, open = FALSE)" 
+Rscript -e "golem::add_module(name = 'experimental_setup', with_test = TRUE, open = FALSE)"
+Rscript -e "golem::add_module(name = 'analysis_choices', with_test = TRUE, open = FALSE)"
+Rscript -e "golem::add_module(name = 'effect_sizes', with_test = TRUE, open = FALSE)"
+Rscript -e "golem::add_module(name = 'sidebar', with_test = TRUE, open = FALSE)"
+```
 
-### Phase 4: Integration
-- Connect to perturbplan package functions
-- Real data processing and analysis
-- Dynamic plot generation based on user inputs
+**Result**: All modules now have proper Golem structure with template comments and comprehensive tests (40 tests passing).
+
+### Priority 2: Asset Management ✅ COMPLETE
+**Issue**: Manual JavaScript inclusion instead of proper Golem asset management
+**Resolution**: 
+- Registered assets with `golem::add_css_file('perturbplan_styles')` and `golem::add_js_file('perturbplan_interactions')`
+- Removed manual `tags$script()` inclusion from `golem_add_external_resources()`
+- Assets now properly managed by `bundle_resources()` function
+
+**Result**: All static assets (CSS/JS) automatically bundled by Golem framework.
+
+### Priority 3: Dependencies ✅ COMPLETE
+**Issue**: Missing package declarations in DESCRIPTION file
+**Resolution**: Added all missing dependencies using `usethis::use_package()`:
+
+```r
+usethis::use_package('config')  # Configuration management
+usethis::use_package('scales')  # Number formatting
+usethis::use_package('tools')   # File extension validation  
+usethis::use_package('utils')   # CSV reading functions
+```
+
+**Result**: All dependencies properly declared in DESCRIPTION and NAMESPACE files.
+
+### Priority 4: Dev Workflow Documentation ✅ COMPLETE
+**Current Task**: Updating this documentation to reflect completed compliance work.
+
+### Golem Compliance Verification
+
+Run these commands to verify continued compliance:
+
+```r
+# Check package structure
+devtools::check()     # Should show 0 errors, 0 warnings
+devtools::test()      # All 40 tests should pass
+
+# Verify Golem structure  
+golem::run_dev()      # App should launch successfully
+
+# Module creation (for future modules)
+golem::add_module(name = "new_module", with_test = TRUE, open = FALSE)
+```
+
+### Current Development State
+
+**✅ Completed**:
+- All UI modules implemented with constraint-driven logic
+- Full parameter control with business rule enforcement  
+- Conditional cost module display
+- Interactive collapsible sections
+- Complete test coverage (40 tests)
+- All assets properly managed
+- All dependencies declared
+
+**🎯 Ready for Next Phase**: The codebase is now fully Golem-compliant and ready for Phase 2: Placeholder Visualizations.
+
+## Development Phases
+
+### Phase 1: Foundation ✅ COMPLETE
+- ✅ Create module skeletons with proper Golem structure
+- ✅ Implement constraint-driven UI with progressive disclosure
+- ✅ Business logic for parameter control and workflow detection
+- ✅ Complete sidebar integration with all modules
+- ✅ Full Golem compliance (modules, assets, dependencies)
+
+### Phase 2: Placeholder Visualizations 🎯 CURRENT PRIORITY
+- Static placeholder plots for all 11 workflow scenarios
+- Power curves, cost curves, and equi-power/equi-cost plots  
+- Interactive plot elements (hover, zoom, selection regions)
+- Results export module with Excel download functionality
+
+#### Phase 2 Implementation Plan:
+1. **Results Display Module**: Create `mod_results_display` with placeholder plots
+2. **Workflow-Specific Plots**: 11 different plot types based on user configuration
+3. **Interactive Elements**: Plotly integration for enhanced user experience
+4. **Export Functionality**: `mod_results_export` with Excel generation
+
+### Phase 3: Analysis Engine Integration
+- Connect to perturbplan package functions (`calculate_power_grid`, etc.)
+- Real data processing and dynamic plot generation  
+- Performance optimization for large parameter grids
+- Advanced error handling and validation
+
+### Phase 4: Production Deployment
+- Docker containerization with proper environment setup
+- Deployment configuration (Shinyapps.io, Shiny Server)
+- Performance monitoring and logging
+- User documentation and tutorials
 
 ## Configuration Management
 
