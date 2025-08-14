@@ -63,7 +63,21 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       # Detect workflow scenario
       workflow_info <- detect_workflow_scenario(config)
       
-      # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis
+      # CHECK FOR POWER+COST WORKFLOWS: Show under construction message
+      if (!is.null(config$design_options$optimization_type) && 
+          config$design_options$optimization_type == "power_cost") {
+        return(list(
+          error = NULL,
+          under_construction = TRUE,
+          message = "Under construction; Stay tuned!",
+          workflow_info = workflow_info,
+          user_config = config,
+          metadata = create_analysis_metadata(config, workflow_info),
+          success = FALSE
+        ))
+      }
+      
+      # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis (POWER-ONLY ONLY)
       if (use_placeholder_mode()) {
         # PLACEHOLDER MODE: Generate realistic fake data
         return(generate_placeholder_analysis(config, workflow_info))
