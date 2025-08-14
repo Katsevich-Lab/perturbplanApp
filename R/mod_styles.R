@@ -1,7 +1,11 @@
-#' UI Styles Module - Now Using Golem Asset Management
+#' UI Styles Module - Golem Asset Management
 #'
-#' @description Loads CSS and JavaScript using proper Golem workflow
-#' Assets are stored in inst/app/www/ and managed by Golem
+#' @description Initializes UI enhancements using proper Golem workflow.
+#' Static assets (CSS/JS) are automatically bundled by golem_add_external_resources().
+#' 
+#' Assets managed by Golem:
+#' - perturbplan_styles.css: Custom styling and color scheme
+#' - perturbplan_interactions.js: Collapsible sections functionality
 #'
 #' @noRd
 #'
@@ -9,7 +13,7 @@
 create_styles <- function() {
   list(
     useShinyjs()
-    # CSS and JS are now automatically loaded by golem_add_external_resources()
-    # Files: inst/app/www/perturbplan_styles.css and perturbplan_interactions.js
+    # All static assets automatically included via bundle_resources()
+    # in golem_add_external_resources() function
   )
 }

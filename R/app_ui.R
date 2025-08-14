@@ -80,9 +80,10 @@ golem_add_external_resources <- function() {
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "perturbplanApp"
-    ),
-    # Add JavaScript for collapsible sidebar functionality
-    tags$script(src = "www/perturbplan_interactions.js")
+    )
+    # CSS and JS assets are automatically included by bundle_resources()
+    # Files: perturbplan_styles.css and perturbplan_interactions.js
+    # Managed by golem::add_css_file() and golem::add_js_file()
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )
