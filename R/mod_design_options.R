@@ -466,7 +466,7 @@ mod_design_options_server <- function(id){
             fixed_value = if(!is.null(input$reads_fixed)) input$reads_fixed else NULL
           ),
           tpm_threshold = list(
-            type = if(!is.null(target) && target == "tpm_threshold") "minimizing" else (input$tpm_control %||% "varying"),
+            type = if(!is.null(target) && target == "tpm_threshold") "minimizing" else if(!is.null(target) && target == "fold_change") "fixed" else (input$tmp_control %||% "varying"),
             fixed_value = if(!is.null(input$tpm_fixed)) input$tpm_fixed else NULL
           ),
           min_fold_change = list(
