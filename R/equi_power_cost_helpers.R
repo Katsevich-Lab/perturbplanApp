@@ -123,7 +123,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       name = "Power Status"
     ) +
     labs(
-      title = "Constrained Optimization: Minimize Cost Subject to Power ≥ Target",
+      title = "Constrained Optimization: Minimize Cost Subject to Power >= Target",
       subtitle = "Purple curve: Required power constraint | Yellow line: Optimal cost | Orange: Tangent solution",
       x = "Cells per Target",
       y = "Reads per Cell",
@@ -153,8 +153,8 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
 #' @noRd
 generate_target_equi_power_curve <- function(cells_range, reads_range, target_power) {
   
-  # For power model: Power ∝ f(cells × reads)
-  # At target power: cells × reads = power_constant
+  # For power model: Power proportional to f(cells * reads)
+  # At target power: cells * reads = power_constant
   # This gives hyperbolic relationship: reads = power_constant / cells
   
   # Calculate the power constant for target power

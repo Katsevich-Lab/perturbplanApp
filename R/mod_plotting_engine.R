@@ -36,6 +36,7 @@ mod_plotting_engine_ui <- function(id) {
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma
 #' @importFrom stats rnorm
+#' @importFrom rlang .data
 mod_plotting_engine_server <- function(id, analysis_results) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -112,7 +113,7 @@ create_single_parameter_plots <- function(results) {
   # Use clean titles from workflow_info (no optimal parameter info in titles)
   plot_title <- workflow_info$title
   
-  p <- ggplot(power_data, aes(x = parameter_value, y = power)) +
+  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power)) +
     geom_line() +
     geom_point() +
     geom_hline(yintercept = target_power, linetype = "dashed") +
@@ -416,8 +417,8 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
   
   # Simple plot with just two curves and tangent point
   p <- ggplot() +
-    geom_line(data = target_equi_power_curve, aes(x = cells, y = reads), color = "purple") +
-    geom_line(data = tangent_equi_cost_line, aes(x = cells, y = reads), color = "orange") +
+    geom_line(data = target_equi_power_curve, aes(x = .data$cells, y = .data$reads), color = "purple") +
+    geom_line(data = tangent_equi_cost_line, aes(x = .data$cells, y = .data$reads), color = "orange") +
     geom_point(aes(x = 500, y = 1500), color = "red") +
     labs(
       title = plot_title,
@@ -507,7 +508,7 @@ generate_tangent_equi_cost_line <- function(cells_range, reads_range, optimal_de
 create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
   
   # Simple cost-power tradeoff plot
-  p <- ggplot(power_data, aes(x = cells, y = reads)) +
+  p <- ggplot(power_data, aes(x = .data$cells, y = .data$reads)) +
     geom_point() +
     labs(
       title = workflow_info$title,
