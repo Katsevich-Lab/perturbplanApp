@@ -16,6 +16,7 @@ Imports:
     magrittr,
     openxlsx,
     plotly,
+    rlang,
     scales,
     shiny (>= 1.7.4),
     shinydashboard,
