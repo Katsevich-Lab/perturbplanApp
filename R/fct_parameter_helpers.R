@@ -73,7 +73,7 @@ format_parameter_value <- function(value, parameter_type) {
   switch(parameter_type,
     "cells_per_target" = paste(scales::comma(value), "cells"),
     "reads_per_cell" = paste(scales::comma(value), "reads/cell"),
-    "tmp_threshold" = paste(value, "TPM"),
+    "tpm_threshold" = paste(value, "TPM"),
     "fold_change" = paste0(value, "x"),
     as.character(value)
   )

@@ -68,9 +68,6 @@ detect_workflow_scenario <- function(workflow_config) {
   
   # VALIDATION: Check for missing essential values
   if (is.null(opt_type) || opt_type == "" || is.null(target) || target == "") {
-    cat("WORKFLOW DETECTION ERROR: Missing essential values\n")
-    cat("  opt_type:", opt_type, "\n")
-    cat("  target:", target, "\n")
     return(list(
       workflow_id = "incomplete_configuration",
       plot_type = "single_parameter_curve",
@@ -113,17 +110,10 @@ detect_workflow_scenario <- function(workflow_config) {
   if (opt_type == "power_cost") {
     # Add null check for param_controls
     if (is.null(param_controls)) {
-      cat("WARNING: param_controls is NULL\n")
       param_controls <- list()
     }
     
     varying_params <- get_varying_parameters(param_controls)
-    
-    # Debug output
-    cat("Power+cost workflow detection:\n")
-    cat("  target:", target, "\n")
-    cat("  varying_params count:", length(varying_params), "\n")
-    cat("  varying_params:", paste(varying_params, collapse = ", "), "\n")
     
     if (target == "tpm_threshold") {
       if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {

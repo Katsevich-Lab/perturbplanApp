@@ -63,21 +63,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       # Detect workflow scenario
       workflow_info <- detect_workflow_scenario(config)
       
-      # CHECK FOR POWER+COST WORKFLOWS: Show under construction message
-      if (!is.null(config$design_options$optimization_type) && 
-          config$design_options$optimization_type == "power_cost") {
-        return(list(
-          error = NULL,
-          under_construction = TRUE,
-          message = "Under construction; Stay tuned!",
-          workflow_info = workflow_info,
-          user_config = config,
-          metadata = create_analysis_metadata(config, workflow_info),
-          success = FALSE
-        ))
-      }
-      
-      # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis (POWER-ONLY ONLY)
+      # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis
       if (use_placeholder_mode()) {
         # PLACEHOLDER MODE: Generate realistic fake data
         return(generate_placeholder_analysis(config, workflow_info))
@@ -310,6 +296,38 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
     stringsAsFactors = FALSE
   )
   
+  # For power+cost workflows, add computed cells/reads columns
+  if (workflow_info$category == "power_cost_single") {
+    # Cost calculation parameters
+    cost_per_cell <- 0.10
+    cost_per_million_reads <- 50
+    cost_budget <- 10000  # Default cost budget for placeholder
+    
+    if (!is.null(workflow_info$varying_parameter)) {
+      if (workflow_info$varying_parameter == "cells") {
+        # Reads is fixed, cells is computed from cost constraint
+        power_data$reads <- 1200  # Fixed value from sidebar
+        # Compute cells for each TPM/FC to stay within cost budget
+        power_data$cells <- pmax(300, pmin(1000, 
+          (cost_budget - cost_per_million_reads * (power_data$reads / 1e6) * 500) / 
+          (cost_per_cell + cost_per_million_reads * (power_data$reads / 1e6))
+        ))
+      } else if (workflow_info$varying_parameter == "reads") {
+        # Cells is fixed, reads is computed from cost constraint  
+        power_data$cells <- 500  # Fixed value from sidebar
+        # Compute reads for each TPM/FC to stay within cost budget
+        remaining_budget <- cost_budget - cost_per_cell * power_data$cells
+        power_data$reads <- pmax(800, pmin(2000,
+          (remaining_budget / (cost_per_million_reads / 1e6)) / power_data$cells
+        ))
+      }
+      
+      # Calculate resulting cost
+      power_data$cost <- power_data$cells * cost_per_cell + 
+                        cost_per_million_reads * (power_data$reads / 1e6) * power_data$cells
+    }
+  }
+  
   # Find optimal design (minimum parameter value that meets power threshold)
   valid_designs <- power_data[power_data$meets_threshold, ]
   if (nrow(valid_designs) > 0) {
@@ -401,6 +419,26 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
   # Add meets_threshold column for plotting
   param_grid$meets_threshold <- param_grid$power >= target_power
   
+  # For power+cost multi-parameter workflows, add conditional TPM/FC columns
+  if (workflow_info$category == "power_cost_multi") {
+    if (workflow_info$minimizing_parameter == "tpm_threshold") {
+      # Add TPM threshold values for each (cells, reads) combination
+      param_grid$tpm_threshold <- with(param_grid, {
+        # Generate realistic TPM values: higher power = lower TPM needed
+        base_tpm <- 20 - 15 * (power - 0.5) / 0.45  # Scale TPM inversely with power
+        pmax(5, pmin(50, base_tpm + rnorm(nrow(param_grid), 0, 2)))  # Add noise, keep in bounds
+      })
+    } else if (workflow_info$minimizing_parameter == "fold_change") {
+      # Add fold change values for each (cells, reads) combination
+      param_grid$fold_change <- with(param_grid, {
+        # Generate realistic FC values: higher power = lower FC needed
+        base_fc <- 2.5 - 1.3 * (power - 0.5) / 0.45  # Scale FC inversely with power
+        pmax(1.1, pmin(5.0, base_fc + rnorm(nrow(param_grid), 0, 0.1)))  # Add noise, keep in bounds
+      })
+    }
+    # Note: If minimizing "cost" (Workflow 5), no additional columns added
+  }
+  
   # Find designs that meet power threshold
   valid_designs <- param_grid[param_grid$meets_threshold, ]
   
@@ -434,6 +472,7 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
     # For power+cost multi-parameter workflows, add optimal minimized parameter
     if (workflow_info$category == "power_cost_multi") {
       if (workflow_info$minimizing_parameter == "tpm_threshold") {
+        # Find the TPM value for the optimal design from param_grid
         optimal_design$optimal_minimized_param <- 12  # Placeholder optimal TPM for multi-param
       } else if (workflow_info$minimizing_parameter == "fold_change") {
         optimal_design$optimal_minimized_param <- 1.5  # Placeholder optimal fold change for multi-param
