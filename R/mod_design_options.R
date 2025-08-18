@@ -71,11 +71,11 @@ mod_design_options_ui <- function(id) {
           selectInput(ns("minimization_target"), NULL,
                      choices = list(
                        "Select what to minimize..." = "",
-                       "Minimize total cells per target" = "cells",
-                       "Minimize reads per cell" = "reads", 
-                       "Minimize total cost (cells x reads)" = "cost",
-                       "Minimize TPM analysis threshold" = "tpm_threshold",
-                       "Minimize minimum fold change" = "fold_change"
+                       "Cells per target" = "cells",
+                       "Reads per cell" = "reads", 
+                       "Total cost" = "cost",
+                       "TPM analysis threshold" = "tpm_threshold",
+                       "Minimum fold change" = "fold_change"
                      ),
                      selected = "")
         ),
@@ -292,11 +292,11 @@ mod_design_options_server <- function(id){
         updateSelectInput(session, "minimization_target",
                          choices = list(
                            "Select what to minimize..." = "",
-                           "Minimize total cells per target" = "cells",
-                           "Minimize reads per cell" = "reads", 
-                           "Minimize total cost (cells x reads)" = "cost",
-                           "Minimize TPM analysis threshold" = "tpm_threshold",
-                           "Minimize minimum fold change" = "fold_change"
+                           "Cells per target" = "cells",
+                           "Reads per cell" = "reads", 
+                           "Total cost" = "cost",
+                           "TPM analysis threshold" = "tmp_threshold",
+                           "Minimum fold change" = "fold_change"
                          ))
         
         # Restore full choices for cells/reads dropdowns when not Power+Cost

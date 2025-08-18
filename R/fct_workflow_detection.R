@@ -23,19 +23,19 @@ detect_workflow <- function(design_config) {
   # Power-only optimization workflows (1-5)
   if (optimization_type == "power_only") {
     workflow_map <- list(
-      "cells" = list(id = 1, name = "Minimize cells per target", type = "power_only"),
-      "reads" = list(id = 2, name = "Minimize reads per cell", type = "power_only"),
-      "tpm_threshold" = list(id = 3, name = "Minimize TPM threshold", type = "power_only"),
-      "fold_change" = list(id = 4, name = "Minimize fold change threshold", type = "power_only"),
-      "cost" = list(id = 5, name = "Minimize total cost", type = "power_only")
+      "cells" = list(id = 1, name = "Cells per target", type = "power_only"),
+      "reads" = list(id = 2, name = "Reads per cell", type = "power_only"),
+      "tmp_threshold" = list(id = 3, name = "TPM threshold", type = "power_only"),
+      "fold_change" = list(id = 4, name = "Fold change threshold", type = "power_only"),
+      "cost" = list(id = 5, name = "Total cost", type = "power_only")
     )
   }
   
   # Power + cost optimization workflows (6-11)  
   else if (optimization_type == "power_cost") {
     workflow_map <- list(
-      "tpm_threshold" = list(id = 6, name = "Minimize TPM threshold (with cost)", type = "power_cost"),
-      "fold_change" = list(id = 7, name = "Minimize fold change threshold (with cost)", type = "power_cost")
+      "tpm_threshold" = list(id = 6, name = "TPM threshold (with cost)", type = "power_cost"),
+      "fold_change" = list(id = 7, name = "Fold change threshold (with cost)", type = "power_cost")
       # Note: workflows 8-11 depend on parameter control combinations
     )
   }
