@@ -171,19 +171,6 @@ mod_design_options_ui <- function(id) {
           )
         ),
         
-        # Design Problem Summary (appears after Steps 1 & 2 are completed)
-        tags$div(
-          id = ns("design_summary"),
-          style = "display: none; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #4A6B82; border-radius: 4px;",
-          tags$div(
-            tags$strong("Your Design Problem:", style = "color: #4A6B82; margin-bottom: 8px; display: block;"),
-            tags$div(
-              id = ns("summary_text"),
-              style = "font-size: 14px; line-height: 1.4; color: #333;"
-            )
-          )
-        ),
-        
         # Step 3: Parameter Control (initially hidden)
         tags$div(
           id = ns("step3"),
@@ -192,6 +179,19 @@ mod_design_options_ui <- function(id) {
           
           # Dynamic parameter controls based on workflow
           uiOutput(ns("dynamic_params"))
+        ),
+        
+        # Design Problem Summary (appears after Step 3 is completed)
+        tags$div(
+          id = ns("design_summary"),
+          style = "display: none; margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #4A6B82; border-radius: 4px;",
+          tags$div(
+            tags$strong("Your Design Problem:", style = "color: #4A6B82; margin-bottom: 8px; display: block;"),
+            tags$div(
+              id = ns("summary_text"),
+              style = "font-size: 14px; line-height: 1.4; color: #333;"
+            )
+          )
         )
       )
     )
@@ -268,38 +268,55 @@ mod_design_options_server <- function(id){
       }
     })
     
-    # Generate and display design problem summary
+    # Generate and display design problem summary (after Step 3)
     observe({
-      # Trigger on parameter control changes for power+cost workflows
+      # Trigger on parameter control changes
       input$cells_control
       input$reads_control
+      input$tpm_control
+      input$fc_control
       
+      # Show summary only after all steps are completed and Step 3 is visible
       if (!is.null(input$optimization_type) && input$optimization_type != "" &&
           !is.null(input$minimization_target) && input$minimization_target != "" &&
           !is.null(input$target_power) && input$target_power > 0) {
         
+        # Check if Step 3 has been shown (indicating parameter controls are set up)
+        step3_visible <- !is.null(input$minimization_target) && input$minimization_target != ""
+        
+        if (step3_visible) {
+        
         # Get resolved parameter configurations for accurate summary
         param_configs <- get_param_configs(input$optimization_type, input$minimization_target)
         
-        # Generate summary text based on workflow
-        summary_text <- generate_design_summary(
-          opt_type = input$optimization_type,
-          target = input$minimization_target,
-          power = input$target_power,
-          cost_budget = input$cost_budget,
-          param_configs = param_configs
-        )
+          # Generate summary text based on workflow and current input states
+          summary_text <- generate_design_summary(
+            opt_type = input$optimization_type,
+            target = input$minimization_target,
+            power = input$target_power,
+            cost_budget = input$cost_budget,
+            param_configs = param_configs,
+            cells_control = input$cells_control,
+            reads_control = input$reads_control,
+            tpm_control = input$tpm_control,
+            fc_control = input$fc_control
+          )
         
-        # Update summary text and show the section
-        shinyjs::html("summary_text", summary_text)
-        shinyjs::show("design_summary")
+          # Update summary text and show the section
+          shinyjs::html("summary_text", summary_text)
+          shinyjs::show("design_summary")
+        } else {
+          shinyjs::hide("design_summary")
+        }
       } else {
         shinyjs::hide("design_summary")
       }
     })
     
     # Helper function to generate design problem summary
-    generate_design_summary <- function(opt_type, target, power, cost_budget, param_configs = NULL) {
+    generate_design_summary <- function(opt_type, target, power, cost_budget, param_configs = NULL, 
+                                       cells_control = NULL, reads_control = NULL, 
+                                       tpm_control = NULL, fc_control = NULL) {
       # Base text
       if (opt_type == "power_only") {
         if (target == "cost") {
@@ -326,25 +343,35 @@ mod_design_options_server <- function(id){
           "fold_change" = "minimum fold change"
         )
         
-        # Generate specific parameter description based on current states
+        # Generate specific parameter description based on actual Step 3 input states
         param_desc <- ""
-        if (!is.null(param_configs)) {
-          cells_type <- param_configs$cells_per_target$type
-          reads_type <- param_configs$reads_per_cell$type
-          
-          if (cells_type == "varying" && reads_type == "varying") {
+        
+        # Use actual control input values if available, otherwise fall back to param_configs
+        actual_cells_type <- cells_control
+        actual_reads_type <- reads_control
+        
+        # If inputs not available, use resolved configs
+        if (is.null(actual_cells_type) && !is.null(param_configs)) {
+          actual_cells_type <- param_configs$cells_per_target$type
+        }
+        if (is.null(actual_reads_type) && !is.null(param_configs)) {
+          actual_reads_type <- param_configs$reads_per_cell$type
+        }
+        
+        if (!is.null(actual_cells_type) && !is.null(actual_reads_type)) {
+          if (actual_cells_type == "varying" && actual_reads_type == "varying") {
             param_desc <- "while varying cells per target and reads per cell"
-          } else if (cells_type == "fixed" && reads_type == "varying") {
+          } else if (actual_cells_type == "fixed" && actual_reads_type == "varying") {
             param_desc <- "while keeping cells per target fixed and varying reads per cell"
-          } else if (cells_type == "varying" && reads_type == "fixed") {
+          } else if (actual_cells_type == "varying" && actual_reads_type == "fixed") {
             param_desc <- "while varying cells per target and keeping reads per cell fixed"
-          } else if (cells_type == "fixed" && reads_type == "fixed") {
+          } else if (actual_cells_type == "fixed" && actual_reads_type == "fixed") {
             param_desc <- "while keeping both cells per target and reads per cell fixed"
           } else {
             param_desc <- "while optimizing cells per target and reads per cell parameters"
           }
         } else {
-          param_desc <- "while varying or fixing cells per target and reads per cell as specified"
+          param_desc <- "while configuring cells per target and reads per cell parameters"
         }
         
         return(paste0(
