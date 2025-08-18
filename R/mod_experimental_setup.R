@@ -26,7 +26,6 @@ mod_experimental_setup_ui <- function(id) {
         id = ns("experimental-content"),
         style = "padding: 15px;",
         selectInput(ns("biological_system"), "Biological system:", c("K562", "Other")),
-        selectInput(ns("experimental_platform"), "Experimental platform:", c("10x Chromium v3", "Other")),
         selectInput(ns("pilot_data_choice"), "Reference expression data:",
                    choices = c("Built-in" = "default", "Custom" = "custom"),
                    selected = "default"),
@@ -82,7 +81,6 @@ mod_experimental_setup_server <- function(id){
     experimental_config <- reactive({
       list(
         biological_system = input$biological_system,
-        experimental_platform = input$experimental_platform,
         pilot_data_choice = input$pilot_data_choice,
         pilot_data = pilot_data(),
         timestamp = Sys.time()
