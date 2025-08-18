@@ -533,6 +533,31 @@ mod_design_options_server <- function(id){
       }
     })
     
+    # Helper function to get resolved parameter controls using business logic
+    get_resolved_param_controls <- function(opt_type, target, input_vals) {
+      # Get the resolved parameter configs using business logic
+      param_configs <- get_param_configs(opt_type, target)
+      
+      list(
+        cells_per_target = list(
+          type = param_configs$cells_per_target$type,
+          fixed_value = if(!is.null(input_vals$cells_fixed)) input_vals$cells_fixed else NULL
+        ),
+        reads_per_cell = list(
+          type = param_configs$reads_per_cell$type,
+          fixed_value = if(!is.null(input_vals$reads_fixed)) input_vals$reads_fixed else NULL
+        ),
+        tpm_threshold = list(
+          type = param_configs$tpm_threshold$type,
+          fixed_value = if(!is.null(input_vals$tpm_fixed)) input_vals$tpm_fixed else NULL
+        ),
+        min_fold_change = list(
+          type = param_configs$min_fold_change$type,
+          fixed_value = if(!is.null(input_vals$fc_fixed)) input_vals$fc_fixed else NULL
+        )
+      )
+    }
+    
     # Return structured design configuration
     design_config <- reactive({
       
@@ -553,28 +578,7 @@ mod_design_options_server <- function(id){
         cost_per_million_reads = if (input$optimization_type == "power_cost") input$cost_per_million_reads 
                                 else if (input$minimization_target == "cost") input$cost_per_million_reads_min 
                                 else NULL,
-        parameter_controls = list(
-          cells_per_target = list(
-            type = if(!is.null(target) && target == "cells") "minimizing" 
-                   else if(!is.null(target) && target == "cost") "optimizing"
-                   else (input$cells_control %||% "varying"),
-            fixed_value = if(!is.null(input$cells_fixed)) input$cells_fixed else NULL
-          ),
-          reads_per_cell = list(
-            type = if(!is.null(target) && target == "reads") "minimizing" 
-                   else if(!is.null(target) && target == "cost") "optimizing"
-                   else (input$reads_control %||% "varying"),
-            fixed_value = if(!is.null(input$reads_fixed)) input$reads_fixed else NULL
-          ),
-          tpm_threshold = list(
-            type = if(!is.null(target) && target == "tpm_threshold") "minimizing" else if(!is.null(target) && target == "fold_change") "fixed" else (input$tmp_control %||% "varying"),
-            fixed_value = if(!is.null(input$tpm_fixed)) input$tpm_fixed else NULL
-          ),
-          min_fold_change = list(
-            type = if(!is.null(target) && target == "fold_change") "minimizing" else if(!is.null(target) && target == "tpm_threshold") "fixed" else (input$fc_control %||% "varying"),
-            fixed_value = if(!is.null(input$fc_fixed)) input$fc_fixed else NULL
-          )
-        ),
+        parameter_controls = get_resolved_param_controls(input$optimization_type, target, input),
         timestamp = Sys.time()
       )
     })
