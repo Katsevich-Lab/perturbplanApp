@@ -359,19 +359,36 @@ mod_design_options_server <- function(id){
         }
         
         if (!is.null(actual_cells_type) && !is.null(actual_reads_type)) {
+          # Build cells/reads description
+          cells_reads_desc <- ""
           if (actual_cells_type == "varying" && actual_reads_type == "varying") {
-            param_desc <- "while varying cells per target and reads per cell"
+            cells_reads_desc <- "varying cells per target and reads per cell"
           } else if (actual_cells_type == "fixed" && actual_reads_type == "varying") {
-            param_desc <- "while keeping cells per target fixed and varying reads per cell"
+            cells_reads_desc <- "keeping cells per target fixed and varying reads per cell"
           } else if (actual_cells_type == "varying" && actual_reads_type == "fixed") {
-            param_desc <- "while varying cells per target and keeping reads per cell fixed"
+            cells_reads_desc <- "varying cells per target and keeping reads per cell fixed"
           } else if (actual_cells_type == "fixed" && actual_reads_type == "fixed") {
-            param_desc <- "while keeping both cells per target and reads per cell fixed"
+            cells_reads_desc <- "keeping both cells per target and reads per cell fixed"
           } else {
-            param_desc <- "while optimizing cells per target and reads per cell parameters"
+            cells_reads_desc <- "optimizing cells per target and reads per cell parameters"
+          }
+          
+          # Add TPM/FC information for power+cost workflows
+          tpm_fc_desc <- ""
+          if (target == "tpm_threshold") {
+            tpm_fc_desc <- "keeping minimum fold change fixed"
+          } else if (target == "fold_change") {
+            tpm_fc_desc <- "keeping TPM threshold fixed"
+          }
+          
+          # Combine descriptions - always include TPM/FC info for power+cost
+          if (tpm_fc_desc != "") {
+            param_desc <- paste0("while ", cells_reads_desc, " and ", tpm_fc_desc)
+          } else {
+            param_desc <- paste0("while ", cells_reads_desc)
           }
         } else {
-          param_desc <- "while configuring cells per target and reads per cell parameters"
+          param_desc <- "while configuring parameter constraints"
         }
         
         return(paste0(
@@ -664,26 +681,51 @@ mod_design_options_server <- function(id){
       }
     })
     
-    # Helper function to get resolved parameter controls using business logic
+    # Helper function to get resolved parameter controls using business logic and user inputs
     get_resolved_param_controls <- function(opt_type, target, input_vals) {
-      # Get the resolved parameter configs using business logic
+      # Get the base parameter configs using business logic
       param_configs <- get_param_configs(opt_type, target)
+      
+      # Override with actual user input from Step 3 controls when available
+      cells_type <- param_configs$cells_per_target$type
+      if (!is.null(input_vals$cells_control)) {
+        cells_type <- input_vals$cells_control
+      }
+      
+      reads_type <- param_configs$reads_per_cell$type
+      if (!is.null(input_vals$reads_control)) {
+        reads_type <- input_vals$reads_control
+      }
+      
+      tpm_type <- param_configs$tpm_threshold$type
+      # Only allow user override if base config allows varying/fixed choice
+      if (!is.null(input_vals$tpm_control) && 
+          param_configs$tpm_threshold$type == "varying") {
+        tpm_type <- input_vals$tpm_control
+      }
+      
+      fc_type <- param_configs$min_fold_change$type
+      # Only allow user override if base config allows varying/fixed choice
+      if (!is.null(input_vals$fc_control) && 
+          param_configs$min_fold_change$type == "varying") {
+        fc_type <- input_vals$fc_control
+      }
       
       list(
         cells_per_target = list(
-          type = param_configs$cells_per_target$type,
+          type = cells_type,
           fixed_value = if(!is.null(input_vals$cells_fixed)) input_vals$cells_fixed else NULL
         ),
         reads_per_cell = list(
-          type = param_configs$reads_per_cell$type,
+          type = reads_type,
           fixed_value = if(!is.null(input_vals$reads_fixed)) input_vals$reads_fixed else NULL
         ),
         tpm_threshold = list(
-          type = param_configs$tpm_threshold$type,
+          type = tpm_type,
           fixed_value = if(!is.null(input_vals$tpm_fixed)) input_vals$tpm_fixed else NULL
         ),
         min_fold_change = list(
-          type = param_configs$min_fold_change$type,
+          type = fc_type,
           fixed_value = if(!is.null(input_vals$fc_fixed)) input_vals$fc_fixed else NULL
         )
       )
@@ -691,6 +733,12 @@ mod_design_options_server <- function(id){
     
     # Return structured design configuration
     design_config <- reactive({
+      
+      # Explicitly depend on control inputs to ensure reactivity
+      input$cells_control
+      input$reads_control
+      input$tpm_control
+      input$fc_control
       
       # Safe access to input values with NULL checking
       target <- input$minimization_target %||% ""
