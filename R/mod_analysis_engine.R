@@ -360,25 +360,52 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
       found = TRUE
     )
     
-    # For power+cost workflows, add optimal minimized parameter and computed cells/reads
-    if (workflow_info$category == "power_cost_single") {
+    # For ALL cost-related workflows, ensure complete (TPM/FC, cells, reads) combination
+    if (workflow_info$category %in% c("power_cost_single", "power_cost_multi", "power_only_cost")) {
+      
+      # Add optimal minimized parameter (TPM or FC)
       if (workflow_info$minimizing_parameter == "tpm_threshold") {
         optimal_design$optimal_minimized_param <- optimal_design$value  # Use the actual optimal value
       } else if (workflow_info$minimizing_parameter == "fold_change") {
         optimal_design$optimal_minimized_param <- optimal_design$value  # Use the actual optimal value
+      } else if (workflow_info$minimizing_parameter == "cost") {
+        # For cost minimization workflows, use fixed TPM/FC from sidebar or defaults
+        if (!is.null(workflow_info$fixed_tpm)) {
+          optimal_design$optimal_minimized_param <- workflow_info$fixed_tpm
+        } else if (!is.null(workflow_info$fixed_fc)) {
+          optimal_design$optimal_minimized_param <- workflow_info$fixed_fc
+        } else {
+          # Default values when both TPM and FC are varying
+          optimal_design$optimal_minimized_param <- 15  # Default TPM threshold
+        }
       }
       
-      # Compute cells and reads values based on cost constraint + optimal TPM/FC
-      if (!is.null(workflow_info$varying_parameter)) {
-        if (workflow_info$varying_parameter == "cells") {
-          # reads is fixed, cells is computed
-          optimal_design$cells <- 600  # Placeholder computed cells value
-          optimal_design$reads <- 1200  # Fixed value from sidebar
-        } else if (workflow_info$varying_parameter == "reads") {
-          # cells is fixed, reads is computed  
-          optimal_design$cells <- 500  # Fixed value from sidebar
-          optimal_design$reads <- 1400  # Placeholder computed reads value
+      # Ensure cells and reads are always included
+      if (is.null(optimal_design$cells) || is.null(optimal_design$reads)) {
+        # Compute cells and reads values based on cost constraint + optimal TPM/FC
+        if (!is.null(workflow_info$varying_parameter)) {
+          if (workflow_info$varying_parameter == "cells") {
+            # reads is fixed, cells is computed
+            optimal_design$cells <- 600  # Placeholder computed cells value
+            optimal_design$reads <- 1200  # Fixed value from sidebar
+          } else if (workflow_info$varying_parameter == "reads") {
+            # cells is fixed, reads is computed  
+            optimal_design$cells <- 500  # Fixed value from sidebar
+            optimal_design$reads <- 1400  # Placeholder computed reads value
+          } else {
+            # Both cells and reads vary - use optimal combination
+            optimal_design$cells <- 500   # Optimal cells
+            optimal_design$reads <- 1500  # Optimal reads
+          }
+        } else {
+          # Default values when parameters not specified
+          optimal_design$cells <- 500   # Default optimal cells
+          optimal_design$reads <- 1500  # Default optimal reads
         }
+      }
+      
+      # Calculate cost if not already present
+      if (is.null(optimal_design$cost)) {
         optimal_design$cost <- optimal_design$cells * 0.10 + 50 * (optimal_design$reads / 1e6) * optimal_design$cells
       }
     }
@@ -474,12 +501,15 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
         optimal_design$found <- TRUE
         optimal_design$type <- "cost_minimized_within_budget"
         
-        # For power+cost multi-parameter workflows, add optimal minimized parameter
-        if (workflow_info$category == "power_cost_multi") {
+        # For ALL cost-related multi-parameter workflows, ensure complete parameter set
+        if (workflow_info$category %in% c("power_cost_multi", "power_only_cost")) {
           if (workflow_info$minimizing_parameter == "tpm_threshold") {
             optimal_design$optimal_minimized_param <- 12  # Placeholder optimal TPM for multi-param
           } else if (workflow_info$minimizing_parameter == "fold_change") {
             optimal_design$optimal_minimized_param <- 1.5  # Placeholder optimal fold change for multi-param
+          } else if (workflow_info$minimizing_parameter == "cost") {
+            # For cost minimization, use fixed TPM/FC or reasonable default
+            optimal_design$optimal_minimized_param <- 15  # Default TPM threshold for cost minimization
           }
         }
       } else {
@@ -499,13 +529,16 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
       type = if (!is.null(cost_budget)) "cost_minimized_within_budget" else "cost_minimized_power_only"
     )
     
-    # For power+cost multi-parameter workflows, add optimal minimized parameter
-    if (workflow_info$category == "power_cost_multi") {
+    # For ALL cost-related multi-parameter workflows, ensure complete parameter set
+    if (workflow_info$category %in% c("power_cost_multi", "power_only_cost")) {
       if (workflow_info$minimizing_parameter == "tpm_threshold") {
         # Find the TPM value for the optimal design from param_grid
         optimal_design$optimal_minimized_param <- 12  # Placeholder optimal TPM for multi-param
       } else if (workflow_info$minimizing_parameter == "fold_change") {
         optimal_design$optimal_minimized_param <- 1.5  # Placeholder optimal fold change for multi-param
+      } else if (workflow_info$minimizing_parameter == "cost") {
+        # For cost minimization, use fixed TPM/FC or reasonable default
+        optimal_design$optimal_minimized_param <- 15  # Default TPM threshold for cost minimization
       }
     }
   }

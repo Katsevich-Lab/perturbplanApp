@@ -75,9 +75,9 @@ mod_results_display_ui <- function(id) {
           )
         ),
         
-        # Export and actions box
+        # Export box
         box(
-          title = "Export & Actions",
+          title = "Export",
           status = "warning",
           solidHeader = TRUE, 
           width = NULL,
@@ -104,12 +104,6 @@ mod_results_display_ui <- function(id) {
               )
             ),
             
-            # Analysis metadata
-            tags$hr(),
-            tags$small(
-              uiOutput(ns("analysis_metadata")),
-              style = "color: #7A8B93;"
-            )
           ),
           
           conditionalPanel(
@@ -144,11 +138,6 @@ mod_results_display_ui <- function(id) {
             h4("Parameter Analysis Details"),
             DTOutput(ns("detailed_table")),
             
-            tags$br(),
-            
-            # Additional analysis information
-            h4("Analysis Configuration"),
-            uiOutput(ns("config_details"))
           )
         )
       )
@@ -238,25 +227,31 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       tagList(
         h4(workflow_info$title, style = "color: #2E4A62; margin-bottom: 15px;"),
         
-        # Workflow description
-        tags$p(
-          workflow_info$description,
-          style = "color: #5A6B73; margin-bottom: 15px; font-style: italic;"
-        ),
-        
-        # Key findings and optimal values
+        # Optimal design results
         tags$div(
-          style = "background-color: #F8F9FA; padding: 15px; border-radius: 5px; margin-bottom: 15px;",
+          style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; margin-bottom: 15px;",
+          
+          # Optimal Design header
+          tags$div(
+            tags$strong("Optimal Design", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
+          ),
           
           if (plots$plot_type == "single_parameter_curve") {
             # Single parameter optimization - show optimal parameter value
             if (!is.null(summary_data$optimal_recommendation$optimal_value)) {
               tagList(
-                tags$strong("Optimal ", format_parameter_name(summary_data$optimal_recommendation$minimized_parameter), ": "),
-                tags$span(summary_data$optimal_recommendation$optimal_value, style = "color: #2E86AB; font-weight: bold; font-size: 16px;"),
-                tags$br(),
-                tags$strong("Achieved Power: "),
-                tags$span(paste0(round(summary_data$optimal_recommendation$achieved_power * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold;")
+                # Parameter being minimized
+                tags$div(
+                  style = "margin-bottom: 8px;",
+                  tags$span(paste0(format_parameter_name(summary_data$optimal_recommendation$minimized_parameter), ": "), style = "color: #5A6B73; font-weight: 500;"),
+                  tags$span(summary_data$optimal_recommendation$optimal_value, style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                ),
+                # Performance achieved
+                tags$div(
+                  style = "margin-top: 12px; padding-top: 10px; border-top: 1px solid #E0E0E0;",
+                  tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
+                  tags$span(paste0(round(summary_data$optimal_recommendation$achieved_power * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold;")
+                )
               )
             } else {
               tags$p("No feasible design found within parameter constraints", style = "color: #C73E1D; font-weight: 500;")
@@ -265,84 +260,64 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
             # Cost optimization - different displays based on workflow type
             if (!is.null(summary_data$optimal_recommendation$optimal_cells)) {
               
-              if (workflow_info$category == "power_cost_single") {
-                # Single parameter power+cost: Show optimal TPM/FC + varying parameter only
-                cost_summary_elements <- list(
-                  tags$strong("Optimal Design:"), tags$br()
-                )
-                
-                # Always show optimal TPM/FC first
+              # For ALL cost-related workflows: Show complete (TPM/FC, cells, reads) combination
+              tagList(
+                # Minimized parameter (TPM/FC or cost constraint) - show for all cost workflows
                 if (!is.null(summary_data$optimal_recommendation$optimal_minimized_param)) {
-                  cost_summary_elements <- append(cost_summary_elements, list(
-                    tags$span(paste("Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
-                                  summary_data$optimal_recommendation$optimal_minimized_param), 
-                            style = "color: #2E86AB; font-weight: bold;"),
-                    tags$br()
-                  ))
-                }
-                
-                # Show only the varying parameter (cells OR reads, not both)
-                if (!is.null(workflow_info$varying_parameter)) {
-                  if (workflow_info$varying_parameter == "cells") {
-                    cost_summary_elements <- append(cost_summary_elements, list(
-                      tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), 
-                              style = "color: #2E86AB; font-weight: bold;")
-                    ))
-                  } else if (workflow_info$varying_parameter == "reads") {
-                    cost_summary_elements <- append(cost_summary_elements, list(
-                      tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), 
-                              style = "color: #2E86AB; font-weight: bold;")
-                    ))
+                  # Determine parameter name and value based on minimizing parameter
+                  param_info <- if (workflow_info$minimizing_parameter == "cost") {
+                    # For cost minimization, show the fixed TPM or FC constraint
+                    list(name = "TPM threshold", value = summary_data$optimal_recommendation$optimal_minimized_param)
+                  } else {
+                    # For TPM/FC minimization, show the optimized parameter
+                    list(name = format_parameter_name(workflow_info$minimizing_parameter), 
+                         value = summary_data$optimal_recommendation$optimal_minimized_param)
                   }
-                }
-              } else {
-                # Multi-parameter power+cost OR power-only cost: Show both cells and reads
-                cost_summary_elements <- list(
-                  tags$strong("Optimal Design:"), tags$br()
+                  
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span(paste0(param_info$name, ": "), style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(param_info$value, style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                  )
+                },
+                
+                # Cells per target - show for all cost workflows
+                tags$div(
+                  style = "margin-bottom: 8px;",
+                  tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
+                  tags$span(paste(summary_data$optimal_recommendation$optimal_cells), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                ),
+                
+                # Reads per cell - show for all cost workflows  
+                tags$div(
+                  style = "margin-bottom: 8px;",
+                  tags$span("Reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                  tags$span(paste(summary_data$optimal_recommendation$optimal_reads), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
                 )
-                
-                # ALWAYS show optimal TPM/FC FIRST for power+cost multi workflows
-                if (workflow_info$category == "power_cost_multi" &&
-                    !is.null(summary_data$optimal_recommendation$optimal_minimized_param)) {
-                  cost_summary_elements <- append(cost_summary_elements, list(
-                    tags$span(paste("Optimal", format_parameter_name(workflow_info$minimizing_parameter), "=", 
-                                  summary_data$optimal_recommendation$optimal_minimized_param), 
-                            style = "color: #2E86AB; font-weight: bold;"),
-                    tags$br()
-                  ))
-                }
-                
-                # Then show cells and reads
-                cost_summary_elements <- append(cost_summary_elements, list(
-                  tags$span(paste(summary_data$optimal_recommendation$optimal_cells, "cells"), style = "color: #2E86AB; font-weight: bold; margin-right: 15px;"),
-                  tags$span(paste(summary_data$optimal_recommendation$optimal_reads, "reads per cell"), style = "color: #2E86AB; font-weight: bold;")
-                ))
-              }
+              )
               
-              # Add cost and power information for all cases
-              cost_summary_elements <- append(cost_summary_elements, list(
-                tags$br(), tags$br(),
-                tags$strong("Total Cost: "),
-                tags$span(paste0("$", scales::comma(summary_data$optimal_recommendation$total_cost)), style = "color: #F18F01; font-weight: bold; font-size: 16px;"),
-                tags$br(),
-                tags$strong("Achieved Power: "),
-                tags$span(paste0(round(summary_data$optimal_recommendation$achieved_power * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold;")
-              ))
-              
-              tagList(cost_summary_elements)
+              # Add performance metrics (cost and power) for all cost optimization cases
+              tagList(
+                # Separator line
+                tags$div(style = "margin: 12px 0; border-top: 1px solid #E0E0E0;"),
+                
+                # Cost
+                tags$div(
+                  style = "margin-bottom: 6px;",
+                  tags$span("Cost: ", style = "color: #5A6B73; font-weight: 500;"),
+                  tags$span(paste0("$", scales::comma(summary_data$optimal_recommendation$total_cost)), style = "color: #F18F01; font-weight: bold; font-size: 16px;")
+                ),
+                
+                # Power
+                tags$div(
+                  tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
+                  tags$span(paste0(round(summary_data$optimal_recommendation$achieved_power * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold;")
+                )
+              )
             } else {
               tags$p("No feasible design found within constraints", style = "color: #C73E1D; font-weight: 500;")
             }
           }
-        ),
-        
-        # Simple recommendation text
-        tags$div(
-          style = "background-color: #E8F4FD; padding: 12px; border-radius: 5px; border-left: 4px solid #2E86AB;",
-          tags$p(
-            summary_data$optimal_recommendation$recommendation_text,
-            style = "margin-bottom: 0; font-weight: 500; color: #2E4A62;"
-          )
         )
       )
     })
@@ -388,63 +363,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       )
     })
     
-    # ========================================================================
-    # ANALYSIS METADATA
-    # ========================================================================
     
-    output$analysis_metadata <- renderUI({
-      req(analysis_results())
-      
-      results <- analysis_results()
-      metadata <- results$metadata
-      
-      tagList(
-        tags$strong("Analysis Mode: "), 
-        tags$span(metadata$analysis_mode),
-        tags$br(),
-        tags$strong("Timestamp: "), 
-        tags$span(format(metadata$analysis_timestamp, "%Y-%m-%d %H:%M")),
-        tags$br(),
-        tags$strong("App Version: "), 
-        tags$span(metadata$app_version)
-      )
-    })
-    
-    # ========================================================================
-    # CONFIGURATION DETAILS
-    # ========================================================================
-    
-    output$config_details <- renderUI({
-      req(analysis_results())
-      
-      results <- analysis_results()
-      config <- results$user_config
-      
-      tagList(
-        tags$div(
-          style = "background-color: #F8F9FA; padding: 15px; border-radius: 5px;",
-          
-          h5("Design Configuration", style = "color: #2E4A62; margin-bottom: 10px;"),
-          tags$strong("Optimization Type: "), 
-          tags$span(config$design_options$optimization_type),
-          tags$br(),
-          tags$strong("Target Power: "), 
-          tags$span(paste0(config$design_options$target_power * 100, "%")),
-          tags$br(),
-          
-          if (!is.null(config$design_options$cost_budget)) {
-            tagList(
-              tags$strong("Cost Budget: "), 
-              tags$span(paste0("$", scales::comma(config$design_options$cost_budget))),
-              tags$br()
-            )
-          },
-          
-          tags$strong("Minimization Target: "), 
-          tags$span(config$design_options$minimization_target)
-        )
-      )
-    })
     
     # ========================================================================
     # EXPORT FUNCTIONALITY
