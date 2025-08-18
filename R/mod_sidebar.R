@@ -17,22 +17,19 @@ mod_sidebar_ui <- function(id) {
     tags$div(
       style = "padding: 10px; max-height: 90vh; overflow-y: auto;",
       
-      # Design Options Module
+      # Design problem
       mod_design_options_ui(ns("design_options")),
       
-      # Cost Information Module (conditional)
-      mod_cost_info_ui(ns("cost_info")),
-      
-      # Perturbation Choices Module
+      # Perturbation choices
       mod_perturbation_choices_ui(ns("perturbation_choices")),
       
-      # Experimental Setup Module  
+      # Experimental choices
       mod_experimental_setup_ui(ns("experimental_setup")),
       
-      # Analysis Choices Module
+      # Analysis choices
       mod_analysis_choices_ui(ns("analysis_choices")),
       
-      # Effect Sizes Module
+      # Effect sizes
       mod_effect_sizes_ui(ns("effect_sizes")),
       
       # Horizontal separator line
@@ -58,7 +55,6 @@ mod_sidebar_server <- function(id){
     
     # Initialize module servers
     design_config <- mod_design_options_server("design_options")
-    cost_config <- mod_cost_info_server("cost_info", design_config)
     perturbation_config <- mod_perturbation_choices_server("perturbation_choices")
     experimental_config <- mod_experimental_setup_server("experimental_setup")
     analysis_config <- mod_analysis_choices_server("analysis_choices")
@@ -74,7 +70,6 @@ mod_sidebar_server <- function(id){
     combined_config <- reactive({
       list(
         design_options = design_config(),
-        cost_info = cost_config(),
         perturbation_choices = perturbation_config(),
         experimental_setup = experimental_config(),
         analysis_choices = analysis_config(),

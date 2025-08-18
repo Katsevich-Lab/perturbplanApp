@@ -20,7 +20,7 @@ mod_experimental_setup_ui <- function(id) {
         style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
         onclick = paste0("toggleSection('", ns("experimental-content"), "', '", ns("exp-chevron"), "')"),
         tags$i(id = ns("exp-chevron"), class = "fa fa-chevron-right", style = "margin-right: 8px;"),
-        tags$strong("Experimental setup")
+        tags$strong("Experimental choices")
       ),
       tags$div(
         id = ns("experimental-content"),

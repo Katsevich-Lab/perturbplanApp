@@ -21,7 +21,7 @@ mod_design_options_ui <- function(id) {
         style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
         onclick = paste0("toggleSection('", ns("design-content"), "', '", ns("design-chevron"), "')"),
         tags$i(id = ns("design-chevron"), class = "fa fa-chevron-down", style = "margin-right: 8px;"),
-        tags$strong("Design Options")
+        tags$strong("Design problem")
       ),
       tags$div(
         id = ns("design-content"),
@@ -59,7 +59,52 @@ mod_design_options_ui <- function(id) {
             style = "display: none; margin-top: 10px;",
             tags$h6("Cost Budget ($):", style = "color: #4A6B82; margin-bottom: 5px; font-weight: bold;"),
             numericInput(ns("cost_budget"), NULL, 
-                        value = 10000, min = 100, max = 1000000, step = 500)
+                        value = 10000, min = 100, max = 1000000, step = 500),
+            
+            # Cost parameters (below cost budget)
+            tags$div(
+              style = "margin-top: 15px;",
+              tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+              
+              # Two column layout for cost inputs
+              tags$div(
+                style = "display: flex; gap: 15px;",
+                
+                # Cost per cell column
+                tags$div(
+                  style = "flex: 1;",
+                  tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                  tags$div(
+                    class = "cost-input-container",
+                    style = "position: relative;",
+                    tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                    numericInput(ns("cost_per_cell"), 
+                                label = NULL,
+                                value = 0.01, 
+                                min = 0, 
+                                step = 0.001,
+                                width = "100%")
+                  )
+                ),
+                
+                # Cost per million reads column  
+                tags$div(
+                  style = "flex: 1;",
+                  tags$label("Cost per million reads:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                  tags$div(
+                    class = "cost-input-container",
+                    style = "position: relative;",
+                    tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                    numericInput(ns("cost_per_million_reads"), 
+                                label = NULL,
+                                value = 1.00, 
+                                min = 0, 
+                                step = 0.01,
+                                width = "100%")
+                  )
+                )
+              )
+            )
           )
         ),
         
@@ -452,6 +497,8 @@ mod_design_options_server <- function(id){
         # Power and Cost Requirements
         target_power = input$target_power,
         cost_budget = if (input$optimization_type == "power_cost") input$cost_budget else NULL,
+        cost_per_cell = if (input$optimization_type == "power_cost") input$cost_per_cell else NULL,
+        cost_per_million_reads = if (input$optimization_type == "power_cost") input$cost_per_million_reads else NULL,
         parameter_controls = list(
           cells_per_target = list(
             type = if(!is.null(target) && target == "cells") "minimizing" 
