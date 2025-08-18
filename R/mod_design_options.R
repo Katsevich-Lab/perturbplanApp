@@ -122,7 +122,53 @@ mod_design_options_ui <- function(id) {
                        "TPM analysis threshold" = "tpm_threshold",
                        "Minimum fold change" = "fold_change"
                      ),
-                     selected = "")
+                     selected = ""),
+          
+          # Cost parameters for cost minimization (only shown when minimizing total cost)
+          tags$div(
+            id = ns("cost_minimization_params"),
+            style = "display: none; margin-top: 15px;",
+            tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+            
+            # Two column layout for cost inputs
+            tags$div(
+              style = "display: flex; gap: 15px;",
+              
+              # Cost per cell column
+              tags$div(
+                style = "flex: 1;",
+                tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                tags$div(
+                  class = "cost-input-container",
+                  style = "position: relative;",
+                  tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                  numericInput(ns("cost_per_cell_min"), 
+                              label = NULL,
+                              value = 0.01, 
+                              min = 0, 
+                              step = 0.001,
+                              width = "100%")
+                )
+              ),
+              
+              # Cost per million reads column  
+              tags$div(
+                style = "flex: 1;",
+                tags$label("Cost per million reads:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                tags$div(
+                  class = "cost-input-container",
+                  style = "position: relative;",
+                  tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                  numericInput(ns("cost_per_million_reads_min"), 
+                              label = NULL,
+                              value = 1.00, 
+                              min = 0, 
+                              step = 0.01,
+                              width = "100%")
+                )
+              )
+            )
+          )
         ),
         
         # Step 3: Parameter Control (initially hidden)
@@ -196,8 +242,16 @@ mod_design_options_server <- function(id){
       # Step 3 appears when minimization target is selected
       if (!is.null(input$minimization_target) && input$minimization_target != "") {
         shinyjs::show("step3")
+        
+        # Show cost parameters if minimizing total cost
+        if (input$minimization_target == "cost") {
+          shinyjs::show("cost_minimization_params")
+        } else {
+          shinyjs::hide("cost_minimization_params")
+        }
       } else {
         shinyjs::hide("step3")
+        shinyjs::hide("cost_minimization_params")
       }
     })
     
@@ -497,8 +551,12 @@ mod_design_options_server <- function(id){
         # Power and Cost Requirements
         target_power = input$target_power,
         cost_budget = if (input$optimization_type == "power_cost") input$cost_budget else NULL,
-        cost_per_cell = if (input$optimization_type == "power_cost") input$cost_per_cell else NULL,
-        cost_per_million_reads = if (input$optimization_type == "power_cost") input$cost_per_million_reads else NULL,
+        cost_per_cell = if (input$optimization_type == "power_cost") input$cost_per_cell 
+                        else if (input$minimization_target == "cost") input$cost_per_cell_min 
+                        else NULL,
+        cost_per_million_reads = if (input$optimization_type == "power_cost") input$cost_per_million_reads 
+                                else if (input$minimization_target == "cost") input$cost_per_million_reads_min 
+                                else NULL,
         parameter_controls = list(
           cells_per_target = list(
             type = if(!is.null(target) && target == "cells") "minimizing" 
