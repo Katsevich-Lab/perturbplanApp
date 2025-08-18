@@ -19,7 +19,7 @@ mod_effect_sizes_ui <- function(id) {
         style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
         onclick = paste0("toggleSection('", ns("effects-content"), "', '", ns("effects-chevron"), "')"),
         tags$i(id = ns("effects-chevron"), class = "fa fa-chevron-right", style = "margin-right: 8px;"),
-        tags$strong("Assumed effect sizes")
+        tags$strong("Effect sizes")
       ),
       tags$div(
         id = ns("effects-content"),
