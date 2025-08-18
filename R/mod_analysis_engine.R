@@ -36,6 +36,10 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     # MAIN ANALYSIS REACTIVE - THE SWAP POINT
     # ========================================================================
     
+    # Track previous configuration to detect sidebar changes
+    previous_config <- reactiveVal(NULL)
+    last_plan_count <- reactiveVal(0)
+    
     analysis_results <- reactive({
       req(workflow_config())
       
@@ -44,6 +48,23 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       # Skip analysis if plan not clicked
       if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
         return(NULL)
+      }
+      
+      # Protection mechanism: Clear results if sidebar inputs changed since last plan
+      current_config_hash <- create_config_hash(config)
+      previous_hash <- previous_config()
+      current_plan_count <- config$plan_clicked
+      
+      # If this is a new plan click, update tracking
+      if (current_plan_count > last_plan_count()) {
+        previous_config(current_config_hash)
+        last_plan_count(current_plan_count)
+      } else {
+        # Check if sidebar inputs changed since last plan
+        if (!is.null(previous_hash) && current_config_hash != previous_hash) {
+          # Sidebar changed but no new plan click - return NULL to clear results
+          return(NULL)
+        }
       }
       
       # Configuration received successfully
@@ -551,6 +572,34 @@ generate_real_analysis <- function(config, workflow_info) {
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
+
+#' Create configuration hash for change detection
+#'
+#' @description Creates a hash of the sidebar configuration to detect changes.
+#' Excludes plan_clicked and timestamp to focus on actual parameter changes.
+#'
+#' @param config User configuration from sidebar modules
+#' @return Character string representing configuration hash
+#' @noRd
+create_config_hash <- function(config) {
+  # Extract relevant configuration excluding plan_clicked and timestamp
+  config_for_hash <- list(
+    design_options = config$design_options,
+    perturbation_choices = config$perturbation_choices,
+    experimental_setup = config$experimental_setup,
+    analysis_choices = config$analysis_choices,
+    effect_sizes = config$effect_sizes
+  )
+  
+  # Create hash using digest (assuming digest package is available)
+  # If digest not available, use simple serialization
+  tryCatch({
+    digest::digest(config_for_hash, algo = "md5")
+  }, error = function(e) {
+    # Fallback: use serialization and simple hash
+    paste(collapse = "", as.character(serialize(config_for_hash, NULL)))
+  })
+}
 
 #' Extract all parameter ranges from configuration
 #'
