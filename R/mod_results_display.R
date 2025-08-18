@@ -335,14 +335,54 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         return(NULL)
       }
       
-      # Prepare data for table
+      # Prepare data for table - handle different workflow structures
       if (results$workflow_info$plot_type == "single_parameter_curve") {
-        table_data <- results$power_data
-        table_data$power <- round(table_data$power, 3)
-        table_data$meets_threshold <- ifelse(table_data$meets_threshold, "Yes", "No")
         
-        colnames(table_data) <- c("Parameter", "Value", "Power", "Meets Target")
+        # Check if this is a power+cost single parameter workflow
+        if (results$workflow_info$category == "power_cost_single") {
+          # Power+cost single parameter: has parameter_name, parameter_value, power, meets_threshold, plus cells/reads/cost
+          table_data <- results$power_data
+          table_data$power <- round(table_data$power, 3)
+          table_data$meets_threshold <- ifelse(table_data$meets_threshold, "Yes", "No")
+          
+          # Round additional numeric columns if they exist
+          if ("cost" %in% names(table_data)) {
+            table_data$cost <- round(table_data$cost, 2)
+          }
+          if ("cells" %in% names(table_data)) {
+            table_data$cells <- round(table_data$cells, 0)
+          }
+          if ("reads" %in% names(table_data)) {
+            table_data$reads <- round(table_data$reads, 0)
+          }
+          
+          # Create appropriate column names based on available columns
+          base_cols <- c("Parameter", "Value", "Power", "Meets Target")
+          additional_cols <- c()
+          
+          if ("cells" %in% names(table_data)) {
+            additional_cols <- c(additional_cols, "Cells")
+          }
+          if ("reads" %in% names(table_data)) {
+            additional_cols <- c(additional_cols, "Reads")
+          }
+          if ("cost" %in% names(table_data)) {
+            additional_cols <- c(additional_cols, "Cost ($)")
+          }
+          
+          colnames(table_data) <- c(base_cols, additional_cols)
+          
+        } else {
+          # Regular single parameter workflow: only parameter_name, parameter_value, power, meets_threshold
+          table_data <- results$power_data
+          table_data$power <- round(table_data$power, 3)
+          table_data$meets_threshold <- ifelse(table_data$meets_threshold, "Yes", "No")
+          
+          colnames(table_data) <- c("Parameter", "Value", "Power", "Meets Target")
+        }
+        
       } else {
+        # Multi-parameter cost tradeoff workflows
         table_data <- results$power_data
         table_data$power <- round(table_data$power, 3)
         table_data$cost <- round(table_data$cost, 2)
