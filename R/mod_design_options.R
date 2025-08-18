@@ -171,6 +171,19 @@ mod_design_options_ui <- function(id) {
           )
         ),
         
+        # Design Problem Summary (appears after Steps 1 & 2 are completed)
+        tags$div(
+          id = ns("design_summary"),
+          style = "display: none; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #4A6B82; border-radius: 4px;",
+          tags$div(
+            tags$strong("Your Design Problem:", style = "color: #4A6B82; margin-bottom: 8px; display: block;"),
+            tags$div(
+              id = ns("summary_text"),
+              style = "font-size: 14px; line-height: 1.4; color: #333;"
+            )
+          )
+        ),
+        
         # Step 3: Parameter Control (initially hidden)
         tags$div(
           id = ns("step3"),
@@ -254,6 +267,67 @@ mod_design_options_server <- function(id){
         shinyjs::hide("cost_minimization_params")
       }
     })
+    
+    # Generate and display design problem summary
+    observe({
+      if (!is.null(input$optimization_type) && input$optimization_type != "" &&
+          !is.null(input$minimization_target) && input$minimization_target != "" &&
+          !is.null(input$target_power) && input$target_power > 0) {
+        
+        # Generate summary text based on workflow
+        summary_text <- generate_design_summary(
+          opt_type = input$optimization_type,
+          target = input$minimization_target,
+          power = input$target_power,
+          cost_budget = input$cost_budget
+        )
+        
+        # Update summary text and show the section
+        shinyjs::html("summary_text", summary_text)
+        shinyjs::show("design_summary")
+      } else {
+        shinyjs::hide("design_summary")
+      }
+    })
+    
+    # Helper function to generate design problem summary
+    generate_design_summary <- function(opt_type, target, power, cost_budget) {
+      # Base text
+      if (opt_type == "power_only") {
+        if (target == "cost") {
+          return(paste0(
+            "Find the minimum <strong>total cost</strong> for which power is at least <strong>", 
+            power * 100, "%</strong>, while varying cells per target and reads per cell, keeping TPM threshold and minimum fold change fixed."
+          ))
+        } else {
+          target_name <- switch(target,
+            "cells" = "cells per target",
+            "reads" = "reads per cell", 
+            "tpm_threshold" = "TPM threshold",
+            "fold_change" = "minimum fold change"
+          )
+          return(paste0(
+            "Find the minimum <strong>", target_name, "</strong> for which power is at least <strong>", 
+            power * 100, 
+            "%</strong>, keeping all other parameters fixed."
+          ))
+        }
+      } else if (opt_type == "power_cost") {
+        target_name <- switch(target,
+          "tpm_threshold" = "TPM threshold",
+          "fold_change" = "minimum fold change"
+        )
+        return(paste0(
+          "Find the minimum <strong>", target_name, "</strong> for which power is at least <strong>", 
+          power * 100, 
+          "%</strong> and cost is at most <strong>$", 
+          format(cost_budget, big.mark = ",", scientific = FALSE),
+          "</strong>, while varying or fixing cells per target and reads per cell as specified."
+        ))
+      }
+      
+      return("Please complete all design options to see your optimization objective.")
+    }
     
     # Dynamic parameter controls generation
     output$dynamic_params <- renderUI({
