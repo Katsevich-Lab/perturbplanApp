@@ -55,47 +55,7 @@ mod_perturbation_choices_ui <- function(id){
                     value = 10,
                     min = 0,
                     max = 100,
-                    step = 1),
-        
-        # gRNA variability
-        numericInput(ns("gRNA_variability"), 
-                    "gRNA variability:",
-                    value = 0.13,
-                    min = 0.01,
-                    max = 1.0,
-                    step = 0.01),
-        
-        # Control group type
-        selectInput(ns("control_group"), 
-                   "Control group:",
-                   choices = c("Complement" = "complement", 
-                              "Non-targeting cells" = "nt_cells"),
-                   selected = "complement"),
-        
-        # Platform efficiency parameters
-        tags$hr(style = "margin: 15px 0; border-color: #E3E6EA;"),
-        tags$h6("Platform efficiency", style = "color: #6B6B6B; margin-bottom: 10px;"),
-        
-        numericInput(ns("mapping_efficiency"), 
-                    "Mapping efficiency:",
-                    value = 0.72,
-                    min = 0.1,
-                    max = 1.0,
-                    step = 0.01),
-        
-        numericInput(ns("cell_recovery_rate"), 
-                    "Cell recovery rate:",
-                    value = 0.5,
-                    min = 0.1,
-                    max = 1.0,
-                    step = 0.01),
-        
-        numericInput(ns("QC_rate"), 
-                    "QC rate:",
-                    value = 1.0,
-                    min = 0.5,
-                    max = 1.0,
-                    step = 0.01)
+                    step = 1)
       )
     )
   )
@@ -110,18 +70,13 @@ mod_perturbation_choices_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
-    # Return reactive list with all perturbation parameters
+    # Return reactive list with core perturbation parameters
     reactive({
       list(
         MOI = input$MOI %||% 10,
         num_targets = input$num_targets %||% 100,
         gRNAs_per_target = input$gRNAs_per_target %||% 4,
-        non_targeting_gRNAs = input$non_targeting_gRNAs %||% 10,
-        gRNA_variability = input$gRNA_variability %||% 0.13,
-        control_group = input$control_group %||% "complement",
-        mapping_efficiency = input$mapping_efficiency %||% 0.72,
-        cell_recovery_rate = input$cell_recovery_rate %||% 0.5,
-        QC_rate = input$QC_rate %||% 1.0
+        non_targeting_gRNAs = input$non_targeting_gRNAs %||% 10
       )
     })
   })
