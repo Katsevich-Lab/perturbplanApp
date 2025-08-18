@@ -25,7 +25,7 @@ detect_workflow <- function(design_config) {
     workflow_map <- list(
       "cells" = list(id = 1, name = "Cells per target", type = "power_only"),
       "reads" = list(id = 2, name = "Reads per cell", type = "power_only"),
-      "tmp_threshold" = list(id = 3, name = "TPM threshold", type = "power_only"),
+      "tpm_threshold" = list(id = 3, name = "TPM threshold", type = "power_only"),
       "fold_change" = list(id = 4, name = "Fold change threshold", type = "power_only"),
       "cost" = list(id = 5, name = "Total cost", type = "power_only")
     )

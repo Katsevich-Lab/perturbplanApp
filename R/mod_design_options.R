@@ -295,7 +295,7 @@ mod_design_options_server <- function(id){
                            "Cells per target" = "cells",
                            "Reads per cell" = "reads", 
                            "Total cost" = "cost",
-                           "TPM analysis threshold" = "tmp_threshold",
+                           "TPM analysis threshold" = "tpm_threshold",
                            "Minimum fold change" = "fold_change"
                          ))
         
