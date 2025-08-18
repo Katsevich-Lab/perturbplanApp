@@ -56,9 +56,9 @@ mod_sidebar_server <- function(id){
     # Initialize module servers
     design_config <- mod_design_options_server("design_options")
     perturbation_config <- mod_perturbation_choices_server("perturbation_choices")
-    experimental_config <- mod_experimental_setup_server("experimental_setup")
-    analysis_config <- mod_analysis_choices_server("analysis_choices")
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes")
+    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
+    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
+    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
     
     # Plan button logic
     observeEvent(input$plan_btn, {
@@ -84,7 +84,7 @@ mod_sidebar_server <- function(id){
           design_opts$parameter_controls$reads_per_cell$fixed_value <- experimental_opts$reads_fixed
         }
         if (!is.null(analysis_opts$tpm_fixed)) {
-          design_opts$parameter_controls$tmp_threshold$fixed_value <- analysis_opts$tmp_fixed
+          design_opts$parameter_controls$tpm_threshold$fixed_value <- analysis_opts$tpm_fixed
         }
         if (!is.null(effect_sizes_opts$fc_fixed)) {
           design_opts$parameter_controls$min_fold_change$fixed_value <- effect_sizes_opts$fc_fixed

@@ -7,7 +7,8 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput
+#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe
+#' @importFrom shinyjs show hide
 mod_analysis_choices_ui <- function(id) {
   ns <- NS(id)
   
@@ -55,9 +56,10 @@ mod_analysis_choices_ui <- function(id) {
                     selected = "complement"),
         numericInput(ns("fdr_target"), "FDR target level:", 0.05, 0.001, 0.1, 0.001),
         
-        # Fixed value input for analysis parameter
+        # Fixed value input for analysis parameter (conditional)
         tags$div(
-          style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA;",
+          id = ns("tpm_fixed_div"),
+          style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
           numericInput(ns("tpm_fixed"), "TPM analysis threshold:", 
                       value = 10, min = 0, max = 100, step = 1)
         )
@@ -70,10 +72,30 @@ mod_analysis_choices_ui <- function(id) {
 #'
 #' @description Server logic for analysis choice parameters and gene list processing
 #'
+#' @param design_config Reactive containing design options configuration
+#'
 #' @noRd 
-mod_analysis_choices_server <- function(id){
+mod_analysis_choices_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+    
+    # Conditional display logic for fixed value input
+    observe({
+      config <- design_config()
+      
+      if (!is.null(config) && !is.null(config$parameter_controls)) {
+        tpm_type <- config$parameter_controls$tpm_threshold$type
+        
+        # Show TPM fixed input only when TPM parameter is set to "fixed"
+        if (!is.null(tpm_type) && tpm_type == "fixed") {
+          shinyjs::show("tpm_fixed_div")
+        } else {
+          shinyjs::hide("tpm_fixed_div")
+        }
+      } else {
+        shinyjs::hide("tpm_fixed_div")
+      }
+    })
     
     # Gene list processing
     gene_list_data <- reactive({
@@ -101,7 +123,7 @@ mod_analysis_choices_server <- function(id){
         control_group = input$control_group,
         fdr_target = input$fdr_target,
         # Fixed value input
-        tmp_fixed = input$tmp_fixed,
+        tpm_fixed = input$tpm_fixed,
         timestamp = Sys.time()
       )
     })

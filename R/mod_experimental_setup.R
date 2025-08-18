@@ -7,7 +7,8 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel
+#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe
+#' @importFrom shinyjs show hide
 mod_experimental_setup_ui <- function(id) {
   ns <- NS(id)
   
@@ -46,17 +47,26 @@ mod_experimental_setup_ui <- function(id) {
                    placeholder = "Choose reference expression data RDS file...")
         ),
         
-        # Fixed value inputs for experimental parameters
+        # Fixed value inputs for experimental parameters (conditional)
         tags$div(
-          style = "margin-top: 20px; padding-top: 15px; border-top: 1px solid #E3E6EA;",
+          id = ns("experimental_fixed_params"),
+          style = "margin-top: 20px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
           
-          # Cells per target fixed value
-          numericInput(ns("cells_fixed"), "Cells per target:", 
-                      value = 1000, min = 50, max = 5000, step = 50),
+          # Cells per target fixed value (conditional)
+          tags$div(
+            id = ns("cells_fixed_div"),
+            style = "display: none; margin-bottom: 15px;",
+            numericInput(ns("cells_fixed"), "Cells per target:", 
+                        value = 1000, min = 50, max = 5000, step = 50)
+          ),
           
-          # Reads per cell fixed value  
-          numericInput(ns("reads_fixed"), "Reads per cell:", 
-                      value = 5000, min = 500, max = 20000, step = 500)
+          # Reads per cell fixed value (conditional)
+          tags$div(
+            id = ns("reads_fixed_div"),
+            style = "display: none; margin-bottom: 15px;",
+            numericInput(ns("reads_fixed"), "Reads per cell:", 
+                        value = 5000, min = 500, max = 20000, step = 500)
+          )
         )
       )
     )
@@ -67,10 +77,48 @@ mod_experimental_setup_ui <- function(id) {
 #'
 #' @description Server logic for experimental setup parameters and file uploads
 #'
+#' @param design_config Reactive containing design options configuration
+#'
 #' @noRd 
-mod_experimental_setup_server <- function(id){
+mod_experimental_setup_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+    
+    # Conditional display logic for fixed value inputs
+    observe({
+      config <- design_config()
+      
+      if (!is.null(config) && !is.null(config$parameter_controls)) {
+        cells_type <- config$parameter_controls$cells_per_target$type
+        reads_type <- config$parameter_controls$reads_per_cell$type
+        
+        # Show cells fixed input only when cells parameter is set to "fixed"
+        if (!is.null(cells_type) && cells_type == "fixed") {
+          shinyjs::show("cells_fixed_div")
+          shinyjs::show("experimental_fixed_params")
+        } else {
+          shinyjs::hide("cells_fixed_div")
+        }
+        
+        # Show reads fixed input only when reads parameter is set to "fixed"
+        if (!is.null(reads_type) && reads_type == "fixed") {
+          shinyjs::show("reads_fixed_div")
+          shinyjs::show("experimental_fixed_params")
+        } else {
+          shinyjs::hide("reads_fixed_div")
+        }
+        
+        # Hide the entire section if neither parameter is fixed
+        if ((is.null(cells_type) || cells_type != "fixed") && 
+            (is.null(reads_type) || reads_type != "fixed")) {
+          shinyjs::hide("experimental_fixed_params")
+        }
+      } else {
+        shinyjs::hide("experimental_fixed_params")
+        shinyjs::hide("cells_fixed_div")
+        shinyjs::hide("reads_fixed_div")
+      }
+    })
     
     # File upload validation and processing would go here
     pilot_data <- reactive({
