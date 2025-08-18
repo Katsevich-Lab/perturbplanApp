@@ -25,7 +25,14 @@ mod_effect_sizes_ui <- function(id) {
         id = ns("effects-content"),
         style = "padding: 15px;",
         numericInput(ns("fc_sd"), "gRNA variability:", 0.15, 0.1, 5, 0.05),
-        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
+        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01),
+        
+        # Fixed value input for effect size parameter
+        tags$div(
+          style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA;",
+          numericInput(ns("fc_fixed"), "Minimum fold change:", 
+                      value = 1.5, min = 1.1, max = 10, step = 0.1)
+        )
       )
     )
   )
@@ -45,6 +52,8 @@ mod_effect_sizes_server <- function(id){
       list(
         fc_sd = input$fc_sd,
         prop_non_null = input$prop_non_null,
+        # Fixed value input
+        fc_fixed = input$fc_fixed,
         timestamp = Sys.time()
       )
     })

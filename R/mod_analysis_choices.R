@@ -53,7 +53,14 @@ mod_analysis_choices_ui <- function(id) {
                     choices = c("Complement cells" = "complement", 
                                "Non-targeting cells" = "nt_cells"), 
                     selected = "complement"),
-        numericInput(ns("fdr_target"), "FDR target level:", 0.05, 0.001, 0.1, 0.001)
+        numericInput(ns("fdr_target"), "FDR target level:", 0.05, 0.001, 0.1, 0.001),
+        
+        # Fixed value input for analysis parameter
+        tags$div(
+          style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA;",
+          numericInput(ns("tpm_fixed"), "TPM analysis threshold:", 
+                      value = 10, min = 0, max = 100, step = 1)
+        )
       )
     )
   )
@@ -93,6 +100,8 @@ mod_analysis_choices_server <- function(id){
         side = input$side,
         control_group = input$control_group,
         fdr_target = input$fdr_target,
+        # Fixed value input
+        tmp_fixed = input$tmp_fixed,
         timestamp = Sys.time()
       )
     })

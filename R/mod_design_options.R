@@ -348,22 +348,18 @@ mod_design_options_server <- function(id){
     create_param_ui <- function(ns, param_id, label, config, default_val, min_val, max_val, step_val) {
       if (config$type == "varying") {
         # For varying parameters: show dropdown with varying/fixed options
+        # Fixed value inputs are now in their logical sidebar sections
         tags$div(
           style = "margin-bottom: 15px;",
           selectInput(ns(paste0(param_id, "_control")), label,
                      choices = list("Varying" = "varying", "Fixed" = "fixed"),
-                     selected = "varying"),
-          conditionalPanel(
-            condition = paste0("input['", ns(paste0(param_id, "_control")), "'] == 'fixed'"),
-            numericInput(ns(paste0(param_id, "_fixed")), "Fixed value:", value = default_val, min = min_val, max = max_val, step = step_val)
-          )
+                     selected = "varying")
         )
       } else if (config$type == "fixed") {
-        # For fixed parameters: show only the input box (no dropdown)
+        # For fixed parameters: show only label (no input - input is in logical sidebar)
         tags$div(
           style = "margin-bottom: 15px;",
-          tags$label(label, style = "font-weight: normal; margin-bottom: 5px;"),
-          numericInput(ns(paste0(param_id, "_fixed")), NULL, value = default_val, min = min_val, max = max_val, step = step_val)
+          tags$label(paste0(label, " (Fixed)"), style = "font-weight: normal; margin-bottom: 5px; color: #666;")
         )
       }
       # Note: minimizing parameters are completely omitted (return NULL)

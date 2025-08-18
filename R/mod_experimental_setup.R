@@ -44,6 +44,19 @@ mod_experimental_setup_ui <- function(id) {
                    label = NULL,
                    accept = c(".rds", ".RDS"),
                    placeholder = "Choose reference expression data RDS file...")
+        ),
+        
+        # Fixed value inputs for experimental parameters
+        tags$div(
+          style = "margin-top: 20px; padding-top: 15px; border-top: 1px solid #E3E6EA;",
+          
+          # Cells per target fixed value
+          numericInput(ns("cells_fixed"), "Cells per target:", 
+                      value = 1000, min = 50, max = 5000, step = 50),
+          
+          # Reads per cell fixed value  
+          numericInput(ns("reads_fixed"), "Reads per cell:", 
+                      value = 5000, min = 500, max = 20000, step = 500)
         )
       )
     )
@@ -83,6 +96,9 @@ mod_experimental_setup_server <- function(id){
         biological_system = input$biological_system,
         pilot_data_choice = input$pilot_data_choice,
         pilot_data = pilot_data(),
+        # Fixed value inputs
+        cells_fixed = input$cells_fixed,
+        reads_fixed = input$reads_fixed,
         timestamp = Sys.time()
       )
     })
