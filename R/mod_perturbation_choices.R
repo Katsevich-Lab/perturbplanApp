@@ -13,10 +13,9 @@ mod_perturbation_choices_ui <- function(id){
   ns <- NS(id)
   tagList(
     tags$div(
-      class = "collapsible-section",
-      # Collapsible header
+      style = "border-radius: 4px; margin-bottom: 5px;",
       tags$div(
-        class = "collapsible-header",
+        id = ns("perturbation-header"),
         style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
         onclick = paste0("toggleSection('", ns("perturbation-content"), "', '", ns("perturbation-chevron"), "')"),
         tags$i(id = ns("perturbation-chevron"), class = "fa fa-chevron-right", style = "margin-right: 8px;"),
