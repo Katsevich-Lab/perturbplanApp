@@ -270,16 +270,24 @@ mod_design_options_server <- function(id){
     
     # Generate and display design problem summary
     observe({
+      # Trigger on parameter control changes for power+cost workflows
+      input$cells_control
+      input$reads_control
+      
       if (!is.null(input$optimization_type) && input$optimization_type != "" &&
           !is.null(input$minimization_target) && input$minimization_target != "" &&
           !is.null(input$target_power) && input$target_power > 0) {
+        
+        # Get resolved parameter configurations for accurate summary
+        param_configs <- get_param_configs(input$optimization_type, input$minimization_target)
         
         # Generate summary text based on workflow
         summary_text <- generate_design_summary(
           opt_type = input$optimization_type,
           target = input$minimization_target,
           power = input$target_power,
-          cost_budget = input$cost_budget
+          cost_budget = input$cost_budget,
+          param_configs = param_configs
         )
         
         # Update summary text and show the section
@@ -291,7 +299,7 @@ mod_design_options_server <- function(id){
     })
     
     # Helper function to generate design problem summary
-    generate_design_summary <- function(opt_type, target, power, cost_budget) {
+    generate_design_summary <- function(opt_type, target, power, cost_budget, param_configs = NULL) {
       # Base text
       if (opt_type == "power_only") {
         if (target == "cost") {
@@ -317,12 +325,34 @@ mod_design_options_server <- function(id){
           "tpm_threshold" = "TPM threshold",
           "fold_change" = "minimum fold change"
         )
+        
+        # Generate specific parameter description based on current states
+        param_desc <- ""
+        if (!is.null(param_configs)) {
+          cells_type <- param_configs$cells_per_target$type
+          reads_type <- param_configs$reads_per_cell$type
+          
+          if (cells_type == "varying" && reads_type == "varying") {
+            param_desc <- "while varying cells per target and reads per cell"
+          } else if (cells_type == "fixed" && reads_type == "varying") {
+            param_desc <- "while keeping cells per target fixed and varying reads per cell"
+          } else if (cells_type == "varying" && reads_type == "fixed") {
+            param_desc <- "while varying cells per target and keeping reads per cell fixed"
+          } else if (cells_type == "fixed" && reads_type == "fixed") {
+            param_desc <- "while keeping both cells per target and reads per cell fixed"
+          } else {
+            param_desc <- "while optimizing cells per target and reads per cell parameters"
+          }
+        } else {
+          param_desc <- "while varying or fixing cells per target and reads per cell as specified"
+        }
+        
         return(paste0(
           "Find the minimum <strong>", target_name, "</strong> for which power is at least <strong>", 
           power * 100, 
           "%</strong> and cost is at most <strong>$", 
           format(cost_budget, big.mark = ",", scientific = FALSE),
-          "</strong>, while varying or fixing cells per target and reads per cell as specified."
+          "</strong>, ", param_desc, "."
         ))
       }
       
