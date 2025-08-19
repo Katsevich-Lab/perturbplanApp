@@ -120,7 +120,7 @@ mod_design_options_ui <- function(id) {
                        "Reads per cell" = "reads", 
                        "Total cost" = "cost",
                        "TPM analysis threshold" = "tpm_threshold",
-                       "Minimum fold change" = "fold_change"
+                       "Fold change" = "fold_change"
                      ),
                      selected = ""),
           
@@ -322,14 +322,14 @@ mod_design_options_server <- function(id){
         if (target == "cost") {
           return(paste0(
             "Find the minimum <strong>total cost</strong> for which power is at least <strong>", 
-            power * 100, "%</strong>, while varying cells per target and reads per cell, keeping TPM threshold and minimum fold change fixed."
+            power * 100, "%</strong>, while varying cells per target and reads per cell, keeping TPM threshold and fold change fixed."
           ))
         } else {
           target_name <- switch(target,
             "cells" = "cells per target",
             "reads" = "reads per cell", 
             "tpm_threshold" = "TPM threshold",
-            "fold_change" = "minimum fold change"
+            "fold_change" = "fold change"
           )
           return(paste0(
             "Find the minimum <strong>", target_name, "</strong> for which power is at least <strong>", 
@@ -340,7 +340,7 @@ mod_design_options_server <- function(id){
       } else if (opt_type == "power_cost") {
         target_name <- switch(target,
           "tpm_threshold" = "TPM threshold",
-          "fold_change" = "minimum fold change"
+          "fold_change" = "fold change"
         )
         
         # Generate specific parameter description based on actual Step 3 input states
@@ -376,7 +376,7 @@ mod_design_options_server <- function(id){
           # Add TPM/FC information for power+cost workflows
           tpm_fc_desc <- ""
           if (target == "tpm_threshold") {
-            tpm_fc_desc <- "keeping minimum fold change fixed"
+            tpm_fc_desc <- "keeping fold change fixed"
           } else if (target == "fold_change") {
             tpm_fc_desc <- "keeping TPM threshold fixed"
           }
@@ -439,7 +439,7 @@ mod_design_options_server <- function(id){
       
       if (!param_configs$min_fold_change$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "fc", "Minimum fold change:", param_configs$min_fold_change, 1.5, 1.1, 10, 0.1)
+          create_param_ui(ns, "fc", "Fold change:", param_configs$min_fold_change, 1.5, 1.1, 10, 0.1)
         ))
       }
       
@@ -522,7 +522,7 @@ mod_design_options_server <- function(id){
                          choices = list(
                            "Select what to minimize..." = "",
                            "Minimize TPM analysis threshold" = "tpm_threshold",
-                           "Minimize minimum fold change" = "fold_change"
+                           "Minimize fold change" = "fold_change"
                          ))
         
         # Update cells/reads dropdowns to remove "Minimizing" option for Power+Cost
@@ -539,7 +539,7 @@ mod_design_options_server <- function(id){
                            "Reads per cell" = "reads", 
                            "Total cost" = "cost",
                            "TPM analysis threshold" = "tpm_threshold",
-                           "Minimum fold change" = "fold_change"
+                           "Fold change" = "fold_change"
                          ))
         
         # Restore full choices for cells/reads dropdowns when not Power+Cost

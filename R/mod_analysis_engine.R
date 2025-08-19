@@ -296,7 +296,7 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
     # (interpret as: lower threshold = more genes included = higher power)
     power_values <- 0.15 + 0.8 * normalized_values
   } else if (varying_param == "fold_change") {
-    # Higher minimum fold change = easier to detect larger effects = higher power
+    # Higher fold change = easier to detect larger effects = higher power
     power_values <- 0.1 + 0.85 * (1 - exp(-3 * normalized_values))
   }
   

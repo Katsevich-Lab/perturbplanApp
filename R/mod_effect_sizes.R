@@ -32,7 +32,7 @@ mod_effect_sizes_ui <- function(id) {
         tags$div(
           id = ns("fc_fixed_div"),
           style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
-          numericInput(ns("fc_fixed"), "Minimum fold change:", 
+          numericInput(ns("fc_fixed"), "Fold change:", 
                       value = 1.5, min = 1.1, max = 10, step = 0.1)
         )
       )

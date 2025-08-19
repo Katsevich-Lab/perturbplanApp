@@ -320,7 +320,7 @@ format_parameter_name <- function(parameter_name) {
     "cells" = "Cells per Target",
     "reads" = "Reads per Cell", 
     "tpm_threshold" = "TPM Threshold",
-    "fold_change" = "Minimum Fold Change",
+    "fold_change" = "Fold Change",
     "cost" = "Total Cost",
     # Fallback: capitalize first letter
     stringr::str_to_title(gsub("_", " ", parameter_name))
