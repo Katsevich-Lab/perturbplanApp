@@ -561,11 +561,13 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
   # Generate strictly decreasing cost curve with dramatic cost differences
   if (min_param == "tpm_threshold") {
     # For TPM: Range from $15000 at TPM=5 to $3000 at TPM=50 (12000 range)
-    # Use power function for steeper decrease: cost = base * (param/max_param)^(-power) + min_cost
-    costs <- 12000 * (param_values / max(param_values))^(-2) + 3000
+    # Use inverted parameter for decreasing: cost decreases as TPM increases
+    normalized_param <- (param_values - min(param_values)) / (max(param_values) - min(param_values))  # 0 to 1
+    costs <- 15000 - 12000 * normalized_param^0.5  # Square root for curved decrease
   } else if (min_param == "fold_change") {
     # For FC: Range from $20000 at FC=0.5 to $4000 at FC=3.0 (16000 range)  
-    costs <- 16000 * (param_values / max(param_values))^(-1.5) + 4000
+    normalized_param <- (param_values - min(param_values)) / (max(param_values) - min(param_values))  # 0 to 1
+    costs <- 20000 - 16000 * normalized_param^0.3  # Gentle curve for steeper initial drop
   } else {
     # Fallback: steep linear decrease
     costs <- 20000 - 800 * param_values
