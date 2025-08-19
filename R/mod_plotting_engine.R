@@ -558,10 +558,21 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
     optimal_param <- 10
   }
   
-  # Generate decreasing cost curve (higher TPM/FC = lower cost due to fewer targets needed)
-  base_costs <- 15000 - 200 * param_values  # Basic decreasing relationship
-  noise <- rnorm(20, 0, 500)  # Add realistic variation
-  costs <- pmax(base_costs + noise, 2000)  # Ensure minimum cost floor
+  # Generate strictly decreasing cost curve (higher TPM/FC = lower cost due to fewer targets needed)
+  # Use exponential decay for smooth, realistic decreasing curve
+  if (min_param == "tpm_threshold") {
+    # For TPM: higher threshold = fewer genes = lower cost
+    costs <- 12000 * exp(-0.04 * param_values) + 3000  # Exponential decay from ~15000 to ~3000
+  } else if (min_param == "fold_change") {
+    # For FC: higher fold change = fewer targets = lower cost  
+    costs <- 10000 * exp(-0.8 * param_values) + 4000   # Exponential decay from ~14000 to ~4000
+  } else {
+    # Fallback: simple linear decrease
+    costs <- 15000 - 500 * param_values
+  }
+  
+  # Ensure costs are strictly decreasing by using cumulative minimum from right to left
+  costs <- rev(cummin(rev(costs)))
   
   # Create plot data
   plot_data <- data.frame(
