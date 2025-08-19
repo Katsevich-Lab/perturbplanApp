@@ -32,7 +32,7 @@ mod_plotting_engine_ui <- function(id) {
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline geom_area
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate
-#' @importFrom plotly ggplotly layout config
+#' @importFrom plotly ggplotly layout config plot_ly
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma
 #' @importFrom stats rnorm
@@ -190,17 +190,33 @@ create_cost_tradeoff_plots <- function(results) {
     p <- create_standard_cost_tradeoff_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
   }
   
-  # Convert to interactive plotly with minimal functionality
-  p_interactive <- ggplotly(p, tooltip = c("x", "y")) %>%
-    layout(
-      title = list(
-        text = paste0("<b>", workflow_info$title, "</b><br>",
-                     "<sup>", workflow_info$description, "</sup>"),
-        font = list(size = 14)
-      ),
-      showlegend = FALSE,
-      hovermode = "closest"
-    )
+  # Convert to interactive plotly with error handling
+  p_interactive <- tryCatch({
+    ggplotly(p, tooltip = c("x", "y")) %>%
+      layout(
+        title = list(
+          text = paste0("<b>", workflow_info$title, "</b><br>",
+                       "<sup>", workflow_info$description, "</sup>"),
+          font = list(size = 14)
+        ),
+        showlegend = FALSE,
+        hovermode = "closest"
+      )
+  }, error = function(e) {
+    # Fallback: create simple plotly plot directly
+    warning("ggplotly conversion failed for workflow ", workflow_info$workflow_id, ": ", e$message)
+    plotly::plot_ly(data = data.frame(x = 1, y = 1), x = ~x, y = ~y, type = "scatter", mode = "markers") %>%
+      plotly::layout(
+        title = paste("Plot Error:", workflow_info$title),
+        xaxis = list(title = "Parameter"),
+        yaxis = list(title = "Value"),
+        annotations = list(
+          list(text = "Plot generation failed - please check data", 
+               x = 0.5, y = 0.5, showarrow = FALSE, 
+               xref = "paper", yref = "paper")
+        )
+      )
+  })
   
   # Add caption annotation only for Workflow 5 (equi-power/equi-cost plot)
   if (is_power_only_cost) {
