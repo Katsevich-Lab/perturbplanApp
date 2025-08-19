@@ -184,7 +184,7 @@ create_cost_tradeoff_plots <- function(results) {
     p <- create_equi_power_cost_plot(power_data, optimal_design, target_power, workflow_info)
   } else if (workflow_info$category == "power_cost_multi") {
     # WORKFLOWS 8, 11: Cost vs minimizing parameter (TPM/FC) curves
-    p <- create_cost_vs_minimizing_param_plot(power_data, optimal_design, target_power, workflow_info)
+    p <- create_cost_vs_minimizing_param_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
   } else {
     # OTHER WORKFLOWS: Standard cost-power tradeoff visualization  
     p <- create_standard_cost_tradeoff_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
@@ -531,13 +531,14 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
 #' @param power_data Power analysis data
 #' @param optimal_design Optimal design information
 #' @param target_power Target power threshold
+#' @param cost_budget Cost budget constraint (can be NULL)
 #' @param workflow_info Workflow information
 #' @return ggplot object with cost vs parameter visualization
 #' @noRd
 #' 
-#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_bw theme element_text
+#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline labs theme_bw theme element_text
 #' @importFrom stats rnorm approx
-create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, target_power, workflow_info) {
+create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
   
   # Determine minimizing parameter (TPM or FC)
   min_param <- workflow_info$minimizing_parameter
@@ -595,6 +596,10 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
     geom_line(color = "blue", size = 1) +
     geom_point(data = optimal_point_data, aes(x = .data$param, y = .data$cost), 
                color = "red", size = 3) +
+    # Add horizontal dashed line for cost budget constraint
+    {if (!is.null(cost_budget)) {
+      geom_hline(yintercept = cost_budget, linetype = "dashed", color = "orange", size = 1)
+    }} +
     labs(
       title = "",  # No title to match other plots
       x = param_label,
