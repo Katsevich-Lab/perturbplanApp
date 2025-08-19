@@ -558,19 +558,17 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
     optimal_param <- 10
   }
   
-  # Generate strictly decreasing cost curve (higher TPM/FC = lower cost due to fewer targets needed)
-  # Use steeper curves to show meaningful cost optimization range
+  # Generate strictly decreasing cost curve with dramatic cost differences
   if (min_param == "tpm_threshold") {
-    # For TPM: higher threshold = fewer genes = lower cost
-    # Range from ~8000 at TPM=5 to ~2000 at TPM=50 (6000 range)
-    costs <- 6000 * exp(-0.08 * (param_values - 5)) + 2000
+    # For TPM: Range from $15000 at TPM=5 to $3000 at TPM=50 (12000 range)
+    # Use power function for steeper decrease: cost = base * (param/max_param)^(-power) + min_cost
+    costs <- 12000 * (param_values / max(param_values))^(-2) + 3000
   } else if (min_param == "fold_change") {
-    # For FC: higher fold change = fewer targets = lower cost  
-    # Range from ~10000 at FC=0.5 to ~3000 at FC=3.0 (7000 range)
-    costs <- 7000 * exp(-0.7 * (param_values - 0.5)) + 3000
+    # For FC: Range from $20000 at FC=0.5 to $4000 at FC=3.0 (16000 range)  
+    costs <- 16000 * (param_values / max(param_values))^(-1.5) + 4000
   } else {
-    # Fallback: simple linear decrease
-    costs <- 15000 - 500 * param_values
+    # Fallback: steep linear decrease
+    costs <- 20000 - 800 * param_values
   }
   
   # Ensure costs are strictly decreasing by using cumulative minimum from right to left
@@ -585,10 +583,17 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
   # Find optimal cost for the optimal parameter
   optimal_cost <- approx(param_values, costs, optimal_param)$y
   
+  # Create optimal point data frame
+  optimal_point_data <- data.frame(
+    param = optimal_param,
+    cost = optimal_cost
+  )
+  
   # Create ggplot with decreasing cost curve
   p <- ggplot(plot_data, aes(x = .data$param, y = .data$cost)) +
     geom_line(color = "blue", size = 1) +
-    geom_point(aes(x = optimal_param, y = optimal_cost), color = "red", size = 3) +
+    geom_point(data = optimal_point_data, aes(x = .data$param, y = .data$cost), 
+               color = "red", size = 3) +
     labs(
       title = "",  # No title to match other plots
       x = param_label,
