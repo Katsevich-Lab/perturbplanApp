@@ -573,8 +573,7 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
     costs <- 20000 - 800 * param_values
   }
   
-  # Ensure costs are strictly decreasing by using cumulative minimum from right to left
-  costs <- rev(cummin(rev(costs)))
+  # Costs are already decreasing by construction - no need to modify them
   
   # Create plot data
   plot_data <- data.frame(
