@@ -252,9 +252,31 @@ mod_design_options_server <- function(id){
     })
     
     observe({
-      # Step 3 appears when minimization target is selected
+      # Step 3 appears when minimization target is selected AND there are parameters to configure
       if (!is.null(input$minimization_target) && input$minimization_target != "") {
-        shinyjs::show("step3")
+        
+        # Check if there are any varying parameters to show
+        opt_type <- input$optimization_type
+        target <- input$minimization_target
+        
+        if (!is.null(opt_type) && opt_type != "" && !is.null(target) && target != "") {
+          param_configs <- get_param_configs(opt_type, target)
+          
+          # Count how many parameters have varying/fixed controls (not minimizing/optimizing)
+          has_controls <- 
+            (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing") && param_configs$cells_per_target$type == "varying") ||
+            (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing") && param_configs$reads_per_cell$type == "varying") ||
+            (!param_configs$tpm_threshold$type %in% c("minimizing", "optimizing") && param_configs$tpm_threshold$type == "varying") ||
+            (!param_configs$min_fold_change$type %in% c("minimizing", "optimizing") && param_configs$min_fold_change$type == "varying")
+          
+          if (has_controls) {
+            shinyjs::show("step3")
+          } else {
+            shinyjs::hide("step3")
+          }
+        } else {
+          shinyjs::hide("step3")
+        }
         
         # Show cost parameters if minimizing total cost
         if (input$minimization_target == "cost") {
@@ -444,7 +466,8 @@ mod_design_options_server <- function(id){
       }
       
       if (length(param_uis) == 0) {
-        return(tags$p("All parameters are being optimized automatically.", style = "color: #666; font-style: italic;"))
+        # No varying parameters to show - hide Step 3 entirely
+        return(NULL)
       }
       
       do.call(tagList, param_uis)
