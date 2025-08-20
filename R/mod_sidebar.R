@@ -9,6 +9,7 @@
 #'
 #' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification
 #' @importFrom shinydashboard dashboardSidebar
+#' @importFrom shinyjs show hide
 mod_sidebar_ui <- function(id) {
   ns <- NS(id)
   
@@ -23,8 +24,12 @@ mod_sidebar_ui <- function(id) {
       # Experimental choices (now includes perturbation choices)
       mod_experimental_setup_ui(ns("experimental_setup")),
       
-      # Analysis choices
-      mod_analysis_choices_ui(ns("analysis_choices")),
+      # Analysis choices (conditional - hide when only showing redundant fixed value info)
+      tags$div(
+        id = ns("analysis_choices_section"),
+        style = "display: block;", # Visible by default
+        mod_analysis_choices_ui(ns("analysis_choices"))
+      ),
       
       # Effect sizes
       mod_effect_sizes_ui(ns("effect_sizes")),
@@ -55,6 +60,25 @@ mod_sidebar_server <- function(id){
     experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
+    
+    # Conditional display logic for analysis choices (Step 3)
+    # Hide when only showing redundant fixed value information
+    observe({
+      config <- design_config()
+      
+      if (!is.null(config) && !is.null(config$optimization_type)) {
+        # Hide Step 3 for power-only workflows where it only shows fixed value info
+        if (config$optimization_type == "power_only") {
+          shinyjs::hide("analysis_choices_section")
+        } else {
+          # Show for power+cost workflows where varying/fixed choices matter
+          shinyjs::show("analysis_choices_section")
+        }
+      } else {
+        # Show by default until optimization type is selected
+        shinyjs::show("analysis_choices_section")
+      }
+    })
     
     # Plan button logic
     observeEvent(input$plan_btn, {
