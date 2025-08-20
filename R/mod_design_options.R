@@ -504,11 +504,9 @@ mod_design_options_server <- function(id){
                      selected = "varying")
         )
       } else if (config$type == "fixed") {
-        # For fixed parameters: show only label (no input - input is in logical sidebar)
-        tags$div(
-          style = "margin-bottom: 15px;",
-          tags$label(paste0(label, " (Fixed)"), style = "font-weight: normal; margin-bottom: 5px; color: #666;")
-        )
+        # For fixed parameters: Don't show redundant "(Fixed)" labels 
+        # Users can see fixed values in the summary section
+        NULL
       }
       # Note: minimizing parameters are completely omitted (return NULL)
     }
