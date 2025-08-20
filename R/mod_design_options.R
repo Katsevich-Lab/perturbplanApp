@@ -175,7 +175,7 @@ mod_design_options_ui <- function(id) {
         tags$div(
           id = ns("step3"),
           style = "display: none;",
-          tags$h5("Step 3: Power-determining Parameters Setup", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+          tags$h5("Step 3: Varying parameters", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
           
           # Dynamic parameter controls based on workflow
           uiOutput(ns("dynamic_params"))

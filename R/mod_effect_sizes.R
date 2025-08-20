@@ -25,16 +25,17 @@ mod_effect_sizes_ui <- function(id) {
       tags$div(
         id = ns("effects-content"),
         style = "padding: 15px;",
-        numericInput(ns("fc_sd"), "gRNA variability:", 0.15, 0.1, 5, 0.05),
-        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01),
         
-        # Fixed value input for effect size parameter (conditional)
+        # Fixed value input for effect size parameter (conditional) - MOVED TO FIRST
         tags$div(
           id = ns("fc_fixed_div"),
-          style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
+          style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
           numericInput(ns("fc_fixed"), "Fold change:", 
                       value = 1.5, min = 1.1, max = 10, step = 0.1)
-        )
+        ),
+        
+        numericInput(ns("fc_sd"), "gRNA variability:", 0.15, 0.1, 5, 0.05),
+        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
       )
     )
   )
