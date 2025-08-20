@@ -20,10 +20,7 @@ mod_sidebar_ui <- function(id) {
       # Design problem
       mod_design_options_ui(ns("design_options")),
       
-      # Perturbation choices
-      mod_perturbation_choices_ui(ns("perturbation_choices")),
-      
-      # Experimental choices
+      # Experimental choices (now includes perturbation choices)
       mod_experimental_setup_ui(ns("experimental_setup")),
       
       # Analysis choices
@@ -55,7 +52,6 @@ mod_sidebar_server <- function(id){
     
     # Initialize module servers
     design_config <- mod_design_options_server("design_options")
-    perturbation_config <- mod_perturbation_choices_server("perturbation_choices")
     experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
@@ -93,7 +89,6 @@ mod_sidebar_server <- function(id){
       
       list(
         design_options = design_opts,
-        perturbation_choices = perturbation_config(),
         experimental_setup = experimental_config(),
         analysis_choices = analysis_config(),
         effect_sizes = effect_sizes_config(),

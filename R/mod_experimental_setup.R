@@ -47,6 +47,44 @@ mod_experimental_setup_ui <- function(id) {
                    placeholder = "Choose reference expression data RDS file...")
         ),
         
+        # Perturbation choices section (integrated from mod_perturbation_choices)
+        tags$div(
+          style = "margin-top: 20px; padding-top: 15px; border-top: 1px solid #E3E6EA;",
+          tags$h5("Perturbation Setup", style = "color: #2E4A62; margin-bottom: 15px;"),
+          
+          # MOI (Multiplicity of Infection)
+          numericInput(ns("MOI"), 
+                      "Multiplicity of infection (MOI):",
+                      value = 10,
+                      min = 1,
+                      max = 50,
+                      step = 1),
+          
+          # Number of targets
+          numericInput(ns("num_targets"), 
+                      "Number of targets:",
+                      value = 100,
+                      min = 10,
+                      max = 1000,
+                      step = 10),
+          
+          # gRNAs per target
+          numericInput(ns("gRNAs_per_target"), 
+                      "gRNAs per target:",
+                      value = 4,
+                      min = 1,
+                      max = 10,
+                      step = 1),
+          
+          # Non-targeting gRNAs
+          numericInput(ns("non_targeting_gRNAs"), 
+                      "Non-targeting gRNAs:",
+                      value = 10,
+                      min = 0,
+                      max = 100,
+                      step = 1)
+        ),
+        
         # Fixed value inputs for experimental parameters (conditional)
         tags$div(
           id = ns("experimental_fixed_params"),
@@ -138,7 +176,7 @@ mod_experimental_setup_server <- function(id, design_config){
       }
     })
     
-    # Return experimental setup configuration
+    # Return experimental setup configuration (now includes perturbation choices)
     experimental_config <- reactive({
       list(
         biological_system = input$biological_system,
@@ -147,6 +185,11 @@ mod_experimental_setup_server <- function(id, design_config){
         # Fixed value inputs
         cells_fixed = input$cells_fixed,
         reads_fixed = input$reads_fixed,
+        # Perturbation choices (integrated from mod_perturbation_choices)
+        MOI = input$MOI %||% 10,
+        num_targets = input$num_targets %||% 100,
+        gRNAs_per_target = input$gRNAs_per_target %||% 4,
+        non_targeting_gRNAs = input$non_targeting_gRNAs %||% 10,
         timestamp = Sys.time()
       )
     })
