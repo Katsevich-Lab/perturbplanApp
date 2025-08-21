@@ -589,6 +589,12 @@ generate_real_analysis <- function(config, workflow_info) {
   tryCatch({
     results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
     
+    # Rename raw_reads_per_cell to reads_per_cell for consistency
+    if ("raw_reads_per_cell" %in% names(results) && !"reads_per_cell" %in% names(results)) {
+      results$reads_per_cell <- results$raw_reads_per_cell
+      results$raw_reads_per_cell <- NULL
+    }
+    
     # Convert perturbplan results to our standardized format
     standardized_results <- standardize_perturbplan_results(results, config, workflow_info)
     

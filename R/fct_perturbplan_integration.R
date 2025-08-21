@@ -351,7 +351,7 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
 get_parameter_column_name <- function(minimizing_param) {
   switch(minimizing_param,
     "cells_per_target" = "cells_per_target",
-    "reads_per_cell" = "raw_reads_per_cell",  # perturbplan uses "raw_reads_per_cell"
+    "reads_per_cell" = "reads_per_cell",  # renamed after cost_power_computation call
     "TPM_threshold" = "TPM_threshold", 
     "minimum_fold_change" = "minimum_fold_change",
     minimizing_param  # fallback to original name
@@ -439,7 +439,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     parameter_value = optimal_row[[param_column]],
     achieved_power = optimal_row$overall_power,
     cells_per_target = optimal_row$cells_per_target %||% NA,
-    reads_per_cell = optimal_row$raw_reads_per_cell %||% optimal_row$reads_per_cell %||% NA,
+    reads_per_cell = optimal_row$reads_per_cell %||% NA,
     TPM_threshold = optimal_row$TPM_threshold %||% NA,
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
     total_cost = optimal_row$total_cost %||% NA
