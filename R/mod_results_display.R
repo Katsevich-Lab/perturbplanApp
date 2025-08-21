@@ -53,7 +53,7 @@ mod_results_display_ui <- function(id) {
         width = 4,
         # Analysis summary box
         box(
-          title = "Summary",
+          title = "Solution",
           status = "info", 
           solidHeader = TRUE,
           width = NULL,
@@ -225,89 +225,125 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       workflow_info <- results$workflow_info
       
       tagList(
-        # Optimal design results
-        tags$div(
-          style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; margin-bottom: 15px;",
+        if (!is.null(results$optimal_design) && !is.null(results$workflow_info)) {
+          optimal <- results$optimal_design
+          workflow_info <- results$workflow_info
+          minimizing_param <- workflow_info$minimizing_parameter
           
-          # Optimal Design header
-          tags$div(
-            tags$strong("Optimal Design", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
-          ),
-          
-          # Show optimal design parameters using real analysis results
           tagList(
-            # Get optimal design values from results
-            if (!is.null(results$optimal_design)) {
-              optimal <- results$optimal_design
+            # SOLUTION SECTION - Show only the minimizing variable and power achieved
+            tags$div(
+              style = "background-color: #E8F4FD; padding: 18px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #2E86AB;",
               
+              # Solution header
+              tags$div(
+                tags$strong("Solution", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
+              ),
+              
+              # Show only the minimizing parameter (the solution)
               tagList(
-                # TPM threshold
-                if (!is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
+                if (minimizing_param == "TPM_threshold" && !is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
                   tags$div(
                     style = "margin-bottom: 8px;",
-                    tags$span("TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$TPM_threshold, 1), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    tags$span("Optimal TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$TPM_threshold, 1), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                  )
+                } else if (minimizing_param == "minimum_fold_change" && !is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("Optimal fold change: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$minimum_fold_change, 2), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                  )
+                } else if (minimizing_param == "cells_per_target" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                  )
+                } else if (minimizing_param == "reads_per_cell" && !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("Optimal raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
                   )
                 },
                 
-                # Fold change
-                if (!is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Fold change: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$minimum_fold_change, 2), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-                  )
-                },
-                
-                # Cells per target
-                if (!is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-                  )
-                },
-                
-                # Raw reads per cell
-                if (!is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-                  )
-                },
-                
-                # Analysis parameters
-                tags$div(style = "margin: 12px 0; border-top: 1px solid #E0E0E0;"),
-                if (!is.null(optimal$mapping_efficiency) && !is.na(optimal$mapping_efficiency)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Mapping efficiency: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(paste0(round(optimal$mapping_efficiency * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-                  )
-                },
-                
-                # Performance metrics
+                # Power achieved
                 if (!is.null(optimal$achieved_power) && !is.na(optimal$achieved_power)) {
                   tags$div(
-                    style = "margin-bottom: 6px;",
+                    style = "margin-top: 12px;",
                     tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(paste0(round(optimal$achieved_power * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold;")
+                    tags$span(paste0(round(optimal$achieved_power * 100, 1), "%"), style = "color: #28A745; font-weight: bold; font-size: 16px;")
                   )
                 }
               )
-            } else {
-              # Fallback to placeholder if optimal design not available
-              tagList(
-                tags$div(
-                  style = "margin-bottom: 8px; color: #999;",
-                  tags$span("Optimal design information not available")
-                )
-              )
-            }
-          )
+            ),
             
-        )
+            # FIXED PARAMETERS SECTION - Show all non-minimizing parameters + mapping efficiency
+            tags$div(
+              style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; margin-bottom: 15px;",
+              
+              # Fixed Parameters header
+              tags$div(
+                tags$strong("Fixed Parameters", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
+              ),
+              
+              # Show non-minimizing parameters
+              tagList(
+                # TPM threshold (if not minimizing)
+                if (minimizing_param != "TPM_threshold" && !is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
+                  tags$div(
+                    style = "margin-bottom: 6px;",
+                    tags$span("TPM threshold: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+                    tags$span(round(optimal$TPM_threshold, 1), style = "color: #6C757D; font-weight: 500;")
+                  )
+                },
+                
+                # Fold change (if not minimizing)
+                if (minimizing_param != "minimum_fold_change" && !is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
+                  tags$div(
+                    style = "margin-bottom: 6px;",
+                    tags$span("Fold change: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+                    tags$span(round(optimal$minimum_fold_change, 2), style = "color: #6C757D; font-weight: 500;")
+                  )
+                },
+                
+                # Cells per target (if not minimizing)
+                if (minimizing_param != "cells_per_target" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
+                  tags$div(
+                    style = "margin-bottom: 6px;",
+                    tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+                    tags$span(round(optimal$cells_per_target), style = "color: #6C757D; font-weight: 500;")
+                  )
+                },
+                
+                # Raw reads per cell (if not minimizing)
+                if (minimizing_param != "reads_per_cell" && !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
+                  tags$div(
+                    style = "margin-bottom: 6px;",
+                    tags$span("Raw reads per cell: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+                    tags$span(round(optimal$reads_per_cell), style = "color: #6C757D; font-weight: 500;")
+                  )
+                },
+                
+                # Mapping efficiency (always in fixed parameters)
+                if (!is.null(optimal$mapping_efficiency) && !is.na(optimal$mapping_efficiency)) {
+                  tags$div(
+                    style = "margin-bottom: 6px;",
+                    tags$span("Mapping efficiency: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+                    tags$span(paste0(round(optimal$mapping_efficiency * 100, 1), "%"), style = "color: #6C757D; font-weight: 500;")
+                  )
+                }
+              )
+            )
+          )
+        } else {
+          # Fallback if data not available
+          tags$div(
+            style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; text-align: center;",
+            tags$span("Solution information not available", style = "color: #999; font-style: italic;")
+          )
+        }
       )
     })
     
