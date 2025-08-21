@@ -318,6 +318,12 @@ standardize_perturbplan_results <- function(results, config, workflow_info) {
       plot_type = workflow_info$plot_type,
       minimizing_parameter = workflow_info$minimizing_parameter,
       optimization_type = config$design_options$optimization_type,
+      cost_constraint = if (config$design_options$optimization_type == "power_cost") 
+                         config$design_options$cost_budget else NULL,
+      cost_per_cell = if (config$design_options$optimization_type == "power_cost") 
+                       config$design_options$cost_per_cell %||% 0.086 else NULL,
+      cost_per_million_reads = if (config$design_options$optimization_type == "power_cost") 
+                                config$design_options$cost_per_million_reads %||% 0.374 else NULL,
       timestamp = Sys.time(),
       n_rows = nrow(results),
       parameter_ranges = extract_parameter_ranges_from_results(results)
@@ -374,17 +380,36 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
     optimal_idx <- which.max(results$overall_power)
     optimal <- results[optimal_idx, ]
 
+    # Base optimal design info
+    optimal_design <- list(
+      parameter_value = optimal[[workflow_info$minimizing_parameter]],
+      achieved_power = optimal$overall_power,
+      cells_per_target = optimal$cells_per_target %||% NA,
+      reads_per_cell = optimal$reads_per_cell %||% NA
+    )
+    
+    # Add cost information if available
+    if ("total_cost" %in% names(optimal)) {
+      optimal_design$total_cost <- optimal$total_cost
+    }
+    if ("cost_per_cell" %in% names(optimal)) {
+      optimal_design$cost_per_cell <- optimal$cost_per_cell
+    }
+    if ("cost_per_million_reads" %in% names(optimal)) {
+      optimal_design$cost_per_million_reads <- optimal$cost_per_million_reads
+    }
+    
     summary <- list(
-      optimal_design = list(
-        parameter_value = optimal[[workflow_info$minimizing_parameter]],
-        achieved_power = optimal$overall_power,
-        cells_per_target = optimal$cells_per_target %||% NA,
-        reads_per_cell = optimal$reads_per_cell %||% NA
-      ),
+      optimal_design = optimal_design,
       power_range = range(results$overall_power, na.rm = TRUE),
       n_designs = nrow(results),
       feasible_designs = sum(results$overall_power >= 0.05, na.rm = TRUE)
     )
+    
+    # Add cost range if cost column exists
+    if ("total_cost" %in% names(results)) {
+      summary$cost_range <- range(results$total_cost, na.rm = TRUE)
+    }
   } else {
     summary <- list(
       message = "Power data not available in results",
@@ -472,6 +497,11 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     stringsAsFactors = FALSE
   )
   
+  # Add cost data if available (for power+cost workflows)
+  if ("total_cost" %in% names(raw_data)) {
+    power_data$cost = raw_data$total_cost
+  }
+  
   # Find optimal design based on parameter type
   feasible_designs <- raw_data[raw_data$overall_power >= target_power, ]
   
@@ -499,7 +529,19 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
     total_cost = optimal_row$total_cost %||% NA,
     # Add mapping efficiency used in the analysis
-    mapping_efficiency = 0.72  # Default value used by perturbplan
+    mapping_efficiency = 0.72,  # Default value used by perturbplan
+    # Add cost calculation metadata for power+cost workflows
+    is_cost_optimized = !is.null(config$design_options$optimization_type) && 
+                        config$design_options$optimization_type == "power_cost",
+    cost_constraint = if (!is.null(config$design_options$optimization_type) && 
+                          config$design_options$optimization_type == "power_cost") 
+                        config$design_options$cost_budget else NULL,
+    cost_per_cell = if (!is.null(config$design_options$optimization_type) && 
+                        config$design_options$optimization_type == "power_cost") 
+                      config$design_options$cost_per_cell %||% 0.086 else NULL,
+    cost_per_million_reads = if (!is.null(config$design_options$optimization_type) && 
+                                 config$design_options$optimization_type == "power_cost") 
+                               config$design_options$cost_per_million_reads %||% 0.374 else NULL
   )
   
   # Create enriched workflow_info for plotting
