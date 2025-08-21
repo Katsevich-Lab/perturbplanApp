@@ -223,7 +223,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
     grid_size = 100,
     
     # Mapping efficiency (perturbplan default)
-    mapping_efficiency = 0.8,
+    mapping_efficiency = 0.72,
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
@@ -447,7 +447,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
     total_cost = optimal_row$total_cost %||% NA,
     # Add mapping efficiency used in the analysis
-    mapping_efficiency = 0.8  # Default value used by perturbplan
+    mapping_efficiency = 0.72  # Default value used by perturbplan
   )
   
   # Create enriched workflow_info for plotting
