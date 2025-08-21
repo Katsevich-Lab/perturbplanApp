@@ -57,7 +57,7 @@ mod_effect_sizes_server <- function(id, design_config){
       config <- design_config()
       
       if (!is.null(config) && !is.null(config$parameter_controls)) {
-        fc_type <- config$parameter_controls$min_fold_change$type
+        fc_type <- config$parameter_controls$minimum_fold_change$type
         
         # Show FC fixed input only when FC parameter is set to "fixed"
         if (!is.null(fc_type) && fc_type == "fixed") {
