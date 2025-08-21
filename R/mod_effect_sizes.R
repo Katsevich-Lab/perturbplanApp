@@ -31,7 +31,7 @@ mod_effect_sizes_ui <- function(id) {
           id = ns("minimum_fold_change_fixed_div"),
           style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
           numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
-                      value = 1.5, min = 1.1, max = 10, step = 0.1)
+                      value = 0.8, min = 0.5, max = 10, step = 0.1)
         ),
         
         numericInput(ns("fc_sd"), "gRNA variability:", 0.15, 0.1, 5, 0.05),
