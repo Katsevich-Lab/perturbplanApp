@@ -121,23 +121,8 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
   # Determine minimizing variable from workflow
   minimizing_variable <- workflow_info$minimizing_parameter
   
-  # Map UI parameter names to perturbplan parameter names
-  ui_to_perturbplan_mapping <- list(
-    "cells" = "cells_per_target",
-    "reads" = "reads_per_cell", 
-    "fold_change" = "minimum_fold_change",
-    "min_fold_change" = "minimum_fold_change",
-    # Also handle the correct names if already provided
-    "cells_per_target" = "cells_per_target",
-    "reads_per_cell" = "reads_per_cell",
-    "TPM_threshold" = "TPM_threshold",
-    "minimum_fold_change" = "minimum_fold_change"
-  )
-  
-  # Apply mapping if needed
-  if (minimizing_variable %in% names(ui_to_perturbplan_mapping)) {
-    minimizing_variable <- ui_to_perturbplan_mapping[[minimizing_variable]]
-  }
+  # minimizing_variable is already standardized by centralized translation in mod_sidebar.R
+  # No additional mapping needed
   
   # Ensure we have the correct parameter name
   valid_minimizing_params <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
@@ -273,7 +258,12 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
 
     # Power and cost parameters
     power_target = design_opts$target_power %||% 0.8,
-    cost_constraint = if (design_opts$optimization_type == "power_cost") design_opts$cost_budget else NULL,
+    
+    # Cost constraint logic:
+    # - For the 4 specific power+cost workflows, cost_constraint should be NULL 
+    #   because the constraint was already applied via obtain_fixed_variable_constraining_cost
+    # - For other power+cost workflows, use the budget
+    cost_constraint = NULL,  # Set to NULL for all workflows - cost constraint already applied if needed
     cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
     cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
     

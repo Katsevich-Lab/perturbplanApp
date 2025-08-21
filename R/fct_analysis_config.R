@@ -85,20 +85,13 @@ detect_workflow_scenario <- function(workflow_config) {
   
   # Power-only workflows (1-5)
   if (opt_type == "power_only") {
-    # Map UI target values to actual parameter names
-    target_param <- switch(target,
-      "cells" = "cells_per_target",
-      "reads" = "reads_per_cell", 
-      "fold_change" = "minimum_fold_change",
-      target  # for TPM_threshold, cost, etc. use as-is
-    )
-    
-    if (target_param %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
+    # target is already translated by centralized translation in mod_sidebar.R
+    if (target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
       return(list(
         workflow_id = paste0("power_single_", target),
         plot_type = "single_parameter_curve",
         category = "power_only_single",
-        minimizing_parameter = target_param,
+        minimizing_parameter = target,
         title = paste("Minimize", format_parameter_name(target)),
         description = paste("Power-only optimization minimizing", format_parameter_name(target))
       ))
