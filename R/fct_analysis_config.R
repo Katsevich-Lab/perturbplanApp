@@ -85,12 +85,20 @@ detect_workflow_scenario <- function(workflow_config) {
   
   # Power-only workflows (1-5)
   if (opt_type == "power_only") {
-    if (target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
+    # Map UI target values to actual parameter names
+    target_param <- switch(target,
+      "cells" = "cells_per_target",
+      "reads" = "reads_per_cell", 
+      "fold_change" = "minimum_fold_change",
+      target  # for TPM_threshold, cost, etc. use as-is
+    )
+    
+    if (target_param %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
       return(list(
         workflow_id = paste0("power_single_", target),
         plot_type = "single_parameter_curve",
         category = "power_only_single",
-        minimizing_parameter = target,
+        minimizing_parameter = target_param,
         title = paste("Minimize", format_parameter_name(target)),
         description = paste("Power-only optimization minimizing", format_parameter_name(target))
       ))
@@ -122,7 +130,7 @@ detect_workflow_scenario <- function(workflow_config) {
           workflow_id = "power_cost_tpm_cells_reads",
           plot_type = "cost_tradeoff_curves",
           category = "power_cost_multi",
-          minimizing_parameter = "tpm_threshold",
+          minimizing_parameter = "TPM_threshold",
           title = "Minimize TPM Threshold",
           description = "Power+cost optimization with TPM, cells, and reads varying"
         ))
@@ -139,7 +147,7 @@ detect_workflow_scenario <- function(workflow_config) {
           workflow_id = paste0("power_cost_tpm_", other_param),
           plot_type = "single_parameter_curve",
           category = "power_cost_single", 
-          minimizing_parameter = "tpm_threshold",
+          minimizing_parameter = "TPM_threshold",
           varying_parameter = other_param,  # Track which cells/reads parameter is varying
           title = "Minimize TPM Threshold",  # Clean title without varying parameter info
           description = paste("Power+cost optimization with TPM and", format_parameter_name(other_param), "varying")
