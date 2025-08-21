@@ -291,3 +291,166 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
 
   return(summary)
 }
+
+#' Get parameter column name from perturbplan results
+#'
+#' @description Maps minimizing parameter names to actual column names 
+#' returned by perturbplan::cost_power_computation
+#' 
+#' @param minimizing_param The parameter being minimized
+#' @return Character string of actual column name in perturbplan results
+#' @noRd
+get_parameter_column_name <- function(minimizing_param) {
+  switch(minimizing_param,
+    "cells_per_target" = "cells_per_target",
+    "reads_per_cell" = "raw_reads_per_cell",  # perturbplan uses "raw_reads_per_cell"
+    "TPM_threshold" = "TPM_threshold", 
+    "minimum_fold_change" = "minimum_fold_change",
+    minimizing_param  # fallback to original name
+  )
+}
+
+#' Transform perturbplan results to plotting format
+#'
+#' @description Converts standardized perturbplan results to the format
+#' expected by the plotting modules (power_data, optimal_design, etc.)
+#'
+#' @param standardized_results Results from standardize_perturbplan_results()
+#' @param config UI configuration from sidebar modules
+#' @param workflow_info Detected workflow information
+#' @return List with plotting-compatible format (power_data, optimal_design, etc.)
+#' @noRd
+transform_perturbplan_to_plotting_format <- function(standardized_results, config, workflow_info) {
+  
+  # Return error if standardized results contain error
+  if (!is.null(standardized_results$error)) {
+    return(standardized_results)
+  }
+  
+  # Extract raw perturbplan data
+  raw_data <- standardized_results$data
+  
+  if (is.null(raw_data) || nrow(raw_data) == 0) {
+    return(list(
+      error = "No data available from perturbplan analysis",
+      metadata = list(
+        analysis_mode = "Real Analysis (Empty Data)",
+        timestamp = Sys.time()
+      )
+    ))
+  }
+  
+  # Get the correct parameter column name
+  minimizing_param <- workflow_info$minimizing_parameter
+  param_column <- get_parameter_column_name(minimizing_param)
+  
+  # Validate that required columns exist
+  required_cols <- c("overall_power", param_column)
+  missing_cols <- setdiff(required_cols, names(raw_data))
+  
+  if (length(missing_cols) > 0) {
+    return(list(
+      error = sprintf("Missing required columns in perturbplan results: %s", 
+                     paste(missing_cols, collapse = ", ")),
+      metadata = list(
+        analysis_mode = "Real Analysis (Missing Columns)",
+        timestamp = Sys.time()
+      )
+    ))
+  }
+  
+  # Create power_data in plotting format
+  target_power <- config$design_options$target_power %||% 0.8
+  
+  power_data <- data.frame(
+    parameter_value = raw_data[[param_column]],
+    power = raw_data$overall_power,
+    meets_threshold = raw_data$overall_power >= target_power,
+    stringsAsFactors = FALSE
+  )
+  
+  # Find optimal design (highest power)
+  optimal_idx <- which.max(raw_data$overall_power)
+  optimal_row <- raw_data[optimal_idx, ]
+  
+  optimal_design <- list(
+    parameter_value = optimal_row[[param_column]],
+    achieved_power = optimal_row$overall_power,
+    cells_per_target = optimal_row$cells_per_target %||% NA,
+    reads_per_cell = optimal_row$raw_reads_per_cell %||% optimal_row$reads_per_cell %||% NA,
+    TPM_threshold = optimal_row$TPM_threshold %||% NA,
+    minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
+    total_cost = optimal_row$total_cost %||% NA
+  )
+  
+  # Create enriched workflow_info for plotting
+  enriched_workflow_info <- workflow_info
+  enriched_workflow_info$plot_type <- "power_curve"  # All power-only workflows are power curves
+  enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter)
+  enriched_workflow_info$description <- create_workflow_description(workflow_info$minimizing_parameter, target_power)
+  
+  # Extract parameter ranges from real data
+  parameter_ranges <- list()
+  parameter_ranges[[minimizing_param]] <- range(power_data$parameter_value, na.rm = TRUE)
+  
+  # Create plotting-compatible results structure
+  plotting_results <- list(
+    # Core plotting data (matches existing plotting module expectations)
+    power_data = power_data,
+    optimal_design = optimal_design,
+    
+    # Workflow and user configuration
+    workflow_info = enriched_workflow_info,
+    user_config = config,
+    
+    # Parameter information
+    parameter_ranges = parameter_ranges,
+    
+    # Raw data for detailed tables/export
+    raw_perturbplan_data = raw_data,
+    
+    # Metadata
+    metadata = list(
+      analysis_mode = "Real Analysis (perturbplan)",
+      data_source = "perturbplan::cost_power_computation",
+      n_designs_evaluated = nrow(raw_data),
+      n_designs_meeting_target = sum(power_data$meets_threshold),
+      timestamp = Sys.time()
+    )
+  )
+  
+  return(plotting_results)
+}
+
+#' Create workflow title for plotting
+#'
+#' @param minimizing_param The parameter being minimized
+#' @return Character string with plot title
+#' @noRd
+create_workflow_title <- function(minimizing_param) {
+  switch(minimizing_param,
+    "cells_per_target" = "Power Optimization: Minimize Cells per Target",
+    "reads_per_cell" = "Power Optimization: Minimize Reads per Cell", 
+    "TPM_threshold" = "Power Optimization: Minimize TPM Threshold",
+    "minimum_fold_change" = "Power Optimization: Minimize Minimum Fold Change",
+    paste("Power Optimization: Minimize", minimizing_param)
+  )
+}
+
+#' Create workflow description for plotting
+#'
+#' @param minimizing_param The parameter being minimized
+#' @param target_power Target power level (e.g., 0.8)
+#' @return Character string with plot description
+#' @noRd
+create_workflow_description <- function(minimizing_param, target_power) {
+  power_pct <- scales::percent_format()(target_power)
+  
+  switch(minimizing_param,
+    "cells_per_target" = sprintf("Finding minimum cells needed to achieve %s power", power_pct),
+    "reads_per_cell" = sprintf("Finding minimum reads needed to achieve %s power", power_pct),
+    "TPM_threshold" = sprintf("Finding minimum TPM threshold to achieve %s power", power_pct), 
+    "minimum_fold_change" = sprintf("Finding minimum fold change to achieve %s power", power_pct),
+    sprintf("Finding minimum %s to achieve %s power", minimizing_param, power_pct)
+  )
+}

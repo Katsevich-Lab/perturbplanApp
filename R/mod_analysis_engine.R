@@ -592,17 +592,21 @@ generate_real_analysis <- function(config, workflow_info) {
     # Convert perturbplan results to our standardized format
     standardized_results <- standardize_perturbplan_results(results, config, workflow_info)
     
-    return(standardized_results)
+    # NEW: Transform to plotting-compatible format
+    if (!is.null(standardized_results$error)) {
+      return(standardized_results)  # Return error as-is
+    }
+    
+    plotting_results <- transform_perturbplan_to_plotting_format(
+      standardized_results, config, workflow_info
+    )
+    
+    return(plotting_results)
     
   }, error = function(e) {
-    return(list(
-      error = paste("Analysis computation failed:", e$message),
-      metadata = list(
-        analysis_mode = "Real Analysis (Error)",
-        timestamp = Sys.time(),
-        error_details = as.character(e)
-      )
-    ))
+    # Graceful fallback to placeholder mode on error
+    warning("Real analysis failed, falling back to placeholder: ", e$message)
+    return(generate_placeholder_analysis(config, workflow_info))
   })
 }
 
