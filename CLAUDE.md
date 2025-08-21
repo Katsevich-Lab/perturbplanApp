@@ -605,3 +605,11 @@ Use roxygen2 for all functions:
 - Clear workflow guidance based on user constraints  
 - Intuitive parameter control interface
 - Comprehensive results export functionality
+
+## CRITICAL PARAMETER NAMING REMINDER
+
+**IMPORTANT**: Recheck the script whenever tpm/tmp is used. The correct one is tpm. Double check.
+
+- For `extract_expression_info`: Use `tmp_threshold` parameter
+- For `cost_power_computation`: Use `tmp_threshold` in fixed_variable mapping
+- Always double-check parameter names when integrating with perturbplan package

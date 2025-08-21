@@ -16,6 +16,7 @@ Imports:
     golem (>= 0.3.5),
     magrittr,
     openxlsx,
+    perturbplan,
     plotly,
     rlang,
     scales,

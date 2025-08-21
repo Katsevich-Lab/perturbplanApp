@@ -568,37 +568,42 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
 #' @return List containing real analysis results (same structure as placeholder)
 #' @noRd
 generate_real_analysis <- function(config, workflow_info) {
-  # TODO: Implement real perturbplan integration
-  # Example implementation pattern:
-  # 
-  # library_params <- extract_library_parameters(config$experimental_setup)
-  # analysis_params <- extract_analysis_parameters(config$analysis_choices)
-  # 
-  # if (workflow_info$plot_type == "single_parameter_curve") {
-  #   results <- perturbplan::calculate_power_grid(
-  #     varying_param = workflow_info$minimizing_parameter,
-  #     fixed_params = extract_fixed_parameters(config),
-  #     target_power = config$design_options$target_power,
-  #     ...
-  #   )
-  # } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
-  #   results <- perturbplan::optimize_cost_power_tradeoff(
-  #     cost_budget = config$design_options$cost_budget,
-  #     target_power = config$design_options$target_power,
-  #     ...  
-  #   )
-  # }
-  #
-  # return(standardize_perturbplan_results(results, config, workflow_info))
+  # Extract pilot data for perturbplan function
+  pilot_data <- extract_pilot_data(config$experimental_setup)
   
-  # For now, return error indicating real mode not implemented
-  return(list(
-    error = "Real analysis mode not yet implemented. Please use placeholder mode.",
-    metadata = list(
-      analysis_mode = "Real Analysis (Not Available)",
-      timestamp = Sys.time()
-    )
-  ))
+  # Handle case where pilot data is not available
+  if (is.null(pilot_data)) {
+    return(list(
+      error = "Pilot data required for real analysis. Please upload reference expression data or use built-in data.",
+      metadata = list(
+        analysis_mode = "Real Analysis (Data Missing)",
+        timestamp = Sys.time()
+      )
+    ))
+  }
+  
+  # Map UI configuration to perturbplan::cost_power_computation parameters
+  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info)
+  
+  # Call perturbplan::cost_power_computation
+  tryCatch({
+    results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+    
+    # Convert perturbplan results to our standardized format
+    standardized_results <- standardize_perturbplan_results(results, config, workflow_info)
+    
+    return(standardized_results)
+    
+  }, error = function(e) {
+    return(list(
+      error = paste("Analysis computation failed:", e$message),
+      metadata = list(
+        analysis_mode = "Real Analysis (Error)",
+        timestamp = Sys.time(),
+        error_details = as.character(e)
+      )
+    ))
+  })
 }
 
 
