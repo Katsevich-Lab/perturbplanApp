@@ -272,14 +272,14 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
   varying_param <- workflow_info$minimizing_parameter
   
   # Extract the varying parameter values from the grid
-  if (varying_param == "cells") {
-    varying_values <- param_grid$cells
-  } else if (varying_param == "reads") {
-    varying_values <- param_grid$reads
-  } else if (varying_param == "tpm_threshold") {
-    varying_values <- param_grid$tpm_threshold
-  } else if (varying_param == "fold_change") {
-    varying_values <- param_grid$fold_change
+  if (varying_param %in% c("cells", "cells_per_target")) {
+    varying_values <- param_grid$cells %||% param_grid$cells_per_target
+  } else if (varying_param %in% c("reads", "reads_per_cell")) {
+    varying_values <- param_grid$reads_per_cell %||% param_grid$reads
+  } else if (varying_param %in% c("tmp_threshold", "TPM_threshold")) {
+    varying_values <- param_grid$tmp_threshold %||% param_grid$TPM_threshold
+  } else if (varying_param %in% c("fold_change", "minimum_fold_change")) {
+    varying_values <- param_grid$fold_change %||% param_grid$minimum_fold_change
   } else {
     stop(paste("Unknown varying parameter:", varying_param))
   }
@@ -611,6 +611,10 @@ generate_real_analysis <- function(config, workflow_info) {
     
   }, error = function(e) {
     # Graceful fallback to placeholder mode on error
+    cat("=== REAL ANALYSIS ERROR ===\n")
+    cat("Error:", e$message, "\n")
+    cat("Falling back to placeholder mode\n")
+    cat("==========================\n")
     warning("Real analysis failed, falling back to placeholder: ", e$message)
     return(generate_placeholder_analysis(config, workflow_info))
   })
