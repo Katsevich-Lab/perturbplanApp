@@ -398,12 +398,12 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
           colnames(table_data) <- c(base_cols, additional_cols)
           
         } else {
-          # Regular single parameter workflow: only parameter_name, parameter_value, power, meets_threshold
+          # Regular single parameter workflow: parameter_value, power, meets_threshold (3 columns)
           table_data <- results$power_data
           table_data$power <- round(table_data$power, 3)
           table_data$meets_threshold <- ifelse(table_data$meets_threshold, "Yes", "No")
           
-          colnames(table_data) <- c("Parameter", "Value", "Power", "Meets Target")
+          colnames(table_data) <- c("Parameter Value", "Power", "Meets Target")
         }
         
       } else {
