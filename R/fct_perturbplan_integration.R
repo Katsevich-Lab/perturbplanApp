@@ -385,7 +385,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
   
   # Create enriched workflow_info for plotting
   enriched_workflow_info <- workflow_info
-  enriched_workflow_info$plot_type <- "power_curve"  # All power-only workflows are power curves
+  enriched_workflow_info$plot_type <- "single_parameter_curve"  # All power-only workflows are single parameter curves
   enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter)
   enriched_workflow_info$description <- create_workflow_description(workflow_info$minimizing_parameter, target_power)
   

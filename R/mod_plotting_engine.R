@@ -143,7 +143,7 @@ create_single_parameter_plots <- function(results) {
     )
   
   # Summary statistics
-  summary_stats <- create_power_curve_summary(power_data, optimal_design, target_power)
+  summary_stats <- create_power_curve_summary(power_data, optimal_design, target_power, workflow_info)
   
   return(list(
     main_plot = p,
@@ -272,9 +272,10 @@ create_cost_tradeoff_plots <- function(results) {
 #' @param power_data Power analysis data
 #' @param optimal_design Optimal design information
 #' @param target_power Target power threshold
+#' @param workflow_info Workflow information with minimizing parameter
 #' @return List with summary statistics
 #' @noRd
-create_power_curve_summary <- function(power_data, optimal_design, target_power) {
+create_power_curve_summary <- function(power_data, optimal_design, target_power, workflow_info) {
   
   # Calculate summary metrics
   feasible_designs <- power_data[power_data$meets_threshold, ]
@@ -290,9 +291,22 @@ create_power_curve_summary <- function(power_data, optimal_design, target_power)
       mean = mean(power_data$power, na.rm = TRUE)
     ),
     
-    optimal_recommendation = if (optimal_design$found) {
+    optimal_recommendation = if (!is.null(optimal_design$parameter_value) && !is.null(optimal_design$achieved_power)) {
+      # Real perturbplan data structure
+      minimizing_param <- workflow_info$minimizing_parameter
       list(
-        minimized_parameter = optimal_design$parameter,
+        parameter = minimizing_param,
+        optimal_value = optimal_design$parameter_value,
+        achieved_power = optimal_design$achieved_power,
+        recommendation_text = paste(
+          "Set", format_parameter_name(minimizing_param),
+          "to", round(optimal_design$parameter_value, 2)
+        )
+      )
+    } else if (!is.null(optimal_design$found) && optimal_design$found) {
+      # Legacy placeholder data structure
+      list(
+        parameter = optimal_design$parameter,
         optimal_value = optimal_design$value,
         achieved_power = optimal_design$power,
         recommendation_text = paste(
@@ -302,7 +316,7 @@ create_power_curve_summary <- function(power_data, optimal_design, target_power)
       )
     } else {
       list(
-        minimized_parameter = NULL,
+        parameter = NULL,
         optimal_value = NULL,
         achieved_power = NULL,
         recommendation_text = "No feasible design found within parameter constraints"
