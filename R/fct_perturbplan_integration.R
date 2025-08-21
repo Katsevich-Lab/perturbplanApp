@@ -178,6 +178,58 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
     }
   }
 
+  # POWER+COST WORKFLOW LOGIC: Calculate missing parameter using cost constraints
+  if (!is.null(config$design_options$optimization_type) && 
+      config$design_options$optimization_type == "power_cost") {
+    
+    # Check if we have a power+cost workflow with one cells/reads parameter fixed
+    has_cells_fixed <- !is.null(fixed_variable$cells_per_target)
+    has_reads_fixed <- !is.null(fixed_variable$reads_per_cell)
+    
+    # Only apply if exactly one of cells/reads is fixed (our target workflows)
+    if ((has_cells_fixed && !has_reads_fixed) || (!has_cells_fixed && has_reads_fixed)) {
+      
+      # Extract cost parameters
+      cost_constraint <- design_opts$cost_budget %||% 1000  # Default budget
+      cost_per_cell <- design_opts$cost_per_cell %||% 0.086  # Default cost per cell
+      cost_per_million_reads <- design_opts$cost_per_million_reads %||% 0.374  # Default cost per million reads
+      
+      cat("=== POWER+COST WORKFLOW DETECTED ===\n")
+      cat("Cost constraint:", cost_constraint, "\n")
+      cat("Fixed parameter:", if(has_cells_fixed) "cells_per_target" else "reads_per_cell", "\n")
+      
+      # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
+      tryCatch({
+        cost_result <- perturbplan::obtain_fixed_variable_constraining_cost(
+          cost_per_captured_cell = cost_per_cell,
+          cost_per_million_reads = cost_per_million_reads,
+          cost_constraint = cost_constraint,
+          MOI = experimental_opts$MOI %||% 10,
+          num_targets = experimental_opts$num_targets %||% 100,
+          non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs %||% 10,
+          gRNAs_per_target = experimental_opts$gRNAs_per_target %||% 4,
+          reads_per_cell = if(has_reads_fixed) fixed_variable$reads_per_cell else NULL,
+          cells_per_target = if(has_cells_fixed) fixed_variable$cells_per_target else NULL,
+          mapping_efficiency = 0.72
+        )
+        
+        # Add the calculated parameter to fixed_variable
+        if (has_cells_fixed && !has_reads_fixed) {
+          fixed_variable$reads_per_cell <- cost_result$reads_per_cell
+          cat("Calculated reads_per_cell:", cost_result$reads_per_cell, "\n")
+        } else if (has_reads_fixed && !has_cells_fixed) {
+          fixed_variable$cells_per_target <- cost_result$cells_per_target
+          cat("Calculated cells_per_target:", cost_result$cells_per_target, "\n")
+        }
+        
+      }, error = function(e) {
+        stop("Cost constraint calculation failed: ", e$message)
+      })
+      
+      cat("=====================================\n")
+    }
+  }
+
   # Map analysis choices
   side_mapping <- c("left" = "left", "right" = "right", "both" = "both")
   control_mapping <- c("complement" = "complement", "nt_cells" = "non_targeting")
@@ -215,9 +267,9 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
     side = side_mapping[analysis_opts$side %||% "left"],
     multiple_testing_alpha = analysis_opts$fdr_target %||% 0.05,
 
-    # Power and cost parameters for power-only workflows
+    # Power and cost parameters
     power_target = design_opts$target_power %||% 0.8,
-    cost_constraint = NULL, # Power-only = no cost constraint
+    cost_constraint = if (design_opts$optimization_type == "power_cost") design_opts$cost_budget else NULL,
     
     # Grid parameters
     grid_size = 100,
