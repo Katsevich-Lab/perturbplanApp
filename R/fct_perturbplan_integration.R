@@ -170,6 +170,9 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
     # Power and cost parameters for power-only workflows
     power_target = design_opts$target_power %||% 0.8,
     cost_constraint = NULL, # Power-only = no cost constraint
+    
+    # Grid parameters
+    grid_size = 100,
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
