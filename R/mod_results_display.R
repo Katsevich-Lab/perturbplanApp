@@ -268,17 +268,26 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                   )
                 },
                 
-                # Reads per cell
+                # Raw reads per cell
                 if (!is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
                   tags$div(
                     style = "margin-bottom: 8px;",
-                    tags$span("Reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span("Raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
                     tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
                   )
                 },
                 
-                # Performance metrics
+                # Analysis parameters
                 tags$div(style = "margin: 12px 0; border-top: 1px solid #E0E0E0;"),
+                if (!is.null(optimal$mapping_efficiency) && !is.na(optimal$mapping_efficiency)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("Mapping efficiency: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(paste0(round(optimal$mapping_efficiency * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                  )
+                },
+                
+                # Performance metrics
                 if (!is.null(optimal$achieved_power) && !is.na(optimal$achieved_power)) {
                   tags$div(
                     style = "margin-bottom: 6px;",
