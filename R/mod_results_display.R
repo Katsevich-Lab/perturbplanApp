@@ -234,43 +234,68 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
             tags$strong("Optimal Design", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
           ),
           
-          # Show optimal design parameters using simple hardcoded values
+          # Show optimal design parameters using real analysis results
           tagList(
-            # TPM threshold (show if not fixed)
-            tags$div(
-              style = "margin-bottom: 8px;",
-              tags$span("TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
-              tags$span("10", style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-            ),
-            
-            # Fold change (show if not fixed)
-            tags$div(
-              style = "margin-bottom: 8px;",
-              tags$span("Fold change: ", style = "color: #5A6B73; font-weight: 500;"),
-              tags$span("0.8", style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-            ),
-            
-            # Cells per target (show if not fixed)
-            tags$div(
-              style = "margin-bottom: 8px;",
-              tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-              tags$span("1000", style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-            ),
-            
-            # Reads per cell (show if not fixed)
-            tags$div(
-              style = "margin-bottom: 8px;",
-              tags$span("Reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-              tags$span("10000", style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-            ),
-            
-            # Performance metrics
-            tags$div(style = "margin: 12px 0; border-top: 1px solid #E0E0E0;"),
-            tags$div(
-              style = "margin-bottom: 6px;",
-              tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
-              tags$span("85%", style = "color: #2E86AB; font-weight: bold;")
-            )
+            # Get optimal design values from results
+            if (!is.null(results$optimal_design)) {
+              optimal <- results$optimal_design
+              
+              tagList(
+                # TPM threshold
+                if (!is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$TPM_threshold, 1), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                  )
+                },
+                
+                # Fold change
+                if (!is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("Fold change: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$minimum_fold_change, 2), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                  )
+                },
+                
+                # Cells per target
+                if (!is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                  )
+                },
+                
+                # Reads per cell
+                if (!is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
+                  tags$div(
+                    style = "margin-bottom: 8px;",
+                    tags$span("Reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                  )
+                },
+                
+                # Performance metrics
+                tags$div(style = "margin: 12px 0; border-top: 1px solid #E0E0E0;"),
+                if (!is.null(optimal$achieved_power) && !is.na(optimal$achieved_power)) {
+                  tags$div(
+                    style = "margin-bottom: 6px;",
+                    tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(paste0(round(optimal$achieved_power * 100, 1), "%"), style = "color: #2E86AB; font-weight: bold;")
+                  )
+                }
+              )
+            } else {
+              # Fallback to placeholder if optimal design not available
+              tagList(
+                tags$div(
+                  style = "margin-bottom: 8px; color: #999;",
+                  tags$span("Optimal design information not available")
+                )
+              )
+            }
           )
             
         )
