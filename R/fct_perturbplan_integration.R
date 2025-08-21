@@ -369,9 +369,18 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     stringsAsFactors = FALSE
   )
   
-  # Find optimal design (highest power)
-  optimal_idx <- which.max(raw_data$overall_power)
-  optimal_row <- raw_data[optimal_idx, ]
+  # Find optimal design (minimum parameter value meeting power target)
+  feasible_designs <- raw_data[raw_data$overall_power >= target_power, ]
+  
+  if (nrow(feasible_designs) > 0) {
+    # Find minimum parameter value among feasible designs
+    optimal_idx <- which.min(feasible_designs[[param_column]])
+    optimal_row <- feasible_designs[optimal_idx, ]
+  } else {
+    # No feasible design meets power target, return design with highest power
+    optimal_idx <- which.max(raw_data$overall_power)
+    optimal_row <- raw_data[optimal_idx, ]
+  }
   
   optimal_design <- list(
     parameter_value = optimal_row[[param_column]],
