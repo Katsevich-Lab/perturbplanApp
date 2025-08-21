@@ -28,9 +28,9 @@ mod_effect_sizes_ui <- function(id) {
         
         # Fixed value input for effect size parameter (conditional) - MOVED TO FIRST
         tags$div(
-          id = ns("fc_fixed_div"),
+          id = ns("minimum_fold_change_fixed_div"),
           style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
-          numericInput(ns("fc_fixed"), "Fold change:", 
+          numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
                       value = 1.5, min = 1.1, max = 10, step = 0.1)
         ),
         
@@ -61,12 +61,12 @@ mod_effect_sizes_server <- function(id, design_config){
         
         # Show FC fixed input only when FC parameter is set to "fixed"
         if (!is.null(fc_type) && fc_type == "fixed") {
-          shinyjs::show("fc_fixed_div")
+          shinyjs::show("minimum_fold_change_fixed_div")
         } else {
-          shinyjs::hide("fc_fixed_div")
+          shinyjs::hide("minimum_fold_change_fixed_div")
         }
       } else {
-        shinyjs::hide("fc_fixed_div")
+        shinyjs::hide("minimum_fold_change_fixed_div")
       }
     })
     
@@ -76,7 +76,7 @@ mod_effect_sizes_server <- function(id, design_config){
         fc_sd = input$fc_sd,
         prop_non_null = input$prop_non_null,
         # Fixed value input
-        fc_fixed = input$fc_fixed,
+        minimum_fold_change_fixed = input$minimum_fold_change_fixed,
         timestamp = Sys.time()
       )
     })

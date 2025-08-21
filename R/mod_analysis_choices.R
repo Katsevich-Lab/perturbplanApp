@@ -5,13 +5,19 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
 #' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe
 #' @importFrom shinyjs show hide
 mod_analysis_choices_ui <- function(id) {
   ns <- NS(id)
-  
+
+  # VARIABLE CONSISTENCY TRACKING:
+  # - TPM input field: "TPM_threshold_fixed"
+  # - TPM div container: "TPM_threshold_fixed_div"
+  # - Parameter control key: "TPM_threshold"
+  # - Return field: "TPM_threshold_fixed"
+
   # Analysis choices (collapsible) - ADAPTED FROM ORIGINAL (MINUS TPM/FC CONTROLS)
   tagList(
     tags$div(
@@ -40,63 +46,73 @@ mod_analysis_choices_ui <- function(id) {
               style = "font-size: 11px;"
             )
           ),
-          fileInput(ns("gene_list_file"), 
+          fileInput(ns("gene_list_file"),
                    label = NULL,
                    accept = c(".csv"),
                    placeholder = "Choose CSV file...")
         ),
-        selectInput(ns("side"), "Test side:", 
-                    choices = c("Left (knockdown)" = "left", 
+        selectInput(ns("side"), "Test side:",
+                    choices = c("Left (knockdown)" = "left",
                                "Right (overexpression)" = "right",
-                               "Both (two-sided)" = "both"), 
+                               "Both (two-sided)" = "both"),
                     selected = "left"),
-        selectInput(ns("control_group"), "Control group:", 
-                    choices = c("Complement cells" = "complement", 
-                               "Non-targeting cells" = "nt_cells"), 
+        selectInput(ns("control_group"), "Control group:",
+                    choices = c("Complement cells" = "complement",
+                               "Non-targeting cells" = "nt_cells"),
                     selected = "complement"),
         numericInput(ns("fdr_target"), "FDR target level:", 0.05, 0.001, 0.1, 0.001),
-        
-        # Fixed value input for analysis parameter (conditional)
+
+        # Fixed value input for TPM analysis parameter (conditional)
+        # CONSISTENT VARIABLE USAGE: TPM_threshold_fixed throughout
         tags$div(
-          id = ns("tpm_fixed_div"),
+          id = ns("TPM_threshold_fixed_div"),
           style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
-          numericInput(ns("tpm_fixed"), "TPM analysis threshold:", 
+          numericInput(ns("TPM_threshold_fixed"), "TPM analysis threshold:",
                       value = 10, min = 0, max = 100, step = 1)
         )
       )
     )
   )
 }
-    
+
 #' analysis_choices Server Functions
 #'
 #' @description Server logic for analysis choice parameters and gene list processing
 #'
 #' @param design_config Reactive containing design options configuration
 #'
-#' @noRd 
+#' @noRd
 mod_analysis_choices_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-    
+
+    # VARIABLE CONSISTENCY TRACKING:
+    # - Parameter control key: config$parameter_controls$TPM_threshold$type
+    # - Show/hide target: "TPM_threshold_fixed_div"
+    # - Input reference: input$TPM_threshold_fixed
+    # - Return field: TPM_threshold_fixed = input$TPM_threshold_fixed
+
     # Conditional display logic for fixed value input
     observe({
       config <- design_config()
-      
+
       if (!is.null(config) && !is.null(config$parameter_controls)) {
-        tpm_type <- config$parameter_controls$tpm_threshold$type
-        
+        # CONSISTENT: Use TPM_threshold parameter control key
+        TPM_type <- config$parameter_controls$TPM_threshold$type
+
         # Show TPM fixed input only when TPM parameter is set to "fixed"
-        if (!is.null(tpm_type) && tpm_type == "fixed") {
-          shinyjs::show("tpm_fixed_div")
+        # CONSISTENT: Use TPM_threshold_fixed_div
+        if (!is.null(TPM_type) && TPM_type == "fixed") {
+          shinyjs::show("TPM_threshold_fixed_div")
         } else {
-          shinyjs::hide("tpm_fixed_div")
+          shinyjs::hide("TPM_threshold_fixed_div")
         }
       } else {
-        shinyjs::hide("tpm_fixed_div")
+        # CONSISTENT: Use TPM_threshold_fixed_div
+        shinyjs::hide("TPM_threshold_fixed_div")
       }
     })
-    
+
     # Gene list processing
     gene_list_data <- reactive({
       if (input$gene_list_mode == "custom" && !is.null(input$gene_list_file)) {
@@ -113,7 +129,7 @@ mod_analysis_choices_server <- function(id, design_config){
         )
       }
     })
-    
+
     # Return analysis choices configuration
     analysis_config <- reactive({
       list(
@@ -122,18 +138,18 @@ mod_analysis_choices_server <- function(id, design_config){
         side = input$side,
         control_group = input$control_group,
         fdr_target = input$fdr_target,
-        # Fixed value input
-        tpm_fixed = input$tpm_fixed,
+        # CONSISTENT: Return TPM_threshold_fixed field using input$TPM_threshold_fixed
+        TPM_threshold_fixed = input$TPM_threshold_fixed,
         timestamp = Sys.time()
       )
     })
-    
+
     return(analysis_config)
   })
 }
-    
+
 ## To be copied in the UI
 # mod_analysis_choices_ui("analysis_choices_1")
-    
+
 ## To be copied in the server
 # mod_analysis_choices_server("analysis_choices_1")

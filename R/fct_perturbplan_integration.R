@@ -31,7 +31,7 @@ extract_pilot_data <- function(experimental_config) {
         biological_system = biological_system,
         B = 1000,                    # Sample 1000 genes
         gene_list = NULL,            # Random sampling
-        TPM_threshold = 0,           # No TPM filtering
+        TPM_threshold = 0,           # No TPM filtering at this stage
         custom_pilot_data = NULL     # Use built-in data
       )
 
@@ -63,7 +63,7 @@ extract_pilot_data <- function(experimental_config) {
         biological_system = "K562",           # Not used when custom_pilot_data provided
         B = 1000,                            # Sample 1000 genes
         gene_list = NULL,                    # Random sampling
-        TPM_threshold = 0,                   # No TPM filtering
+        TPM_threshold = 0,                   # No TPM filtering at this stage
         custom_pilot_data = validation_result$data  # Use validated custom data
       )
 
@@ -92,6 +92,23 @@ extract_pilot_data <- function(experimental_config) {
 #' @return Named list of parameters for cost_power_computation
 #' @noRd
 map_config_to_perturbplan_params <- function(config, workflow_info) {
+  # DEBUG: Log what the UI is sending
+  cat("=== DEBUG: UI Configuration Received ===\n")
+  cat("Minimization target:", config$design_options$minimization_target %||% "NULL", "\n")
+  cat("Parameter controls:\n")
+  if (!is.null(config$design_options$parameter_controls)) {
+    for (name in names(config$design_options$parameter_controls)) {
+      cat(sprintf("  %s: %s\n", name, config$design_options$parameter_controls[[name]]$type))
+    }
+  }
+  cat("Fixed values from UI:\n")
+  cat("  reads_fixed:", config$experimental_setup$reads_fixed %||% "NULL", "\n")
+  cat("  TPM_threshold_fixed:", config$analysis_choices$TPM_threshold_fixed %||% "NULL", "\n")
+  cat("  minimum_fold_change_fixed:", config$effect_sizes$minimum_fold_change_fixed %||% "NULL", "\n")
+  cat("Full analysis_choices keys:", paste(names(config$analysis_choices %||% list()), collapse = ", "), "\n")
+  cat("Full effect_sizes keys:", paste(names(config$effect_sizes %||% list()), collapse = ", "), "\n")
+  cat("===========================================\n")
+  
   # Extract pilot data
   pilot_data <- extract_pilot_data(config$experimental_setup)
 
@@ -103,11 +120,29 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
 
   # Determine minimizing variable from workflow
   minimizing_variable <- workflow_info$minimizing_parameter
-  if (minimizing_variable == "min_fold_change") {
-    minimizing_variable <- "minimum_fold_change"
+  
+  # Map UI parameter names to perturbplan parameter names
+  ui_to_perturbplan_mapping <- list(
+    "cells" = "cells_per_target",
+    "reads" = "reads_per_cell", 
+    "fold_change" = "minimum_fold_change",
+    "min_fold_change" = "minimum_fold_change",
+    # Also handle the correct names if already provided
+    "cells_per_target" = "cells_per_target",
+    "reads_per_cell" = "reads_per_cell",
+    "TPM_threshold" = "TPM_threshold",
+    "minimum_fold_change" = "minimum_fold_change"
+  )
+  
+  # Apply mapping if needed
+  if (minimizing_variable %in% names(ui_to_perturbplan_mapping)) {
+    minimizing_variable <- ui_to_perturbplan_mapping[[minimizing_variable]]
   }
-  if (minimizing_variable == "TPM_threshold") {
-    minimizing_variable <- "TPM_threshold"
+  
+  # Ensure we have the correct parameter name
+  valid_minimizing_params <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
+  if (!minimizing_variable %in% valid_minimizing_params) {
+    stop(sprintf("`minimizing_variable` must be one of: %s! Received: '%s'", paste(valid_minimizing_params, collapse = ", "), minimizing_variable))
   }
 
   # Build fixed_variable list
@@ -132,20 +167,33 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
 
     if (!is.null(param_controls$TPM_threshold) &&
         param_controls$TPM_threshold$type == "fixed" &&
-        !is.null(analysis_opts$TPM_threshold)) {
-      fixed_variable$TPM_threshold <- analysis_opts$TPM_threshold
+        !is.null(analysis_opts$TPM_threshold_fixed)) {
+      fixed_variable$TPM_threshold <- analysis_opts$TPM_threshold_fixed
     }
 
-    if (!is.null(param_controls$min_fold_change) &&
-        param_controls$min_fold_change$type == "fixed" &&
-        !is.null(effect_opts$minimum_fold_change)) {
-      fixed_variable$minimum_fold_change <- effect_opts$minimum_fold_change
+    if (!is.null(param_controls$minimum_fold_change) &&
+        param_controls$minimum_fold_change$type == "fixed" &&
+        !is.null(effect_opts$minimum_fold_change_fixed)) {
+      fixed_variable$minimum_fold_change <- effect_opts$minimum_fold_change_fixed
     }
   }
 
   # Map analysis choices
   side_mapping <- c("left" = "left", "right" = "right", "both" = "both")
   control_mapping <- c("complement" = "complement", "nt_cells" = "non_targeting")
+
+  # DEBUG: Log what will be passed to perturbplan
+  cat("=== DEBUG: Parameters for perturbplan ===\n")
+  cat("minimizing_variable:", minimizing_variable, "\n")
+  cat("fixed_variable:\n")
+  if (length(fixed_variable) > 0) {
+    for (name in names(fixed_variable)) {
+      cat(sprintf("  %s: %s (%s)\n", name, fixed_variable[[name]], typeof(fixed_variable[[name]])))
+    }
+  } else {
+    cat("  (empty)\n")
+  }
+  cat("==========================================\n")
 
   # Build parameter list
   params <- list(
@@ -369,12 +417,17 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     stringsAsFactors = FALSE
   )
   
-  # Find optimal design (minimum parameter value meeting power target)
+  # Find optimal design based on parameter type
   feasible_designs <- raw_data[raw_data$overall_power >= target_power, ]
   
   if (nrow(feasible_designs) > 0) {
-    # Find minimum parameter value among feasible designs
-    optimal_idx <- which.min(feasible_designs[[param_column]])
+    # For minimum_fold_change: find MAXIMUM value (closest to 1) among feasible designs
+    # For other parameters: find MINIMUM value among feasible designs
+    if (minimizing_param == "minimum_fold_change") {
+      optimal_idx <- which.max(feasible_designs[[param_column]])
+    } else {
+      optimal_idx <- which.min(feasible_designs[[param_column]])
+    }
     optimal_row <- feasible_designs[optimal_idx, ]
   } else {
     # No feasible design meets power target, return design with highest power
