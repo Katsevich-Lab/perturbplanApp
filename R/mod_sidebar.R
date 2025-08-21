@@ -80,8 +80,8 @@ mod_sidebar_server <- function(id){
         if (!is.null(experimental_opts$reads_fixed)) {
           design_opts$parameter_controls$reads_per_cell$fixed_value <- experimental_opts$reads_fixed
         }
-        if (!is.null(analysis_opts$tpm_fixed)) {
-          design_opts$parameter_controls$tpm_threshold$fixed_value <- analysis_opts$tpm_fixed
+        if (!is.null(analysis_opts$TPM_threshold_fixed)) {
+          design_opts$parameter_controls$TPM_threshold$fixed_value <- analysis_opts$TPM_threshold_fixed
         }
         if (!is.null(effect_sizes_opts$minimum_fold_change_fixed)) {
           design_opts$parameter_controls$minimum_fold_change$fixed_value <- effect_sizes_opts$minimum_fold_change_fixed
