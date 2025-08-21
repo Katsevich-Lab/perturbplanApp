@@ -288,16 +288,19 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
   # Normalize parameter values to [0,1] range for consistent scaling
   normalized_values <- (varying_values - min(varying_values)) / (max(varying_values) - min(varying_values))
   
-  if (varying_param %in% c("cells", "reads")) {
+  if (varying_param %in% c("cells", "reads", "cells_per_target", "reads_per_cell")) {
     # More cells/reads = higher power, with diminishing returns (sigmoid curve)
     power_values <- 0.1 + 0.85 * (1 - exp(-4 * normalized_values))
-  } else if (varying_param == "tpm_threshold") {
+  } else if (varying_param %in% c("tpm_threshold", "TPM_threshold")) {
     # TPM threshold: show as INCREASING for optimization perspective
     # (interpret as: lower threshold = more genes included = higher power)
     power_values <- 0.15 + 0.8 * normalized_values
-  } else if (varying_param == "fold_change") {
+  } else if (varying_param %in% c("fold_change", "minimum_fold_change")) {
     # Higher fold change = easier to detect larger effects = higher power
     power_values <- 0.1 + 0.85 * (1 - exp(-3 * normalized_values))
+  } else {
+    # Fallback for any unknown parameters
+    power_values <- 0.2 + 0.7 * normalized_values
   }
   
   # Ensure strictly increasing by using cumulative maximum

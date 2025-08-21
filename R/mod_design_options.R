@@ -80,7 +80,7 @@ mod_design_options_ui <- function(id) {
                     tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
                     numericInput(ns("cost_per_cell"), 
                                 label = NULL,
-                                value = 0.01, 
+                                value = 0.086, 
                                 min = 0, 
                                 step = 0.001,
                                 width = "100%")
@@ -97,9 +97,9 @@ mod_design_options_ui <- function(id) {
                     tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
                     numericInput(ns("cost_per_million_reads"), 
                                 label = NULL,
-                                value = 1.00, 
+                                value = 0.374, 
                                 min = 0, 
-                                step = 0.01,
+                                step = 0.001,
                                 width = "100%")
                   )
                 )
@@ -144,7 +144,7 @@ mod_design_options_ui <- function(id) {
                   tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
                   numericInput(ns("cost_per_cell_min"), 
                               label = NULL,
-                              value = 0.01, 
+                              value = 0.086, 
                               min = 0, 
                               step = 0.001,
                               width = "100%")
@@ -161,9 +161,9 @@ mod_design_options_ui <- function(id) {
                   tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
                   numericInput(ns("cost_per_million_reads_min"), 
                               label = NULL,
-                              value = 1.00, 
+                              value = 0.374, 
                               min = 0, 
-                              step = 0.01,
+                              step = 0.001,
                               width = "100%")
                 )
               )

@@ -155,26 +155,30 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
     # Add fixed parameters based on their type and fixed values
     if (!is.null(param_controls$cells_per_target) &&
         param_controls$cells_per_target$type == "fixed" &&
-        !is.null(experimental_opts$cells_fixed)) {
-      fixed_variable$cells_per_target <- experimental_opts$cells_fixed
+        !is.null(param_controls$cells_per_target$fixed_value)) {
+      # Ensure integer values for perturbplan
+      fixed_variable$cells_per_target <- round(param_controls$cells_per_target$fixed_value)
     }
 
     if (!is.null(param_controls$reads_per_cell) &&
         param_controls$reads_per_cell$type == "fixed" &&
-        !is.null(experimental_opts$reads_fixed)) {
-      fixed_variable$reads_per_cell <- experimental_opts$reads_fixed
+        !is.null(param_controls$reads_per_cell$fixed_value)) {
+      # Ensure integer values for perturbplan
+      fixed_variable$reads_per_cell <- round(param_controls$reads_per_cell$fixed_value)
     }
 
     if (!is.null(param_controls$TPM_threshold) &&
         param_controls$TPM_threshold$type == "fixed" &&
-        !is.null(analysis_opts$TPM_threshold_fixed)) {
-      fixed_variable$TPM_threshold <- analysis_opts$TPM_threshold_fixed
+        !is.null(param_controls$TPM_threshold$fixed_value)) {
+      # TPM threshold can remain as decimal
+      fixed_variable$TPM_threshold <- param_controls$TPM_threshold$fixed_value
     }
 
     if (!is.null(param_controls$minimum_fold_change) &&
         param_controls$minimum_fold_change$type == "fixed" &&
-        !is.null(effect_opts$minimum_fold_change_fixed)) {
-      fixed_variable$minimum_fold_change <- effect_opts$minimum_fold_change_fixed
+        !is.null(param_controls$minimum_fold_change$fixed_value)) {
+      # Fold change can remain as decimal
+      fixed_variable$minimum_fold_change <- param_controls$minimum_fold_change$fixed_value
     }
   }
 
@@ -213,13 +217,13 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
           mapping_efficiency = 0.72
         )
         
-        # Add the calculated parameter to fixed_variable
+        # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
         if (has_cells_fixed && !has_reads_fixed) {
-          fixed_variable$reads_per_cell <- cost_result$reads_per_cell
-          cat("Calculated reads_per_cell:", cost_result$reads_per_cell, "\n")
+          fixed_variable$reads_per_cell <- round(cost_result$reads_per_cell)
+          cat("Calculated reads_per_cell:", cost_result$reads_per_cell, "(rounded to", fixed_variable$reads_per_cell, ")\n")
         } else if (has_reads_fixed && !has_cells_fixed) {
-          fixed_variable$cells_per_target <- cost_result$cells_per_target
-          cat("Calculated cells_per_target:", cost_result$cells_per_target, "\n")
+          fixed_variable$cells_per_target <- round(cost_result$cells_per_target)
+          cat("Calculated cells_per_target:", cost_result$cells_per_target, "(rounded to", fixed_variable$cells_per_target, ")\n")
         }
         
       }, error = function(e) {
@@ -270,6 +274,8 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
     # Power and cost parameters
     power_target = design_opts$target_power %||% 0.8,
     cost_constraint = if (design_opts$optimization_type == "power_cost") design_opts$cost_budget else NULL,
+    cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
+    cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
     
     # Grid parameters
     grid_size = 100,
@@ -546,7 +552,8 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
   
   # Create enriched workflow_info for plotting
   enriched_workflow_info <- workflow_info
-  enriched_workflow_info$plot_type <- "single_parameter_curve"  # All power-only workflows are single parameter curves
+  # Preserve the original plot_type from workflow detection (don't override for power+cost workflows)
+  # enriched_workflow_info$plot_type is already set correctly by detect_workflow_scenario()
   enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter)
   enriched_workflow_info$description <- create_workflow_description(workflow_info$minimizing_parameter, target_power)
   

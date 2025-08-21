@@ -113,6 +113,7 @@ create_single_parameter_plots <- function(results) {
   # Use clean titles from workflow_info (no optimal parameter info in titles)
   plot_title <- workflow_info$title
   
+  # Standard single parameter power curve (same for power-only and power+cost workflows)
   p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power)) +
     geom_line() +
     geom_point() +
@@ -125,7 +126,7 @@ create_single_parameter_plots <- function(results) {
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5))
   
-  # Convert to interactive plotly with minimal functionality
+  # Convert to interactive plotly with minimal functionality (same for all single parameter workflows)
   p_interactive <- ggplotly(p, tooltip = c("x", "y")) %>%
     layout(
       title = list(
