@@ -633,7 +633,7 @@ generate_real_analysis <- function(config, workflow_info) {
   if (workflow_info$workflow_id == "power_cost_minimization") {
     # Use specialized cost minimization analysis
     tryCatch({
-      results <- perform_cost_minimization_analysis(config, workflow_info)
+      results <- perform_cost_minimization_analysis(config, workflow_info, pilot_data)
       
       # Return results directly (already in plotting format)
       return(results)
