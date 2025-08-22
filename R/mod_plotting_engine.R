@@ -290,30 +290,7 @@ create_cost_tradeoff_plots <- function(results) {
       )
   })
   
-  # Add caption annotation only for Workflow 5 (equi-power/equi-cost plot)
-  if (is_power_only_cost) {
-    p_interactive <- p_interactive %>%
-      layout(
-        margin = list(b = 80),  # Add bottom margin for caption
-        annotations = list(
-          list(
-            text = paste(
-              "Target Power:", scales::percent(target_power), 
-              "| Optimal Cost: $", round(optimal_design$total_cost, 0),
-              "| Purple: Equi-power curve | Orange: Equi-cost line"
-            ),
-            showarrow = FALSE,
-            x = 0.5,
-            y = -0.08,  # Adjust position to be more visible
-            xref = "paper",
-            yref = "paper",
-            xanchor = "center",
-            yanchor = "top",
-            font = list(size = 12, color = "#333333")
-          )
-        )
-      )
-  }
+  # Caption annotation removed - info now displayed directly on curves
   
   p_interactive <- p_interactive %>%
     config(
@@ -655,16 +632,47 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
                scale_y_log10(labels = scales::comma_format())
       cat("Log scales added successfully\n")
       
-      cat("Adding labels...\n")
-      # Simple labels for cost minimization
+      cat("Adding labels and annotations...\n")
+      # Clean labels without subtitle
       p <- p + labs(
         x = "Cells per target",
         y = "Reads per cell", 
-        title = "Minimize Total Cost",
-        subtitle = sprintf("Power-only optimization with cost minimization\nTarget Power: %.0f%% | Optimal Cost: $ %.0f | Teal: Equi-power curve | Black: Equi-cost line", 
-                          target_power * 100, optimal_design$total_cost)
+        title = "Minimize Total Cost"
       )
-      cat("Labels added successfully\n")
+      
+      # Add annotation on equi-power curve (teal curve) - position higher
+      power_annotation_x <- median(power_data$cells_per_target, na.rm = TRUE)
+      power_annotation_y <- power_data$reads_per_cell[which.min(abs(power_data$cells_per_target - power_annotation_x))]
+      
+      p <- p + annotate(
+        "text", 
+        x = power_annotation_x, 
+        y = power_annotation_y * 2.5,  # Position much higher above the curve
+        label = sprintf("Target Power: %.0f%%", target_power * 100),
+        color = "#20B2AA",  # Same color as equi-power curve
+        size = 4,
+        fontface = "bold",
+        hjust = 0.5
+      )
+      
+      # Add annotation on equi-cost curve (black curve) - position lower and left
+      if (nrow(cost_grid_data) > 0) {
+        cost_annotation_x <- median(cost_grid_data$cells_per_target, na.rm = TRUE) * 0.85  # Position slightly to the left
+        cost_annotation_y <- cost_grid_data$reads_per_cell[which.min(abs(cost_grid_data$cells_per_target - cost_annotation_x))]
+        
+        p <- p + annotate(
+          "text",
+          x = cost_annotation_x,
+          y = cost_annotation_y * 0.4,  # Position much lower below the curve
+          label = sprintf("Cost: $%.0f", optimal_design$total_cost),  # Remove "Optimal" 
+          color = "black",  # Same color as equi-cost curve
+          size = 4,
+          fontface = "bold",
+          hjust = 0.5
+        )
+      }
+      
+      cat("Labels and annotations added successfully\n")
       
       cat("Adding theme...\n")
       # Theme

@@ -66,7 +66,7 @@ perform_cost_minimization_analysis <- function(config, workflow_info) {
     cost_power_df = cost_power_grid,              # Output from cost_power_computation
     minimizing_variable = "cost",                 # Cost minimization
     power_target = config$design_options$target_power,
-    power_precision = 0.01,                       # As specified
+    power_precision = 0.002,                      # Very tight precision for optimal results
     MOI = perturbplan_params$MOI,                 # From UI experimental setup
     num_targets = perturbplan_params$num_targets, # From UI experimental setup
     non_targeting_gRNAs = perturbplan_params$non_targeting_gRNAs, # From UI experimental setup
