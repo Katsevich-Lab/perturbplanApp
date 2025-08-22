@@ -614,6 +614,21 @@ generate_real_analysis <- function(config, workflow_info) {
     ))
   }
   
+  # Check if this is cost minimization workflow (Workflow 5)
+  if (workflow_info$workflow_id == "power_cost_minimization") {
+    # Use specialized cost minimization analysis
+    tryCatch({
+      results <- perform_cost_minimization_analysis(config, workflow_info)
+      
+      # Return results directly (already in plotting format)
+      return(results)
+      
+    }, error = function(e) {
+      stop("Cost minimization analysis failed: ", e$message)
+    })
+  }
+  
+  # For all other workflows: Use standard cost_power_computation
   # Map UI configuration to perturbplan::cost_power_computation parameters
   perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info)
   
