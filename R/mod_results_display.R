@@ -314,6 +314,25 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                     tags$span("Optimal raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
                     tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
                   )
+                } else if (minimizing_param == "cost" && !is.null(optimal$total_cost) && !is.na(optimal$total_cost)) {
+                  # Cost minimization workflow
+                  tagList(
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Minimum total cost: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(paste0("$", round(optimal$total_cost)), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    )
+                  )
                 },
                 
                 # For power+cost workflows, also show the varying parameter from cost calculation
