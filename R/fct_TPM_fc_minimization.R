@@ -81,17 +81,27 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
   # Use optimal_cost_power_df as the main data (this has the correct structure)
   power_data <- optimal_results$optimal_cost_power_df
   
-  # Find minimum TPM point for target power
+  # Find minimum TPM threshold for target power under cost constraint
   target_power <- config$design_options$target_power
   power_tolerance <- 0.01
+  
+  # Filter by target power first, then apply cost constraint
   target_rows <- power_data[abs(power_data$overall_power - target_power) <= power_tolerance, ]
   
   if (nrow(target_rows) == 0) {
     target_rows <- power_data[which.min(abs(power_data$overall_power - target_power)), ]
   }
   
-  optimal_idx <- which.min(target_rows$TPM_threshold)  # Minimize TPM threshold
-  optimal_point <- target_rows[optimal_idx, ]
+  # Apply cost constraint to target power rows
+  feasible_rows <- target_rows[target_rows$total_cost <= cost_constraint, ]
+  
+  if (nrow(feasible_rows) == 0) {
+    # If no feasible solutions under cost constraint, take cheapest among target power rows
+    feasible_rows <- target_rows[which.min(target_rows$total_cost), ]
+  }
+  
+  optimal_idx <- which.min(feasible_rows$TPM_threshold)  # Minimize TPM threshold among feasible solutions
+  optimal_point <- feasible_rows[optimal_idx, ]
   
   # Create optimal design in expected format using CORRECT column names
   optimal_design <- list(
@@ -198,17 +208,27 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
   # Use optimal_cost_power_df as the main data (this has the correct structure)
   power_data <- optimal_results$optimal_cost_power_df
   
-  # Find minimum FC point for target power
+  # Find FC closest to 1 (no effect) for target power under cost constraint
   target_power <- config$design_options$target_power
   power_tolerance <- 0.01
+  
+  # Filter by target power first, then apply cost constraint
   target_rows <- power_data[abs(power_data$overall_power - target_power) <= power_tolerance, ]
   
   if (nrow(target_rows) == 0) {
     target_rows <- power_data[which.min(abs(power_data$overall_power - target_power)), ]
   }
   
-  optimal_idx <- which.min(target_rows$minimum_fold_change)  # Minimize fold change
-  optimal_point <- target_rows[optimal_idx, ]
+  # Apply cost constraint to target power rows
+  feasible_rows <- target_rows[target_rows$total_cost <= cost_constraint, ]
+  
+  if (nrow(feasible_rows) == 0) {
+    # If no feasible solutions under cost constraint, take cheapest among target power rows
+    feasible_rows <- target_rows[which.min(target_rows$total_cost), ]
+  }
+  
+  optimal_idx <- which.min(abs(feasible_rows$minimum_fold_change - 1))  # Find FC closest to 1 among feasible solutions
+  optimal_point <- feasible_rows[optimal_idx, ]
   
   # Create optimal design in expected format using CORRECT column names
   optimal_design <- list(
