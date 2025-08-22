@@ -51,9 +51,18 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
                     config$design_options$parameter_controls$cost$fixed_value %||%
                     10000  # Default cost constraint if not specified
   
-  # Debug: Check cost extraction
-  cat("DEBUG TPM: config$cost_budget =", config$cost_budget %||% "NULL", "\n")
-  cat("DEBUG TPM: Final cost_constraint =", cost_constraint, "\n")
+  # Debug: Check cost extraction and config structure
+  cat("DEBUG TPM: config structure:\n")
+  cat("  config$cost_budget =", config$cost_budget %||% "NULL", "\n")
+  cat("  config$cost_info =", if(!is.null(config$cost_info)) "present" else "NULL", "\n")
+  if (!is.null(config$cost_info)) {
+    cat("  config$cost_info keys:", paste(names(config$cost_info), collapse = ", "), "\n")
+  }
+  cat("  config$design_options =", if(!is.null(config$design_options)) "present" else "NULL", "\n")
+  if (!is.null(config$design_options)) {
+    cat("  config$design_options keys:", paste(names(config$design_options), collapse = ", "), "\n")
+  }
+  cat("  Final cost_constraint =", cost_constraint, "\n")
   
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)  # Key difference from cost minimization
   perturbplan_params$grid_size <- 30         # Reduced for faster computation
