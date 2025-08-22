@@ -174,18 +174,35 @@ mod_experimental_setup_server <- function(id, design_config){
         cells_type <- config$parameter_controls$cells_per_target$type
         reads_type <- config$parameter_controls$reads_per_cell$type
         
-        # Show cells fixed input only when cells parameter is set to "fixed"
+        # Debug: Check parameter types for power-only mode
+        if (!is.null(config$optimization_type) && config$optimization_type == "power_only") {
+          cat("EXPERIMENTAL SETUP DEBUG (power-only):\n")
+          cat("  optimization_type:", config$optimization_type, "\n") 
+          cat("  minimization_target:", config$minimization_target %||% "NULL", "\n")
+          cat("  cells_type:", cells_type %||% "NULL", "\n")
+          cat("  reads_type:", reads_type %||% "NULL", "\n")
+        }
+        
+        # Show cells fixed input when cells parameter is set to "fixed" 
+        # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode
         if (!is.null(cells_type) && cells_type == "fixed") {
           shinyjs::show("cells_fixed_div")
           shinyjs::show("experimental_fixed_params")
+          if (!is.null(config$optimization_type) && config$optimization_type == "power_only") {
+            cat("  -> Showing cells_fixed_div\n")
+          }
         } else {
           shinyjs::hide("cells_fixed_div")
         }
         
-        # Show reads fixed input only when reads parameter is set to "fixed"
+        # Show reads fixed input when reads parameter is set to "fixed"
+        # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode  
         if (!is.null(reads_type) && reads_type == "fixed") {
           shinyjs::show("reads_fixed_div")
           shinyjs::show("experimental_fixed_params")
+          if (!is.null(config$optimization_type) && config$optimization_type == "power_only") {
+            cat("  -> Showing reads_fixed_div\n")
+          }
         } else {
           shinyjs::hide("reads_fixed_div")
         }
