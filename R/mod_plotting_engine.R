@@ -28,7 +28,7 @@ mod_plotting_engine_ui <- function(id) {
 #' @return Reactive list containing plot objects for display
 #' @noRd 
 #' 
-#' @importFrom shiny moduleServer reactive req
+#' @importFrom shiny moduleServer reactive req bindCache
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline geom_area
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate
@@ -114,7 +114,7 @@ mod_plotting_engine_server <- function(id, analysis_results) {
       # cat("Final plots is NULL:", is.null(final_result$plots), "\n")
       
       return(final_result)
-    })
+    }) %>% bindCache(analysis_results())
     
     return(plot_objects)
   })
