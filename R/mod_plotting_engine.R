@@ -50,8 +50,13 @@ mod_plotting_engine_server <- function(id, analysis_results) {
       
       results <- analysis_results()
       
+      cat("=== PLOTTING ENGINE: plot_objects reactive called ===\n")
+      cat("Results structure:", if(!is.null(results)) "present" else "NULL", "\n")
+      cat("Results error:", if(!is.null(results) && !is.null(results$error)) "present" else "none", "\n")
+      
       # Return NULL if no analysis results or error
       if (is.null(results) || !is.null(results$error)) {
+        cat("Returning NULL from plot_objects\n")
         return(NULL)
       }
       
@@ -60,12 +65,21 @@ mod_plotting_engine_server <- function(id, analysis_results) {
       tryCatch({
         workflow_info <- results$workflow_info
         
+        cat("Workflow ID:", if(!is.null(workflow_info)) workflow_info$workflow_id else "NULL", "\n")
+        cat("Power data available:", if(!is.null(results$power_data)) "YES" else "NO", "\n")
+        cat("Optimal design available:", if(!is.null(results$optimal_design)) "YES" else "NO", "\n")
+        
         if (workflow_info$plot_type == "single_parameter_curve") {
           # Generate single parameter power curve plots (8 workflows)
+          cat("Creating single parameter plots\n")
           plots <- create_single_parameter_plots(results)
         } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
           # Generate cost-power tradeoff plots (3 workflows)
+          cat("Creating cost tradeoff plots\n")
           plots <- create_cost_tradeoff_plots(results)
+          cat("Cost tradeoff plots created, checking structure...\n")
+          cat("Plots is NULL:", is.null(plots), "\n")
+          cat("Plots class:", if(!is.null(plots)) class(plots) else "NULL", "\n")
         } else {
           # Error case
           return(list(
@@ -87,13 +101,19 @@ mod_plotting_engine_server <- function(id, analysis_results) {
       })
       
       # Return plot objects with metadata
-      return(list(
+      final_result <- list(
         plots = plots,
         workflow_info = workflow_info,
         plot_type = workflow_info$plot_type,
         success = TRUE,
         error = NULL
-      ))
+      )
+      
+      cat("Returning from plot_objects reactive\n")
+      cat("Final result structure:", paste(names(final_result), collapse = ", "), "\n")
+      cat("Final plots is NULL:", is.null(final_result$plots), "\n")
+      
+      return(final_result)
     })
     
     return(plot_objects)
@@ -184,19 +204,30 @@ create_single_parameter_plots <- function(results) {
 #' @noRd
 create_cost_tradeoff_plots <- function(results) {
   
+  cat("=== INSIDE create_cost_tradeoff_plots ===\n")
+  
   power_data <- results$power_data
-  cost_data <- results$cost_data
+  cost_data <- results$cost_data  
   optimal_design <- results$optimal_design
   target_power <- results$user_config$design_options$target_power
   cost_budget <- results$user_config$design_options$cost_budget
   workflow_info <- results$workflow_info
+  
+  cat("Power data extracted:", !is.null(power_data), "\n")
+  cat("Cost data extracted:", !is.null(cost_data), "\n")
+  cat("Optimal design extracted:", !is.null(optimal_design), "\n")
+  cat("Target power extracted:", !is.null(target_power), "\n")
+  cat("Workflow info extracted:", !is.null(workflow_info), "\n")
   
   # Determine plot type based on workflow category
   is_power_only_cost <- (workflow_info$workflow_id == "power_cost_minimization")
   
   if (workflow_info$workflow_id == "power_cost_minimization") {
     # WORKFLOW 5: Equi-power/equi-cost curves for cost minimization
-    p <- create_equi_power_cost_plot(power_data, optimal_design, target_power, workflow_info)
+    cat("Calling create_equi_power_cost_plot for cost minimization\n")
+    p <- create_equi_power_cost_plot(power_data, optimal_design, target_power, workflow_info, cost_data)
+    cat("create_equi_power_cost_plot completed\n")
+    cat("Plot object class:", class(p), "\n")
   } else if (workflow_info$category == "power_cost_multi") {
     # WORKFLOWS 8, 11: Cost vs minimizing parameter (TPM/FC) curves
     p <- create_cost_vs_minimizing_param_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
@@ -206,8 +237,14 @@ create_cost_tradeoff_plots <- function(results) {
   }
   
   # Convert to interactive plotly with error handling
+  cat("Starting ggplotly conversion...\n")
   p_interactive <- tryCatch({
-    ggplotly(p, tooltip = c("x", "y")) %>%
+    cat("Converting ggplot to plotly...\n")
+    plotly_obj <- ggplotly(p, tooltip = c("x", "y"))
+    cat("ggplotly conversion successful\n")
+    
+    cat("Adding plotly layout...\n")
+    plotly_obj %>%
       layout(
         title = list(
           text = paste0("<b>", workflow_info$title, "</b><br>",
@@ -219,6 +256,7 @@ create_cost_tradeoff_plots <- function(results) {
       )
   }, error = function(e) {
     # Fallback: create simple plotly plot directly
+    cat("ERROR in ggplotly conversion:", e$message, "\n")
     warning("ggplotly conversion failed for workflow ", workflow_info$workflow_id, ": ", e$message)
     plotly::plot_ly(data = data.frame(x = 1, y = 1), x = ~x, y = ~y, type = "scatter", mode = "markers") %>%
       plotly::layout(
@@ -242,7 +280,7 @@ create_cost_tradeoff_plots <- function(results) {
           list(
             text = paste(
               "Target Power:", scales::percent(target_power), 
-              "| Optimal Cost: $", round(optimal_design$cost, 0),
+              "| Optimal Cost: $", round(optimal_design$total_cost, 0),
               "| Purple: Equi-power curve | Orange: Equi-cost line"
             ),
             showarrow = FALSE,
@@ -266,15 +304,20 @@ create_cost_tradeoff_plots <- function(results) {
     )
   
   # Cost analysis summary
+  cat("Creating cost analysis summary...\n")
   cost_summary <- create_cost_analysis_summary(cost_data, optimal_design, target_power, cost_budget)
+  cat("Cost analysis summary created\n")
   
-  return(list(
+  cat("Returning plot objects...\n")
+  result <- list(
     main_plot = p,
     interactive_plot = p_interactive,
     cost_summary = cost_summary,
     plot_data = power_data,
     optimal_point = optimal_design
-  ))
+  )
+  cat("Plot objects prepared for return\n")
+  return(result)
 }
 
 
@@ -352,8 +395,15 @@ create_power_curve_summary <- function(power_data, optimal_design, target_power,
 #' @noRd
 create_cost_analysis_summary <- function(cost_data, optimal_design, target_power, cost_budget) {
   
-  # Check if cost_data is NULL or doesn't have cost column
-  if (is.null(cost_data) || is.null(cost_data$cost)) {
+  cat("=== INSIDE create_cost_analysis_summary ===\n")
+  cat("Cost data null check:", is.null(cost_data), "\n")
+  if (!is.null(cost_data)) {
+    cat("Cost data columns:", paste(names(cost_data), collapse = ", "), "\n")
+  }
+  
+  # Check if cost_data is NULL or doesn't have total_cost column
+  if (is.null(cost_data) || is.null(cost_data$total_cost)) {
+    cat("Returning early - no cost data available\n")
     return(list(
       total_designs_evaluated = 0,
       power_feasible_designs = 0,
@@ -365,11 +415,12 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
     ))
   }
   
-  # Calculate cost metrics
-  feasible_designs <- cost_data[cost_data$power >= target_power, ]
+  # For cost minimization, cost_data doesn't have power column, so skip power filtering
+  cat("Creating simplified cost summary for cost minimization\n")
+  feasible_designs <- cost_data  # All designs from cost_grid are relevant
   
   if (!is.null(cost_budget)) {
-    budget_feasible <- feasible_designs[feasible_designs$cost <= cost_budget, ]
+    budget_feasible <- feasible_designs[feasible_designs$total_cost <= cost_budget, ]
   } else {
     budget_feasible <- feasible_designs
   }
@@ -380,21 +431,21 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
     budget_feasible_designs = if (!is.null(cost_budget)) nrow(budget_feasible) else nrow(feasible_designs),
     
     cost_range = list(
-      min = min(cost_data$cost, na.rm = TRUE),
-      max = max(cost_data$cost, na.rm = TRUE),
-      mean = mean(cost_data$cost, na.rm = TRUE)
+      min = min(cost_data$total_cost, na.rm = TRUE),
+      max = max(cost_data$total_cost, na.rm = TRUE),
+      mean = mean(cost_data$total_cost, na.rm = TRUE)
     ),
     
-    optimal_recommendation = if (!is.null(optimal_design$found) && optimal_design$found) {
+    optimal_recommendation = if (!is.null(optimal_design$cells_per_target)) {
       optimal_rec <- list(
-        optimal_cells = optimal_design$cells,
-        optimal_reads = optimal_design$reads,
-        total_cost = optimal_design$cost,
-        achieved_power = optimal_design$power,
+        optimal_cells = optimal_design$cells_per_target,
+        optimal_reads = optimal_design$reads_per_cell,
+        total_cost = optimal_design$total_cost,
+        achieved_power = optimal_design$achieved_power,
         recommendation_text = paste(
-          "Optimal design:", optimal_design$cells, "cells,", optimal_design$reads, "reads",
-          "| Cost: $", scales::comma(optimal_design$cost),
-          "| Power:", scales::percent(optimal_design$power)
+          "Optimal design:", optimal_design$cells_per_target, "cells,", optimal_design$reads_per_cell, "reads",
+          "| Cost: $", scales::comma(optimal_design$total_cost),
+          "| Power:", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
       )
       
@@ -420,6 +471,7 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
     }
   )
   
+  cat("Cost analysis summary completed successfully\n")
   return(summary)
 }
 # ============================================================================
@@ -438,74 +490,204 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
 #' @param workflow_info Workflow information
 #' @return ggplot object with equi-power/equi-cost visualization
 #' @noRd
-#' @importFrom ggplot2 ggplot aes geom_point geom_line annotate labs theme_minimal theme element_text scale_color_gradient2 scale_size_manual
+#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_smooth geom_text geom_vline geom_hline annotate labs theme_minimal theme_bw theme element_text scale_color_gradient2 scale_color_viridis_c scale_size_manual scale_x_log10 scale_y_log10 scale_linetype_discrete
 #' @importFrom scales percent_format
-create_equi_power_cost_plot <- function(power_data, optimal_design, target_power, workflow_info) {
+#' @importFrom dplyr group_by slice_max ungroup
+#' @importFrom magrittr %>%
+create_equi_power_cost_plot <- function(power_data, optimal_design, target_power, workflow_info, cost_data = NULL) {
   
-  # For cost minimization workflow, power_data contains optimal_power_cost_df from find_optimal_design
-  
-  # Create plot title
-  plot_title <- if (workflow_info$workflow_id == "power_cost_minimization") {
-    "Equi-Power and Equi-Cost Curves"
-  } else {
-    workflow_info$title
+  cat("=== INSIDE create_equi_power_cost_plot ===\n")
+  cat("Power data rows:", nrow(power_data), "\n")
+  cat("Power data columns:", paste(names(power_data), collapse = ", "), "\n")
+  cat("Cost data present:", !is.null(cost_data), "\n")
+  if (!is.null(cost_data)) {
+    cat("Cost data rows:", nrow(cost_data), "\n")
+    cat("Cost data columns:", paste(names(cost_data), collapse = ", "), "\n")
   }
+  cat("Workflow ID:", workflow_info$workflow_id, "\n")
+  cat("Optimal design structure:", str(optimal_design), "\n")
   
-  # Extract target power level data points
-  power_tolerance <- 0.02  # Allow some tolerance for power matching
-  target_power_data <- power_data[abs(power_data$power - target_power) <= power_tolerance, ]
+  # For cost minimization workflow, we use:
+  # - power_data: optimal_cost_power_df for equi-power curves  
+  # - cost_data: optimal_cost_grid for equi-cost curves
   
-  # If no points close to target power, expand tolerance
-  if (nrow(target_power_data) == 0) {
-    power_tolerance <- 0.05
-    target_power_data <- power_data[abs(power_data$power - target_power) <= power_tolerance, ]
-  }
-  
-  # Create cost levels for equi-cost curves
-  cost_levels <- quantile(power_data$total_cost, probs = c(0.2, 0.4, 0.6, 0.8), na.rm = TRUE)
-  
-  # Base plot with target power curve
-  p <- ggplot() +
-    # Target power curve (purple)
-    geom_line(data = target_power_data, 
-              aes(x = .data$cells_per_target, y = .data$reads_per_cell), 
-              color = "purple", size = 1.2, alpha = 0.8) +
+  if (!is.null(workflow_info) && workflow_info$workflow_id == "power_cost_minimization") {
+    cat("Inside cost minimization branch\n")
+    # power_data contains optimal_cost_power_df for equi-power curves
+    equi_power_df <- power_data
     
-    # Optimal point (red dot)
-    geom_point(aes(x = optimal_design$cells_per_target, y = optimal_design$reads_per_cell), 
-               color = "red", size = 3) +
-    
-    # Background points (cost gradient)
-    geom_point(data = power_data, 
-               aes(x = .data$cells_per_target, y = .data$reads_per_cell, color = .data$total_cost),
-               alpha = 0.6, size = 1) +
-    
-    scale_color_gradient2(
-      low = "green", mid = "yellow", high = "red",
-      midpoint = median(power_data$total_cost, na.rm = TRUE),
-      name = "Total Cost"
-    ) +
-    
-    labs(
-      title = plot_title,
-      x = "Cells per Target",
-      y = "Reads per Cell",
-      subtitle = paste0("Target Power: ", scales::percent(target_power), 
-                       " | Optimal Cost: $", round(optimal_design$total_cost))
-    ) +
-    theme_bw() +
-    theme(plot.title = element_text(hjust = 0.5))
-  
-  # Add equi-cost lines if we have enough data points
-  for (cost_level in cost_levels) {
-    cost_data <- power_data[abs(power_data$total_cost - cost_level) <= cost_level * 0.1, ]
-    if (nrow(cost_data) > 5) {
-      p <- p + geom_line(data = cost_data, 
-                        aes(x = .data$cells_per_target, y = .data$reads_per_cell),
-                        color = "orange", alpha = 0.6, linetype = "dashed")
+    # cost_data contains optimal_cost_grid for equi-cost curves
+    if (!is.null(cost_data) && nrow(cost_data) > 0) {
+      cat("Using cost_data for equi-cost curves\n")
+      cat("Cost data columns:", paste(names(cost_data), collapse = ", "), "\n")
+      cat("Cost data sample values:\n")
+      cat("  cells_per_target range:", range(cost_data$cells_per_target, na.rm = TRUE), "\n")
+      if ("reads_per_cell" %in% names(cost_data)) {
+        cat("  reads_per_cell range:", range(cost_data$reads_per_cell, na.rm = TRUE), "\n")
+      } else {
+        cat("  reads_per_cell column: NOT FOUND\n")
+      }
+      # Use cost_data directly as equi-cost curves
+      cost_grid_data <- cost_data
+      
+      # Add cost_of_interest column if not present
+      if (!"cost_of_interest" %in% names(cost_grid_data)) {
+        cat("Adding cost_of_interest column\n")
+        # Group by similar cost levels
+        cost_range <- range(cost_grid_data$total_cost, na.rm = TRUE)
+        cost_levels <- seq(from = cost_range[1], to = cost_range[2], length.out = 5)
+        cost_levels <- round(cost_levels)
+        
+        # Assign each point to nearest cost level
+        cost_grid_data$cost_of_interest <- sapply(cost_grid_data$total_cost, function(cost) {
+          cost_levels[which.min(abs(cost_levels - cost))]
+        })
+      }
+      cat("Cost grid data prepared, rows:", nrow(cost_grid_data), "\n")
+    } else {
+      cat("Using fallback approach for cost levels\n")
+      # Fallback: create cost levels from power_data
+      cost_range <- range(power_data$total_cost, na.rm = TRUE)
+      cost_levels <- seq(from = cost_range[1], to = cost_range[2], length.out = 5)
+      cost_levels <- round(cost_levels)
+      
+      # Create cost grid data for equi-cost lines
+      cost_grid_data <- data.frame()
+      for (cost_level in cost_levels) {
+        # Find points near this cost level
+        cost_tolerance <- diff(cost_range) * 0.05  # 5% tolerance
+        cost_points <- power_data[abs(power_data$total_cost - cost_level) <= cost_tolerance, ]
+        if (nrow(cost_points) > 0) {
+          cost_points$cost_of_interest <- cost_level
+          cost_grid_data <- rbind(cost_grid_data, cost_points)
+        }
+      }
+      cat("Fallback cost grid data prepared, rows:", nrow(cost_grid_data), "\n")
     }
+    
+    # Create label dataframe for cost curve labels
+    if (nrow(cost_grid_data) > 0) {
+      cat("Creating label dataframe\n")
+      label_df <- cost_grid_data %>%
+        group_by(cost_of_interest) %>%
+        slice_max(cells_per_target, n = 1, with_ties = FALSE) %>%
+        ungroup()
+      cat("Label dataframe created, rows:", nrow(label_df), "\n")
+    } else {
+      cat("No cost grid data for labels\n")
+      label_df <- data.frame()
+    }
+    
+    cat("Starting plot creation\n")
+    
+    # Test each required column exists
+    required_cols <- c("cells_per_target", "reads_per_cell", "minimum_fold_change")
+    missing_cols <- setdiff(required_cols, names(power_data))
+    if (length(missing_cols) > 0) {
+      cat("ERROR: Missing required columns in power_data:", paste(missing_cols, collapse = ", "), "\n")
+      return(NULL)
+    }
+    
+    # Create simplified plot for cost minimization (single equi-power + single equi-cost curve)
+    tryCatch({
+      cat("Creating simplified cost minimization plot...\n")
+      p <- ggplot()
+      cat("Base ggplot created successfully\n")
+      
+      cat("Adding equi-power curve (teal)...\n")
+      # Single equi-power curve (teal/green color like in your screenshot)
+      p <- p + geom_smooth(
+        data = power_data,
+        mapping = aes(x = cells_per_target, y = reads_per_cell),
+        se = FALSE,
+        color = "#20B2AA",  # Teal color
+        size = 1.2
+      )
+      cat("Equi-power curve added successfully\n")
+      
+      # Single equi-cost curve at optimal cost level (black)
+      if (nrow(cost_grid_data) > 0) {
+        cat("Adding equi-cost curve (black)...\n")
+        p <- p + geom_smooth(
+          data = cost_grid_data,
+          mapping = aes(x = cells_per_target, y = reads_per_cell),
+          se = FALSE,
+          color = "black",
+          linetype = "dashed",
+          size = 1
+        )
+        cat("Equi-cost curve added successfully\n")
+      }
+      
+      cat("Adding optimal point...\n")
+      # Highlight optimal point
+      p <- p + geom_point(
+        data = data.frame(x = optimal_design$cells_per_target, y = optimal_design$reads_per_cell),
+        mapping = aes(x = x, y = y),
+        color = "red", 
+        size = 4,
+        shape = 17  # Triangle
+      )
+      cat("Optimal point added successfully\n")
+      
+      cat("Adding scales...\n")
+      # Use log scales but we'll handle tooltips differently
+      p <- p + scale_x_log10(labels = scales::comma_format()) + 
+               scale_y_log10(labels = scales::comma_format())
+      cat("Log scales added successfully\n")
+      
+      cat("Adding labels...\n")
+      # Simple labels for cost minimization
+      p <- p + labs(
+        x = "Cells per target",
+        y = "Reads per cell", 
+        title = "Minimize Total Cost",
+        subtitle = sprintf("Power-only optimization with cost minimization\nTarget Power: %.0f%% | Optimal Cost: $ %.0f | Teal: Equi-power curve | Black: Equi-cost line", 
+                          target_power * 100, optimal_design$total_cost)
+      )
+      cat("Labels added successfully\n")
+      
+      cat("Adding theme...\n")
+      # Theme
+      p <- p + theme_bw() +
+        theme(
+          axis.title.x = element_text(size = 14),
+          axis.text.x = element_text(size = 12),
+          axis.title.y = element_text(size = 14),
+          axis.text.y = element_text(size = 12),
+          legend.position = "none",  # Remove all legends
+          plot.title = element_text(hjust = 0.5, size = 20)
+        )
+      cat("Theme added successfully\n")
+      
+    }, error = function(e) {
+      cat("ERROR in plot creation:", e$message, "\n")
+      # Create a simple fallback plot
+      p <<- ggplot(power_data, aes(x = cells_per_target, y = reads_per_cell)) +
+        geom_point() +
+        labs(title = "Error in plot creation")
+    })
+    
+  } else {
+    # Fallback for other workflow types
+    p <- ggplot(power_data, aes(x = cells_per_target, y = reads_per_cell)) +
+      geom_point(aes(color = total_cost), alpha = 0.6) +
+      geom_point(aes(x = optimal_design$cells_per_target, y = optimal_design$reads_per_cell),
+                color = "red", size = 3) +
+      scale_color_viridis_c(name = "Total Cost") +
+      labs(
+        title = workflow_info$title,
+        x = "Cells per Target",
+        y = "Reads per Cell",
+        subtitle = paste0("Target Power: ", scales::percent(target_power), 
+                         " | Optimal Cost: $", round(optimal_design$total_cost))
+      ) +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
   }
   
+  cat("Plot creation completed, returning plot object\n")
+  cat("Plot object class:", class(p), "\n")
   return(p)
 }
 

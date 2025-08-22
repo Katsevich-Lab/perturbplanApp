@@ -125,7 +125,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
   # No additional mapping needed
   
   # Ensure we have the correct parameter name
-  valid_minimizing_params <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
+  valid_minimizing_params <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell", "cost")
   if (!minimizing_variable %in% valid_minimizing_params) {
     stop(sprintf("`minimizing_variable` must be one of: %s! Received: '%s'", paste(valid_minimizing_params, collapse = ", "), minimizing_variable))
   }
