@@ -285,29 +285,13 @@ create_minimization_plot <- function(analysis_results) {
       ) +
       theme_minimal() +
       theme(
-        plot.title = element_text(size = 14, face = "bold"),
-        plot.subtitle = element_text(size = 12, color = "gray60")
+        plot.title = element_text(size = 14, face = "bold", hjust = 0.5),  # Center the title
+        plot.subtitle = element_text(size = 12, color = "gray60", hjust = 0.5)  # Center the subtitle
       )
     
   }, error = function(e) {
     stop("Plot creation failed: ", e$message)
   })
-  
-  # Add annotation for optimal point
-  if (nrow(optimal_point) > 0) {
-    optimal_value <- optimal_point[[minimizing_variable]]
-    optimal_cost <- optimal_point$total_cost
-    
-    p <- p + annotate(
-      "text",
-      x = optimal_value,
-      y = optimal_cost + (max(grouped_data$total_cost, na.rm = TRUE) * 0.1),
-      label = paste("Optimal:", round(optimal_value, 2)),
-      color = "red",
-      fontface = "bold",
-      size = 3.5
-    )
-  }
   
   return(p)
 }
