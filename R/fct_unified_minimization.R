@@ -226,71 +226,98 @@ prepare_minimization_data <- function(analysis_results) {
 #' @noRd
 create_minimization_plot <- function(analysis_results) {
   
+  cat("=== CREATE_MINIMIZATION_PLOT: Starting ===\n")
+  
   # Validate input
   if (is.null(analysis_results) || is.null(analysis_results$power_data)) {
     stop("Invalid analysis_results: missing power_data")
   }
   
-  # Get shared data
-  data_prep <- prepare_minimization_data(analysis_results)
-  grouped_data <- data_prep$grouped_data
-  optimal_point <- data_prep$optimal_point
-  minimizing_variable <- data_prep$minimizing_variable
-  cost_constraint <- data_prep$cost_constraint
+  cat("  Input validation passed\n")
   
-  # Validate data
-  if (is.null(grouped_data) || nrow(grouped_data) == 0) {
-    stop("No grouped data available for plotting")
-  }
+  # Get shared data
+  tryCatch({
+    data_prep <- prepare_minimization_data(analysis_results)
+    cat("  prepare_minimization_data completed\n")
+    
+    grouped_data <- data_prep$grouped_data
+    optimal_point <- data_prep$optimal_point
+    minimizing_variable <- data_prep$minimizing_variable
+    cost_constraint <- data_prep$cost_constraint
+    
+    cat("  Data extracted: grouped_data rows =", nrow(grouped_data), "\n")
+    cat("  Minimizing variable:", minimizing_variable, "\n")
+    cat("  Optimal point rows:", nrow(optimal_point), "\n")
+    
+    # Validate data
+    if (is.null(grouped_data) || nrow(grouped_data) == 0) {
+      stop("No grouped data available for plotting")
+    }
+    
+  }, error = function(e) {
+    cat("  ERROR in data preparation:", e$message, "\n")
+    stop("Data preparation failed: ", e$message)
+  })
   
   # Create base plot with log scales
-  p <- ggplot(grouped_data, aes_string(x = minimizing_variable, y = "total_cost")) +
-    geom_point(aes(color = overall_power), size = 2, alpha = 0.7) +
-    scale_color_gradient2(
-      low = "red", mid = "yellow", high = "green",
-      midpoint = 0.8, name = "Power"
-    ) +
+  cat("  Creating ggplot object\n")
+  
+  tryCatch({
+    p <- ggplot(grouped_data, aes_string(x = minimizing_variable, y = "total_cost")) +
+      geom_point(aes(color = overall_power), size = 2, alpha = 0.7) +
+      scale_color_gradient2(
+        low = "red", mid = "yellow", high = "green",
+        midpoint = 0.8, name = "Power"
+      ) +
+      
+      # Use log scales for consistency with other plots
+      scale_x_log10(
+        labels = scales::comma_format()
+      ) +
+      scale_y_log10(
+        labels = scales::dollar_format()
+      ) +
+      
+      # Add cost constraint line (horizontal dashed line)
+      geom_hline(
+        yintercept = cost_constraint, 
+        linetype = "dashed", 
+        color = "orange", 
+        size = 1.2
+      ) +
+      
+      # Add optimal point annotation (red dot)
+      geom_point(
+        data = optimal_point,
+        aes_string(x = minimizing_variable, y = "total_cost"),
+        color = "red", 
+        size = 4, 
+        shape = 19
+      ) +
+      
+      # Styling
+      labs(
+        title = if (minimizing_variable == "TPM_threshold") "TPM Threshold Minimization" else "Fold Change Minimization",
+        subtitle = paste("Cost Constraint: $", scales::comma(cost_constraint)),
+        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Minimum Fold Change (log scale)",
+        y = "Total Cost ($, log scale)"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60")
+      )
     
-    # Use log scales for consistency with other plots
-    scale_x_log10(
-      labels = scales::comma_format()
-    ) +
-    scale_y_log10(
-      labels = scales::dollar_format()
-    ) +
+    cat("  ggplot object created successfully\n")
     
-    # Add cost constraint line (horizontal dashed line)
-    geom_hline(
-      yintercept = cost_constraint, 
-      linetype = "dashed", 
-      color = "orange", 
-      size = 1.2
-    ) +
-    
-    # Add optimal point annotation (red dot)
-    geom_point(
-      data = optimal_point,
-      aes_string(x = minimizing_variable, y = "total_cost"),
-      color = "red", 
-      size = 4, 
-      shape = 19
-    ) +
-    
-    # Styling
-    labs(
-      title = if (minimizing_variable == "TPM_threshold") "TPM Threshold Minimization" else "Fold Change Minimization",
-      subtitle = paste("Cost Constraint: $", scales::comma(cost_constraint)),
-      x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Minimum Fold Change (log scale)",
-      y = "Total Cost ($, log scale)"
-    ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(size = 14, face = "bold"),
-      plot.subtitle = element_text(size = 12, color = "gray60")
-    )
+  }, error = function(e) {
+    cat("  ERROR creating ggplot:", e$message, "\n")
+    stop("Plot creation failed: ", e$message)
+  })
   
   # Add annotation for optimal point
   if (nrow(optimal_point) > 0) {
+    cat("  Adding optimal point annotation\n")
     optimal_value <- optimal_point[[minimizing_variable]]
     optimal_cost <- optimal_point$total_cost
     
@@ -305,6 +332,7 @@ create_minimization_plot <- function(analysis_results) {
     )
   }
   
+  cat("=== CREATE_MINIMIZATION_PLOT: Completed successfully ===\n")
   return(p)
 }
 
