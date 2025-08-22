@@ -170,20 +170,6 @@ mod_experimental_setup_server <- function(id, design_config){
     observe({
       config <- design_config()
       
-      # Debug: Check what config we're receiving
-      if (!is.null(config)) {
-        cat("DEBUG experimental_setup: optimization_type =", config$optimization_type %||% "NULL", "\n")
-        cat("DEBUG experimental_setup: minimization_target =", config$minimization_target %||% "NULL", "\n")
-        if (!is.null(config$parameter_controls)) {
-          cat("DEBUG experimental_setup: cells_type =", config$parameter_controls$cells_per_target$type %||% "NULL", "\n")
-          cat("DEBUG experimental_setup: reads_type =", config$parameter_controls$reads_per_cell$type %||% "NULL", "\n")
-        } else {
-          cat("DEBUG experimental_setup: parameter_controls is NULL\n")
-        }
-      } else {
-        cat("DEBUG experimental_setup: config is NULL\n")
-      }
-      
       if (!is.null(config) && !is.null(config$parameter_controls)) {
         cells_type <- config$parameter_controls$cells_per_target$type
         reads_type <- config$parameter_controls$reads_per_cell$type
