@@ -94,12 +94,25 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     dplyr::ungroup()
   
   # Step 9: Find optimal solution using the same grouped data
-  optimal_design <- find_optimal_point_in_grouped_data(
+  optimal_point <- find_optimal_point_in_grouped_data(
     grouped_data, 
     minimization_config, 
     cost_constraint, 
     config$design_options$target_power
   )
+  
+  # Step 9b: Create properly formatted optimal design object
+  optimal_design <- list(
+    cells_per_target = optimal_point$cells_per_target,
+    reads_per_cell = optimal_point$reads_per_cell %||% optimal_point$raw_reads_per_cell,
+    total_cost = optimal_point$total_cost,
+    achieved_power = optimal_point$overall_power,  # Map overall_power to achieved_power
+    optimal_minimized_param = optimal_point[[minimization_config$variable]],  # The minimized parameter value
+    mapping_efficiency = 0.85  # Default value (not used in minimization workflows)
+  )
+  
+  # Add the minimizing parameter to the optimal design
+  optimal_design[[minimization_config$variable]] <- optimal_point[[minimization_config$variable]]
   
   # Step 10: Return unified results
   final_results <- list(
@@ -126,7 +139,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   cat("=== UNIFIED FUNCTION RETURNING ===\n")
   cat("  Final power_data rows:", nrow(final_results$power_data), "\n")
   cat("  Final optimal_design available:", !is.null(final_results$optimal_design), "\n")
-  cat("  Final workflow_info available:", !is.null(final_results$workflow_info), "\n")
+  cat("  Optimal design columns:", paste(names(final_results$optimal_design), collapse = ", "), "\n")
   
   return(final_results)
 }
@@ -226,42 +239,24 @@ prepare_minimization_data <- function(analysis_results) {
 #' @noRd
 create_minimization_plot <- function(analysis_results) {
   
-  cat("=== CREATE_MINIMIZATION_PLOT: Starting ===\n")
-  
   # Validate input
   if (is.null(analysis_results) || is.null(analysis_results$power_data)) {
     stop("Invalid analysis_results: missing power_data")
   }
   
-  cat("  Input validation passed\n")
-  
   # Get shared data
-  tryCatch({
-    data_prep <- prepare_minimization_data(analysis_results)
-    cat("  prepare_minimization_data completed\n")
-    
-    grouped_data <- data_prep$grouped_data
-    optimal_point <- data_prep$optimal_point
-    minimizing_variable <- data_prep$minimizing_variable
-    cost_constraint <- data_prep$cost_constraint
-    
-    cat("  Data extracted: grouped_data rows =", nrow(grouped_data), "\n")
-    cat("  Minimizing variable:", minimizing_variable, "\n")
-    cat("  Optimal point rows:", nrow(optimal_point), "\n")
-    
-    # Validate data
-    if (is.null(grouped_data) || nrow(grouped_data) == 0) {
-      stop("No grouped data available for plotting")
-    }
-    
-  }, error = function(e) {
-    cat("  ERROR in data preparation:", e$message, "\n")
-    stop("Data preparation failed: ", e$message)
-  })
+  data_prep <- prepare_minimization_data(analysis_results)
+  grouped_data <- data_prep$grouped_data
+  optimal_point <- data_prep$optimal_point
+  minimizing_variable <- data_prep$minimizing_variable
+  cost_constraint <- data_prep$cost_constraint
+  
+  # Validate data
+  if (is.null(grouped_data) || nrow(grouped_data) == 0) {
+    stop("No grouped data available for plotting")
+  }
   
   # Create base plot with log scales
-  cat("  Creating ggplot object\n")
-  
   tryCatch({
     p <- ggplot(grouped_data, aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]])) +
       # Add line connecting the points
@@ -311,16 +306,12 @@ create_minimization_plot <- function(analysis_results) {
         plot.subtitle = element_text(size = 12, color = "gray60")
       )
     
-    cat("  ggplot object created successfully\n")
-    
   }, error = function(e) {
-    cat("  ERROR creating ggplot:", e$message, "\n")
     stop("Plot creation failed: ", e$message)
   })
   
   # Add annotation for optimal point
   if (nrow(optimal_point) > 0) {
-    cat("  Adding optimal point annotation\n")
     optimal_value <- optimal_point[[minimizing_variable]]
     optimal_cost <- optimal_point$total_cost
     
@@ -335,7 +326,6 @@ create_minimization_plot <- function(analysis_results) {
     )
   }
   
-  cat("=== CREATE_MINIMIZATION_PLOT: Completed successfully ===\n")
   return(p)
 }
 
