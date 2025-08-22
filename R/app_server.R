@@ -20,33 +20,19 @@ app_server <- function(input, output, session) {
   # MODULE 2: ANALYSIS ENGINE (Placeholder vs Real Swap Point)
   # ========================================================================
   # Generate analysis results data (this is where placeholder/real happens)
-  raw_analysis_results <- mod_analysis_engine_server("analysis", user_workflow_config)
-  
-  # Create cached analysis results at app server level to prevent duplicate module calls
-  # Cache here preserves sidebar change detection but prevents duplicate expensive computations
-  analysis_results <- reactive({
-    raw_analysis_results()
-  }) %>% bindCache({
-    config <- user_workflow_config()
-    if (is.null(config) || config$plan_clicked == 0) {
-      NULL  # No caching when no plan clicked (allows real-time sidebar change detection)
-    } else {
-      # Cache based on plan click and config - allows sidebar change detection, prevents duplicate computation
-      paste(config$plan_clicked, digest::digest(config, algo = "md5"))
-    }
-  })
+  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config)
   
   # ========================================================================
   # MODULE 3: PLOTTING ENGINE (Always Same)
   # ========================================================================
   # Convert analysis data into plot objects
-  plot_objects <- mod_plotting_engine_server("plotting", analysis_results)
+  plot_objects <- mod_plotting_engine_server("plotting", analysis_results_raw)
   
   # ========================================================================
   # MODULE 4: RESULTS DISPLAY (Always Same)  
   # ========================================================================
   # Handle UI presentation of plots and tables
-  mod_results_display_server("display", plot_objects, analysis_results)
+  mod_results_display_server("display", plot_objects, analysis_results_raw)
   
   # ========================================================================
   # APP STATE MANAGEMENT
@@ -55,7 +41,7 @@ app_server <- function(input, output, session) {
   # Combined observer for loading states and error handling
   observe({
     config <- user_workflow_config()
-    analysis <- analysis_results()
+    analysis <- analysis_results_raw()
     
     # Handle loading states
     if (!is.null(config) && config$plan_clicked > 0 && is.null(analysis)) {

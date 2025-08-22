@@ -41,6 +41,9 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     previous_config <- reactiveVal(NULL)
     last_plan_count <- reactiveVal(0)
     
+    # Cache for expensive computation results
+    cached_results <- reactiveVal(NULL)
+    
     analysis_results <- reactive({
       req(workflow_config())
       
@@ -56,15 +59,22 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       previous_hash <- previous_config()
       current_plan_count <- config$plan_clicked
       
-      # If this is a new plan click, update tracking
+      # If this is a new plan click, update tracking and clear cache
       if (current_plan_count > last_plan_count()) {
         previous_config(current_config_hash)
         last_plan_count(current_plan_count)
+        cached_results(NULL)  # Clear cache for new plan
       } else {
         # Check if sidebar inputs changed since last plan
         if (!is.null(previous_hash) && current_config_hash != previous_hash) {
           # Sidebar changed but no new plan click - return NULL to clear results
+          cached_results(NULL)  # Clear cache
           return(NULL)
+        }
+        
+        # Same config as before - return cached results if available
+        if (!is.null(cached_results())) {
+          return(cached_results())
         }
       }
       
@@ -102,17 +112,17 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       
       # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis
       # Wrap in comprehensive error handling to prevent app crashes
-      tryCatch({
+      results <- tryCatch({
         if (use_placeholder_mode()) {
           # PLACEHOLDER MODE: Generate realistic fake data
-          return(generate_placeholder_analysis(config, workflow_info))
+          generate_placeholder_analysis(config, workflow_info)
         } else {
           # REAL MODE: Call perturbplan package functions
-          return(generate_real_analysis(config, workflow_info))
+          generate_real_analysis(config, workflow_info)
         }
       }, error = function(e) {
         # Return error object instead of crashing
-        return(list(
+        list(
           error = paste("Analysis Error:", e$message),
           metadata = list(
             analysis_mode = get_analysis_mode(),
@@ -120,8 +130,12 @@ mod_analysis_engine_server <- function(id, workflow_config) {
             timestamp = Sys.time(),
             error_details = as.character(e)
           )
-        ))
+        )
       })
+      
+      # Cache the results to prevent duplicate computation
+      cached_results(results)
+      return(results)
     })
     
     return(analysis_results)
