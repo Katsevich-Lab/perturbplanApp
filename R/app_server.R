@@ -5,6 +5,8 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @importFrom shiny bindCache
+#' @importFrom magrittr %>%
 #' @noRd
 app_server <- function(input, output, session) {
   
@@ -18,7 +20,21 @@ app_server <- function(input, output, session) {
   # MODULE 2: ANALYSIS ENGINE (Placeholder vs Real Swap Point)
   # ========================================================================
   # Generate analysis results data (this is where placeholder/real happens)
-  analysis_results <- mod_analysis_engine_server("analysis", user_workflow_config)
+  raw_analysis_results <- mod_analysis_engine_server("analysis", user_workflow_config)
+  
+  # Create cached analysis results at app server level to prevent duplicate module calls
+  # Cache here preserves sidebar change detection but prevents duplicate expensive computations
+  analysis_results <- reactive({
+    raw_analysis_results()
+  }) %>% bindCache({
+    config <- user_workflow_config()
+    if (is.null(config) || config$plan_clicked == 0) {
+      NULL  # No caching when no plan clicked (allows real-time sidebar change detection)
+    } else {
+      # Cache based on plan click and config - allows sidebar change detection, prevents duplicate computation
+      paste(config$plan_clicked, digest::digest(config, algo = "md5"))
+    }
+  })
   
   # ========================================================================
   # MODULE 3: PLOTTING ENGINE (Always Same)

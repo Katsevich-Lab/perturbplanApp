@@ -122,16 +122,6 @@ mod_analysis_engine_server <- function(id, workflow_config) {
           )
         ))
       })
-    }) %>% bindCache({
-      config <- workflow_config()
-      if (is.null(config) || config$plan_clicked == 0) {
-        NULL  # No caching when no plan clicked
-      } else {
-        list(
-          plan_clicked = config$plan_clicked,
-          config_hash = create_config_hash(config)
-        )
-      }
     })
     
     return(analysis_results)
