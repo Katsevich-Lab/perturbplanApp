@@ -24,7 +24,9 @@ perform_cost_minimization_analysis <- function(config, workflow_info) {
   
   # Step 1: Get comprehensive parameters from UI using existing mapping function
   # This includes MOI, num_targets, experimental setup, pilot data, costs, etc.
-  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info)
+  # Extract pilot data once
+  pilot_data <- extract_pilot_data(config$experimental_setup)
+  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
   
   # Override for cost minimization workflow: 
   # - Use "cost" as minimizing variable (perturbplan now supports this)

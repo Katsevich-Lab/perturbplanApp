@@ -645,7 +645,7 @@ generate_real_analysis <- function(config, workflow_info) {
   
   # For all other workflows: Use standard cost_power_computation
   # Map UI configuration to perturbplan::cost_power_computation parameters
-  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info)
+  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
   
   # Call perturbplan::cost_power_computation
   tryCatch({

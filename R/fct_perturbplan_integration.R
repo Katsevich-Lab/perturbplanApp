@@ -89,9 +89,10 @@ extract_pilot_data <- function(experimental_config) {
 #'
 #' @param config Complete UI configuration from sidebar modules
 #' @param workflow_info Detected workflow information
+#' @param pilot_data Pre-extracted pilot data to avoid duplicate extraction
 #' @return Named list of parameters for cost_power_computation
 #' @noRd
-map_config_to_perturbplan_params <- function(config, workflow_info) {
+map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) {
   # DEBUG: Log what the UI is sending
   # cat("=== DEBUG: UI Configuration Received ===\n")
   # cat("Minimization target:", config$design_options$minimization_target %||% "NULL", "\n")
@@ -109,8 +110,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info) {
   # cat("Full effect_sizes keys:", paste(names(config$effect_sizes %||% list()), collapse = ", "), "\n")
   # cat("===========================================\n")
   
-  # Extract pilot data
-  pilot_data <- extract_pilot_data(config$experimental_setup)
+  # Use pre-extracted pilot data (passed as parameter to avoid duplication)
 
   # Extract design options
   design_opts <- config$design_options
