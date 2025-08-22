@@ -263,8 +263,8 @@ create_minimization_plot <- function(analysis_results) {
   cat("  Creating ggplot object\n")
   
   tryCatch({
-    p <- ggplot(grouped_data, aes_string(x = minimizing_variable, y = "total_cost")) +
-      geom_point(aes(color = overall_power), size = 2, alpha = 0.7) +
+    p <- ggplot(grouped_data, aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]])) +
+      geom_point(aes(color = .data[["overall_power"]]), size = 2, alpha = 0.7) +
       scale_color_gradient2(
         low = "red", mid = "yellow", high = "green",
         midpoint = 0.8, name = "Power"
@@ -289,7 +289,7 @@ create_minimization_plot <- function(analysis_results) {
       # Add optimal point annotation (red dot)
       geom_point(
         data = optimal_point,
-        aes_string(x = minimizing_variable, y = "total_cost"),
+        aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]]),
         color = "red", 
         size = 4, 
         shape = 19
