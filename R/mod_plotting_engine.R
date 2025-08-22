@@ -244,24 +244,40 @@ create_cost_tradeoff_plots <- function(results) {
       # cat("Starting ggplotly conversion...\n")
   p_interactive <- tryCatch({
       # cat("Converting ggplot to plotly...\n")
+    
     # First convert to plotly
     plotly_obj <- ggplotly(p, tooltip = NULL)
     
-    # Then manually modify each trace to add proper hover data
+    # Then modify traces for custom hover data
     for (i in seq_along(plotly_obj$x$data)) {
       trace_data <- plotly_obj$x$data[[i]]
       if (!is.null(trace_data$x) && !is.null(trace_data$y)) {
-        # Transform log coordinates back to normal scale
-        cells_values <- round(10^trace_data$x)
-        reads_values <- round(10^trace_data$y)
         
-        # Set custom hover text
-        plotly_obj$x$data[[i]]$hovertemplate <- paste0(
-          "Cells per target: %{customdata[0]:,}<br>",
-          "Reads per cell: %{customdata[1]:,}<br>",
-          "<extra></extra>"
-        )
-        plotly_obj$x$data[[i]]$customdata <- cbind(cells_values, reads_values)
+        if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+          # For minimization plots: show minimizing variable and cost
+          x_values <- round(10^trace_data$x, if(workflow_info$workflow_id == "power_cost_TPM_cells_reads") 1 else 3)
+          y_values <- round(10^trace_data$y)
+          
+          x_label <- if (workflow_info$workflow_id == "power_cost_TPM_cells_reads") "TPM Threshold" else "Fold Change"
+          
+          plotly_obj$x$data[[i]]$hovertemplate <- paste0(
+            x_label, ": %{customdata[0]}<br>",
+            "Total Cost: $%{customdata[1]:,}<br>",
+            "<extra></extra>"
+          )
+          plotly_obj$x$data[[i]]$customdata <- cbind(x_values, y_values)
+        } else {
+          # For other plots: cells and reads hover data
+          cells_values <- round(10^trace_data$x)
+          reads_values <- round(10^trace_data$y)
+          
+          plotly_obj$x$data[[i]]$hovertemplate <- paste0(
+            "Cells per target: %{customdata[0]:,}<br>",
+            "Reads per cell: %{customdata[1]:,}<br>",
+            "<extra></extra>"
+          )
+          plotly_obj$x$data[[i]]$customdata <- cbind(cells_values, reads_values)
+        }
       }
     }
       # cat("ggplotly conversion with manual trace modification successful\n")

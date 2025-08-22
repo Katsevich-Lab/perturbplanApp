@@ -218,6 +218,11 @@ prepare_minimization_data <- function(analysis_results) {
 #' @noRd
 create_minimization_plot <- function(analysis_results) {
   
+  # Validate input
+  if (is.null(analysis_results) || is.null(analysis_results$power_data)) {
+    stop("Invalid analysis_results: missing power_data")
+  }
+  
   # Get shared data
   data_prep <- prepare_minimization_data(analysis_results)
   grouped_data <- data_prep$grouped_data
@@ -225,12 +230,25 @@ create_minimization_plot <- function(analysis_results) {
   minimizing_variable <- data_prep$minimizing_variable
   cost_constraint <- data_prep$cost_constraint
   
-  # Create base plot
+  # Validate data
+  if (is.null(grouped_data) || nrow(grouped_data) == 0) {
+    stop("No grouped data available for plotting")
+  }
+  
+  # Create base plot with log scales
   p <- ggplot(grouped_data, aes_string(x = minimizing_variable, y = "total_cost")) +
     geom_point(aes(color = overall_power), size = 2, alpha = 0.7) +
     scale_color_gradient2(
       low = "red", mid = "yellow", high = "green",
       midpoint = 0.8, name = "Power"
+    ) +
+    
+    # Use log scales for consistency with other plots
+    scale_x_log10(
+      labels = scales::comma_format()
+    ) +
+    scale_y_log10(
+      labels = scales::dollar_format()
     ) +
     
     # Add cost constraint line (horizontal dashed line)
@@ -254,8 +272,8 @@ create_minimization_plot <- function(analysis_results) {
     labs(
       title = if (minimizing_variable == "TPM_threshold") "TPM Threshold Minimization" else "Fold Change Minimization",
       subtitle = paste("Cost Constraint: $", scales::comma(cost_constraint)),
-      x = if (minimizing_variable == "TPM_threshold") "TPM Threshold" else "Minimum Fold Change",
-      y = "Total Cost ($)"
+      x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Minimum Fold Change (log scale)",
+      y = "Total Cost ($, log scale)"
     ) +
     theme_minimal() +
     theme(
