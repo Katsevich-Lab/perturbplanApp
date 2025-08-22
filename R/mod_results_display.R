@@ -214,7 +214,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       }
       # Check for analysis errors if no plotting error
       else if (!is.null(results) && !is.null(results$error)) {
-        error_msg <- paste("Analysis Error:", results$error)
+        error_msg <- results$error
       }
       
       if (!is.null(error_msg)) {
