@@ -643,31 +643,17 @@ generate_real_analysis <- function(config, workflow_info) {
     })
   }
 
-  # Check if this is TPM minimization workflow (Workflow 6)
-  if (workflow_info$workflow_id == "power_cost_TPM_cells_reads") {
-    # Use specialized TPM minimization analysis
+  # Check if this is TPM or FC minimization workflow (Workflows 10-11)
+  if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    # Use unified constrained minimization analysis
     tryCatch({
-      results <- perform_TPM_minimization_analysis(config, workflow_info, pilot_data)
+      results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data)
 
       # Return results directly (already in plotting format)
       return(results)
 
     }, error = function(e) {
-      stop("TPM minimization analysis failed: ", e$message)
-    })
-  }
-
-  # Check if this is FC minimization workflow (Workflow 7)
-  if (workflow_info$workflow_id == "power_cost_fc_cells_reads") {
-    # Use specialized FC minimization analysis
-    tryCatch({
-      results <- perform_fc_minimization_analysis(config, workflow_info, pilot_data)
-
-      # Return results directly (already in plotting format)
-      return(results)
-
-    }, error = function(e) {
-      stop("FC minimization analysis failed: ", e$message)
+      stop("Constrained minimization analysis failed: ", e$message)
     })
   }
 

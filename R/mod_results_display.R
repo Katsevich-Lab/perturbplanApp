@@ -342,53 +342,80 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
               
               # Show minimizing parameter and varying parameter (for power+cost workflows)
               tagList(
-                # Always show the minimizing parameter first
-                if (minimizing_param == "TPM_threshold" && !is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
-                  # TPM minimization workflow - show TPM + corresponding cells/reads
+                # Check if this is workflows 10-11 (unified constrained minimization)
+                if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+                  # Use unified minimization solution display
+                  render_minimization_solution(results)
+                } else if (minimizing_param == "TPM_threshold" && !is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
+                  # Legacy TPM minimization workflow display (for other TPM workflows)
                   tagList(
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Optimal TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$TPM_threshold, 1), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                      tags$span(
+                        if (!is.null(optimal$TPM_threshold) && is.numeric(optimal$TPM_threshold)) round(optimal$TPM_threshold, 1) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
+                      )
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                      tags$span(
+                        if (!is.null(optimal$cells_per_target) && is.numeric(optimal$cells_per_target)) round(optimal$cells_per_target) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+                      )
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                      tags$span(
+                        if (!is.null(optimal$reads_per_cell) && is.numeric(optimal$reads_per_cell)) round(optimal$reads_per_cell) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+                      )
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Total cost: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(paste0("$", scales::comma(round(optimal$total_cost))), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                      tags$span(
+                        if (!is.null(optimal$total_cost) && is.numeric(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+                      )
                     )
                   )
                 } else if (minimizing_param == "minimum_fold_change" && !is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
-                  # FC minimization workflow - show FC + corresponding cells/reads
+                  # Legacy FC minimization workflow display (for other FC workflows)
                   tagList(
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Optimal fold change: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$minimum_fold_change, 2), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                      tags$span(
+                        if (!is.null(optimal$minimum_fold_change) && is.numeric(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
+                      )
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                      tags$span(
+                        if (!is.null(optimal$cells_per_target) && is.numeric(optimal$cells_per_target)) round(optimal$cells_per_target) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+                      )
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                      tags$span(
+                        if (!is.null(optimal$reads_per_cell) && is.numeric(optimal$reads_per_cell)) round(optimal$reads_per_cell) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+                      )
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
                       tags$span("Total cost: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(paste0("$", scales::comma(round(optimal$total_cost))), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                      tags$span(
+                        if (!is.null(optimal$total_cost) && is.numeric(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+                      )
                     )
                   )
                 } else if (minimizing_param == "cells_per_target" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
