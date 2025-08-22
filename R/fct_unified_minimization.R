@@ -126,11 +126,11 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
 #' @noRd
 get_minimization_config <- function(workflow_id) {
   switch(workflow_id,
-    "workflow_10" = list(
+    "power_cost_TPM_cells_reads" = list(
       variable = "TPM_threshold",
       optimization_goal = "minimize"
     ),
-    "workflow_11" = list(
+    "power_cost_fc_cells_reads" = list(
       variable = "minimum_fold_change", 
       optimization_goal = "closest_to_one"
     ),
