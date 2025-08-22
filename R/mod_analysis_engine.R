@@ -27,7 +27,8 @@ mod_analysis_engine_ui <- function(id) {
 #' @return Reactive list containing analysis results data
 #' @noRd 
 #' 
-#' @importFrom shiny moduleServer reactive req
+#' @importFrom shiny moduleServer reactive req bindCache
+#' @importFrom magrittr %>%
 mod_analysis_engine_server <- function(id, workflow_config) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -121,7 +122,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
           )
         ))
       })
-    })
+    }) %>% bindCache(workflow_config()$plan_clicked, workflow_config()$timestamp)
     
     return(analysis_results)
   })
