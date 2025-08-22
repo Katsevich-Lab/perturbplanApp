@@ -5,7 +5,7 @@
 #' @param biological_system Character, biological system (e.g., "K562")
 #' @param experimental_platform Character, platform (e.g., "10x Chromium v3")
 #'
-#' @return List with parameter ranges for cells, reads, tpm_threshold, fold_change
+#' @return List with parameter ranges for cells, reads, TPM_threshold, fold_change
 #'
 #' @noRd
 get_parameter_ranges <- function(biological_system = "K562", experimental_platform = "10x Chromium v3") {
@@ -13,7 +13,7 @@ get_parameter_ranges <- function(biological_system = "K562", experimental_platfo
   list(
     cells_per_target = list(min = 50, max = 5000, step = 50, default = 1000),
     reads_per_cell = list(min = 500, max = 20000, step = 500, default = 5000),
-    tpm_threshold = list(min = 0, max = 100, step = 1, default = 10),
+    TPM_threshold = list(min = 0, max = 100, step = 1, default = 10),
     fold_change = list(min = 1.1, max = 10, step = 0.1, default = 1.5)
   )
 }
@@ -73,7 +73,7 @@ format_parameter_value <- function(value, parameter_type) {
   switch(parameter_type,
     "cells_per_target" = paste(scales::comma(value), "cells"),
     "reads_per_cell" = paste(scales::comma(value), "reads/cell"),
-    "tpm_threshold" = paste(value, "TPM"),
+    "TPM_threshold" = paste(value, "TPM"),
     "fold_change" = paste0(value, "x"),
     as.character(value)
   )

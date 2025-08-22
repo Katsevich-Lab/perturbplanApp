@@ -127,7 +127,7 @@ detect_workflow_scenario <- function(workflow_config) {
       if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
         # Workflow 8: TPM + cells + reads varying
         return(list(
-          workflow_id = "power_cost_tpm_cells_reads",
+          workflow_id = "power_cost_TPM_cells_reads",
           plot_type = "cost_tradeoff_curves",
           category = "power_cost_multi",
           minimizing_parameter = "TPM_threshold",
@@ -144,7 +144,7 @@ detect_workflow_scenario <- function(workflow_config) {
           other_param_ui  # fallback
         )
         return(list(
-          workflow_id = paste0("power_cost_tpm_", other_param),
+          workflow_id = paste0("power_cost_TPM_", other_param),
           plot_type = "single_parameter_curve",
           category = "power_cost_single", 
           minimizing_parameter = "TPM_threshold",
@@ -289,7 +289,7 @@ get_default_parameter_range <- function(parameter_name) {
   switch(parameter_name,
     "cells" = seq(100, 2000, 50),
     "reads" = seq(1000, 10000, 200),
-    "tpm_threshold" = seq(5, 50, 1),
+    "TPM_threshold" = seq(5, 50, 1),
     "fold_change" = seq(1.2, 3.0, 0.1),
     # Fallback
     c(1, 10, 1)

@@ -39,10 +39,10 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   perturbplan_params$fixed_variable$minimum_fold_change <- fc_value
   
   # Always ensure TPM_threshold is fixed  
-  tpm_value <- config$analysis_choices$TPM_threshold_fixed %||%
+  TPM_value <- config$analysis_choices$TPM_threshold_fixed %||%
               config$design_options$parameter_controls$TPM_threshold$fixed_value %||%
               10  # Default TPM threshold
-  perturbplan_params$fixed_variable$TPM_threshold <- as.numeric(tpm_value)
+  perturbplan_params$fixed_variable$TPM_threshold <- as.numeric(TPM_value)
   
   # Remove cells/reads from fixed_variable so they can vary for cost optimization
   # (This is required for cost minimization regardless of UI parameter control status)

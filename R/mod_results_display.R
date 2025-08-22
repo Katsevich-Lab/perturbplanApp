@@ -431,7 +431,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
               tagList(
                 # TPM threshold (for cost minimization, get from config or power_data)
                 if (minimizing_param != "TPM_threshold") {
-                  tpm_value <- if (!is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
+                  TPM_value <- if (!is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
                     optimal$TPM_threshold
                   } else if (!is.null(plots$plots$plot_data) && "TPM_threshold" %in% names(plots$plots$plot_data)) {
                     # For cost minimization, get from nested plot data
@@ -439,11 +439,11 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                   } else {
                     10  # Default TPM threshold commonly used
                   }
-                  if (!is.null(tpm_value) && !is.na(tpm_value)) {
+                  if (!is.null(TPM_value) && !is.na(TPM_value)) {
                     tags$div(
                       style = "margin-bottom: 6px;",
                       tags$span("TPM analysis threshold: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-                      tags$span(round(tpm_value, 1), style = "color: #6C757D; font-weight: 500;")
+                      tags$span(round(TPM_value, 1), style = "color: #6C757D; font-weight: 500;")
                     )
                   }
                 },

@@ -295,7 +295,7 @@ mod_design_options_server <- function(id){
       # Trigger on parameter control changes
       input$cells_control
       input$reads_control
-      input$tpm_control
+      input$TPM_control
       input$fc_control
       
       # Show summary only after all steps are completed and Step 3 is visible
@@ -320,7 +320,7 @@ mod_design_options_server <- function(id){
             param_configs = param_configs,
             cells_control = input$cells_control,
             reads_control = input$reads_control,
-            tpm_control = input$tpm_control,
+            TPM_control = input$TPM_control,
             fc_control = input$fc_control
           )
         
@@ -338,7 +338,7 @@ mod_design_options_server <- function(id){
     # Helper function to generate design problem summary
     generate_design_summary <- function(opt_type, target, power, cost_budget, param_configs = NULL, 
                                        cells_control = NULL, reads_control = NULL, 
-                                       tpm_control = NULL, fc_control = NULL) {
+                                       TPM_control = NULL, fc_control = NULL) {
       # Base text
       if (opt_type == "power_only") {
         if (target == "cost") {
@@ -396,16 +396,16 @@ mod_design_options_server <- function(id){
           }
           
           # Add TPM/FC information for power+cost workflows
-          tpm_fc_desc <- ""
+          TPM_fc_desc <- ""
           if (target == "TPM_threshold") {
-            tpm_fc_desc <- "keeping fold change fixed"
+            TPM_fc_desc <- "keeping fold change fixed"
           } else if (target == "fold_change") {
-            tpm_fc_desc <- "keeping TPM threshold fixed"
+            TPM_fc_desc <- "keeping TPM threshold fixed"
           }
           
           # Combine descriptions - always include TPM/FC info for power+cost
-          if (tpm_fc_desc != "") {
-            param_desc <- paste0("while ", cells_reads_desc, " and ", tpm_fc_desc)
+          if (TPM_fc_desc != "") {
+            param_desc <- paste0("while ", cells_reads_desc, " and ", TPM_fc_desc)
           } else {
             param_desc <- paste0("while ", cells_reads_desc)
           }
@@ -455,7 +455,7 @@ mod_design_options_server <- function(id){
       
       if (!param_configs$TPM_threshold$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "tpm", "TPM threshold:", param_configs$TPM_threshold, 10, 0, 100, 1)
+          create_param_ui(ns, "TPM", "TPM threshold:", param_configs$TPM_threshold, 10, 0, 100, 1)
         ))
       }
       
@@ -490,7 +490,7 @@ mod_design_options_server <- function(id){
           configs$TPM_threshold$type <- if (target == "TPM_threshold") "minimizing" else "fixed"
           configs$minimum_fold_change$type <- if (target == "fold_change") "minimizing" else "fixed"
         } else if (target == "cost") {
-          # Cost minimization: cells/reads vary simultaneously (omit both), tpm/fc fixed
+          # Cost minimization: cells/reads vary simultaneously (omit both), TPM/fc fixed
           configs$cells_per_target$type <- "optimizing"
           configs$reads_per_cell$type <- "optimizing"
           configs$TPM_threshold$type <- "fixed"
@@ -580,28 +580,28 @@ mod_design_options_server <- function(id){
         if (target == "cells") {
           updateSelectInput(session, "cells_control", selected = "minimizing")
           updateSelectInput(session, "reads_control", selected = "varying")
-          updateSelectInput(session, "tpm_control", selected = "varying")
+          updateSelectInput(session, "TPM_control", selected = "varying")
           updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "reads") {
           updateSelectInput(session, "cells_control", selected = "varying")
           updateSelectInput(session, "reads_control", selected = "minimizing")
-          updateSelectInput(session, "tpm_control", selected = "varying")
+          updateSelectInput(session, "TPM_control", selected = "varying")
           updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "cost") {
-          # For cost minimization: cells/reads = varying, tpm/fc = fixed
+          # For cost minimization: cells/reads = varying, TPM/fc = fixed
           updateSelectInput(session, "cells_control", selected = "varying")
           updateSelectInput(session, "reads_control", selected = "varying")
-          updateSelectInput(session, "tpm_control", selected = "fixed")
+          updateSelectInput(session, "TPM_control", selected = "fixed")
           updateSelectInput(session, "fc_control", selected = "fixed")
         } else if (target == "TPM_threshold") {
           updateSelectInput(session, "cells_control", selected = "varying")
           updateSelectInput(session, "reads_control", selected = "varying")
-          updateSelectInput(session, "tpm_control", selected = "minimizing")
+          updateSelectInput(session, "TPM_control", selected = "minimizing")
           updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "fold_change") {
           updateSelectInput(session, "cells_control", selected = "varying")
           updateSelectInput(session, "reads_control", selected = "varying")
-          updateSelectInput(session, "tpm_control", selected = "varying")
+          updateSelectInput(session, "TPM_control", selected = "varying")
           updateSelectInput(session, "fc_control", selected = "minimizing")
         }
       }
@@ -626,7 +626,7 @@ mod_design_options_server <- function(id){
             updateSelectInput(session, "reads_control", selected = "fixed")
           }
           if (target != "TPM_threshold") {
-            updateSelectInput(session, "tpm_control", selected = "fixed")
+            updateSelectInput(session, "TPM_control", selected = "fixed")
           }
           if (target != "fold_change") {
             updateSelectInput(session, "fc_control", selected = "fixed")
@@ -635,19 +635,19 @@ mod_design_options_server <- function(id){
           # Disable all dropdowns (non-clickable)
           shinyjs::disable("cells_control")
           shinyjs::disable("reads_control")
-          shinyjs::disable("tpm_control")
+          shinyjs::disable("TPM_control")
           shinyjs::disable("fc_control")
         } else if (target == "cost") {
-          # Cost minimization = all parameters disabled (cells/reads varying, tpm/fc fixed)
+          # Cost minimization = all parameters disabled (cells/reads varying, TPM/fc fixed)
           shinyjs::disable("cells_control")
           shinyjs::disable("reads_control")
-          shinyjs::disable("tpm_control")
+          shinyjs::disable("TPM_control")
           shinyjs::disable("fc_control")
         } else if (opt_type == "power_cost" && target == "TPM_threshold") {
           # Power+cost + TPM minimization: TPM=minimizing+disabled, FC=fixed+disabled, cells/reads=varying/fixed with constraint
-          updateSelectInput(session, "tpm_control", selected = "minimizing")
+          updateSelectInput(session, "TPM_control", selected = "minimizing")
           updateSelectInput(session, "fc_control", selected = "fixed")
-          shinyjs::disable("tpm_control")
+          shinyjs::disable("TPM_control")
           shinyjs::disable("fc_control")
           # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
           shinyjs::enable("cells_control")
@@ -655,9 +655,9 @@ mod_design_options_server <- function(id){
         } else if (opt_type == "power_cost" && target == "fold_change") {
           # Power+cost + FC minimization: FC=minimizing+disabled, TPM=fixed+disabled, cells/reads=varying/fixed with constraint
           updateSelectInput(session, "fc_control", selected = "minimizing")
-          updateSelectInput(session, "tpm_control", selected = "fixed")
+          updateSelectInput(session, "TPM_control", selected = "fixed")
           shinyjs::disable("fc_control")
-          shinyjs::disable("tpm_control")
+          shinyjs::disable("TPM_control")
           # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
           shinyjs::enable("cells_control")
           shinyjs::enable("reads_control")
@@ -665,7 +665,7 @@ mod_design_options_server <- function(id){
           # Re-enable all dropdowns for other scenarios
           shinyjs::enable("cells_control")
           shinyjs::enable("reads_control")
-          shinyjs::enable("tpm_control")
+          shinyjs::enable("TPM_control")
           shinyjs::enable("fc_control")
         }
       }
@@ -718,11 +718,11 @@ mod_design_options_server <- function(id){
         reads_type <- input_vals$reads_control
       }
       
-      tpm_type <- param_configs$TPM_threshold$type
+      TPM_type <- param_configs$TPM_threshold$type
       # Only allow user override if base config allows varying/fixed choice
-      if (!is.null(input_vals$tpm_control) && 
+      if (!is.null(input_vals$TPM_control) && 
           param_configs$TPM_threshold$type == "varying") {
-        tpm_type <- input_vals$tpm_control
+        TPM_type <- input_vals$TPM_control
       }
       
       fc_type <- param_configs$minimum_fold_change$type
@@ -742,8 +742,8 @@ mod_design_options_server <- function(id){
           fixed_value = if(!is.null(input_vals$reads_fixed)) input_vals$reads_fixed else NULL
         ),
         TPM_threshold = list(
-          type = tpm_type,
-          fixed_value = if(!is.null(input_vals$tpm_fixed)) input_vals$tpm_fixed else NULL
+          type = TPM_type,
+          fixed_value = if(!is.null(input_vals$TPM_fixed)) input_vals$TPM_fixed else NULL
         ),
         minimum_fold_change = list(
           type = fc_type,
@@ -758,7 +758,7 @@ mod_design_options_server <- function(id){
       # Explicitly depend on control inputs to ensure reactivity
       input$cells_control
       input$reads_control
-      input$tpm_control
+      input$TPM_control
       input$fc_control
       
       # Safe access to input values with NULL checking

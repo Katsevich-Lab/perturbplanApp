@@ -3,7 +3,7 @@ test_that("mod_cost_info server works", {
   design_config <- reactive({
     list(
       optimization_type = "power_cost",
-      minimization_target = "tpm_threshold"
+      minimization_target = "TPM_threshold"
     )
   })
   

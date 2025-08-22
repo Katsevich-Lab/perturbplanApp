@@ -25,7 +25,7 @@ detect_workflow <- function(design_config) {
     workflow_map <- list(
       "cells" = list(id = 1, name = "Cells per target", type = "power_only"),
       "reads" = list(id = 2, name = "Reads per cell", type = "power_only"),
-      "tpm_threshold" = list(id = 3, name = "TPM threshold", type = "power_only"),
+      "TPM_threshold" = list(id = 3, name = "TPM threshold", type = "power_only"),
       "fold_change" = list(id = 4, name = "Fold change threshold", type = "power_only"),
       "cost" = list(id = 5, name = "Total cost", type = "power_only")
     )
@@ -34,8 +34,8 @@ detect_workflow <- function(design_config) {
   # Power + cost optimization workflows (6-11)  
   else if (optimization_type == "power_cost") {
     workflow_map <- list(
-      "tpm_threshold" = list(id = 6, name = "TPM threshold (with cost)", type = "power_cost"),
-      "fold_change" = list(id = 7, name = "Fold change threshold (with cost)", type = "power_cost")
+      "TPM_threshold" = list(id = "power_cost_TPM_cells_reads", name = "TPM threshold (with cost)", type = "power_cost", minimizing_parameter = "TPM_threshold"),
+      "fold_change" = list(id = "power_cost_fc_cells_reads", name = "Fold change threshold (with cost)", type = "power_cost", minimizing_parameter = "minimum_fold_change")
       # Note: workflows 8-11 depend on parameter control combinations
     )
   }
@@ -49,7 +49,13 @@ detect_workflow <- function(design_config) {
     ))
   }
   
-  return(workflow)
+  # Convert workflow structure to expected format
+  return(list(
+    workflow_id = workflow$id,
+    workflow_name = workflow$name,
+    workflow_type = workflow$type,
+    minimizing_parameter = workflow$minimizing_parameter
+  ))
 }
 
 #' Validate Design Configuration Completeness

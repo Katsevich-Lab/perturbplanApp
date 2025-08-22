@@ -829,7 +829,7 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
   min_param <- workflow_info$minimizing_parameter
   
   # Create parameter range and labels
-  if (min_param == "tpm_threshold") {
+  if (min_param == "TPM_threshold") {
     param_values <- seq(5, 50, length.out = 20)  # TPM range
     param_label <- "TPM Threshold"
     optimal_param <- 15  # Optimal TPM value
@@ -845,7 +845,7 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
   }
   
   # Generate strictly decreasing cost curve with dramatic cost differences
-  if (min_param == "tpm_threshold") {
+  if (min_param == "TPM_threshold") {
     # For TPM: Range from $15000 at TPM=5 to $3000 at TPM=50 (12000 range)
     # Use inverted parameter for decreasing: cost decreases as TPM increases
     normalized_param <- (param_values - min(param_values)) / (max(param_values) - min(param_values))  # 0 to 1
