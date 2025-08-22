@@ -5,5 +5,5 @@
 \title{Cost Minimization Analysis Functions}
 \description{
 Helper functions for power-only cost minimization workflow (Workflow 5)
-using cost_power_computation + find_optimal_design integration.
+using cost_power_computation + find_optimal_cost_design integration.
 }

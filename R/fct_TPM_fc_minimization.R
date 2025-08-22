@@ -1,15 +1,15 @@
 #' TPM and Fold Change Minimization Analysis Functions
 #'
 #' @description Helper functions for power+cost TPM/FC minimization workflows (Workflows 6-7)
-#' using cost_power_computation + find_optimal_design integration with cost constraints.
+#' using cost_power_computation + find_optimal_cost_design integration with cost constraints.
 #'
 #' @name TPM-fc-minimization
 NULL
 
-#' Perform TPM threshold minimization analysis using cost_power_computation + find_optimal_design
+#' Perform TPM threshold minimization analysis using cost_power_computation + find_optimal_cost_design
 #'
 #' @description Implements Workflow 6: Power+cost TPM minimization by calling
-#' cost_power_computation with cost_constraint (from UI), then find_optimal_design
+#' cost_power_computation with cost_constraint (from UI), then find_optimal_cost_design
 #' to generate equi-power and equi-cost curves.
 #'
 #' @param config User configuration from sidebar
@@ -56,7 +56,7 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
   
-  # Step 3: Call find_optimal_design with ALL required parameters
+  # Step 3: Call find_optimal_cost_design with ALL required parameters
   # Use the same minimizing_variable as cost_power_computation (TPM_threshold)
   # Include all experimental parameters needed for equi-cost curve generation
   find_optimal_params <- list(
@@ -73,10 +73,10 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
     cost_grid_size = 200                          # As specified
   )
   
-  optimal_results <- do.call(perturbplan::find_optimal_design, find_optimal_params)
+  optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
   
   # Step 4: Extract key components and format for CURRENT plotting engine
-  # Use the ACTUAL data structure returned by find_optimal_design
+  # Use the ACTUAL data structure returned by find_optimal_cost_design
   
   # Use optimal_design_df as the main data (this has the correct structure)
   power_data <- optimal_results$optimal_design_df
@@ -123,10 +123,10 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
   ))
 }
 
-#' Perform fold change minimization analysis using cost_power_computation + find_optimal_design
+#' Perform fold change minimization analysis using cost_power_computation + find_optimal_cost_design
 #'
 #' @description Implements Workflow 7: Power+cost FC minimization by calling
-#' cost_power_computation with cost_constraint (from UI), then find_optimal_design
+#' cost_power_computation with cost_constraint (from UI), then find_optimal_cost_design
 #' to generate equi-power and equi-cost curves.
 #'
 #' @param config User configuration from sidebar
@@ -173,7 +173,7 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
   
-  # Step 3: Call find_optimal_design with ALL required parameters
+  # Step 3: Call find_optimal_cost_design with ALL required parameters
   # Use the same minimizing_variable as cost_power_computation (minimum_fold_change)
   # Include all experimental parameters needed for equi-cost curve generation
   find_optimal_params <- list(
@@ -190,10 +190,10 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
     cost_grid_size = 200                          # As specified
   )
   
-  optimal_results <- do.call(perturbplan::find_optimal_design, find_optimal_params)
+  optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
   
   # Step 4: Extract key components and format for CURRENT plotting engine
-  # Use the ACTUAL data structure returned by find_optimal_design
+  # Use the ACTUAL data structure returned by find_optimal_cost_design
   
   # Use optimal_design_df as the main data (this has the correct structure)
   power_data <- optimal_results$optimal_design_df

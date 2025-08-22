@@ -5,5 +5,5 @@
 \title{TPM and Fold Change Minimization Analysis Functions}
 \description{
 Helper functions for power+cost TPM/FC minimization workflows (Workflows 6-7)
-using cost_power_computation + find_optimal_design integration with cost constraints.
+using cost_power_computation + find_optimal_cost_design integration with cost constraints.
 }

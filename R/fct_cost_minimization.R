@@ -1,15 +1,15 @@
 #' Cost Minimization Analysis Functions
 #'
 #' @description Helper functions for power-only cost minimization workflow (Workflow 5)
-#' using cost_power_computation + find_optimal_design integration.
+#' using cost_power_computation + find_optimal_cost_design integration.
 #'
 #' @name cost-minimization
 NULL
 
-#' Perform cost minimization analysis using cost_power_computation + find_optimal_design
+#' Perform cost minimization analysis using cost_power_computation + find_optimal_cost_design
 #'
 #' @description Implements Workflow 5: Power-only cost minimization by calling
-#' cost_power_computation with cost_constraint=NULL, then find_optimal_design
+#' cost_power_computation with cost_constraint=NULL, then find_optimal_cost_design
 #' to generate equi-power and equi-cost curves.
 #'
 #' @param config User configuration from sidebar

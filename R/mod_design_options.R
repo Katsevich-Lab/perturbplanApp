@@ -262,12 +262,12 @@ mod_design_options_server <- function(id){
         if (!is.null(opt_type) && opt_type != "" && !is.null(target) && target != "") {
           param_configs <- get_param_configs(opt_type, target)
           
-          # Count how many parameters have varying/fixed controls (not minimizing/optimizing)
+          # Count how many parameters need UI controls (not minimizing/optimizing)
           has_controls <- 
-            (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing") && param_configs$cells_per_target$type == "varying") ||
-            (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing") && param_configs$reads_per_cell$type == "varying") ||
-            (!param_configs$TPM_threshold$type %in% c("minimizing", "optimizing") && param_configs$TPM_threshold$type == "varying") ||
-            (!param_configs$minimum_fold_change$type %in% c("minimizing", "optimizing") && param_configs$minimum_fold_change$type == "varying")
+            (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing")) ||
+            (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing")) ||
+            (!param_configs$TPM_threshold$type %in% c("minimizing", "optimizing")) ||
+            (!param_configs$minimum_fold_change$type %in% c("minimizing", "optimizing"))
           
           if (has_controls) {
             shinyjs::show("step3")

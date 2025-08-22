@@ -490,6 +490,7 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
 #' @importFrom scales percent_format
 #' @importFrom dplyr group_by slice_max ungroup
 #' @importFrom magrittr %>%
+#' @importFrom stats median
 create_equi_power_cost_plot <- function(power_data, optimal_design, target_power, workflow_info, cost_data = NULL) {
   
       # cat("=== INSIDE create_equi_power_cost_plot ===\n")
