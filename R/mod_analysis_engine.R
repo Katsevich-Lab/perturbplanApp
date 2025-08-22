@@ -646,13 +646,27 @@ generate_real_analysis <- function(config, workflow_info) {
   # Check if this is TPM or FC minimization workflow (Workflows 10-11)
   if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
     # Use unified constrained minimization analysis
+    cat("=== ANALYSIS ENGINE: Calling unified constrained minimization ===\n")
     tryCatch({
       results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data)
+      
+      # Debug: Check what unified function returns
+      cat("=== UNIFIED RESULTS STRUCTURE ===\n")
+      cat("  power_data available:", !is.null(results$power_data), "\n")
+      cat("  power_data rows:", if(!is.null(results$power_data)) nrow(results$power_data) else "NULL", "\n")
+      cat("  optimal_design available:", !is.null(results$optimal_design), "\n")
+      cat("  workflow_info available:", !is.null(results$workflow_info), "\n")
+      cat("  metadata available:", !is.null(results$metadata), "\n")
+      if (!is.null(results$error)) {
+        cat("  ERROR in results:", results$error, "\n")
+      }
 
       # Return results directly (already in plotting format)
       return(results)
 
     }, error = function(e) {
+      cat("=== ERROR in unified minimization ===\n")
+      cat("Error message:", e$message, "\n")
       stop("Constrained minimization analysis failed: ", e$message)
     })
   }

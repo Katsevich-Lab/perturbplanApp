@@ -102,7 +102,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   )
   
   # Step 10: Return unified results
-  return(list(
+  final_results <- list(
     power_data = grouped_data,  # Grouped data for consistent plotting
     cost_data = optimal_results$optimal_cost_grid,  # For equi-cost curves
     optimal_design = optimal_design,
@@ -120,7 +120,15 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
         grouped_data = grouped_data
       )
     )
-  ))
+  )
+  
+  # Debug final results
+  cat("=== UNIFIED FUNCTION RETURNING ===\n")
+  cat("  Final power_data rows:", nrow(final_results$power_data), "\n")
+  cat("  Final optimal_design available:", !is.null(final_results$optimal_design), "\n")
+  cat("  Final workflow_info available:", !is.null(final_results$workflow_info), "\n")
+  
+  return(final_results)
 }
 
 #' Get minimization configuration for workflow
