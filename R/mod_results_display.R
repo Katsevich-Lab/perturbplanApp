@@ -44,6 +44,17 @@ mod_results_display_ui <- function(id) {
             ns = ns,
             # Interactive plot output
             plotlyOutput(ns("main_plot"), height = "400px")
+          ),
+          
+          # Error display panel
+          conditionalPanel(
+            condition = "output.show_error == true",
+            ns = ns,
+            tags$div(
+              style = "background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 20px; margin: 20px 0;",
+              tags$h4("Analysis Error", style = "color: #721c24; margin-top: 0;"),
+              uiOutput(ns("error_message"))
+            )
           )
         )
       ),
@@ -179,6 +190,42 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         is.null(plots$error) && is.null(results$error)
     })
     outputOptions(output, "show_results", suspendWhenHidden = FALSE)
+    
+    # Determine if errors should be shown
+    output$show_error <- reactive({
+      plots <- plot_objects()
+      results <- analysis_results()
+      
+      (!is.null(plots) && !is.null(plots$error)) || 
+        (!is.null(results) && !is.null(results$error))
+    })
+    outputOptions(output, "show_error", suspendWhenHidden = FALSE)
+    
+    # Error message display
+    output$error_message <- renderUI({
+      plots <- plot_objects()
+      results <- analysis_results()
+      
+      error_msg <- NULL
+      
+      # Check for plotting errors first
+      if (!is.null(plots) && !is.null(plots$error)) {
+        error_msg <- paste("Plotting Error:", plots$error)
+      }
+      # Check for analysis errors if no plotting error
+      else if (!is.null(results) && !is.null(results$error)) {
+        error_msg <- paste("Analysis Error:", results$error)
+      }
+      
+      if (!is.null(error_msg)) {
+        tags$div(
+          style = "color: #721c24; line-height: 1.5;",
+          tags$p(error_msg),
+          tags$p("Please check your input parameters and try again.", 
+                 style = "margin-top: 10px; font-style: italic;")
+        )
+      }
+    })
     
     # ========================================================================
     # MAIN PLOT RENDERING

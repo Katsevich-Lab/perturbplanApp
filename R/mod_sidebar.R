@@ -88,7 +88,7 @@ mod_sidebar_server <- function(id){
         }
       }
       
-      combined_config <- list(
+      list(
         design_options = design_opts,
         experimental_setup = experimental_config(),
         analysis_choices = analysis_config(),
@@ -96,23 +96,6 @@ mod_sidebar_server <- function(id){
         plan_clicked = input$plan_btn,
         timestamp = Sys.time()
       )
-      
-      # ============================================================================
-      # CENTRALIZED PARAMETER TRANSLATION: UI → Backend
-      # ============================================================================
-      # Standardize all UI parameter names to backend-compatible names
-      # This ensures ALL downstream functions receive consistent parameter names
-      if (!is.null(combined_config$design_options$minimization_target)) {
-        combined_config$design_options$minimization_target <- switch(
-          combined_config$design_options$minimization_target,
-          "cells" = "cells_per_target",           # "Cells per target" → backend
-          "reads" = "reads_per_cell",             # "Reads per cell" → backend  
-          "fold_change" = "minimum_fold_change",  # "Fold change" → backend
-          combined_config$design_options$minimization_target  # No change for TPM_threshold, cost
-        )
-      }
-      
-      return(combined_config)
     })
     
     return(combined_config)

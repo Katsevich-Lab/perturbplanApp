@@ -81,17 +81,46 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         ))
       }
       
-      # Detect workflow scenario
+      # ============================================================================
+      # CENTRALIZED PARAMETER TRANSLATION: UI → Backend
+      # ============================================================================
+      # Standardize UI parameter names to backend-compatible names before analysis
+      # This happens AFTER UI processing but BEFORE backend analysis functions
+      if (!is.null(config$design_options$minimization_target)) {
+        config$design_options$minimization_target <- switch(
+          config$design_options$minimization_target,
+          "cells" = "cells_per_target",           # "Cells per target" → backend
+          "reads" = "reads_per_cell",             # "Reads per cell" → backend  
+          "fold_change" = "minimum_fold_change",  # "Fold change" → backend
+          config$design_options$minimization_target  # No change for TPM_threshold, cost
+        )
+      }
+      
+      # Detect workflow scenario (with translated parameter names)
       workflow_info <- detect_workflow_scenario(config)
       
       # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis
-      if (use_placeholder_mode()) {
-        # PLACEHOLDER MODE: Generate realistic fake data
-        return(generate_placeholder_analysis(config, workflow_info))
-      } else {
-        # REAL MODE: Call perturbplan package functions
-        return(generate_real_analysis(config, workflow_info))
-      }
+      # Wrap in comprehensive error handling to prevent app crashes
+      tryCatch({
+        if (use_placeholder_mode()) {
+          # PLACEHOLDER MODE: Generate realistic fake data
+          return(generate_placeholder_analysis(config, workflow_info))
+        } else {
+          # REAL MODE: Call perturbplan package functions
+          return(generate_real_analysis(config, workflow_info))
+        }
+      }, error = function(e) {
+        # Return error object instead of crashing
+        return(list(
+          error = paste("Analysis Error:", e$message),
+          metadata = list(
+            analysis_mode = get_analysis_mode(),
+            workflow_type = workflow_info$workflow_id %||% "unknown",
+            timestamp = Sys.time(),
+            error_details = as.character(e)
+          )
+        ))
+      })
     })
     
     return(analysis_results)

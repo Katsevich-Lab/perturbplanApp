@@ -85,13 +85,20 @@ detect_workflow_scenario <- function(workflow_config) {
   
   # Power-only workflows (1-5)
   if (opt_type == "power_only") {
-    # target is already translated by centralized translation in mod_sidebar.R
-    if (target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
+    # Handle both UI names and backend names for compatibility
+    if (target %in% c("cells", "reads", "fold_change", "cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
+      # Map UI names to backend names for return value
+      backend_target <- switch(target,
+        "cells" = "cells_per_target",
+        "reads" = "reads_per_cell", 
+        "fold_change" = "minimum_fold_change",
+        target  # Already backend name
+      )
       return(list(
         workflow_id = paste0("power_single_", target),
         plot_type = "single_parameter_curve",
         category = "power_only_single",
-        minimizing_parameter = target,
+        minimizing_parameter = backend_target,
         title = paste("Minimize", format_parameter_name(target)),
         description = paste("Power-only optimization minimizing", format_parameter_name(target))
       ))
@@ -146,7 +153,7 @@ detect_workflow_scenario <- function(workflow_config) {
           description = paste("Power+cost optimization with TPM and", format_parameter_name(other_param), "varying")
         ))
       }
-    } else if (target == "minimum_fold_change") {
+    } else if (target %in% c("minimum_fold_change", "fold_change")) {
       # Similar logic for fold change workflows 9-11
       if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
         return(list(

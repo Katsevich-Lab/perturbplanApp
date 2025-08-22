@@ -56,21 +56,35 @@ mod_plotting_engine_server <- function(id, analysis_results) {
       }
       
       # Determine plot type and generate appropriate plots
-      workflow_info <- results$workflow_info
-      
-      if (workflow_info$plot_type == "single_parameter_curve") {
-        # Generate single parameter power curve plots (8 workflows)
-        plots <- create_single_parameter_plots(results)
-      } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
-        # Generate cost-power tradeoff plots (3 workflows)
-        plots <- create_cost_tradeoff_plots(results)
-      } else {
-        # Error case
+      # Wrap in error handling to prevent app crashes
+      tryCatch({
+        workflow_info <- results$workflow_info
+        
+        if (workflow_info$plot_type == "single_parameter_curve") {
+          # Generate single parameter power curve plots (8 workflows)
+          plots <- create_single_parameter_plots(results)
+        } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
+          # Generate cost-power tradeoff plots (3 workflows)
+          plots <- create_cost_tradeoff_plots(results)
+        } else {
+          # Error case
+          return(list(
+            error = paste("Unknown plot type:", workflow_info$plot_type),
+            plots = list()
+          ))
+        }
+      }, error = function(e) {
+        # Return error object instead of crashing
         return(list(
-          error = paste("Unknown plot type:", workflow_info$plot_type),
-          plots = list()
+          error = paste("Plotting Error:", e$message),
+          plots = list(),
+          metadata = list(
+            plot_type = workflow_info$plot_type %||% "unknown",
+            timestamp = Sys.time(),
+            error_details = as.character(e)
+          )
         ))
-      }
+      })
       
       # Return plot objects with metadata
       return(list(
