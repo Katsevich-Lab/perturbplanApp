@@ -36,11 +36,12 @@ app_server <- function(input, output, session) {
   # APP STATE MANAGEMENT
   # ========================================================================
   
-  # Handle loading states
+  # Combined observer for loading states and error handling
   observe({
     config <- user_workflow_config()
     analysis <- analysis_results()
     
+    # Handle loading states
     if (!is.null(config) && config$plan_clicked > 0 && is.null(analysis)) {
       # Show loading notification when Plan clicked but analysis not ready
       showNotification(
@@ -49,11 +50,8 @@ app_server <- function(input, output, session) {
         duration = 2
       )
     }
-  })
-  
-  # Handle analysis errors
-  observe({
-    analysis <- analysis_results()
+    
+    # Handle analysis errors  
     if (!is.null(analysis) && !is.null(analysis$error)) {
       showNotification(
         paste("Analysis Error:", analysis$error), 
