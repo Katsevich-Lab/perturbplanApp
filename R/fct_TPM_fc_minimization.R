@@ -46,9 +46,14 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
   
   # Key parameters for TPM minimization with cost constraint
   # Extract cost constraint from UI (required for power+cost workflows)
-  cost_constraint <- config$cost_info$cost_constraint_budget %||%
+  cost_constraint <- config$cost_budget %||%
+                    config$cost_info$cost_constraint_budget %||%
                     config$design_options$parameter_controls$cost$fixed_value %||%
-                    50000  # Default cost constraint if not specified
+                    10000  # Default cost constraint if not specified
+  
+  # Debug: Check cost extraction
+  cat("DEBUG TPM: config$cost_budget =", config$cost_budget %||% "NULL", "\n")
+  cat("DEBUG TPM: Final cost_constraint =", cost_constraint, "\n")
   
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)  # Key difference from cost minimization
   perturbplan_params$grid_size <- 30         # Reduced for faster computation
@@ -174,9 +179,14 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
   
   # Key parameters for FC minimization with cost constraint
   # Extract cost constraint from UI (required for power+cost workflows)
-  cost_constraint <- config$cost_info$cost_constraint_budget %||%
+  cost_constraint <- config$cost_budget %||%
+                    config$cost_info$cost_constraint_budget %||%
                     config$design_options$parameter_controls$cost$fixed_value %||%
-                    50000  # Default cost constraint if not specified
+                    10000  # Default cost constraint if not specified
+  
+  # Debug: Check cost extraction
+  cat("DEBUG FC: config$cost_budget =", config$cost_budget %||% "NULL", "\n")
+  cat("DEBUG FC: Final cost_constraint =", cost_constraint, "\n")
   
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)  # Key difference from cost minimization
   perturbplan_params$grid_size <- 30         # Reduced for faster computation
