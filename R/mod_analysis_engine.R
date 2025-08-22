@@ -658,7 +658,7 @@ generate_real_analysis <- function(config, workflow_info) {
   }
 
   # Check if this is FC minimization workflow (Workflow 7)
-  if (workflow_info$workflow_id == "power_cost_fold_change_cells_reads") {
+  if (workflow_info$workflow_id == "power_cost_fc_cells_reads") {
     # Use specialized FC minimization analysis
     tryCatch({
       results <- perform_fc_minimization_analysis(config, workflow_info, pilot_data)
