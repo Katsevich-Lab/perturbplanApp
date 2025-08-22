@@ -470,8 +470,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                   }
                 },
                 
-                # Power achieved
-                if (!is.null(optimal$achieved_power) && !is.na(optimal$achieved_power)) {
+                # Power achieved (only for non-unified workflows)
+                if (!is.null(optimal$achieved_power) && !is.na(optimal$achieved_power) && 
+                    !workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
                   tags$div(
                     style = "margin-top: 12px;",
                     tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
