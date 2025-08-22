@@ -260,13 +260,9 @@ create_minimization_plot <- function(analysis_results) {
   tryCatch({
     p <- ggplot(grouped_data, aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]])) +
       # Add line connecting the points
-      geom_line(color = "steelblue", size = 1, alpha = 0.8) +
-      # Add points with power color coding
-      geom_point(aes(color = .data[["overall_power"]]), size = 2, alpha = 0.7) +
-      scale_color_gradient2(
-        low = "red", mid = "yellow", high = "green",
-        midpoint = 0.8, guide = "none"  # Remove legend
-      ) +
+      geom_line(color = "black", size = 1) +
+      # Add black points
+      geom_point(color = "black", size = 2) +
       
       # Use log scales for consistency with other plots
       scale_x_log10(
