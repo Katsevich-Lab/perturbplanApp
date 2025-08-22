@@ -442,38 +442,69 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
 #' @importFrom scales percent_format
 create_equi_power_cost_plot <- function(power_data, optimal_design, target_power, workflow_info) {
   
-  # Extract data ranges for curve generation
-  cells_range <- range(power_data$cells)
-  reads_range <- range(power_data$reads)
+  # For cost minimization workflow, power_data contains optimal_power_cost_df from find_optimal_design
   
-  # Generate curves with proper tangency
-  target_equi_power_curve <- generate_target_equi_power_curve(cells_range, reads_range, target_power)
-  tangent_equi_cost_line <- generate_tangent_equi_cost_line(cells_range, reads_range, optimal_design)
-  
-  # Calculate optimal cost for display
-  optimal_cost <- optimal_design$cost
-  
-  # Create plot title (clean titles for all workflows)
+  # Create plot title
   plot_title <- if (workflow_info$workflow_id == "power_cost_minimization") {
-    # For power-only cost optimization (Workflow 5) 
     "Equi-Power and Equi-Cost Curves"
   } else {
-    # For power+cost workflows, use clean title from workflow_info
     workflow_info$title
   }
   
-  # Simple plot with just two curves and tangent point
+  # Extract target power level data points
+  power_tolerance <- 0.02  # Allow some tolerance for power matching
+  target_power_data <- power_data[abs(power_data$power - target_power) <= power_tolerance, ]
+  
+  # If no points close to target power, expand tolerance
+  if (nrow(target_power_data) == 0) {
+    power_tolerance <- 0.05
+    target_power_data <- power_data[abs(power_data$power - target_power) <= power_tolerance, ]
+  }
+  
+  # Create cost levels for equi-cost curves
+  cost_levels <- quantile(power_data$total_cost, probs = c(0.2, 0.4, 0.6, 0.8), na.rm = TRUE)
+  
+  # Base plot with target power curve
   p <- ggplot() +
-    geom_line(data = target_equi_power_curve, aes(x = .data$cells, y = .data$reads), color = "purple") +
-    geom_line(data = tangent_equi_cost_line, aes(x = .data$cells, y = .data$reads), color = "orange") +
-    geom_point(aes(x = 500, y = 1500), color = "red") +
+    # Target power curve (purple)
+    geom_line(data = target_power_data, 
+              aes(x = .data$cells_per_target, y = .data$reads_per_cell), 
+              color = "purple", size = 1.2, alpha = 0.8) +
+    
+    # Optimal point (red dot)
+    geom_point(aes(x = optimal_design$cells_per_target, y = optimal_design$reads_per_cell), 
+               color = "red", size = 3) +
+    
+    # Background points (cost gradient)
+    geom_point(data = power_data, 
+               aes(x = .data$cells_per_target, y = .data$reads_per_cell, color = .data$total_cost),
+               alpha = 0.6, size = 1) +
+    
+    scale_color_gradient2(
+      low = "green", mid = "yellow", high = "red",
+      midpoint = median(power_data$total_cost, na.rm = TRUE),
+      name = "Total Cost"
+    ) +
+    
     labs(
       title = plot_title,
       x = "Cells per Target",
-      y = "Reads per Cell"
+      y = "Reads per Cell",
+      subtitle = paste0("Target Power: ", scales::percent(target_power), 
+                       " | Optimal Cost: $", round(optimal_design$total_cost))
     ) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5))
+  
+  # Add equi-cost lines if we have enough data points
+  for (cost_level in cost_levels) {
+    cost_data <- power_data[abs(power_data$total_cost - cost_level) <= cost_level * 0.1, ]
+    if (nrow(cost_data) > 5) {
+      p <- p + geom_line(data = cost_data, 
+                        aes(x = .data$cells_per_target, y = .data$reads_per_cell),
+                        color = "orange", alpha = 0.6, linetype = "dashed")
+    }
+  }
   
   return(p)
 }
