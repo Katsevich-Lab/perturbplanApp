@@ -85,19 +85,20 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
   target_power <- config$design_options$target_power
   power_tolerance <- 0.01
   
-  # Filter by target power first, then apply cost constraint
-  target_rows <- power_data[abs(power_data$overall_power - target_power) <= power_tolerance, ]
+  # Filter by cost constraint first, then find optimal TPM among power-feasible solutions
+  cost_feasible <- power_data[power_data$total_cost <= cost_constraint, ]
   
-  if (nrow(target_rows) == 0) {
-    target_rows <- power_data[which.min(abs(power_data$overall_power - target_power)), ]
+  if (nrow(cost_feasible) == 0) {
+    # If no solutions under cost constraint, take the cheapest available
+    cost_feasible <- power_data[which.min(power_data$total_cost), ]
   }
   
-  # Apply cost constraint to target power rows
-  feasible_rows <- target_rows[target_rows$total_cost <= cost_constraint, ]
+  # Among cost-feasible solutions, find those meeting target power
+  feasible_rows <- cost_feasible[abs(cost_feasible$overall_power - target_power) <= power_tolerance, ]
   
   if (nrow(feasible_rows) == 0) {
-    # If no feasible solutions under cost constraint, take cheapest among target power rows
-    feasible_rows <- target_rows[which.min(target_rows$total_cost), ]
+    # If no cost-feasible solutions meet target power, take closest power among cost-feasible
+    feasible_rows <- cost_feasible[which.min(abs(cost_feasible$overall_power - target_power)), ]
   }
   
   optimal_idx <- which.min(feasible_rows$TPM_threshold)  # Minimize TPM threshold among feasible solutions
@@ -212,19 +213,20 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
   target_power <- config$design_options$target_power
   power_tolerance <- 0.01
   
-  # Filter by target power first, then apply cost constraint
-  target_rows <- power_data[abs(power_data$overall_power - target_power) <= power_tolerance, ]
+  # Filter by cost constraint first, then find optimal FC among power-feasible solutions
+  cost_feasible <- power_data[power_data$total_cost <= cost_constraint, ]
   
-  if (nrow(target_rows) == 0) {
-    target_rows <- power_data[which.min(abs(power_data$overall_power - target_power)), ]
+  if (nrow(cost_feasible) == 0) {
+    # If no solutions under cost constraint, take the cheapest available
+    cost_feasible <- power_data[which.min(power_data$total_cost), ]
   }
   
-  # Apply cost constraint to target power rows
-  feasible_rows <- target_rows[target_rows$total_cost <= cost_constraint, ]
+  # Among cost-feasible solutions, find those meeting target power
+  feasible_rows <- cost_feasible[abs(cost_feasible$overall_power - target_power) <= power_tolerance, ]
   
   if (nrow(feasible_rows) == 0) {
-    # If no feasible solutions under cost constraint, take cheapest among target power rows
-    feasible_rows <- target_rows[which.min(target_rows$total_cost), ]
+    # If no cost-feasible solutions meet target power, take closest power among cost-feasible
+    feasible_rows <- cost_feasible[which.min(abs(cost_feasible$overall_power - target_power)), ]
   }
   
   optimal_idx <- which.min(abs(feasible_rows$minimum_fold_change - 1))  # Find FC closest to 1 among feasible solutions
