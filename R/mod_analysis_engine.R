@@ -43,6 +43,24 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
     # Cache for expensive computation results
     cached_results <- reactiveVal(NULL)
+    
+    # Track optimization mode changes to clear cache and refresh state
+    previous_optimization_mode <- reactiveVal(NULL)
+    
+    # Clear cache when optimization mode changes
+    observe({
+      config <- workflow_config()
+      if (!is.null(config) && !is.null(config$design_options$optimization_type)) {
+        current_mode <- config$design_options$optimization_type
+        
+        # If mode changed, clear cached results to force fresh analysis
+        if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
+          cached_results(NULL)
+        }
+        
+        previous_optimization_mode(current_mode)
+      }
+    })
 
     analysis_results <- reactive({
       req(workflow_config())

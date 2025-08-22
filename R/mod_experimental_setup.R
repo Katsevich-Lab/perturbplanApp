@@ -166,9 +166,32 @@ mod_experimental_setup_server <- function(id, design_config){
       }
     })
     
+    # Track previous optimization type for mode switching
+    previous_mode <- reactiveVal(NULL)
+    
     # Conditional display logic for fixed value inputs
     observe({
       config <- design_config()
+      
+      # Check if optimization mode has changed - if so, refresh UI state
+      if (!is.null(config) && !is.null(config$optimization_type)) {
+        current_mode <- config$optimization_type
+        
+        # If mode switched, reset all fixed parameter inputs
+        if (!is.null(previous_mode()) && previous_mode() != current_mode) {
+          # Reset fixed value inputs when switching modes
+          updateNumericInput(session, "cells_fixed", value = 1000)
+          updateNumericInput(session, "reads_fixed", value = 5000)
+          
+          # Hide all fixed parameter sections initially
+          shinyjs::hide("experimental_fixed_params")
+          shinyjs::hide("cells_fixed_div")
+          shinyjs::hide("reads_fixed_div")
+        }
+        
+        # Update previous mode tracker
+        previous_mode(current_mode)
+      }
       
       if (!is.null(config) && !is.null(config$parameter_controls)) {
         cells_type <- config$parameter_controls$cells_per_target$type
