@@ -51,7 +51,7 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
                     50000  # Default cost constraint if not specified
   
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)  # Key difference from cost minimization
-  perturbplan_params$grid_size <- 100         # As specified
+  perturbplan_params$grid_size <- 50         # Updated for workflows 10-11
   
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
@@ -63,14 +63,14 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
     cost_power_df = cost_power_grid,              # Output from cost_power_computation
     minimizing_variable = "TPM_threshold",        # TPM minimization
     power_target = config$design_options$target_power,
-    power_precision = 0.002,                      # Very tight precision for optimal results
+    power_precision = 0.01,                      # Updated precision for workflows 10-11
     MOI = perturbplan_params$MOI,                 # From UI experimental setup
     num_targets = perturbplan_params$num_targets, # From UI experimental setup
     non_targeting_gRNAs = perturbplan_params$non_targeting_gRNAs, # From UI experimental setup
     gRNAs_per_target = perturbplan_params$gRNAs_per_target, # From UI experimental setup
     cost_per_captured_cell = perturbplan_params$cost_per_captured_cell, # From UI cost info
     cost_per_million_reads = perturbplan_params$cost_per_million_reads, # From UI cost info
-    cost_grid_size = 200                          # As specified
+    cost_grid_size = 50                          # Updated for workflows 10-11
   )
   
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
@@ -78,8 +78,8 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
   # Step 4: Extract key components and format for CURRENT plotting engine
   # Use the ACTUAL data structure returned by find_optimal_cost_design
   
-  # Use optimal_design_df as the main data (this has the correct structure)
-  power_data <- optimal_results$optimal_design_df
+  # Use optimal_cost_power_df as the main data (this has the correct structure)
+  power_data <- optimal_results$optimal_cost_power_df
   
   # Find minimum TPM point for target power
   target_power <- config$design_options$target_power
@@ -105,8 +105,8 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
   
   # Return in format compatible with current system
   return(list(
-    power_data = power_data,  # This is optimal_design_df for equi-power curves
-    cost_data = optimal_results$cost_grid,  # This is cost_grid for equi-cost curves
+    power_data = power_data,  # This is optimal_cost_power_df for equi-power curves
+    cost_data = optimal_results$optimal_cost_grid,  # This is cost_grid for equi-cost curves
     optimal_design = optimal_design,
     user_config = config,
     workflow_info = workflow_info,
@@ -168,7 +168,7 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
                     50000  # Default cost constraint if not specified
   
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)  # Key difference from cost minimization
-  perturbplan_params$grid_size <- 100         # As specified
+  perturbplan_params$grid_size <- 50         # Updated for workflows 10-11
   
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
@@ -180,14 +180,14 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
     cost_power_df = cost_power_grid,              # Output from cost_power_computation
     minimizing_variable = "minimum_fold_change",  # FC minimization
     power_target = config$design_options$target_power,
-    power_precision = 0.002,                      # Very tight precision for optimal results
+    power_precision = 0.01,                      # Updated precision for workflows 10-11
     MOI = perturbplan_params$MOI,                 # From UI experimental setup
     num_targets = perturbplan_params$num_targets, # From UI experimental setup
     non_targeting_gRNAs = perturbplan_params$non_targeting_gRNAs, # From UI experimental setup
     gRNAs_per_target = perturbplan_params$gRNAs_per_target, # From UI experimental setup
     cost_per_captured_cell = perturbplan_params$cost_per_captured_cell, # From UI cost info
     cost_per_million_reads = perturbplan_params$cost_per_million_reads, # From UI cost info
-    cost_grid_size = 200                          # As specified
+    cost_grid_size = 50                          # Updated for workflows 10-11
   )
   
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
@@ -195,8 +195,8 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
   # Step 4: Extract key components and format for CURRENT plotting engine
   # Use the ACTUAL data structure returned by find_optimal_cost_design
   
-  # Use optimal_design_df as the main data (this has the correct structure)
-  power_data <- optimal_results$optimal_design_df
+  # Use optimal_cost_power_df as the main data (this has the correct structure)
+  power_data <- optimal_results$optimal_cost_power_df
   
   # Find minimum FC point for target power
   target_power <- config$design_options$target_power
@@ -222,8 +222,8 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
   
   # Return in format compatible with current system
   return(list(
-    power_data = power_data,  # This is optimal_design_df for equi-power curves
-    cost_data = optimal_results$cost_grid,  # This is cost_grid for equi-cost curves
+    power_data = power_data,  # This is optimal_cost_power_df for equi-power curves
+    cost_data = optimal_results$optimal_cost_grid,  # This is cost_grid for equi-cost curves
     optimal_design = optimal_design,
     user_config = config,
     workflow_info = workflow_info,

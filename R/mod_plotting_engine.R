@@ -210,7 +210,11 @@ create_cost_tradeoff_plots <- function(results) {
   cost_data <- results$cost_data  
   optimal_design <- results$optimal_design
   target_power <- results$user_config$design_options$target_power
-  cost_budget <- results$user_config$design_options$cost_budget
+  # Extract cost budget from different locations based on workflow type
+  cost_budget <- results$user_config$design_options$cost_budget %||%
+                 results$metadata$TPM_minimization_data$cost_constraint %||%
+                 results$metadata$fc_minimization_data$cost_constraint %||%
+                 results$user_config$cost_info$cost_constraint_budget
   workflow_info <- results$workflow_info
   
       # cat("Power data extracted:", !is.null(power_data), "\n")
@@ -228,8 +232,8 @@ create_cost_tradeoff_plots <- function(results) {
     p <- create_equi_power_cost_plot(power_data, optimal_design, target_power, workflow_info, cost_data)
       # cat("create_equi_power_cost_plot completed\n")
       # cat("Plot object class:", class(p), "\n")
-  } else if (workflow_info$category == "power_cost_multi") {
-    # WORKFLOWS 8, 11: Cost vs minimizing parameter (TPM/FC) curves
+  } else if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    # WORKFLOWS 10, 11: Cost vs minimizing parameter (TPM/FC) curves
     p <- create_cost_vs_minimizing_param_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
   } else {
     # OTHER WORKFLOWS: Standard cost-power tradeoff visualization  
@@ -809,90 +813,97 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
   return(p)
 }
 
-#' Create cost vs minimizing parameter plot
+#' Create cost vs minimizing parameter plot using real perturbplan data
 #'
-#' @description Creates a decreasing cost curve showing optimal cost vs the minimizing variable (TPM or FC)
-#' for power+cost multi-parameter workflows (Workflows 8, 11). Shows clear optimization relationship.
+#' @description Plots minimum cost vs minimizing variable (TPM or FC) from optimal_cost_power_df.
+#' Shows decreasing cost curve with optimal solution under cost constraint.
+#' Used for power+cost TPM/FC minimization workflows (10-11).
 #'
-#' @param power_data Power analysis data
+#' @param power_data optimal_cost_power_df from perturbplan results
 #' @param optimal_design Optimal design information
 #' @param target_power Target power threshold
-#' @param cost_budget Cost budget constraint (can be NULL)
+#' @param cost_budget Cost budget constraint from UI
 #' @param workflow_info Workflow information
 #' @return ggplot object with cost vs parameter visualization
 #' @noRd
 #' 
-#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline labs theme_bw theme element_text
-#' @importFrom stats rnorm approx
+#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline labs theme_bw theme element_text
+#' @importFrom dplyr distinct arrange
+#' @importFrom scales comma comma_format
+#' @importFrom rlang .data
 create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
   
   # Determine minimizing parameter (TPM or FC)
   min_param <- workflow_info$minimizing_parameter
   
-  # Create parameter range and labels
+  # Set parameter labels and column names
   if (min_param == "TPM_threshold") {
-    param_values <- seq(5, 50, length.out = 20)  # TPM range
     param_label <- "TPM Threshold"
-    optimal_param <- 15  # Optimal TPM value
-  } else if (min_param == "fold_change") {
-    param_values <- seq(0.5, 3.0, length.out = 20)  # FC range  
+    param_col <- "TPM_threshold"
+  } else if (min_param == "minimum_fold_change") {
     param_label <- "Fold Change"
-    optimal_param <- 1.5  # Optimal FC value
+    param_col <- "minimum_fold_change"
   } else {
-    # Fallback case
-    param_values <- seq(1, 20, length.out = 20)
-    param_label <- "Parameter"
-    optimal_param <- 10
+    stop("Unknown minimizing parameter: ", min_param)
   }
   
-  # Generate strictly decreasing cost curve with dramatic cost differences
-  if (min_param == "TPM_threshold") {
-    # For TPM: Range from $15000 at TPM=5 to $3000 at TPM=50 (12000 range)
-    # Use inverted parameter for decreasing: cost decreases as TPM increases
-    normalized_param <- (param_values - min(param_values)) / (max(param_values) - min(param_values))  # 0 to 1
-    costs <- 15000 - 12000 * normalized_param^0.5  # Square root for curved decrease
-  } else if (min_param == "fold_change") {
-    # For FC: Range from $20000 at FC=0.5 to $4000 at FC=3.0 (16000 range)  
-    normalized_param <- (param_values - min(param_values)) / (max(param_values) - min(param_values))  # 0 to 1
-    costs <- 20000 - 16000 * normalized_param^0.3  # Gentle curve for steeper initial drop
+  # Extract cost and minimizing variable, get distinct rows, and arrange by parameter
+  plot_data <- power_data[, c(param_col, "total_cost")]
+  plot_data <- unique(plot_data)  # Get distinct rows
+  plot_data <- plot_data[order(plot_data[[param_col]]), ]  # Sort by parameter
+  
+  # Find optimal solution (minimum parameter value under cost constraint)
+  if (!is.null(cost_budget) && !is.na(cost_budget)) {
+    feasible_rows <- plot_data[plot_data$total_cost <= cost_budget, ]
+    if (nrow(feasible_rows) > 0) {
+      optimal_param_value <- min(feasible_rows[[param_col]])
+      optimal_cost <- feasible_rows[feasible_rows[[param_col]] == optimal_param_value, "total_cost"][1]
+    } else {
+      # No feasible solutions under budget - use minimum cost point
+      optimal_param_value <- plot_data[which.min(plot_data$total_cost), param_col]
+      optimal_cost <- min(plot_data$total_cost)
+    }
   } else {
-    # Fallback: steep linear decrease
-    costs <- 20000 - 800 * param_values
+    # No cost constraint - use minimum cost point
+    optimal_param_value <- plot_data[which.min(plot_data$total_cost), param_col]
+    optimal_cost <- min(plot_data$total_cost)
   }
   
-  # Costs are already decreasing by construction - no need to modify them
-  
-  # Create plot data
-  plot_data <- data.frame(
-    param = param_values,
-    cost = costs
-  )
-  
-  # Find optimal cost for the optimal parameter
-  optimal_cost <- approx(param_values, costs, optimal_param)$y
-  
-  # Create optimal point data frame
-  optimal_point_data <- data.frame(
-    param = optimal_param,
-    cost = optimal_cost
-  )
-  
-  # Create ggplot with decreasing cost curve
-  p <- ggplot(plot_data, aes(x = .data$param, y = .data$cost)) +
-    geom_line(color = "blue", size = 1) +
-    geom_point(data = optimal_point_data, aes(x = .data$param, y = .data$cost), 
-               color = "red", size = 3) +
-    # Add horizontal dashed line for cost budget constraint
-    {if (!is.null(cost_budget)) {
-      geom_hline(yintercept = cost_budget, linetype = "dashed", color = "orange", size = 1)
+  # Create ggplot with real data: cost vs minimizing parameter 
+  p <- ggplot(plot_data, aes(x = .data[[param_col]], y = .data$total_cost)) +
+    geom_point(color = "blue", size = 2, alpha = 0.7) +  # Scatter points
+    geom_line(color = "blue", size = 1) +  # Connect points with line
+    # Highlight optimal solution
+    geom_point(aes(x = optimal_param_value, y = optimal_cost), 
+               color = "red", size = 4) +
+    # Add cost budget constraint line if available
+    {if (!is.null(cost_budget) && !is.na(cost_budget)) {
+      geom_hline(yintercept = cost_budget, linetype = "dashed", 
+                 color = "orange", size = 1, alpha = 0.8)
     }} +
+    # Add vertical line at optimal parameter
+    geom_vline(xintercept = optimal_param_value, linetype = "dotted", 
+               color = "red", size = 1, alpha = 0.8) +
     labs(
-      title = "",  # No title to match other plots
+      title = paste("Cost vs", param_label, "Optimization"),
       x = param_label,
-      y = "Optimal Cost ($)"
+      y = "Total Cost ($)",
+      subtitle = if (!is.null(cost_budget) && !is.na(cost_budget)) {
+        paste("Budget:", scales::comma(cost_budget), "| Optimal:", param_label, "=", 
+              round(optimal_param_value, 3), "| Cost:", scales::comma(round(optimal_cost)))
+      } else {
+        paste("Optimal:", param_label, "=", round(optimal_param_value, 3), 
+              "| Cost:", scales::comma(round(optimal_cost)))
+      }
     ) +
     theme_bw() +
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      plot.subtitle = element_text(hjust = 0.5, size = 12),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 10)
+    ) +
+    scale_y_continuous(labels = scales::comma_format())
     
   return(p)
 }
