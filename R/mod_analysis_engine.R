@@ -642,13 +642,21 @@ generate_real_analysis <- function(config, workflow_info) {
     return(plotting_results)
     
   }, error = function(e) {
-    # Graceful fallback to placeholder mode on error
+    # Return error object to display to user instead of falling back
     cat("=== REAL ANALYSIS ERROR ===\n")
     cat("Error:", e$message, "\n")
-    cat("Falling back to placeholder mode\n")
+    cat("Returning error to user\n")
     cat("==========================\n")
-    warning("Real analysis failed, falling back to placeholder: ", e$message)
-    return(generate_placeholder_analysis(config, workflow_info))
+    
+    return(list(
+      error = e$message,
+      metadata = list(
+        analysis_mode = get_analysis_mode(),
+        workflow_type = workflow_info$workflow_id %||% "unknown",
+        timestamp = Sys.time(),
+        error_details = as.character(e)
+      )
+    ))
   })
 }
 
