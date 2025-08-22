@@ -261,24 +261,24 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         }
         
         # Return the interactive plot - handle different data structures
-        # cat("=== RENDERING MAIN PLOT ===\n")
-        # cat("Plots structure available:", !is.null(plots), "\n")
+        cat("=== RENDERING MAIN PLOT ===\n")
+        cat("Plots structure available:", !is.null(plots), "\n")
         if (!is.null(plots)) {
-        # cat("Plot object keys:", paste(names(plots), collapse = ", "), "\n")
+          cat("Plot object keys:", paste(names(plots), collapse = ", "), "\n")
         }
         
         # Check for direct interactive_plot (cost minimization)
         if (!is.null(plots$interactive_plot)) {
-        # cat("Using direct interactive_plot\n")
+          cat("Using direct interactive_plot\n")
           plots$interactive_plot
         }
         # Check for nested plots$interactive_plot (other workflows) 
         else if (!is.null(plots$plots) && !is.null(plots$plots$interactive_plot)) {
-        # cat("Using nested plots$interactive_plot\n")
+          cat("Using nested plots$interactive_plot\n")
           plots$plots$interactive_plot
         }
         else {
-        # cat("No interactive plot found in either location\n")
+          cat("No interactive plot found in either location\n")
           NULL
         }
       }, error = function(e) {
@@ -441,16 +441,16 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                 # Fold change (for cost minimization, get from config or power_data)
                 if (minimizing_param != "minimum_fold_change") {
                   fc_value <- if (!is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
-        # cat("DEBUG: Using fold change from optimal design:", optimal$minimum_fold_change, "\n")
+                    cat("DEBUG: Using fold change from optimal design:", optimal$minimum_fold_change, "\n")
                     optimal$minimum_fold_change
                   } else {
                     # For cost minimization, get from plot data or use common fixed value
                     if (!is.null(plots$plots$plot_data) && "minimum_fold_change" %in% names(plots$plots$plot_data)) {
                       fc_from_data <- unique(plots$plots$plot_data$minimum_fold_change)[1]
-        # cat("DEBUG: Using fold change from nested plot data:", fc_from_data, "\n")
+                      cat("DEBUG: Using fold change from nested plot data:", fc_from_data, "\n")
                       fc_from_data
                     } else {
-        # cat("DEBUG: Using default fold change (nested plot_data not available)\n")
+                      cat("DEBUG: Using default fold change (nested plot_data not available)\n")
                       0.5  # Default fold change commonly used for downregulation
                     }
                   }

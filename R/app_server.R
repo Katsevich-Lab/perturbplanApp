@@ -63,18 +63,5 @@ app_server <- function(input, output, session) {
     }
   })
   
-  # Development debug output (optional - can remove in production)
-  if (getOption("perturbplan.debug", FALSE)) {
-    observe({
-      config <- user_workflow_config()
-      if (!is.null(config) && config$plan_clicked > 0) {
-        cat("=== Plan Executed ===\n")
-        cat("Workflow Type:", config$design_options$optimization_type, "\n")
-        cat("Target Power:", config$design_options$target_power, "\n")
-        cat("Analysis Mode:", ifelse(use_placeholder_mode(), "Placeholder", "Real"), "\n")
-        cat("Timestamp:", as.character(Sys.time()), "\n")
-        cat("--- End Debug ---\n")
-      }
-    })
-  }
+  # Development debug output disabled to reduce console output
 }
