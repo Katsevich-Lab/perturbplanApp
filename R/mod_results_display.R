@@ -240,8 +240,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                 tags$strong("Solution", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
               ),
               
-              # Show only the minimizing parameter (the solution)
+              # Show minimizing parameter and varying parameter (for power+cost workflows)
               tagList(
+                # Always show the minimizing parameter first
                 if (minimizing_param == "TPM_threshold" && !is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
                   tags$div(
                     style = "margin-bottom: 8px;",
@@ -266,6 +267,25 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                     tags$span("Optimal raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
                     tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
                   )
+                },
+                
+                # For power+cost workflows, also show the varying parameter from cost calculation
+                if (!is.null(workflow_info$category) && workflow_info$category == "power_cost_single" && 
+                    !is.null(workflow_info$varying_parameter)) {
+                  varying_param <- workflow_info$varying_parameter
+                  if (varying_param == "cells" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Cost-constrained cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                    )
+                  } else if (varying_param == "reads" && !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Cost-constrained raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                    )
+                  }
                 },
                 
                 # Power achieved
@@ -308,8 +328,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                   )
                 },
                 
-                # Cells per target (if not minimizing)
-                if (minimizing_param != "cells_per_target" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
+                # Cells per target (if not minimizing AND not varying in power+cost)
+                if (minimizing_param != "cells_per_target" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target) &&
+                    !(workflow_info$category == "power_cost_single" && workflow_info$varying_parameter == "cells")) {
                   tags$div(
                     style = "margin-bottom: 6px;",
                     tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
@@ -317,8 +338,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                   )
                 },
                 
-                # Raw reads per cell (if not minimizing)
-                if (minimizing_param != "reads_per_cell" && !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
+                # Raw reads per cell (if not minimizing AND not varying in power+cost)
+                if (minimizing_param != "reads_per_cell" && !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell) &&
+                    !(workflow_info$category == "power_cost_single" && workflow_info$varying_parameter == "reads")) {
                   tags$div(
                     style = "margin-bottom: 6px;",
                     tags$span("Raw reads per cell: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
