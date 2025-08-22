@@ -21,9 +21,9 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   # Step 1: Detect minimization configuration
   minimization_config <- get_minimization_config(workflow_info$workflow_id)
   
-  # Step 2: Extract cost constraint from user (always use config$cost_budget for workflows 10-11)
-  cost_constraint <- config$cost_budget %||% 
-                     config$design_options$cost_budget %||% 
+  # Step 2: Extract cost constraint from user (always use config$design_options$cost_budget for workflows 10-11)
+  cost_constraint <- config$design_options$cost_budget %||% 
+                     config$cost_budget %||% 
                      10000
   
   # Debug: Cost constraint extraction
