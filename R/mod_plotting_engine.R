@@ -657,7 +657,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       
       # Add annotation on equi-cost curve (black curve) - position lower and left
       if (nrow(cost_grid_data) > 0) {
-        cost_annotation_x <- median(cost_grid_data$cells_per_target, na.rm = TRUE) * 0.85  # Position slightly to the left
+        cost_annotation_x <- median(cost_grid_data$cells_per_target, na.rm = TRUE) * 0.85  # Position at 0.85 of median
         cost_annotation_y <- cost_grid_data$reads_per_cell[which.min(abs(cost_grid_data$cells_per_target - cost_annotation_x))]
         
         p <- p + annotate(
