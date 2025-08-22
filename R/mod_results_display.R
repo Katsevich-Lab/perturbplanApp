@@ -181,12 +181,22 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # REACTIVE DISPLAY STATE
     # ========================================================================
     
+    # Cache analysis results locally to avoid multiple calls
+    cached_analysis_results <- reactive({
+      analysis_results()
+    })
+    
+    # Cache plot objects locally to avoid multiple calls  
+    cached_plot_objects <- reactive({
+      plot_objects()
+    })
+    
     # Determine if results should be shown
     output$show_results <- reactive({
-      # Use tryCatch to handle any errors in plot_objects() or analysis_results()
+      # Use tryCatch to handle any errors in cached_plot_objects() or cached_analysis_results()
       tryCatch({
-        plots <- plot_objects()
-        results <- analysis_results()
+        plots <- cached_plot_objects()
+        results <- cached_analysis_results()
         
         !is.null(plots) && !is.null(results) && 
           is.null(plots$error) && is.null(results$error)
@@ -200,8 +210,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # Determine if errors should be shown
     output$show_error <- reactive({
       tryCatch({
-        plots <- plot_objects()
-        results <- analysis_results()
+        plots <- cached_plot_objects()
+        results <- cached_analysis_results()
         
         # Only show error if we have actual data with errors, not when data is missing
         has_plot_error <- !is.null(plots) && !is.null(plots$error)
@@ -221,8 +231,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       error_msg <- NULL
       
       tryCatch({
-        plots <- plot_objects()
-        results <- analysis_results()
+        plots <- cached_plot_objects()
+        results <- cached_analysis_results()
         
         # Check for plotting errors first
         if (!is.null(plots) && !is.null(plots$error)) {
@@ -252,9 +262,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     
     output$main_plot <- renderPlotly({
       tryCatch({
-        req(plot_objects())
+        req(cached_plot_objects())
         
-        plots <- plot_objects()
+        plots <- cached_plot_objects()
         
         if (!is.null(plots$error)) {
           return(NULL)
@@ -292,10 +302,10 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # ========================================================================
     
     output$analysis_summary <- renderUI({
-      req(analysis_results(), plot_objects())
+      req(cached_analysis_results(), cached_plot_objects())
       
-      results <- analysis_results()
-      plots <- plot_objects()
+      results <- cached_analysis_results()
+      plots <- cached_plot_objects()
       
       if (!is.null(results$error) || !is.null(plots$error)) {
         return(tags$div(
@@ -516,9 +526,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # ========================================================================
     
     output$detailed_table <- renderDT({
-      req(analysis_results())
+      req(cached_analysis_results())
       
-      results <- analysis_results()
+      results <- cached_analysis_results()
       
       if (!is.null(results$error)) {
         return(NULL)
@@ -604,10 +614,10 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         paste0("perturbplan_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
       },
       content = function(file) {
-        req(analysis_results(), plot_objects())
+        req(cached_analysis_results(), cached_plot_objects())
         
-        results <- analysis_results()
-        plots <- plot_objects()
+        results <- cached_analysis_results()
+        plots <- cached_plot_objects()
         
         tryCatch({
           # Prepare Excel data
@@ -655,9 +665,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
       },
       content = function(file) {
-        req(plot_objects())
+        req(cached_plot_objects())
         
-        plots <- plot_objects()
+        plots <- cached_plot_objects()
         
         tryCatch({
           # Get the static ggplot (not the interactive plotly version)
