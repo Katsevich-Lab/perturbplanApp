@@ -240,8 +240,27 @@ create_cost_tradeoff_plots <- function(results) {
   cat("Starting ggplotly conversion...\n")
   p_interactive <- tryCatch({
     cat("Converting ggplot to plotly...\n")
-    plotly_obj <- ggplotly(p, tooltip = c("x", "y"))
-    cat("ggplotly conversion successful\n")
+    # First convert to plotly
+    plotly_obj <- ggplotly(p, tooltip = NULL)
+    
+    # Then manually modify each trace to add proper hover data
+    for (i in seq_along(plotly_obj$x$data)) {
+      trace_data <- plotly_obj$x$data[[i]]
+      if (!is.null(trace_data$x) && !is.null(trace_data$y)) {
+        # Transform log coordinates back to normal scale
+        cells_values <- round(10^trace_data$x)
+        reads_values <- round(10^trace_data$y)
+        
+        # Set custom hover text
+        plotly_obj$x$data[[i]]$hovertemplate <- paste0(
+          "Cells per target: %{customdata[0]:,}<br>",
+          "Reads per cell: %{customdata[1]:,}<br>",
+          "<extra></extra>"
+        )
+        plotly_obj$x$data[[i]]$customdata <- cbind(cells_values, reads_values)
+      }
+    }
+    cat("ggplotly conversion with manual trace modification successful\n")
     
     cat("Adding plotly layout...\n")
     plotly_obj %>%
