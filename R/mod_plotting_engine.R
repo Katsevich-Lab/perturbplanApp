@@ -234,16 +234,7 @@ create_cost_tradeoff_plots <- function(results) {
       # cat("Plot object class:", class(p), "\n")
   } else if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
     # WORKFLOWS 10, 11: Unified constrained minimization plots
-    cat("=== PLOTTING ENGINE: Creating minimization plot ===\n")
-    cat("  workflow_id:", workflow_info$workflow_id, "\n")
-    cat("  results available:", !is.null(results), "\n")
-    cat("  power_data available:", !is.null(results$power_data), "\n")
-    if (!is.null(results$power_data)) {
-      cat("  power_data rows:", nrow(results$power_data), "\n")
-      cat("  power_data columns:", paste(names(results$power_data), collapse = ", "), "\n")
-    }
     p <- create_minimization_plot(results)
-    cat("  plot created successfully\n")
   } else {
     # OTHER WORKFLOWS: Standard cost-power tradeoff visualization  
     p <- create_standard_cost_tradeoff_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)

@@ -26,14 +26,6 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
                      config$cost_budget %||% 
                      10000
   
-  # Debug: Cost constraint extraction
-  cat("DEBUG Unified Minimization:\n")
-  cat("  Workflow:", workflow_info$workflow_id, "\n")
-  cat("  Minimizing variable:", minimization_config$variable, "\n")
-  cat("  config$optimization_type =", config$design_options$optimization_type %||% "NULL", "\n")
-  cat("  config$cost_budget =", config$cost_budget %||% "NULL", "\n")
-  cat("  config$design_options$cost_budget =", config$design_options$cost_budget %||% "NULL", "\n")
-  cat("  Final cost_constraint =", cost_constraint, "\n")
   
   # Step 3: Get comprehensive parameters from UI using existing mapping function
   perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
@@ -135,11 +127,6 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     )
   )
   
-  # Debug final results
-  cat("=== UNIFIED FUNCTION RETURNING ===\n")
-  cat("  Final power_data rows:", nrow(final_results$power_data), "\n")
-  cat("  Final optimal_design available:", !is.null(final_results$optimal_design), "\n")
-  cat("  Optimal design columns:", paste(names(final_results$optimal_design), collapse = ", "), "\n")
   
   return(final_results)
 }
