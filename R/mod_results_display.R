@@ -344,16 +344,52 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
               tagList(
                 # Always show the minimizing parameter first
                 if (minimizing_param == "TPM_threshold" && !is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Optimal TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$TPM_threshold, 1), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                  # TPM minimization workflow - show TPM + corresponding cells/reads
+                  tagList(
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$TPM_threshold, 1), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Total cost: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(paste0("$", scales::comma(round(optimal$total_cost))), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    )
                   )
                 } else if (minimizing_param == "minimum_fold_change" && !is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Optimal fold change: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$minimum_fold_change, 2), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                  # FC minimization workflow - show FC + corresponding cells/reads
+                  tagList(
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal fold change: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$minimum_fold_change, 2), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    ),
+                    tags$div(
+                      style = "margin-bottom: 8px;",
+                      tags$span("Total cost: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(paste0("$", scales::comma(round(optimal$total_cost))), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                    )
                   )
                 } else if (minimizing_param == "cells_per_target" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
                   tags$div(
@@ -473,8 +509,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                   }
                 },
                 
-                # Cells per target (if not minimizing AND not cost minimization AND not varying in power+cost)
+                # Cells per target (if not minimizing AND not cost/TPM/FC minimization AND not varying in power+cost)
                 if (minimizing_param != "cells_per_target" && minimizing_param != "cost" && 
+                    minimizing_param != "TPM_threshold" && minimizing_param != "minimum_fold_change" &&
                     !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target) &&
                     !(workflow_info$category == "power_cost_single" && workflow_info$varying_parameter == "cells")) {
                   tags$div(
@@ -484,8 +521,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                   )
                 },
                 
-                # Raw reads per cell (if not minimizing AND not cost minimization AND not varying in power+cost)
+                # Raw reads per cell (if not minimizing AND not cost/TPM/FC minimization AND not varying in power+cost)
                 if (minimizing_param != "reads_per_cell" && minimizing_param != "cost" && 
+                    minimizing_param != "TPM_threshold" && minimizing_param != "minimum_fold_change" &&
                     !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell) &&
                     !(workflow_info$category == "power_cost_single" && workflow_info$varying_parameter == "reads")) {
                   tags$div(
