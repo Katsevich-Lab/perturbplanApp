@@ -827,10 +827,11 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
 #' @return ggplot object with cost vs parameter visualization
 #' @noRd
 #' 
-#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline labs theme_bw theme element_text
-#' @importFrom dplyr distinct arrange
+#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline labs theme_bw theme element_text scale_y_continuous
+#' @importFrom dplyr distinct arrange group_by slice_min ungroup
 #' @importFrom scales comma comma_format
 #' @importFrom rlang .data
+#' @importFrom magrittr %>%
 create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
   
   # Determine minimizing parameter (TPM or FC)
@@ -847,26 +848,49 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
     stop("Unknown minimizing parameter: ", min_param)
   }
   
-  # Extract cost and minimizing variable, get distinct rows, and arrange by parameter
-  plot_data <- power_data[, c(param_col, "total_cost")]
-  plot_data <- unique(plot_data)  # Get distinct rows
-  plot_data <- plot_data[order(plot_data[[param_col]]), ]  # Sort by parameter
+  # Extract cost and minimizing variable, find minimum cost for each parameter value using dplyr
+  # This reduces from ~451 points to ~20 points (one per parameter value)
+  plot_data <- power_data %>%
+    dplyr::group_by(.data[[param_col]]) %>%
+    dplyr::slice_min(total_cost, n = 1, with_ties = FALSE) %>%
+    dplyr::ungroup() %>%
+    dplyr::arrange(.data[[param_col]]) %>%
+    as.data.frame()  # Convert back to data.frame for consistent access
   
   # Find optimal solution (minimum parameter value under cost constraint)
+  # AND extract corresponding cells/reads from original power_data
   if (!is.null(cost_budget) && !is.na(cost_budget)) {
-    feasible_rows <- plot_data[plot_data$total_cost <= cost_budget, ]
+    # Step 1: Find all feasible solutions (under cost budget) from original data
+    feasible_rows <- power_data[power_data$total_cost <= cost_budget, ]
     if (nrow(feasible_rows) > 0) {
+      # Step 2: Find minimum parameter value among feasible solutions
       optimal_param_value <- min(feasible_rows[[param_col]])
-      optimal_cost <- feasible_rows[feasible_rows[[param_col]] == optimal_param_value, "total_cost"][1]
+      
+      # Step 3: Among ALL rows with this parameter value, find minimum cost
+      param_rows <- power_data[power_data[[param_col]] == optimal_param_value, ]
+      optimal_idx <- which.min(param_rows$total_cost)
+      optimal_row <- param_rows[optimal_idx, ]
+      
+      optimal_cost <- optimal_row$total_cost
+      optimal_cells <- optimal_row$cells_per_target
+      optimal_reads <- optimal_row$reads_per_cell
     } else {
-      # No feasible solutions under budget - use minimum cost point
-      optimal_param_value <- plot_data[which.min(plot_data$total_cost), param_col]
-      optimal_cost <- min(plot_data$total_cost)
+      # No feasible solutions under budget - use global minimum cost point
+      optimal_idx <- which.min(power_data$total_cost)
+      optimal_row <- power_data[optimal_idx, ]
+      optimal_param_value <- optimal_row[[param_col]]
+      optimal_cost <- optimal_row$total_cost
+      optimal_cells <- optimal_row$cells_per_target
+      optimal_reads <- optimal_row$reads_per_cell
     }
   } else {
-    # No cost constraint - use minimum cost point
-    optimal_param_value <- plot_data[which.min(plot_data$total_cost), param_col]
-    optimal_cost <- min(plot_data$total_cost)
+    # No cost constraint - use global minimum cost point
+    optimal_idx <- which.min(power_data$total_cost)
+    optimal_row <- power_data[optimal_idx, ]
+    optimal_param_value <- optimal_row[[param_col]]
+    optimal_cost <- optimal_row$total_cost
+    optimal_cells <- optimal_row$cells_per_target
+    optimal_reads <- optimal_row$reads_per_cell
   }
   
   # Create ggplot with real data: cost vs minimizing parameter 

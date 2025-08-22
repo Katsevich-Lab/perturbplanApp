@@ -51,7 +51,7 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
                     50000  # Default cost constraint if not specified
   
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)  # Key difference from cost minimization
-  perturbplan_params$grid_size <- 50         # Updated for workflows 10-11
+  perturbplan_params$grid_size <- 30         # Reduced for faster computation
   
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
@@ -70,7 +70,7 @@ perform_TPM_minimization_analysis <- function(config, workflow_info, pilot_data)
     gRNAs_per_target = perturbplan_params$gRNAs_per_target, # From UI experimental setup
     cost_per_captured_cell = perturbplan_params$cost_per_captured_cell, # From UI cost info
     cost_per_million_reads = perturbplan_params$cost_per_million_reads, # From UI cost info
-    cost_grid_size = 50                          # Updated for workflows 10-11
+    cost_grid_size = 30                          # Reduced for faster computation
   )
   
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
@@ -168,7 +168,7 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
                     50000  # Default cost constraint if not specified
   
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)  # Key difference from cost minimization
-  perturbplan_params$grid_size <- 50         # Updated for workflows 10-11
+  perturbplan_params$grid_size <- 30         # Reduced for faster computation
   
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
@@ -187,7 +187,7 @@ perform_fc_minimization_analysis <- function(config, workflow_info, pilot_data) 
     gRNAs_per_target = perturbplan_params$gRNAs_per_target, # From UI experimental setup
     cost_per_captured_cell = perturbplan_params$cost_per_captured_cell, # From UI cost info
     cost_per_million_reads = perturbplan_params$cost_per_million_reads, # From UI cost info
-    cost_grid_size = 50                          # Updated for workflows 10-11
+    cost_grid_size = 30                          # Reduced for faster computation
   )
   
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
