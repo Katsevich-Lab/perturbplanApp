@@ -129,9 +129,9 @@ mod_experimental_setup_ui <- function(id) {
           
           # Reads per cell fixed value (conditional)
           tags$div(
-            id = ns("reads_fixed_div"),
+            id = ns("mapped_reads_fixed_div"),
             style = "display: none; margin-bottom: 15px;",
-            numericInput(ns("reads_fixed"), "Reads per cell:", 
+            numericInput(ns("mapped_reads_fixed"), "Mapped reads per cell:", 
                         value = 5000, min = 500, max = 20000, step = 500)
           )
         )
@@ -189,12 +189,12 @@ mod_experimental_setup_server <- function(id, design_config){
         if (!is.null(previous_mode()) && previous_mode() != current_mode) {
           # Reset fixed value inputs when switching modes
           updateNumericInput(session, "cells_fixed", value = 1000)
-          updateNumericInput(session, "reads_fixed", value = 5000)
+          updateNumericInput(session, "mapped_reads_fixed", value = 5000)
           
           # Hide all fixed parameter sections initially
           shinyjs::hide("experimental_fixed_params")
           shinyjs::hide("cells_fixed_div")
-          shinyjs::hide("reads_fixed_div")
+          shinyjs::hide("mapped_reads_fixed_div")
         }
         
         # Update previous mode tracker
@@ -203,7 +203,7 @@ mod_experimental_setup_server <- function(id, design_config){
       
       if (!is.null(config) && !is.null(config$parameter_controls)) {
         cells_type <- config$parameter_controls$cells_per_target$type
-        reads_type <- config$parameter_controls$reads_per_cell$type
+        reads_type <- config$parameter_controls$mapped_reads_per_cell$type
         
         # Show cells fixed input when cells parameter is set to "fixed" 
         # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode
@@ -217,10 +217,10 @@ mod_experimental_setup_server <- function(id, design_config){
         # Show reads fixed input when reads parameter is set to "fixed"
         # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode  
         if (!is.null(reads_type) && reads_type == "fixed") {
-          shinyjs::show("reads_fixed_div")
+          shinyjs::show("mapped_reads_fixed_div")
           shinyjs::show("experimental_fixed_params")
         } else {
-          shinyjs::hide("reads_fixed_div")
+          shinyjs::hide("mapped_reads_fixed_div")
         }
         
         # Hide the entire section if neither parameter is fixed
@@ -231,7 +231,7 @@ mod_experimental_setup_server <- function(id, design_config){
       } else {
         shinyjs::hide("experimental_fixed_params")
         shinyjs::hide("cells_fixed_div")
-        shinyjs::hide("reads_fixed_div")
+        shinyjs::hide("mapped_reads_fixed_div")
       }
     })
     
@@ -367,7 +367,7 @@ mod_experimental_setup_server <- function(id, design_config){
         pilot_data = pilot_data(),
         # Fixed value inputs
         cells_fixed = input$cells_fixed,
-        reads_fixed = input$reads_fixed,
+        mapped_reads_fixed = input$mapped_reads_fixed,
         # Perturbation choices (integrated from mod_perturbation_choices)
         MOI = input$MOI %||% 10,
         num_targets = input$num_targets %||% 100,

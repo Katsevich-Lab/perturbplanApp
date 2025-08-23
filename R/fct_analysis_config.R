@@ -66,6 +66,7 @@ detect_workflow_scenario <- function(workflow_config) {
   param_controls <- design_config$parameter_controls
   cost_budget <- design_config$cost_budget
   
+  
   # VALIDATION: Check for missing essential values
   if (is.null(opt_type) || opt_type == "" || is.null(target) || target == "") {
     return(list(
@@ -86,11 +87,12 @@ detect_workflow_scenario <- function(workflow_config) {
   # Power-only workflows (1-5)
   if (opt_type == "power_only") {
     # Handle both UI names and backend names for compatibility
-    if (target %in% c("cells", "reads", "fold_change", "cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
-      # Map UI names to backend names for return value
+    if (target %in% c("cells", "reads", "reads_per_cell", "fold_change", "cells_per_target", "TPM_threshold", "minimum_fold_change")) {
+      # Map UI names to perturbplan-compatible parameter names
       backend_target <- switch(target,
         "cells" = "cells_per_target",
-        "reads" = "reads_per_cell", 
+        "reads" = "reads_per_cell",  # Use perturbplan-compatible name
+        "reads_per_cell" = "reads_per_cell",  # Already backend name
         "fold_change" = "minimum_fold_change",
         target  # Already backend name
       )
@@ -124,7 +126,7 @@ detect_workflow_scenario <- function(workflow_config) {
     varying_params <- get_varying_parameters(param_controls)
     
     if (target == "TPM_threshold") {
-      if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "mapped_reads_per_cell") %in% varying_params)) {
         # Workflow 8: TPM + cells + reads varying
         return(list(
           workflow_id = "power_cost_TPM_cells_reads",
@@ -140,7 +142,7 @@ detect_workflow_scenario <- function(workflow_config) {
         # Map UI control name to internal name
         other_param <- switch(other_param_ui,
           "cells_per_target" = "cells",
-          "reads_per_cell" = "reads",
+          "mapped_reads_per_cell" = "reads",
           other_param_ui  # fallback
         )
         return(list(
@@ -155,7 +157,7 @@ detect_workflow_scenario <- function(workflow_config) {
       }
     } else if (target %in% c("minimum_fold_change", "fold_change")) {
       # Similar logic for fold change workflows 9-11
-      if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "mapped_reads_per_cell") %in% varying_params)) {
         return(list(
           workflow_id = "power_cost_fc_cells_reads",
           plot_type = "cost_tradeoff_curves",
@@ -169,7 +171,7 @@ detect_workflow_scenario <- function(workflow_config) {
         # Map UI control name to internal name
         other_param <- switch(other_param_ui,
           "cells_per_target" = "cells",
-          "reads_per_cell" = "reads",
+          "mapped_reads_per_cell" = "reads",
           other_param_ui  # fallback
         )
         return(list(
@@ -327,7 +329,7 @@ format_parameter_name <- function(parameter_name) {
   switch(parameter_name,
     # Full parameter names (preferred)
     "cells_per_target" = "Cells per Target",
-    "reads_per_cell" = "Reads per Cell",
+    "mapped_reads_per_cell" = "Mapped Reads per Cell",
     "TPM_threshold" = "TPM Threshold",
     "minimum_fold_change" = "Minimum Fold Change",
     # Legacy abbreviated names (backward compatibility)

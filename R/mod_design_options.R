@@ -265,7 +265,7 @@ mod_design_options_server <- function(id){
           # Count how many parameters need UI controls (not minimizing/optimizing)
           has_controls <- 
             (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing")) ||
-            (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing")) ||
+            (!param_configs$mapped_reads_per_cell$type %in% c("minimizing", "optimizing")) ||
             (!param_configs$TPM_threshold$type %in% c("minimizing", "optimizing")) ||
             (!param_configs$minimum_fold_change$type %in% c("minimizing", "optimizing"))
           
@@ -377,7 +377,7 @@ mod_design_options_server <- function(id){
           actual_cells_type <- param_configs$cells_per_target$type
         }
         if (is.null(actual_reads_type) && !is.null(param_configs)) {
-          actual_reads_type <- param_configs$reads_per_cell$type
+          actual_reads_type <- param_configs$mapped_reads_per_cell$type
         }
         
         if (!is.null(actual_cells_type) && !is.null(actual_reads_type)) {
@@ -447,9 +447,9 @@ mod_design_options_server <- function(id){
         ))
       }
       
-      if (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing")) {
+      if (!param_configs$mapped_reads_per_cell$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "reads", "Reads per cell:", param_configs$reads_per_cell, 5000, 500, 20000, 500)
+          create_param_ui(ns, "reads", "Mapped reads per cell:", param_configs$mapped_reads_per_cell, 5000, 500, 20000, 500)
         ))
       }
       
@@ -477,7 +477,7 @@ mod_design_options_server <- function(id){
     get_param_configs <- function(opt_type, target) {
       configs <- list(
         cells_per_target = list(type = "varying", enabled = TRUE),
-        reads_per_cell = list(type = "varying", enabled = TRUE),
+        mapped_reads_per_cell = list(type = "varying", enabled = TRUE),
         TPM_threshold = list(type = "varying", enabled = TRUE),
         minimum_fold_change = list(type = "varying", enabled = TRUE)
       )
@@ -486,13 +486,13 @@ mod_design_options_server <- function(id){
         if (target %in% c("cells", "reads", "TPM_threshold", "fold_change")) {
           # Power-only + single parameter minimization: minimize target, fix all others
           configs$cells_per_target$type <- if (target == "cells") "minimizing" else "fixed"
-          configs$reads_per_cell$type <- if (target == "reads") "minimizing" else "fixed"
+          configs$mapped_reads_per_cell$type <- if (target == "reads") "minimizing" else "fixed"
           configs$TPM_threshold$type <- if (target == "TPM_threshold") "minimizing" else "fixed"
           configs$minimum_fold_change$type <- if (target == "fold_change") "minimizing" else "fixed"
         } else if (target == "cost") {
           # Cost minimization: cells/reads vary simultaneously (omit both), TPM/fc fixed
           configs$cells_per_target$type <- "optimizing"
-          configs$reads_per_cell$type <- "optimizing"
+          configs$mapped_reads_per_cell$type <- "optimizing"
           configs$TPM_threshold$type <- "fixed"
           configs$minimum_fold_change$type <- "fixed"
         }
@@ -500,13 +500,13 @@ mod_design_options_server <- function(id){
         if (target == "TPM_threshold") {
           # Power+cost + TPM minimization: TPM minimizing, FC fixed, cells/reads constrained varying/fixed
           configs$cells_per_target$type <- "varying"
-          configs$reads_per_cell$type <- "varying"
+          configs$mapped_reads_per_cell$type <- "varying"
           configs$TPM_threshold$type <- "minimizing"
           configs$minimum_fold_change$type <- "fixed"
         } else if (target == "fold_change") {
           # Power+cost + FC minimization: FC minimizing, TPM fixed, cells/reads constrained varying/fixed
           configs$cells_per_target$type <- "varying"
-          configs$reads_per_cell$type <- "varying"
+          configs$mapped_reads_per_cell$type <- "varying"
           configs$TPM_threshold$type <- "fixed"
           configs$minimum_fold_change$type <- "minimizing"
         }
@@ -717,9 +717,9 @@ mod_design_options_server <- function(id){
       }
       
       
-      reads_type <- param_configs$reads_per_cell$type
+      reads_type <- param_configs$mapped_reads_per_cell$type
       if (!is.null(input_vals$reads_control) && 
-          param_configs$reads_per_cell$type == "varying") {
+          param_configs$mapped_reads_per_cell$type == "varying") {
         reads_type <- input_vals$reads_control
       }
       
@@ -742,7 +742,7 @@ mod_design_options_server <- function(id){
           type = cells_type,
           fixed_value = if(!is.null(input_vals$cells_fixed)) input_vals$cells_fixed else NULL
         ),
-        reads_per_cell = list(
+        mapped_reads_per_cell = list(
           type = reads_type,
           fixed_value = if(!is.null(input_vals$reads_fixed)) input_vals$reads_fixed else NULL
         ),

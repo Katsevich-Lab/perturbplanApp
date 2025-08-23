@@ -77,8 +77,8 @@ mod_sidebar_server <- function(id){
         if (!is.null(experimental_opts$cells_fixed)) {
           design_opts$parameter_controls$cells_per_target$fixed_value <- experimental_opts$cells_fixed
         }
-        if (!is.null(experimental_opts$reads_fixed)) {
-          design_opts$parameter_controls$reads_per_cell$fixed_value <- experimental_opts$reads_fixed
+        if (!is.null(experimental_opts$mapped_reads_fixed)) {
+          design_opts$parameter_controls$mapped_reads_per_cell$fixed_value <- experimental_opts$mapped_reads_fixed
         }
         if (!is.null(analysis_opts$TPM_threshold_fixed)) {
           design_opts$parameter_controls$TPM_threshold$fixed_value <- analysis_opts$TPM_threshold_fixed

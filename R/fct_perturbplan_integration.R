@@ -121,6 +121,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   # Determine minimizing variable from workflow
   minimizing_variable <- workflow_info$minimizing_parameter
   
+  
   # minimizing_variable is already standardized by centralized translation in mod_sidebar.R
   # No additional mapping needed
   
@@ -145,11 +146,14 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
       fixed_variable$cells_per_target <- round(param_controls$cells_per_target$fixed_value)
     }
 
-    if (!is.null(param_controls$reads_per_cell) &&
-        param_controls$reads_per_cell$type == "fixed" &&
-        !is.null(param_controls$reads_per_cell$fixed_value)) {
-      # Ensure integer values for perturbplan
-      fixed_variable$reads_per_cell <- round(param_controls$reads_per_cell$fixed_value)
+    if (!is.null(param_controls$mapped_reads_per_cell) &&
+        param_controls$mapped_reads_per_cell$type == "fixed" &&
+        !is.null(param_controls$mapped_reads_per_cell$fixed_value)) {
+      # Convert mapped reads to sequenced reads for perturbplan
+      mapped_value <- param_controls$mapped_reads_per_cell$fixed_value
+      mapping_efficiency <- config$experimental_setup$mapping_efficiency %||% 0.72
+      sequenced_value <- round(mapped_value / mapping_efficiency)
+      fixed_variable$reads_per_cell <- sequenced_value
     }
 
     if (!is.null(param_controls$TPM_threshold) &&
@@ -349,7 +353,7 @@ extract_parameter_ranges_from_results <- function(results) {
   ranges <- list()
 
   # Extract ranges for all numeric columns that represent parameters
-  param_cols <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
+  param_cols <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "sequenced_reads_per_cell")
 
   for (col in param_cols) {
     if (col %in% names(results) && is.numeric(results[[col]])) {
@@ -381,7 +385,7 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
       parameter_value = optimal[[workflow_info$minimizing_parameter]],
       achieved_power = optimal$overall_power,
       cells_per_target = optimal$cells_per_target %||% NA,
-      reads_per_cell = optimal$reads_per_cell %||% NA
+      sequenced_reads_per_cell = optimal$sequenced_reads_per_cell %||% NA
     )
     
     # Add cost information if available
@@ -427,7 +431,7 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
 get_parameter_column_name <- function(minimizing_param) {
   switch(minimizing_param,
     "cells_per_target" = "cells_per_target",
-    "reads_per_cell" = "reads_per_cell",  # renamed after cost_power_computation call
+    "reads_per_cell" = "sequenced_reads_per_cell",  # standardized column name
     "TPM_threshold" = "TPM_threshold", 
     "minimum_fold_change" = "minimum_fold_change",
     minimizing_param  # fallback to original name
@@ -520,7 +524,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     parameter_value = optimal_row[[param_column]],
     achieved_power = optimal_row$overall_power,
     cells_per_target = optimal_row$cells_per_target %||% NA,
-    reads_per_cell = optimal_row$reads_per_cell %||% NA,
+    sequenced_reads_per_cell = optimal_row$sequenced_reads_per_cell %||% NA,
     TPM_threshold = optimal_row$TPM_threshold %||% NA,
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
     total_cost = optimal_row$total_cost %||% NA,

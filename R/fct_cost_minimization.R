@@ -29,7 +29,7 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   
   # Override for cost minimization workflow: 
   # - Use "cost" as minimizing variable (perturbplan now supports this)
-  # - Let cells_per_target and reads_per_cell vary to find minimum cost combination
+  # - Let cells_per_target and sequenced_reads_per_cell vary to find minimum cost combination
   perturbplan_params$minimizing_variable <- "cost"
   
   # Always ensure minimum_fold_change is fixed for cost minimization
@@ -47,7 +47,7 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   # Remove cells/reads from fixed_variable so they can vary for cost optimization
   # (This is required for cost minimization regardless of UI parameter control status)
   perturbplan_params$fixed_variable$cells_per_target <- NULL
-  perturbplan_params$fixed_variable$reads_per_cell <- NULL
+  perturbplan_params$fixed_variable$sequenced_reads_per_cell <- NULL
   
   # Key parameters for cost minimization
   perturbplan_params$cost_constraint <- NULL  # Key requirement: no cost constraint  
@@ -57,6 +57,9 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+  
+  # Keep original column names for perturbplan compatibility
+  # Do NOT rename columns here - find_optimal_cost_design expects original names
   
   # cat("cost_power_computation completed. Grid dimensions:", nrow(cost_power_grid), "x", ncol(cost_power_grid), "\n")
   
@@ -89,6 +92,15 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   # Use optimal_cost_power_df as the main data (this has the correct structure)
   power_data <- optimal_results$optimal_cost_power_df
   
+  # Standardize column names in power_data for UI compatibility
+  if ("raw_reads_per_cell" %in% names(power_data)) {
+    power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
+    power_data$raw_reads_per_cell <- NULL
+  } else if ("reads_per_cell" %in% names(power_data)) {
+    power_data$sequenced_reads_per_cell <- power_data$reads_per_cell
+    power_data$reads_per_cell <- NULL
+  }
+  
   # Find minimum cost point for target power
   target_power <- config$design_options$target_power
   power_tolerance <- 0.01
@@ -101,23 +113,38 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   optimal_idx <- which.min(target_rows$total_cost)
   optimal_point <- target_rows[optimal_idx, ]
   
-  # Create optimal design in expected format using CORRECT column names
+  # Create optimal design in expected format - standardize column names for UI
   optimal_design <- list(
     cells_per_target = optimal_point$cells_per_target,
-    reads_per_cell = optimal_point$reads_per_cell,  # This is corrected in find_optimal_cost_design output
+    # Convert perturbplan column names to our standardized names
+    sequenced_reads_per_cell = optimal_point$raw_reads_per_cell %||% 
+                               optimal_point$reads_per_cell %||% 
+                               optimal_point$sequenced_reads_per_cell,
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,   # Correct column name
     optimal_minimized_param = optimal_point$total_cost
   )
   
   # cat("Optimal design: cells =", optimal_design$cells_per_target,
-  #     ", reads =", optimal_design$reads_per_cell, 
+  #     ", reads =", optimal_design$sequenced_reads_per_cell, 
   #     ", cost =", optimal_design$total_cost, "\n")
+  
+  # Standardize column names in cost_data for UI compatibility
+  cost_data <- optimal_results$optimal_cost_grid
+  if (!is.null(cost_data)) {
+    if ("raw_reads_per_cell" %in% names(cost_data)) {
+      cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
+      cost_data$raw_reads_per_cell <- NULL
+    } else if ("reads_per_cell" %in% names(cost_data)) {
+      cost_data$sequenced_reads_per_cell <- cost_data$reads_per_cell
+      cost_data$reads_per_cell <- NULL
+    }
+  }
   
   # Return in format compatible with current system
   return(list(
     power_data = power_data,  # This is optimal_cost_power_df for equi-power curves
-    cost_data = optimal_results$optimal_cost_grid,  # This is cost_grid for equi-cost curves
+    cost_data = cost_data,  # This is cost_grid for equi-cost curves
     optimal_design = optimal_design,
     user_config = config,
     workflow_info = workflow_info,

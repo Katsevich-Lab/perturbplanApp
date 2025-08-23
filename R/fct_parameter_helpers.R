@@ -12,7 +12,7 @@ get_parameter_ranges <- function(biological_system = "K562", experimental_platfo
   # Default ranges - can be customized based on biological system and platform
   list(
     cells_per_target = list(min = 50, max = 5000, step = 50, default = 1000),
-    reads_per_cell = list(min = 500, max = 20000, step = 500, default = 5000),
+    mapped_reads_per_cell = list(min = 500, max = 20000, step = 500, default = 5000),
     TPM_threshold = list(min = 0, max = 100, step = 1, default = 10),
     fold_change = list(min = 1.1, max = 10, step = 0.1, default = 1.5)
   )
@@ -72,7 +72,7 @@ create_parameter_grid <- function(parameter_controls, ranges) {
 format_parameter_value <- function(value, parameter_type) {
   switch(parameter_type,
     "cells_per_target" = paste(scales::comma(value), "cells"),
-    "reads_per_cell" = paste(scales::comma(value), "reads/cell"),
+    "mapped_reads_per_cell" = paste(scales::comma(value), "reads/cell"),
     "TPM_threshold" = paste(value, "TPM"),
     "fold_change" = paste0(value, "x"),
     as.character(value)
@@ -101,8 +101,8 @@ validate_parameter_combinations <- function(parameter_grid) {
   
   # Check for unrealistic combinations
   if ("cells_per_target" %in% names(parameter_grid) && 
-      "reads_per_cell" %in% names(parameter_grid)) {
-    total_reads <- parameter_grid$cells_per_target * parameter_grid$reads_per_cell
+      "mapped_reads_per_cell" %in% names(parameter_grid)) {
+    total_reads <- parameter_grid$cells_per_target * parameter_grid$mapped_reads_per_cell
     if (any(total_reads > 1e8)) {
       warnings <- c(warnings, "Some combinations result in very high total read counts")
     }

@@ -79,6 +79,15 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   # Step 8: Apply consistent data grouping for both plotting and optimal solution
   power_data <- optimal_results$optimal_cost_power_df
   
+  # Standardize column names in power_data for UI compatibility
+  if ("raw_reads_per_cell" %in% names(power_data)) {
+    power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
+    power_data$raw_reads_per_cell <- NULL
+  } else if ("reads_per_cell" %in% names(power_data)) {
+    power_data$sequenced_reads_per_cell <- power_data$reads_per_cell
+    power_data$reads_per_cell <- NULL
+  }
+  
   # Group by minimizing variable and select minimum cost for each value
   grouped_data <- power_data %>%
     dplyr::group_by(.data[[minimization_config$variable]]) %>%
@@ -96,7 +105,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   # Step 9b: Create properly formatted optimal design object
   optimal_design <- list(
     cells_per_target = optimal_point$cells_per_target,
-    reads_per_cell = optimal_point$reads_per_cell %||% optimal_point$raw_reads_per_cell,
+    sequenced_reads_per_cell = optimal_point$sequenced_reads_per_cell,
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,  # Map overall_power to achieved_power
     optimal_minimized_param = optimal_point[[minimization_config$variable]],  # The minimized parameter value
@@ -106,10 +115,22 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   # Add the minimizing parameter to the optimal design
   optimal_design[[minimization_config$variable]] <- optimal_point[[minimization_config$variable]]
   
+  # Standardize column names in cost_data for UI compatibility
+  cost_data <- optimal_results$optimal_cost_grid
+  if (!is.null(cost_data)) {
+    if ("raw_reads_per_cell" %in% names(cost_data)) {
+      cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
+      cost_data$raw_reads_per_cell <- NULL
+    } else if ("reads_per_cell" %in% names(cost_data)) {
+      cost_data$sequenced_reads_per_cell <- cost_data$reads_per_cell
+      cost_data$reads_per_cell <- NULL
+    }
+  }
+  
   # Step 10: Return unified results
   final_results <- list(
     power_data = grouped_data,  # Grouped data for consistent plotting
-    cost_data = optimal_results$optimal_cost_grid,  # For equi-cost curves
+    cost_data = cost_data,  # For equi-cost curves
     optimal_design = optimal_design,
     user_config = config,
     workflow_info = workflow_info,
@@ -315,8 +336,8 @@ render_minimization_solution <- function(analysis_results) {
   
   # Extract values with defensive checks
   minimized_value <- optimal_point[[minimizing_variable]]
-  cells_value <- optimal_point$cells_per_target %||% optimal_point$raw_cells_per_target
-  reads_value <- optimal_point$reads_per_cell %||% optimal_point$raw_reads_per_cell
+  cells_value <- optimal_point$cells_per_target
+  reads_value <- optimal_point$sequenced_reads_per_cell
   cost_value <- optimal_point$total_cost
   power_value <- optimal_point$overall_power
   

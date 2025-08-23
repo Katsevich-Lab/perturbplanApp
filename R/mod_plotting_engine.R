@@ -455,11 +455,11 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
     optimal_recommendation = if (!is.null(optimal_design$cells_per_target)) {
       optimal_rec <- list(
         optimal_cells = optimal_design$cells_per_target,
-        optimal_reads = optimal_design$reads_per_cell,
+        optimal_reads = optimal_design$sequenced_reads_per_cell,
         total_cost = optimal_design$total_cost,
         achieved_power = optimal_design$achieved_power,
         recommendation_text = paste(
-          "Optimal design:", optimal_design$cells_per_target, "cells,", optimal_design$reads_per_cell, "reads",
+          "Optimal design:", optimal_design$cells_per_target, "cells,", optimal_design$sequenced_reads_per_cell, "reads",
           "| Cost: $", scales::comma(optimal_design$total_cost),
           "| Power:", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
@@ -539,10 +539,10 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       # cat("Cost data columns:", paste(names(cost_data), collapse = ", "), "\n")
       # cat("Cost data sample values:\n")
       # cat("  cells_per_target range:", range(cost_data$cells_per_target, na.rm = TRUE), "\n")
-      if ("reads_per_cell" %in% names(cost_data)) {
-      # cat("  reads_per_cell range:", range(cost_data$reads_per_cell, na.rm = TRUE), "\n")
+      if ("sequenced_reads_per_cell" %in% names(cost_data)) {
+      # cat("  sequenced_reads_per_cell range:", range(cost_data$sequenced_reads_per_cell, na.rm = TRUE), "\n")
       } else {
-      # cat("  reads_per_cell column: NOT FOUND\n")
+      # cat("  sequenced_reads_per_cell column: NOT FOUND\n")
       }
       # Use cost_data directly as equi-cost curves
       cost_grid_data <- cost_data
@@ -597,12 +597,25 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
     
       # cat("Starting plot creation\n")
     
+    # Standardize column names in power_data if needed
+    if ("raw_reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
+      power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
+      power_data$raw_reads_per_cell <- NULL
+    } else if ("reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
+      power_data$sequenced_reads_per_cell <- power_data$reads_per_cell  
+      power_data$reads_per_cell <- NULL
+    }
+    
     # Test each required column exists
-    required_cols <- c("cells_per_target", "reads_per_cell", "minimum_fold_change")
+    required_cols <- c("cells_per_target", "sequenced_reads_per_cell", "minimum_fold_change")
     missing_cols <- setdiff(required_cols, names(power_data))
     if (length(missing_cols) > 0) {
       # cat("ERROR: Missing required columns in power_data:", paste(missing_cols, collapse = ", "), "\n")
-      return(NULL)
+      # Return a simple fallback plot instead of NULL to avoid ggplotly errors
+      return(ggplot(data.frame(x = 1, y = 1), aes(x, y)) +
+             geom_point() +
+             labs(title = "Error: Missing data columns",
+                  subtitle = paste("Missing:", paste(missing_cols, collapse = ", "))))
     }
     
     # Create simplified plot for cost minimization (single equi-power + single equi-cost curve)
@@ -615,7 +628,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       # Single equi-power curve (teal/green color like in your screenshot)
       p <- p + geom_smooth(
         data = power_data,
-        mapping = aes(x = cells_per_target, y = reads_per_cell),
+        mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell),
         se = FALSE,
         color = "#20B2AA",  # Teal color
         size = 1.2
@@ -627,7 +640,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       # cat("Adding equi-cost curve (black)...\n")
         p <- p + geom_smooth(
           data = cost_grid_data,
-          mapping = aes(x = cells_per_target, y = reads_per_cell),
+          mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell),
           se = FALSE,
           color = "black",
           linetype = "dashed",
@@ -639,7 +652,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       # cat("Adding optimal point...\n")
       # Highlight optimal point
       p <- p + geom_point(
-        data = data.frame(x = optimal_design$cells_per_target, y = optimal_design$reads_per_cell),
+        data = data.frame(x = optimal_design$cells_per_target, y = optimal_design$sequenced_reads_per_cell),
         mapping = aes(x = x, y = y),
         color = "red", 
         size = 4,
@@ -663,7 +676,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       
       # Add annotation on equi-power curve (teal curve) - position higher
       power_annotation_x <- median(power_data$cells_per_target, na.rm = TRUE)
-      power_annotation_y <- power_data$reads_per_cell[which.min(abs(power_data$cells_per_target - power_annotation_x))]
+      power_annotation_y <- power_data$sequenced_reads_per_cell[which.min(abs(power_data$cells_per_target - power_annotation_x))]
       
       p <- p + annotate(
         "text", 
@@ -679,7 +692,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       # Add annotation on equi-cost curve (black curve) - position lower and left
       if (nrow(cost_grid_data) > 0) {
         cost_annotation_x <- median(cost_grid_data$cells_per_target, na.rm = TRUE) * 0.92  # Position at 0.92 of median
-        cost_annotation_y <- cost_grid_data$reads_per_cell[which.min(abs(cost_grid_data$cells_per_target - cost_annotation_x))]
+        cost_annotation_y <- cost_grid_data$sequenced_reads_per_cell[which.min(abs(cost_grid_data$cells_per_target - cost_annotation_x))]
         
         p <- p + annotate(
           "text",
@@ -711,16 +724,16 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
     }, error = function(e) {
       # cat("ERROR in plot creation:", e$message, "\n")
       # Create a simple fallback plot
-      p <<- ggplot(power_data, aes(x = cells_per_target, y = reads_per_cell)) +
+      p <<- ggplot(power_data, aes(x = cells_per_target, y = sequenced_reads_per_cell)) +
         geom_point() +
         labs(title = "Error in plot creation")
     })
     
   } else {
     # Fallback for other workflow types
-    p <- ggplot(power_data, aes(x = cells_per_target, y = reads_per_cell)) +
+    p <- ggplot(power_data, aes(x = cells_per_target, y = sequenced_reads_per_cell)) +
       geom_point(aes(color = total_cost), alpha = 0.6) +
-      geom_point(aes(x = optimal_design$cells_per_target, y = optimal_design$reads_per_cell),
+      geom_point(aes(x = optimal_design$cells_per_target, y = optimal_design$sequenced_reads_per_cell),
                 color = "red", size = 3) +
       scale_color_viridis_c(name = "Total Cost") +
       labs(
@@ -889,7 +902,7 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
       
       optimal_cost <- optimal_row$total_cost
       optimal_cells <- optimal_row$cells_per_target
-      optimal_reads <- optimal_row$reads_per_cell
+      optimal_reads <- optimal_row$sequenced_reads_per_cell
     } else {
       # No feasible solutions under budget - use global minimum cost point
       optimal_idx <- which.min(power_data$total_cost)
@@ -897,7 +910,7 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
       optimal_param_value <- optimal_row[[param_col]]
       optimal_cost <- optimal_row$total_cost
       optimal_cells <- optimal_row$cells_per_target
-      optimal_reads <- optimal_row$reads_per_cell
+      optimal_reads <- optimal_row$sequenced_reads_per_cell
     }
   } else {
     # No cost constraint - use global minimum cost point
@@ -906,7 +919,7 @@ create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, tar
     optimal_param_value <- optimal_row[[param_col]]
     optimal_cost <- optimal_row$total_cost
     optimal_cells <- optimal_row$cells_per_target
-    optimal_reads <- optimal_row$reads_per_cell
+    optimal_reads <- optimal_row$sequenced_reads_per_cell
   }
   
   # Create ggplot with real data: cost vs minimizing parameter 

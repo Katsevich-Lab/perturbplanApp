@@ -367,9 +367,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
-                      tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
                       tags$span(
-                        if (!is.null(optimal$reads_per_cell) && is.numeric(optimal$reads_per_cell)) round(optimal$reads_per_cell) else "N/A",
+                        if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
                         style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
                       )
                     ),
@@ -403,9 +403,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
-                      tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
                       tags$span(
-                        if (!is.null(optimal$reads_per_cell) && is.numeric(optimal$reads_per_cell)) round(optimal$reads_per_cell) else "N/A",
+                        if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
                         style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
                       )
                     ),
@@ -424,11 +424,14 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                     tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
                     tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
                   )
-                } else if (minimizing_param == "reads_per_cell" && !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
+                } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell") && !is.null(optimal$sequenced_reads_per_cell) && !is.na(optimal$sequenced_reads_per_cell)) {
                   tags$div(
                     style = "margin-bottom: 8px;",
-                    tags$span("Optimal raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                    tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                    tags$span(
+                      if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
+                      style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
+                    )
                   )
                 } else if (minimizing_param == "cost" && !is.null(optimal$total_cost) && !is.na(optimal$total_cost)) {
                   # Cost minimization workflow
@@ -445,8 +448,11 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                     ),
                     tags$div(
                       style = "margin-bottom: 8px;",
-                      tags$span("Optimal reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
+                      tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(
+                        if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
+                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+                      )
                     )
                   )
                 },
@@ -461,11 +467,14 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                       tags$span("Cost-constrained cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
                       tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
                     )
-                  } else if (varying_param == "reads" && !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell)) {
+                  } else if (varying_param == "reads" && !is.null(optimal$sequenced_reads_per_cell) && !is.na(optimal$sequenced_reads_per_cell)) {
                     tags$div(
                       style = "margin-bottom: 8px;",
-                      tags$span("Cost-constrained raw reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$reads_per_cell), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+                      tags$span("Cost-constrained sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+                      tags$span(
+                      if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
+                      style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
+                    )
                     )
                   }
                 },
@@ -550,14 +559,17 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
                 },
                 
                 # Raw reads per cell (if not minimizing AND not cost/TPM/FC minimization AND not varying in power+cost)
-                if (minimizing_param != "reads_per_cell" && minimizing_param != "cost" && 
+                if (!minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell") && minimizing_param != "cost" && 
                     minimizing_param != "TPM_threshold" && minimizing_param != "minimum_fold_change" &&
-                    !is.null(optimal$reads_per_cell) && !is.na(optimal$reads_per_cell) &&
+                    !is.null(optimal$sequenced_reads_per_cell) && !is.na(optimal$sequenced_reads_per_cell) &&
                     !(workflow_info$category == "power_cost_single" && workflow_info$varying_parameter == "reads")) {
                   tags$div(
                     style = "margin-bottom: 6px;",
-                    tags$span("Raw reads per cell: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-                    tags$span(round(optimal$reads_per_cell), style = "color: #6C757D; font-weight: 500;")
+                    tags$span("Sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+                    tags$span(
+                      if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
+                      style = "color: #6C757D; font-weight: 500;"
+                    )
                   )
                 },
                 

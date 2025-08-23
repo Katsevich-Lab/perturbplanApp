@@ -337,7 +337,7 @@ generate_single_parameter_power_curve <- function(param_grid, workflow_info, tar
   if (varying_param %in% c("cells", "cells_per_target")) {
     varying_values <- param_grid$cells %||% param_grid$cells_per_target
   } else if (varying_param %in% c("reads", "reads_per_cell")) {
-    varying_values <- param_grid$reads_per_cell %||% param_grid$reads
+    varying_values <- param_grid$sequenced_reads_per_cell %||% param_grid$reads
   } else if (varying_param %in% c("TPM_threshold")) {
     varying_values <- param_grid$TPM_threshold
   } else if (varying_param %in% c("fold_change", "minimum_fold_change")) {
@@ -683,10 +683,13 @@ generate_real_analysis <- function(config, workflow_info) {
   tryCatch({
     results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
 
-    # Rename raw_reads_per_cell to reads_per_cell for consistency
-    if ("raw_reads_per_cell" %in% names(results) && !"reads_per_cell" %in% names(results)) {
-      results$reads_per_cell <- results$raw_reads_per_cell
+    # Standardize perturbplan output column names to sequenced_reads_per_cell
+    if ("raw_reads_per_cell" %in% names(results)) {
+      results$sequenced_reads_per_cell <- results$raw_reads_per_cell
       results$raw_reads_per_cell <- NULL
+    } else if ("reads_per_cell" %in% names(results)) {
+      results$sequenced_reads_per_cell <- results$reads_per_cell
+      results$reads_per_cell <- NULL
     }
 
     # Convert perturbplan results to our standardized format
