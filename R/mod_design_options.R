@@ -708,16 +708,18 @@ mod_design_options_server <- function(id){
       param_configs <- get_param_configs(opt_type, target)
       
       # Override with actual user input from Step 3 controls when available
-      # But never allow user input to override "minimizing" or "optimizing" types
+      # But ONLY allow user input to override "varying" types (user has a choice)
+      # Never allow override of "minimizing", "optimizing", or "fixed" types (business logic)
       cells_type <- param_configs$cells_per_target$type
       if (!is.null(input_vals$cells_control) && 
-          !param_configs$cells_per_target$type %in% c("minimizing", "optimizing")) {
+          param_configs$cells_per_target$type == "varying") {
         cells_type <- input_vals$cells_control
       }
       
+      
       reads_type <- param_configs$reads_per_cell$type
       if (!is.null(input_vals$reads_control) && 
-          !param_configs$reads_per_cell$type %in% c("minimizing", "optimizing")) {
+          param_configs$reads_per_cell$type == "varying") {
         reads_type <- input_vals$reads_control
       }
       
