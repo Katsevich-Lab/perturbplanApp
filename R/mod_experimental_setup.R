@@ -103,7 +103,15 @@ mod_experimental_setup_ui <- function(id) {
                       value = 10,
                       min = 0,
                       max = 100,
-                      step = 1)
+                      step = 1),
+          
+          # Mapping efficiency
+          numericInput(ns("mapping_efficiency"), 
+                      "Mapping efficiency:",
+                      value = 0.72,
+                      min = 0.1,
+                      max = 1.0,
+                      step = 0.01)
         ),
         
         # Fixed value inputs for experimental parameters (conditional)
@@ -365,6 +373,7 @@ mod_experimental_setup_server <- function(id, design_config){
         num_targets = input$num_targets %||% 100,
         gRNAs_per_target = input$gRNAs_per_target %||% 4,
         non_targeting_gRNAs = input$non_targeting_gRNAs %||% 10,
+        mapping_efficiency = input$mapping_efficiency %||% 0.72,
         timestamp = Sys.time()
       )
     })

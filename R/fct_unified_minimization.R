@@ -100,7 +100,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,  # Map overall_power to achieved_power
     optimal_minimized_param = optimal_point[[minimization_config$variable]],  # The minimized parameter value
-    mapping_efficiency = optimal_point$mapping_efficiency %||% 0.72  # Use perturbplan value or standard default
+    mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72  # Use user input or standard default
   )
   
   # Add the minimizing parameter to the optimal design

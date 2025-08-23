@@ -199,7 +199,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
           gRNAs_per_target = experimental_opts$gRNAs_per_target %||% 4,
           reads_per_cell = if(has_reads_fixed) fixed_variable$reads_per_cell else NULL,
           cells_per_target = if(has_cells_fixed) fixed_variable$cells_per_target else NULL,
-          mapping_efficiency = 0.72
+          mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72
         )
         
         # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
@@ -270,8 +270,8 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     # Grid parameters
     grid_size = 100,
     
-    # Mapping efficiency (perturbplan default)
-    mapping_efficiency = 0.72,
+    # Mapping efficiency (from user input)
+    mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72,
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
@@ -525,7 +525,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
     total_cost = optimal_row$total_cost %||% NA,
     # Add mapping efficiency used in the analysis
-    mapping_efficiency = 0.72,  # Default value used by perturbplan
+    mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72,
     # Add cost calculation metadata for power+cost workflows
     is_cost_optimized = !is.null(config$design_options$optimization_type) && 
                         config$design_options$optimization_type == "power_cost",
