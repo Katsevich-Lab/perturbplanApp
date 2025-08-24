@@ -293,8 +293,8 @@ mod_design_options_server <- function(id){
     # Generate and display design problem summary (after Step 3)
     observe({
       # Trigger on parameter control changes
-      input$cells_control
-      input$reads_control
+      input$cells_per_target_control
+      input$reads_per_cell_control
       input$TPM_control
       input$fc_control
       
@@ -318,8 +318,8 @@ mod_design_options_server <- function(id){
             power = input$target_power,
             cost_budget = input$cost_budget,
             param_configs = param_configs,
-            cells_control = input$cells_control,
-            reads_control = input$reads_control,
+            cells_per_target_control = input$cells_per_target_control,
+            reads_per_cell_control = input$reads_per_cell_control,
             TPM_control = input$TPM_control,
             fc_control = input$fc_control
           )
@@ -337,7 +337,7 @@ mod_design_options_server <- function(id){
     
     # Helper function to generate design problem summary
     generate_design_summary <- function(opt_type, target, power, cost_budget, param_configs = NULL, 
-                                       cells_control = NULL, reads_control = NULL, 
+                                       cells_per_target_control = NULL, reads_per_cell_control = NULL, 
                                        TPM_control = NULL, fc_control = NULL) {
       # Base text
       if (opt_type == "power_only") {
@@ -369,8 +369,8 @@ mod_design_options_server <- function(id){
         param_desc <- ""
         
         # Use actual control input values if available, otherwise fall back to param_configs
-        actual_cells_type <- cells_control
-        actual_reads_type <- reads_control
+        actual_cells_type <- cells_per_target_control
+        actual_reads_type <- reads_per_cell_control
         
         # If inputs not available, use resolved configs
         if (is.null(actual_cells_type) && !is.null(param_configs)) {
@@ -547,9 +547,9 @@ mod_design_options_server <- function(id){
                          ))
         
         # Update cells/reads dropdowns to remove "Minimizing" option for Power+Cost
-        updateSelectInput(session, "cells_control",
+        updateSelectInput(session, "cells_per_target_control",
                          choices = list("Varying" = "varying", "Fixed" = "fixed"))
-        updateSelectInput(session, "reads_control", 
+        updateSelectInput(session, "reads_per_cell_control", 
                          choices = list("Varying" = "varying", "Fixed" = "fixed"))
       } else {
         # Include cost option
@@ -564,9 +564,9 @@ mod_design_options_server <- function(id){
                          ))
         
         # Restore full choices for cells/reads dropdowns when not Power+Cost
-        updateSelectInput(session, "cells_control",
+        updateSelectInput(session, "cells_per_target_control",
                          choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"))
-        updateSelectInput(session, "reads_control", 
+        updateSelectInput(session, "reads_per_cell_control", 
                          choices = list("Varying" = "varying", "Fixed" = "fixed", "Minimizing" = "minimizing"))
       }
     })
@@ -578,29 +578,29 @@ mod_design_options_server <- function(id){
       if (!is.null(target) && target != "") {
         # Set the selected parameter to "Minimizing"
         if (target == "cells_per_target") {
-          updateSelectInput(session, "cells_control", selected = "minimizing")
-          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "cells_per_target_control", selected = "minimizing")
+          updateSelectInput(session, "reads_per_cell_control", selected = "varying")
           updateSelectInput(session, "TPM_control", selected = "varying")
           updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "reads_per_cell") {
-          updateSelectInput(session, "cells_control", selected = "varying")
-          updateSelectInput(session, "reads_control", selected = "minimizing")
+          updateSelectInput(session, "cells_per_target_control", selected = "varying")
+          updateSelectInput(session, "reads_per_cell_control", selected = "minimizing")
           updateSelectInput(session, "TPM_control", selected = "varying")
           updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "cost") {
           # For cost minimization: cells/reads = varying, TPM/fc = fixed
-          updateSelectInput(session, "cells_control", selected = "varying")
-          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "cells_per_target_control", selected = "varying")
+          updateSelectInput(session, "reads_per_cell_control", selected = "varying")
           updateSelectInput(session, "TPM_control", selected = "fixed")
           updateSelectInput(session, "fc_control", selected = "fixed")
         } else if (target == "TPM_threshold") {
-          updateSelectInput(session, "cells_control", selected = "varying")
-          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "cells_per_target_control", selected = "varying")
+          updateSelectInput(session, "reads_per_cell_control", selected = "varying")
           updateSelectInput(session, "TPM_control", selected = "minimizing")
           updateSelectInput(session, "fc_control", selected = "varying")
         } else if (target == "minimum_fold_change") {
-          updateSelectInput(session, "cells_control", selected = "varying")
-          updateSelectInput(session, "reads_control", selected = "varying")
+          updateSelectInput(session, "cells_per_target_control", selected = "varying")
+          updateSelectInput(session, "reads_per_cell_control", selected = "varying")
           updateSelectInput(session, "TPM_control", selected = "varying")
           updateSelectInput(session, "fc_control", selected = "minimizing")
         }
@@ -620,10 +620,10 @@ mod_design_options_server <- function(id){
           
           # Force all non-minimizing parameters to be "Fixed"
           if (target != "cells_per_target") {
-            updateSelectInput(session, "cells_control", selected = "fixed")
+            updateSelectInput(session, "cells_per_target_control", selected = "fixed")
           }
           if (target != "reads_per_cell") {
-            updateSelectInput(session, "reads_control", selected = "fixed")
+            updateSelectInput(session, "reads_per_cell_control", selected = "fixed")
           }
           if (target != "TPM_threshold") {
             updateSelectInput(session, "TPM_control", selected = "fixed")
@@ -633,14 +633,14 @@ mod_design_options_server <- function(id){
           }
           
           # Disable all dropdowns (non-clickable)
-          shinyjs::disable("cells_control")
-          shinyjs::disable("reads_control")
+          shinyjs::disable("cells_per_target_control")
+          shinyjs::disable("reads_per_cell_control")
           shinyjs::disable("TPM_control")
           shinyjs::disable("fc_control")
         } else if (target == "cost") {
           # Cost minimization = all parameters disabled (cells/reads varying, TPM/fc fixed)
-          shinyjs::disable("cells_control")
-          shinyjs::disable("reads_control")
+          shinyjs::disable("cells_per_target_control")
+          shinyjs::disable("reads_per_cell_control")
           shinyjs::disable("TPM_control")
           shinyjs::disable("fc_control")
         } else if (opt_type == "power_cost" && target == "TPM_threshold") {
@@ -650,8 +650,8 @@ mod_design_options_server <- function(id){
           shinyjs::disable("TPM_control")
           shinyjs::disable("fc_control")
           # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
-          shinyjs::enable("cells_control")
-          shinyjs::enable("reads_control")
+          shinyjs::enable("cells_per_target_control")
+          shinyjs::enable("reads_per_cell_control")
         } else if (opt_type == "power_cost" && target == "minimum_fold_change") {
           # Power+cost + FC minimization: FC=minimizing+disabled, TPM=fixed+disabled, cells/reads=varying/fixed with constraint
           updateSelectInput(session, "fc_control", selected = "minimizing")
@@ -659,12 +659,12 @@ mod_design_options_server <- function(id){
           shinyjs::disable("fc_control")
           shinyjs::disable("TPM_control")
           # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
-          shinyjs::enable("cells_control")
-          shinyjs::enable("reads_control")
+          shinyjs::enable("cells_per_target_control")
+          shinyjs::enable("reads_per_cell_control")
         } else {
           # Re-enable all dropdowns for other scenarios
-          shinyjs::enable("cells_control")
-          shinyjs::enable("reads_control")
+          shinyjs::enable("cells_per_target_control")
+          shinyjs::enable("reads_per_cell_control")
           shinyjs::enable("TPM_control")
           shinyjs::enable("fc_control")
         }
@@ -681,23 +681,23 @@ mod_design_options_server <- function(id){
           opt_type == "power_cost" && target %in% c("TPM_threshold", "minimum_fold_change")) {
         
         # When cells is set to fixed, auto-set reads to varying and disable it
-        if (!is.null(input$cells_control) && input$cells_control == "fixed") {
-          updateSelectInput(session, "reads_control", selected = "varying")
-          shinyjs::disable("reads_control")
+        if (!is.null(input$cells_per_target_control) && input$cells_per_target_control == "fixed") {
+          updateSelectInput(session, "reads_per_cell_control", selected = "varying")
+          shinyjs::disable("reads_per_cell_control")
         }
         
         # When reads is set to fixed, auto-set cells to varying and disable it
-        if (!is.null(input$reads_control) && input$reads_control == "fixed") {
-          updateSelectInput(session, "cells_control", selected = "varying")
-          shinyjs::disable("cells_control")
+        if (!is.null(input$reads_per_cell_control) && input$reads_per_cell_control == "fixed") {
+          updateSelectInput(session, "cells_per_target_control", selected = "varying")
+          shinyjs::disable("cells_per_target_control")
         }
         
         # When cells or reads is set back to varying, enable the other
-        if (!is.null(input$cells_control) && input$cells_control == "varying") {
-          shinyjs::enable("reads_control")
+        if (!is.null(input$cells_per_target_control) && input$cells_per_target_control == "varying") {
+          shinyjs::enable("reads_per_cell_control")
         }
-        if (!is.null(input$reads_control) && input$reads_control == "varying") {
-          shinyjs::enable("cells_control")
+        if (!is.null(input$reads_per_cell_control) && input$reads_per_cell_control == "varying") {
+          shinyjs::enable("cells_per_target_control")
         }
       }
     })
@@ -711,16 +711,16 @@ mod_design_options_server <- function(id){
       # But ONLY allow user input to override "varying" types (user has a choice)
       # Never allow override of "minimizing", "optimizing", or "fixed" types (business logic)
       cells_type <- param_configs$cells_per_target$type
-      if (!is.null(input_vals$cells_control) && 
+      if (!is.null(input_vals$cells_per_target_control) && 
           param_configs$cells_per_target$type == "varying") {
-        cells_type <- input_vals$cells_control
+        cells_type <- input_vals$cells_per_target_control
       }
       
       
       reads_type <- param_configs$mapped_reads_per_cell$type
-      if (!is.null(input_vals$reads_control) && 
+      if (!is.null(input_vals$reads_per_cell_control) && 
           param_configs$mapped_reads_per_cell$type == "varying") {
-        reads_type <- input_vals$reads_control
+        reads_type <- input_vals$reads_per_cell_control
       }
       
       TPM_type <- param_configs$TPM_threshold$type
@@ -761,8 +761,8 @@ mod_design_options_server <- function(id){
     design_config <- reactive({
       
       # Explicitly depend on control inputs to ensure reactivity
-      input$cells_control
-      input$reads_control
+      input$cells_per_target_control
+      input$reads_per_cell_control
       input$TPM_control
       input$fc_control
       
