@@ -378,9 +378,6 @@ create_power_curve_summary <- function(power_data, optimal_design, target_power,
 #' @noRd
 create_cost_analysis_summary <- function(cost_data, optimal_design, target_power, cost_budget) {
   
-  if (!is.null(cost_data)) {
-  }
-  
   # Check if cost_data is NULL or doesn't have total_cost column
   if (is.null(cost_data) || is.null(cost_data$total_cost)) {
     return(list(
@@ -474,9 +471,6 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
 #' @importFrom stats median
 create_equi_power_cost_plot <- function(power_data, optimal_design, target_power, workflow_info, cost_data = NULL) {
   
-  if (!is.null(cost_data)) {
-  }
-  
   # For cost minimization workflow, we use:
   # - power_data: optimal_cost_power_df for equi-power curves  
   # - cost_data: optimal_cost_grid for equi-cost curves
@@ -487,9 +481,6 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
     
     # cost_data contains optimal_cost_grid for equi-cost curves
     if (!is.null(cost_data) && nrow(cost_data) > 0) {
-      if ("sequenced_reads_per_cell" %in% names(cost_data)) {
-      } else {
-      }
       # Use cost_data directly as equi-cost curves
       cost_grid_data <- cost_data
       
@@ -672,95 +663,6 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
   return(p)
 }
 
-#' Generate target equi-power curve
-#'
-#' @description Creates the hyperbolic curve showing all (cells, reads) combinations
-#' that achieve exactly the target power level.
-#'
-#' @param cells_range Numeric vector with min/max cells values
-#' @param reads_range Numeric vector with min/max reads values  
-#' @param target_power Target power level
-#' @return Data frame with cells, reads columns
-#' @noRd
-generate_target_equi_power_curve <- function(cells_range, reads_range, target_power) {
-  
-  # Equi-power curve: Y = c/X (tangent to cost curve)
-  c <- 750000  # Calculated for tangency
-  
-  # Generate cells values
-  cells_seq <- seq(cells_range[1], cells_range[2], length.out = 100)
-  
-  # Calculate reads: Y = c/X
-  reads_seq <- c / cells_seq
-  
-  # Filter to valid range
-  valid_idx <- reads_seq >= reads_range[1] & reads_seq <= reads_range[2]
-  
-  return(data.frame(
-    cells = cells_seq[valid_idx],
-    reads = reads_seq[valid_idx]
-  ))
-}
-
-#' Generate tangent equi-cost line
-#'
-#' @description Creates the linear cost constraint line that is tangent to the
-#' equi-power curve at the optimal point, representing minimum cost.
-#'
-#' @param cells_range Numeric vector with min/max cells values
-#' @param reads_range Numeric vector with min/max reads values
-#' @param optimal_design Optimal design point information
-#' @return Data frame with cells, reads columns
-#' @noRd
-generate_tangent_equi_cost_line <- function(cells_range, reads_range, optimal_design) {
-  
-  # Equi-cost line: Y = C - d*X (tangent to power curve)
-  C <- 3000   # Calculated for tangency
-  d <- 3      # Fixed slope
-  
-  # Generate cells values
-  cells_seq <- seq(cells_range[1], cells_range[2], length.out = 100)
-  
-  # Calculate reads: Y = C - d*X
-  reads_seq <- C - d * cells_seq
-  
-  # Filter to valid range
-  valid_idx <- reads_seq >= reads_range[1] & reads_seq <= reads_range[2] & reads_seq > 0
-  
-  return(data.frame(
-    cells = cells_seq[valid_idx],
-    reads = reads_seq[valid_idx]
-  ))
-}
-
-#' Create standard cost-power tradeoff plot
-#'
-#' @description Creates standard visualization for workflows 8, 11 with cost budgets.
-#'
-#' @param power_data Power analysis data
-#' @param optimal_design Optimal design information
-#' @param target_power Target power threshold
-#' @param cost_budget Cost budget constraint (can be NULL)
-#' @param workflow_info Workflow information
-#' @return ggplot object
-#' @noRd
-#' @importFrom ggplot2 ggplot aes geom_point geom_abline labs theme_minimal theme element_text scale_color_gradient2 scale_size_manual
-#' @importFrom scales percent_format comma
-create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
-  
-  # Simple cost-power tradeoff plot
-  p <- ggplot(power_data, aes(x = .data$cells, y = .data$reads)) +
-    geom_point() +
-    labs(
-      title = workflow_info$title,
-      x = "Cells per Target",
-      y = "Reads per Cell"
-    ) +
-    theme_bw() +
-    theme(plot.title = element_text(hjust = 0.5))
-  
-  return(p)
-}
 
 #' Create cost vs minimizing parameter plot using real perturbplan data
 #'
