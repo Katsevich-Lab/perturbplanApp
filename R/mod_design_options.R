@@ -116,11 +116,11 @@ mod_design_options_ui <- function(id) {
           selectInput(ns("minimization_target"), NULL,
                      choices = list(
                        "Select what to minimize..." = "",
-                       "Cells per target" = "cells",
-                       "Reads per cell" = "reads", 
+                       "Cells per target" = "cells_per_target",
+                       "Reads per cell" = "reads_per_cell", 
                        "Total cost" = "cost",
                        "TPM analysis threshold" = "TPM_threshold",
-                       "Fold change" = "fold_change"
+                       "Fold change" = "minimum_fold_change"
                      ),
                      selected = ""),
           
@@ -348,10 +348,10 @@ mod_design_options_server <- function(id){
           ))
         } else {
           target_name <- switch(target,
-            "cells" = "cells per target",
-            "reads" = "reads per cell", 
+            "cells_per_target" = "cells per target",
+            "reads_per_cell" = "reads per cell", 
             "TPM_threshold" = "TPM threshold",
-            "fold_change" = "fold change"
+            "minimum_fold_change" = "fold change"
           )
           return(paste0(
             "Find the minimum <strong>", target_name, "</strong> for which power is at least <strong>", 
@@ -362,7 +362,7 @@ mod_design_options_server <- function(id){
       } else if (opt_type == "power_cost") {
         target_name <- switch(target,
           "TPM_threshold" = "TPM threshold",
-          "fold_change" = "fold change"
+          "minimum_fold_change" = "fold change"
         )
         
         # Generate specific parameter description based on actual Step 3 input states
@@ -399,7 +399,7 @@ mod_design_options_server <- function(id){
           TPM_fc_desc <- ""
           if (target == "TPM_threshold") {
             TPM_fc_desc <- "keeping fold change fixed"
-          } else if (target == "fold_change") {
+          } else if (target == "minimum_fold_change") {
             TPM_fc_desc <- "keeping TPM threshold fixed"
           }
           
@@ -443,13 +443,13 @@ mod_design_options_server <- function(id){
       # Only show parameters that are not being minimized or optimized automatically
       if (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "cells", "Cells per target:", param_configs$cells_per_target, 1000, 50, 5000, 50)
+          create_param_ui(ns, "cells_per_target", "Cells per target:", param_configs$cells_per_target, 1000, 50, 5000, 50)
         ))
       }
       
       if (!param_configs$mapped_reads_per_cell$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "reads", "Mapped reads per cell:", param_configs$mapped_reads_per_cell, 5000, 500, 20000, 500)
+          create_param_ui(ns, "reads_per_cell", "Mapped reads per cell:", param_configs$mapped_reads_per_cell, 5000, 500, 20000, 500)
         ))
       }
       
@@ -483,12 +483,12 @@ mod_design_options_server <- function(id){
       )
       
       if (opt_type == "power_only") {
-        if (target %in% c("cells", "reads", "TPM_threshold", "fold_change")) {
+        if (target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
           # Power-only + single parameter minimization: minimize target, fix all others
-          configs$cells_per_target$type <- if (target == "cells") "minimizing" else "fixed"
-          configs$mapped_reads_per_cell$type <- if (target == "reads") "minimizing" else "fixed"
+          configs$cells_per_target$type <- if (target == "cells_per_target") "minimizing" else "fixed"
+          configs$mapped_reads_per_cell$type <- if (target == "reads_per_cell") "minimizing" else "fixed"
           configs$TPM_threshold$type <- if (target == "TPM_threshold") "minimizing" else "fixed"
-          configs$minimum_fold_change$type <- if (target == "fold_change") "minimizing" else "fixed"
+          configs$minimum_fold_change$type <- if (target == "minimum_fold_change") "minimizing" else "fixed"
         } else if (target == "cost") {
           # Cost minimization: cells/reads vary simultaneously (omit both), TPM/fc fixed
           configs$cells_per_target$type <- "optimizing"
@@ -503,7 +503,7 @@ mod_design_options_server <- function(id){
           configs$mapped_reads_per_cell$type <- "varying"
           configs$TPM_threshold$type <- "minimizing"
           configs$minimum_fold_change$type <- "fixed"
-        } else if (target == "fold_change") {
+        } else if (target == "minimum_fold_change") {
           # Power+cost + FC minimization: FC minimizing, TPM fixed, cells/reads constrained varying/fixed
           configs$cells_per_target$type <- "varying"
           configs$mapped_reads_per_cell$type <- "varying"
@@ -543,7 +543,7 @@ mod_design_options_server <- function(id){
                          choices = list(
                            "Select what to minimize..." = "",
                            "Minimize TPM analysis threshold" = "TPM_threshold",
-                           "Minimize fold change" = "fold_change"
+                           "Minimize fold change" = "minimum_fold_change"
                          ))
         
         # Update cells/reads dropdowns to remove "Minimizing" option for Power+Cost
@@ -556,11 +556,11 @@ mod_design_options_server <- function(id){
         updateSelectInput(session, "minimization_target",
                          choices = list(
                            "Select what to minimize..." = "",
-                           "Cells per target" = "cells",
-                           "Reads per cell" = "reads", 
+                           "Cells per target" = "cells_per_target",
+                           "Reads per cell" = "reads_per_cell", 
                            "Total cost" = "cost",
                            "TPM analysis threshold" = "TPM_threshold",
-                           "Fold change" = "fold_change"
+                           "Fold change" = "minimum_fold_change"
                          ))
         
         # Restore full choices for cells/reads dropdowns when not Power+Cost
@@ -577,12 +577,12 @@ mod_design_options_server <- function(id){
       
       if (!is.null(target) && target != "") {
         # Set the selected parameter to "Minimizing"
-        if (target == "cells") {
+        if (target == "cells_per_target") {
           updateSelectInput(session, "cells_control", selected = "minimizing")
           updateSelectInput(session, "reads_control", selected = "varying")
           updateSelectInput(session, "TPM_control", selected = "varying")
           updateSelectInput(session, "fc_control", selected = "varying")
-        } else if (target == "reads") {
+        } else if (target == "reads_per_cell") {
           updateSelectInput(session, "cells_control", selected = "varying")
           updateSelectInput(session, "reads_control", selected = "minimizing")
           updateSelectInput(session, "TPM_control", selected = "varying")
@@ -598,7 +598,7 @@ mod_design_options_server <- function(id){
           updateSelectInput(session, "reads_control", selected = "varying")
           updateSelectInput(session, "TPM_control", selected = "minimizing")
           updateSelectInput(session, "fc_control", selected = "varying")
-        } else if (target == "fold_change") {
+        } else if (target == "minimum_fold_change") {
           updateSelectInput(session, "cells_control", selected = "varying")
           updateSelectInput(session, "reads_control", selected = "varying")
           updateSelectInput(session, "TPM_control", selected = "varying")
@@ -616,19 +616,19 @@ mod_design_options_server <- function(id){
       if (!is.null(opt_type) && !is.null(target) && opt_type != "" && target != "") {
         
         # PRD Rule: Power-only optimization + non-cost minimization target
-        if (opt_type == "power_only" && target %in% c("cells", "reads", "TPM_threshold", "fold_change")) {
+        if (opt_type == "power_only" && target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
           
           # Force all non-minimizing parameters to be "Fixed"
-          if (target != "cells") {
+          if (target != "cells_per_target") {
             updateSelectInput(session, "cells_control", selected = "fixed")
           }
-          if (target != "reads") {
+          if (target != "reads_per_cell") {
             updateSelectInput(session, "reads_control", selected = "fixed")
           }
           if (target != "TPM_threshold") {
             updateSelectInput(session, "TPM_control", selected = "fixed")
           }
-          if (target != "fold_change") {
+          if (target != "minimum_fold_change") {
             updateSelectInput(session, "fc_control", selected = "fixed")
           }
           
@@ -652,7 +652,7 @@ mod_design_options_server <- function(id){
           # Cells/reads: varying/fixed but not both fixed (handled by cells/reads constraint logic)
           shinyjs::enable("cells_control")
           shinyjs::enable("reads_control")
-        } else if (opt_type == "power_cost" && target == "fold_change") {
+        } else if (opt_type == "power_cost" && target == "minimum_fold_change") {
           # Power+cost + FC minimization: FC=minimizing+disabled, TPM=fixed+disabled, cells/reads=varying/fixed with constraint
           updateSelectInput(session, "fc_control", selected = "minimizing")
           updateSelectInput(session, "TPM_control", selected = "fixed")
@@ -678,7 +678,7 @@ mod_design_options_server <- function(id){
       
       # Only apply constraint for Power+Cost optimization with TPM or FC minimization
       if (!is.null(opt_type) && !is.null(target) && 
-          opt_type == "power_cost" && target %in% c("TPM_threshold", "fold_change")) {
+          opt_type == "power_cost" && target %in% c("TPM_threshold", "minimum_fold_change")) {
         
         # When cells is set to fixed, auto-set reads to varying and disable it
         if (!is.null(input$cells_control) && input$cells_control == "fixed") {

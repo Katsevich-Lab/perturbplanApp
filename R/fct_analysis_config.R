@@ -59,21 +59,13 @@ detect_workflow_scenario <- function(workflow_config) {
   
   # Power-only workflows (1-5)
   if (opt_type == "power_only") {
-    # Handle both UI names and backend names for compatibility
-    if (target %in% c("cells", "reads", "reads_per_cell", "fold_change", "cells_per_target", "TPM_threshold", "minimum_fold_change")) {
-      # Map UI names to perturbplan-compatible parameter names
-      backend_target <- switch(target,
-        "cells" = "cells_per_target",
-        "reads" = "reads_per_cell",  # Use perturbplan-compatible name
-        "reads_per_cell" = "reads_per_cell",  # Already backend name
-        "fold_change" = "minimum_fold_change",
-        target  # Already backend name
-      )
+    # UI now sends perturbplan names directly - no translation needed
+    if (target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
       return(list(
         workflow_id = paste0("power_single_", target),
         plot_type = "single_parameter_curve",
         category = "power_only_single",
-        minimizing_parameter = backend_target,
+        minimizing_parameter = target,
         title = paste("Minimize", format_parameter_name(target)),
         description = paste("Power-only optimization minimizing", format_parameter_name(target))
       ))
@@ -165,7 +157,7 @@ detect_workflow_scenario <- function(workflow_config) {
     workflow_id = "unknown",
     plot_type = "single_parameter_curve",  # Default to safe plot type
     category = "unknown",
-    minimizing_parameter = "cells",  # Safe default
+    minimizing_parameter = "cells_per_target",  # Safe default
     title = "Unknown Workflow Configuration",
     description = "Unable to detect workflow from configuration"
   ))
