@@ -17,9 +17,8 @@ mod_analysis_engine_ui <- function(id) {
 
 #' Analysis Engine Server Functions
 #'
-#' @description THE critical swap point: generates placeholder data that matches
-#' user configuration and can be easily replaced with real perturbplan calculations.
-#' This is where placeholder vs real analysis mode is determined.
+#' @description Generates real analysis results using perturbplan package functions.
+#' Handles all workflow scenarios with comprehensive error handling and caching.
 #'
 #' @param id Module namespace ID
 #' @param workflow_config Reactive containing complete user configuration
@@ -34,7 +33,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     ns <- session$ns
 
     # ========================================================================
-    # MAIN ANALYSIS REACTIVE - THE SWAP POINT
+    # MAIN ANALYSIS REACTIVE - PERTURBPLAN INTEGRATION
     # ========================================================================
 
     # Track previous configuration to detect sidebar changes
@@ -128,16 +127,10 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       # Detect workflow scenario (with translated parameter names)
       workflow_info <- detect_workflow_scenario(config)
 
-      # THE CRITICAL SWAP POINT: Choose placeholder vs real analysis
+      # PERTURBPLAN ANALYSIS: Call perturbplan package functions
       # Wrap in comprehensive error handling to prevent app crashes
       results <- tryCatch({
-        if (use_placeholder_mode()) {
-          # PLACEHOLDER MODE: Generate realistic fake data
-          generate_placeholder_analysis(config, workflow_info)
-        } else {
-          # REAL MODE: Call perturbplan package functions
-          generate_real_analysis(config, workflow_info)
-        }
+        generate_real_analysis(config, workflow_info)
       }, error = function(e) {
         # Return error object instead of crashing
         list(
@@ -162,7 +155,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
 
 # ============================================================================
-# PLACEHOLDER DATA GENERATION (Current Implementation)
+# [REMOVED] PLACEHOLDER DATA GENERATION - NO LONGER NEEDED
 # ============================================================================
 
 #' Generate placeholder analysis results
@@ -177,7 +170,10 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 #' @return List containing placeholder analysis results
 #' @noRd
 generate_placeholder_analysis <- function(config, workflow_info) {
-
+  # ⚠️ DEPRECATED: This function is no longer used in production
+  # App now uses real perturbplan integration exclusively
+  stop("Placeholder analysis is deprecated. App uses real perturbplan integration.")
+  
   # Extract user parameters for realistic placeholder data
   design_config <- config$design_options
   target_power <- design_config$target_power
@@ -618,14 +614,13 @@ generate_cost_tradeoff_curves <- function(param_grid, workflow_info, target_powe
 
 
 # ============================================================================
-# REAL ANALYSIS PLACEHOLDER (Future Integration Point)
+# PERTURBPLAN INTEGRATION - PRODUCTION ANALYSIS ENGINE
 # ============================================================================
 
 #' Generate real analysis results using perturbplan package
 #'
-#' @description THIS IS THE FUTURE INTEGRATION POINT.
-#' When ready to integrate with perturbplan package, implement here.
-#' The function signature and return structure should match generate_placeholder_analysis().
+#' @description Production analysis engine with full perturbplan integration.
+#' Handles all 11 workflow scenarios with real mathematical optimization.
 #'
 #' @param config User configuration from sidebar modules
 #' @param workflow_info Detected workflow information
