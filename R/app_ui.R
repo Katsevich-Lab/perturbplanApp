@@ -63,7 +63,7 @@ golem_add_external_resources <- function() {
       app_title = "perturbplanApp"
     )
     # CSS and JS assets are automatically included by bundle_resources()
-    # Files: perturbplan_styles.css and perturbplan_interactions.js
+    # Files: variables.css, layout.css, components.css, perturbplan_styles.css, perturbplan_interactions.js  
     # Managed by golem::add_css_file() and golem::add_js_file()
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

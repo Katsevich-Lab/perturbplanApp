@@ -116,10 +116,16 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   # Create optimal design in expected format - standardize column names for UI
   optimal_design <- list(
     cells_per_target = optimal_point$cells_per_target,
-    # Convert perturbplan column names to our standardized names
-    sequenced_reads_per_cell = optimal_point$raw_reads_per_cell %||% 
-                               optimal_point$reads_per_cell %||% 
-                               optimal_point$sequenced_reads_per_cell,
+    # Convert perturbplan column names to our standardized names (safe column access)
+    sequenced_reads_per_cell = if ("raw_reads_per_cell" %in% names(optimal_point)) {
+                                 optimal_point$raw_reads_per_cell
+                               } else if ("reads_per_cell" %in% names(optimal_point)) {
+                                 optimal_point$reads_per_cell
+                               } else if ("sequenced_reads_per_cell" %in% names(optimal_point)) {
+                                 optimal_point$sequenced_reads_per_cell
+                               } else {
+                                 NA  # Fallback if none found
+                               },
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,   # Correct column name
     optimal_minimized_param = optimal_point$total_cost
