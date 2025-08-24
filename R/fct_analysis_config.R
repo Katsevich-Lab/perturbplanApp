@@ -12,28 +12,8 @@
 #' @return Logical indicating if placeholder mode is active
 #' @noRd
 use_placeholder_mode <- function() {
-  # Priority order for configuration:
-  # 1. Environment variable (for deployment)
-  # 2. Golem config file (for different environments)  
-  # 3. Default to TRUE (safe for development)
-  
-  # Check environment variable first
-  env_setting <- Sys.getenv("PERTURBPLAN_USE_PLACEHOLDER", "")
-  if (env_setting != "") {
-    return(tolower(env_setting) %in% c("true", "1", "yes"))
-  }
-  
-  # Check golem config
-  tryCatch({
-    config_setting <- config::get("use_placeholder_data", config = golem::get_golem_name())
-    if (!is.null(config_setting)) {
-      return(isTRUE(config_setting))
-    }
-  }, error = function(e) {
-    # Config not found, continue to default
-  })
-  
-  # Default to real mode (perturbplan integration is complete)
+  # DEPRECATED: Always return FALSE - app uses real perturbplan integration exclusively
+  # This function is kept for compatibility but placeholder mode is disabled
   return(FALSE)
 }
 
@@ -42,11 +22,8 @@ use_placeholder_mode <- function() {
 #' @return Character string describing current mode
 #' @noRd
 get_analysis_mode <- function() {
-  if (use_placeholder_mode()) {
-    return("Placeholder Analysis (Simulated Results)")
-  } else {
-    return("Real Analysis (perturbplan Package)")
-  }
+  # Always return real analysis mode - placeholder mode is deprecated
+  return("Real Analysis (perturbplan Package)")
 }
 
 # ============================================================================
