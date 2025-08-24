@@ -1,19 +1,16 @@
 # ============================================================================
 # ANALYSIS CONFIGURATION AND UTILITIES
 # ============================================================================
-# PLACEHOLDER VS REAL MODE CONTROL
+# ANALYSIS MODE CONTROL
 # ============================================================================
 
-#' Check if app should use placeholder data
+#' Check if app should use real analysis
 #'
-#' @description Controls whether analysis uses placeholder calculations
-#' or real perturbplan package calls. This is THE master switch.
+#' @description Always returns FALSE - app uses real perturbplan integration exclusively.
 #'
-#' @return Logical indicating if placeholder mode is active
+#' @return Logical - always FALSE (real analysis mode)
 #' @noRd
 use_placeholder_mode <- function() {
-  # DEPRECATED: Always return FALSE - app uses real perturbplan integration exclusively
-  # This function is kept for compatibility but placeholder mode is disabled
   return(FALSE)
 }
 
@@ -22,7 +19,6 @@ use_placeholder_mode <- function() {
 #' @return Character string describing current mode
 #' @noRd
 get_analysis_mode <- function() {
-  # Always return real analysis mode - placeholder mode is deprecated
   return("Real Analysis (perturbplan Package)")
 }
 

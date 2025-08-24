@@ -17,9 +17,9 @@ app_server <- function(input, output, session) {
   user_workflow_config <- mod_sidebar_server("sidebar")
   
   # ========================================================================  
-  # MODULE 2: ANALYSIS ENGINE (Placeholder vs Real Swap Point)
+  # MODULE 2: ANALYSIS ENGINE (Perturbplan Integration)
   # ========================================================================
-  # Generate analysis results data (this is where placeholder/real happens)
+  # Generate real analysis results using perturbplan package functions
   analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config)
   
   # ========================================================================

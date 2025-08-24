@@ -94,21 +94,10 @@ extract_pilot_data <- function(experimental_config) {
 #' @noRd
 map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) {
   # DEBUG: Log what the UI is sending
-  # cat("=== DEBUG: UI Configuration Received ===\n")
-  # cat("Minimization target:", config$design_options$minimization_target %||% "NULL", "\n")
-  # cat("Parameter controls:\n")
   if (!is.null(config$design_options$parameter_controls)) {
     for (name in names(config$design_options$parameter_controls)) {
-  # cat(sprintf("  %s: %s\n", name, config$design_options$parameter_controls[[name]]$type))
     }
   }
-  # cat("Fixed values from UI:\n")
-  # cat("  reads_fixed:", config$experimental_setup$reads_fixed %||% "NULL", "\n")
-  # cat("  TPM_threshold_fixed:", config$analysis_choices$TPM_threshold_fixed %||% "NULL", "\n")
-  # cat("  minimum_fold_change_fixed:", config$effect_sizes$minimum_fold_change_fixed %||% "NULL", "\n")
-  # cat("Full analysis_choices keys:", paste(names(config$analysis_choices %||% list()), collapse = ", "), "\n")
-  # cat("Full effect_sizes keys:", paste(names(config$effect_sizes %||% list()), collapse = ", "), "\n")
-  # cat("===========================================\n")
   
   # Use pre-extracted pilot data (passed as parameter to avoid duplication)
 
@@ -185,9 +174,6 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
       cost_per_cell <- design_opts$cost_per_cell %||% 0.086  # Default cost per cell
       cost_per_million_reads <- design_opts$cost_per_million_reads %||% 0.374  # Default cost per million reads
       
-  # cat("=== POWER+COST WORKFLOW DETECTED ===\n")
-  # cat("Cost constraint:", cost_constraint, "\n")
-  # cat("Fixed parameter:", if(has_cells_fixed) "cells_per_target" else "reads_per_cell", "\n")
       
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
       tryCatch({
@@ -207,17 +193,14 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
         # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
         if (has_cells_fixed && !has_reads_fixed) {
           fixed_variable$reads_per_cell <- round(cost_result$reads_per_cell)
-  # cat("Calculated reads_per_cell:", cost_result$reads_per_cell, "(rounded to", fixed_variable$reads_per_cell, ")\n")
         } else if (has_reads_fixed && !has_cells_fixed) {
           fixed_variable$cells_per_target <- round(cost_result$cells_per_target)
-  # cat("Calculated cells_per_target:", cost_result$cells_per_target, "(rounded to", fixed_variable$cells_per_target, ")\n")
         }
         
       }, error = function(e) {
         stop("Cost constraint calculation failed: ", e$message)
       })
       
-  # cat("=====================================\n")
     }
   }
 
@@ -226,17 +209,11 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   control_mapping <- c("complement" = "complement", "nt_cells" = "non_targeting")
 
   # DEBUG: Log what will be passed to perturbplan
-  # cat("=== DEBUG: Parameters for perturbplan ===\n")
-  # cat("minimizing_variable:", minimizing_variable, "\n")
-  # cat("fixed_variable:\n")
   if (length(fixed_variable) > 0) {
     for (name in names(fixed_variable)) {
-  # cat(sprintf("  %s: %s (%s)\n", name, fixed_variable[[name]], typeof(fixed_variable[[name]])))
     }
   } else {
-  # cat("  (empty)\n")
   }
-  # cat("==========================================\n")
 
   # Build parameter list
   params <- list(

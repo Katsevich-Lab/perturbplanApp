@@ -18,9 +18,6 @@ NULL
 #' @noRd
 perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data) {
   
-  # cat("=== COST MINIMIZATION ANALYSIS ===\n")
-  # cat("Workflow:", workflow_info$workflow_id, "\n")
-  # cat("Target power:", config$design_options$target_power, "\n")
   
   # Step 1: Get comprehensive parameters from UI using existing mapping function
   # This includes MOI, num_targets, experimental setup, pilot data, costs, etc.
@@ -53,7 +50,6 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   perturbplan_params$cost_constraint <- NULL  # Key requirement: no cost constraint  
   perturbplan_params$grid_size <- 100         # As specified
   
-  # cat("Calling cost_power_computation with cost_constraint = NULL, grid_size = 100\n")
   
   # Step 2: Call cost_power_computation to get power-cost grid
   cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
@@ -61,7 +57,6 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   # Keep original column names for perturbplan compatibility
   # Do NOT rename columns here - find_optimal_cost_design expects original names
   
-  # cat("cost_power_computation completed. Grid dimensions:", nrow(cost_power_grid), "x", ncol(cost_power_grid), "\n")
   
   # Step 3: Call find_optimal_cost_design with ALL required parameters
   # Use the same minimizing_variable as cost_power_computation (cost)
@@ -80,11 +75,9 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
     cost_grid_size = 200                          # As specified
   )
   
-  # cat("Calling find_optimal_cost_design with cost_grid_size = 200, power_precision = 0.01\n")
   
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
   
-  # cat("find_optimal_cost_design completed\n")
   
   # Step 4: Extract key components and format for CURRENT plotting engine
   # Use the ACTUAL data structure returned by find_optimal_cost_design
@@ -131,9 +124,6 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
     optimal_minimized_param = optimal_point$total_cost
   )
   
-  # cat("Optimal design: cells =", optimal_design$cells_per_target,
-  #     ", reads =", optimal_design$sequenced_reads_per_cell, 
-  #     ", cost =", optimal_design$total_cost, "\n")
   
   # Standardize column names in cost_data for UI compatibility
   cost_data <- optimal_results$optimal_cost_grid
