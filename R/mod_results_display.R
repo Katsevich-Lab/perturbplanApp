@@ -504,8 +504,6 @@ render_minimization_solution_display <- function(optimal, workflow_info) {
   } else {
     # Fallback for any other minimizing parameters
     tagList(
-      create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
-      create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
       create_cost_display(optimal$total_cost),
       create_power_achieved_display(optimal$achieved_power)
     )
