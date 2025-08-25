@@ -806,7 +806,7 @@ render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info 
   } else {
     # For workflows where both cells and reads are varying (like cost minimization),
     # don't show them in Fixed Parameters - they should be in the main Solution section
-    if (!is.null(workflow_info) && workflow_info$category == "power_only_cost") {
+    if (!is.null(workflow_info) && workflow_info$category == "cost_only") {
       return(NULL)
     }
     # For other workflows, exclude TPM_threshold and minimum_fold_change as before
@@ -847,7 +847,7 @@ render_fixed_reads_display <- function(optimal, minimizing_param, workflow_info 
   } else {
     # For workflows where both cells and reads are varying (like cost minimization),
     # don't show them in Fixed Parameters - they should be in the main Solution section
-    if (!is.null(workflow_info) && workflow_info$category == "power_only_cost") {
+    if (!is.null(workflow_info) && workflow_info$category == "cost_only") {
       return(NULL)
     }
     # For other workflows, exclude TPM_threshold and minimum_fold_change as before
