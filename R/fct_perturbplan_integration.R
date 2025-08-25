@@ -206,7 +206,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 
   # Map analysis choices
   side_mapping <- c("left" = "left", "right" = "right", "both" = "both")
-  control_mapping <- c("complement" = "complement", "nt_cells" = "non_targeting")
+  control_mapping <- c("complement" = "complement", "nt_cells" = "nt_cells")
 
   # DEBUG: Log what will be passed to perturbplan
   if (length(fixed_variable) > 0) {
