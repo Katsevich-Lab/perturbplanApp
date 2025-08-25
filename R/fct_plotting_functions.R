@@ -14,7 +14,7 @@
 #' @importFrom scales percent_format comma comma_format dollar_format
 #' @importFrom stats rnorm median power
 #' @importFrom rlang .data
-#' @importFrom dplyr group_by slice_max slice_min ungroup arrange
+#' @importFrom dplyr group_by slice_max slice_min ungroup arrange case_when
 NULL
 
 # ============================================================================
@@ -44,7 +44,15 @@ create_single_parameter_plots <- function(results) {
   plot_title <- workflow_info$title
   
   # Standard single parameter power curve (same for power-only and power+cost workflows)
-  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power)) +
+  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power, 
+                              text = paste0(param_label, ": ", 
+                                          case_when(
+                                            varying_param == "TPM_threshold" ~ scales::comma(.data$parameter_value),
+                                            varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(.data$parameter_value),
+                                            varying_param == "minimum_fold_change" ~ as.character(round(.data$parameter_value, 2)),
+                                            TRUE ~ as.character(.data$parameter_value)
+                                          ),
+                                          "<br>Power: ", scales::percent(.data$power, accuracy = 0.1)))) +
     geom_line() +
     geom_point() +
     geom_hline(yintercept = target_power, linetype = "dashed")
@@ -64,8 +72,8 @@ create_single_parameter_plots <- function(results) {
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5))
   
-  # Convert to interactive plotly with minimal functionality (same for all single parameter workflows)
-  p_interactive <- ggplotly(p, tooltip = c("x", "y")) %>%
+  # Convert to interactive plotly with custom tooltips showing parameter name
+  p_interactive <- ggplotly(p, tooltip = "text") %>%
     layout(
       title = list(
         text = paste0("<b>", workflow_info$title, "</b><br>",
