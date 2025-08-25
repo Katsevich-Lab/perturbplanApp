@@ -493,12 +493,26 @@ render_minimization_solution_display <- function(optimal, workflow_info) {
     tagList(
       create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 1, "18px"),
       create_cost_display(optimal$total_cost),
+      # If both cells and reads are varying (no specific varying_parameter), show them here
+      if (is.null(workflow_info$varying_parameter)) {
+        tagList(
+          create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+          create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px")
+        )
+      },
       create_power_achieved_display(optimal$achieved_power)
     )
   } else if (minimizing_param == "minimum_fold_change") {
     tagList(
       create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 3, "18px"),
       create_cost_display(optimal$total_cost),
+      # If both cells and reads are varying (no specific varying_parameter), show them here
+      if (is.null(workflow_info$varying_parameter)) {
+        tagList(
+          create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+          create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px")
+        )
+      },
       create_power_achieved_display(optimal$achieved_power)
     )
   } else {
@@ -793,16 +807,18 @@ render_fixed_fc_display <- function(optimal, plots, minimizing_param) {
 render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info = NULL) {
   excluded_params <- c("cells_per_target", "cost")
   
-  # For workflows 10-11, only show cells if it's the user-fixed parameter (not the varying/cost-constrained one)
+  # For workflows 10-11, handle different varying scenarios
   if (!is.null(workflow_info) && 
       workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-    # Only show cells if it's NOT the varying parameter (i.e., it's fixed)
-    if (is.null(workflow_info$varying_parameter) || workflow_info$varying_parameter != "cells") {
-      # Cells is fixed, so show it in Fixed Parameters section
-    } else {
-      # Cells is varying (cost-constrained), so don't show it here
+    # If both cells and reads are varying (no specific varying_parameter), don't show in Fixed Parameters
+    if (is.null(workflow_info$varying_parameter)) {
+      return(NULL)  # Both varying - show in main Solution section
+    }
+    # If cells is varying (cost-constrained), don't show it here
+    if (workflow_info$varying_parameter == "cells") {
       return(NULL)
     }
+    # Otherwise, cells is fixed, so show it in Fixed Parameters section
   } else {
     # For workflows where both cells and reads are varying (like cost minimization),
     # don't show them in Fixed Parameters - they should be in the main Solution section
@@ -834,16 +850,18 @@ render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info 
 render_fixed_reads_display <- function(optimal, minimizing_param, workflow_info = NULL) {
   excluded_params <- c("reads_per_cell", "mapped_reads_per_cell", "cost")
   
-  # For workflows 10-11, only show reads if it's the user-fixed parameter (not the varying/cost-constrained one)
+  # For workflows 10-11, handle different varying scenarios
   if (!is.null(workflow_info) && 
       workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-    # Only show reads if it's NOT the varying parameter (i.e., it's fixed)
-    if (is.null(workflow_info$varying_parameter) || workflow_info$varying_parameter != "reads") {
-      # Reads is fixed, so show it in Fixed Parameters section
-    } else {
-      # Reads is varying (cost-constrained), so don't show it here
+    # If both cells and reads are varying (no specific varying_parameter), don't show in Fixed Parameters
+    if (is.null(workflow_info$varying_parameter)) {
+      return(NULL)  # Both varying - show in main Solution section
+    }
+    # If reads is varying (cost-constrained), don't show it here
+    if (workflow_info$varying_parameter == "reads") {
       return(NULL)
     }
+    # Otherwise, reads is fixed, so show it in Fixed Parameters section
   } else {
     # For workflows where both cells and reads are varying (like cost minimization),
     # don't show them in Fixed Parameters - they should be in the main Solution section
