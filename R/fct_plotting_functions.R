@@ -52,7 +52,7 @@ create_single_parameter_plots <- function(results) {
   # Add log scale for TPM_threshold parameter to standardize with other TPM plots
   if (varying_param == "TPM_threshold") {
     p <- p + scale_x_log10(labels = scales::comma_format())
-    param_label <- "TPM Threshold (log scale)"
+    param_label <- "TPM Threshold"
   }
   
   p <- p +
@@ -158,7 +158,7 @@ create_cost_tradeoff_plots <- function(results) {
           
           plotly_obj$x$data[[i]]$hovertemplate <- paste0(
             x_label, ": %{customdata[0]}<br>",
-            "Total Cost: $%{customdata[1]:,}<br>",
+            "Optimal Cost: $%{customdata[1]:,}<br>",
             "<extra></extra>"
           )
           plotly_obj$x$data[[i]]$customdata <- cbind(x_values, y_values)
@@ -518,8 +518,8 @@ create_minimization_plot <- function(analysis_results) {
         } else {
           "Unconstrained Minimization"
         },
-        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Fold Change",
-        y = "Total Cost ($, log scale)"
+        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold" else "Fold Change",
+        y = "Optimal Cost ($)"
       ) +
       theme_bw() +
       theme(plot.title = element_text(hjust = 0.5))
