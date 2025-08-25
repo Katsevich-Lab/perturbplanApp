@@ -554,7 +554,9 @@ render_solution_section <- function(results, plots) {
 render_minimizing_parameter_display <- function(optimal, workflow_info, minimizing_param) {
   # Check if this is workflows 10-11 (unified constrained minimization)
   if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-    return(render_minimization_solution(list(optimal_design = optimal, workflow_info = workflow_info)))
+    # Need to pass the full results object, not just optimal_design and workflow_info
+    # We need to reconstruct the full results object from the parent context
+    return(render_minimization_solution_display(optimal, workflow_info))
   }
   
   # Handle different minimizing parameters
@@ -571,6 +573,40 @@ render_minimizing_parameter_display <- function(optimal, workflow_info, minimizi
   }
   
   return(NULL)
+}
+
+#' Render minimization solution display (for unified workflows 10-11)
+#'
+#' @param optimal Optimal design results
+#' @param workflow_info Workflow information
+#' @return Shiny UI tagList
+#' @noRd
+render_minimization_solution_display <- function(optimal, workflow_info) {
+  minimizing_param <- workflow_info$minimizing_parameter
+  
+  # For unified workflows, show the minimizing parameter and supporting parameters
+  if (minimizing_param == "TPM_threshold") {
+    tagList(
+      create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 1, "18px"),
+      create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+      create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
+      create_cost_display(optimal$total_cost)
+    )
+  } else if (minimizing_param == "minimum_fold_change") {
+    tagList(
+      create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 2, "18px"),
+      create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+      create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
+      create_cost_display(optimal$total_cost)
+    )
+  } else {
+    # Fallback for any other minimizing parameters
+    tagList(
+      create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+      create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
+      create_cost_display(optimal$total_cost)
+    )
+  }
 }
 
 #' Render TPM minimization display
