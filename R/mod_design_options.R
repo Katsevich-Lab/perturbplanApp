@@ -175,9 +175,7 @@ mod_design_options_ui <- function(id) {
         tags$div(
           id = ns("step3"),
           style = "display: none;",
-          tags$h5("Step 3: Varying parameters", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
-          
-          # Dynamic parameter controls based on workflow
+          # Dynamic parameter controls with conditional title
           uiOutput(ns("dynamic_params"))
         ),
         
@@ -470,7 +468,11 @@ mod_design_options_server <- function(id){
         return(NULL)
       }
       
-      do.call(tagList, param_uis)
+      # Show title only when there are parameters to display
+      tagList(
+        tags$h5("Step 3: Varying parameters", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+        do.call(tagList, param_uis)
+      )
     })
     
     # Helper function to get parameter configurations for each workflow
