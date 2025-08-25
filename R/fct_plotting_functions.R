@@ -477,10 +477,10 @@ create_minimization_plot <- function(analysis_results) {
       # Add black points
       geom_point(color = "black", size = 2) +
       
-      # Use log scales for consistency with other plots
-      scale_x_log10(
-        labels = scales::comma_format()
-      ) +
+      # Use conditional X scale: log for TPM, linear for fold change
+      {if (minimizing_variable == "TPM_threshold") {
+        scale_x_log10(labels = scales::comma_format())
+      }} +
       scale_y_log10(
         labels = scales::dollar_format()
       ) +
@@ -512,7 +512,7 @@ create_minimization_plot <- function(analysis_results) {
         } else {
           "Unconstrained Minimization"
         },
-        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Fold Change (log scale)",
+        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Fold Change",
         y = "Total Cost ($, log scale)"
       ) +
       theme_minimal() +
