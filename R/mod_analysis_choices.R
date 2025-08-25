@@ -60,7 +60,7 @@ mod_analysis_choices_ui <- function(id) {
                     choices = c("Complement cells" = "complement",
                                "Non-targeting cells" = "nt_cells"),
                     selected = "complement"),
-        numericInput(ns("fdr_target"), "FDR target level:", 0.05, 0.001, 0.1, 0.001),
+        numericInput(ns("fdr_target"), "FDR target level:", 0.1, 0.001, 0.5, 0.001),
 
         # Fixed value input for TPM analysis parameter (conditional)
         # CONSISTENT VARIABLE USAGE: TPM_threshold_fixed throughout

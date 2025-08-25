@@ -233,7 +233,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     # Analysis parameters
     control_group = control_mapping[analysis_opts$control_group %||% "complement"],
     side = side_mapping[analysis_opts$side %||% "left"],
-    multiple_testing_alpha = analysis_opts$fdr_target %||% 0.05,
+    multiple_testing_alpha = analysis_opts$fdr_target %||% 0.1,
 
     # Power and cost parameters
     power_target = design_opts$target_power %||% 0.8,
