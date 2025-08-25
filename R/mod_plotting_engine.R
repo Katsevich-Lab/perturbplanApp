@@ -664,121 +664,112 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
 }
 
 
-#' Create cost vs minimizing parameter plot using real perturbplan data
+#' Create minimization plot for workflows 10-11
 #'
-#' @description Plots minimum cost vs minimizing variable (TPM or FC) from optimal_cost_power_df.
-#' Shows decreasing cost curve with optimal solution under cost constraint.
-#' Used for power+cost TPM/FC minimization workflows (10-11).
+#' @description Creates cost vs minimizing parameter plots for TPM/FC minimization workflows.
+#' Self-contained plotting function that works directly with analysis results.
 #'
-#' @param power_data optimal_cost_power_df from perturbplan results
-#' @param optimal_design Optimal design information
-#' @param target_power Target power threshold
-#' @param cost_budget Cost budget constraint from UI
-#' @param workflow_info Workflow information
+#' @param analysis_results Results from constrained minimization analysis
 #' @return ggplot object with cost vs parameter visualization
 #' @noRd
 #' 
-#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline labs theme_bw theme element_text scale_y_continuous
-#' @importFrom dplyr distinct arrange group_by slice_min ungroup
-#' @importFrom scales comma comma_format
+#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline labs theme_minimal theme element_text scale_x_log10 scale_y_log10
+#' @importFrom dplyr group_by slice_min ungroup arrange
+#' @importFrom scales comma_format dollar_format
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
-create_cost_vs_minimizing_param_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
+create_minimization_plot <- function(analysis_results) {
   
-  # Determine minimizing parameter (TPM or FC)
-  min_param <- workflow_info$minimizing_parameter
-  
-  # Set parameter labels and column names
-  if (min_param == "TPM_threshold") {
-    param_label <- "TPM Threshold"
-    param_col <- "TPM_threshold"
-  } else if (min_param == "minimum_fold_change") {
-    param_label <- "Fold Change"
-    param_col <- "minimum_fold_change"
-  } else {
-    stop("Unknown minimizing parameter: ", min_param)
+  # Validate input
+  if (is.null(analysis_results) || is.null(analysis_results$power_data)) {
+    stop("Invalid analysis_results: missing power_data")
   }
   
-  # Extract cost and minimizing variable, find minimum cost for each parameter value using dplyr
-  # This reduces from ~451 points to ~20 points (one per parameter value)
-  plot_data <- power_data %>%
-    dplyr::group_by(.data[[param_col]]) %>%
+  # Extract data from analysis results
+  power_data <- analysis_results$power_data
+  minimizing_variable <- analysis_results$metadata$minimizing_variable
+  cost_constraint <- analysis_results$metadata$cost_constraint
+  
+  # Group by minimizing variable and get minimum cost for each level
+  grouped_data <- power_data %>%
+    dplyr::group_by(.data[[minimizing_variable]]) %>%
     dplyr::slice_min(total_cost, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
-    dplyr::arrange(.data[[param_col]]) %>%
-    as.data.frame()  # Convert back to data.frame for consistent access
+    dplyr::arrange(.data[[minimizing_variable]]) %>%
+    as.data.frame()
   
-  # Find optimal solution (minimum parameter value under cost constraint)
-  # AND extract corresponding cells/reads from original power_data
-  if (!is.null(cost_budget) && !is.na(cost_budget)) {
-    # Step 1: Find all feasible solutions (under cost budget) from original data
-    feasible_rows <- power_data[power_data$total_cost <= cost_budget, ]
-    if (nrow(feasible_rows) > 0) {
-      # Step 2: Find minimum parameter value among feasible solutions
-      optimal_param_value <- min(feasible_rows[[param_col]])
-      
-      # Step 3: Among ALL rows with this parameter value, find minimum cost
-      param_rows <- power_data[power_data[[param_col]] == optimal_param_value, ]
-      optimal_idx <- which.min(param_rows$total_cost)
-      optimal_row <- param_rows[optimal_idx, ]
-      
-      optimal_cost <- optimal_row$total_cost
-      optimal_cells <- optimal_row$cells_per_target
-      optimal_reads <- optimal_row$sequenced_reads_per_cell
-    } else {
-      # No feasible solutions under budget - use global minimum cost point
-      optimal_idx <- which.min(power_data$total_cost)
-      optimal_row <- power_data[optimal_idx, ]
-      optimal_param_value <- optimal_row[[param_col]]
-      optimal_cost <- optimal_row$total_cost
-      optimal_cells <- optimal_row$cells_per_target
-      optimal_reads <- optimal_row$sequenced_reads_per_cell
-    }
-  } else {
-    # No cost constraint - use global minimum cost point
-    optimal_idx <- which.min(power_data$total_cost)
-    optimal_row <- power_data[optimal_idx, ]
-    optimal_param_value <- optimal_row[[param_col]]
-    optimal_cost <- optimal_row$total_cost
-    optimal_cells <- optimal_row$cells_per_target
-    optimal_reads <- optimal_row$sequenced_reads_per_cell
+  # Validate data
+  if (is.null(grouped_data) || nrow(grouped_data) == 0) {
+    stop("No grouped data available for plotting")
   }
   
-  # Create ggplot with real data: cost vs minimizing parameter 
-  p <- ggplot(plot_data, aes(x = .data[[param_col]], y = .data$total_cost)) +
-    geom_point(color = "blue", size = 2, alpha = 0.7) +  # Scatter points
-    geom_line(color = "blue", size = 1) +  # Connect points with line
-    # Highlight optimal solution
-    geom_point(aes(x = optimal_param_value, y = optimal_cost), 
-               color = "red", size = 4) +
-    # Add cost budget constraint line if available
-    {if (!is.null(cost_budget) && !is.na(cost_budget)) {
-      geom_hline(yintercept = cost_budget, linetype = "dashed", 
-                 color = "orange", size = 1, alpha = 0.8)
-    }} +
-    # Add vertical line at optimal parameter
-    geom_vline(xintercept = optimal_param_value, linetype = "dotted", 
-               color = "red", size = 1, alpha = 0.8) +
-    labs(
-      title = paste("Cost vs", param_label, "Optimization"),
-      x = param_label,
-      y = "Total Cost ($)",
-      subtitle = if (!is.null(cost_budget) && !is.na(cost_budget)) {
-        paste("Budget:", scales::comma(cost_budget), "| Optimal:", param_label, "=", 
-              round(optimal_param_value, 3), "| Cost:", scales::comma(round(optimal_cost)))
-      } else {
-        paste("Optimal:", param_label, "=", round(optimal_param_value, 3), 
-              "| Cost:", scales::comma(round(optimal_cost)))
-      }
-    ) +
-    theme_bw() +
-    theme(
-      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-      plot.subtitle = element_text(hjust = 0.5, size = 12),
-      axis.title = element_text(size = 12),
-      axis.text = element_text(size = 10)
-    ) +
-    scale_y_continuous(labels = scales::comma_format())
+  # Find optimal point (minimum parameter value under cost constraint)
+  if (!is.null(cost_constraint) && !is.na(cost_constraint)) {
+    feasible_data <- grouped_data[grouped_data$total_cost <= cost_constraint, ]
+    if (nrow(feasible_data) > 0) {
+      optimal_point <- feasible_data[which.min(feasible_data[[minimizing_variable]]), ]
+    } else {
+      optimal_point <- grouped_data[which.min(grouped_data$total_cost), ]
+    }
+  } else {
+    optimal_point <- grouped_data[which.min(grouped_data$total_cost), ]
+  }
+  
+  # Create base plot with log scales
+  tryCatch({
+    p <- ggplot(grouped_data, aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]])) +
+      # Add line connecting the points
+      geom_line(color = "black", size = 1) +
+      # Add black points
+      geom_point(color = "black", size = 2) +
+      
+      # Use log scales for consistency with other plots
+      scale_x_log10(
+        labels = scales::comma_format()
+      ) +
+      scale_y_log10(
+        labels = scales::dollar_format()
+      ) +
+      
+      # Add cost constraint line (horizontal dashed line)
+      {if (!is.null(cost_constraint) && !is.na(cost_constraint)) {
+        geom_hline(
+          yintercept = cost_constraint, 
+          linetype = "dashed", 
+          color = "orange", 
+          size = 1.2
+        )
+      }} +
+      
+      # Add optimal point annotation (red dot)
+      geom_point(
+        data = optimal_point,
+        aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]]),
+        color = "red", 
+        size = 4, 
+        shape = 19
+      ) +
+      
+      # Styling
+      labs(
+        title = if (minimizing_variable == "TPM_threshold") "TPM Threshold Minimization" else "Fold Change Minimization",
+        subtitle = if (!is.null(cost_constraint) && !is.na(cost_constraint)) {
+          paste("Cost Constraint: $", scales::comma(cost_constraint))
+        } else {
+          "Unconstrained Minimization"
+        },
+        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Minimum Fold Change (log scale)",
+        y = "Total Cost ($, log scale)"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold", hjust = 0.5),  # Center the title
+        plot.subtitle = element_text(size = 12, color = "gray60", hjust = 0.5)  # Center the subtitle
+      )
     
+  }, error = function(e) {
+    stop("Plot creation failed: ", e$message)
+  })
+  
   return(p)
 }
