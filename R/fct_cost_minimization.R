@@ -48,7 +48,7 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   
   # Key parameters for cost minimization
   perturbplan_params$cost_constraint <- NULL  # Key requirement: no cost constraint  
-  perturbplan_params$grid_size <- 100         # As specified
+  perturbplan_params$grid_size <- 50          # Reduced for better performance
   
   
   # Step 2: Call cost_power_computation to get power-cost grid
@@ -72,7 +72,7 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
     gRNAs_per_target = perturbplan_params$gRNAs_per_target, # From UI experimental setup
     cost_per_captured_cell = perturbplan_params$cost_per_captured_cell, # From UI cost info
     cost_per_million_reads = perturbplan_params$cost_per_million_reads, # From UI cost info
-    cost_grid_size = 200                          # As specified
+    cost_grid_size = 50                           # Reduced for better performance
   )
   
   
