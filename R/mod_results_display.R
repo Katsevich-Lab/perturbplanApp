@@ -444,7 +444,7 @@ render_solution_section <- function(results, plots) {
     ),
     
     # FIXED PARAMETERS SECTION
-    render_fixed_parameters_section(optimal, plots, minimizing_param)
+    render_fixed_parameters_section(optimal, plots, minimizing_param, workflow_info)
   )
 }
 
@@ -710,7 +710,7 @@ create_power_achieved_display <- function(power_value) {
 #' @param minimizing_param Minimizing parameter name
 #' @return Shiny UI tags$div
 #' @noRd
-render_fixed_parameters_section <- function(optimal, plots, minimizing_param) {
+render_fixed_parameters_section <- function(optimal, plots, minimizing_param, workflow_info = NULL) {
   tags$div(
     style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; margin-bottom: 15px;",
     
@@ -723,8 +723,8 @@ render_fixed_parameters_section <- function(optimal, plots, minimizing_param) {
     tagList(
       render_fixed_tpm_display(optimal, plots, minimizing_param),
       render_fixed_fc_display(optimal, plots, minimizing_param),
-      render_fixed_cells_display(optimal, minimizing_param),
-      render_fixed_reads_display(optimal, minimizing_param),
+      render_fixed_cells_display(optimal, minimizing_param, workflow_info),
+      render_fixed_reads_display(optimal, minimizing_param, workflow_info),
       render_mapping_efficiency_display(optimal)
     )
   )
@@ -796,8 +796,20 @@ render_fixed_fc_display <- function(optimal, plots, minimizing_param) {
 #' @param minimizing_param Minimizing parameter name
 #' @return Shiny UI tags$div or NULL
 #' @noRd
-render_fixed_cells_display <- function(optimal, minimizing_param) {
-  excluded_params <- c("cells_per_target", "cost", "TPM_threshold", "minimum_fold_change")
+render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info = NULL) {
+  excluded_params <- c("cells_per_target", "cost")
+  
+  # For workflows 10-11, only show cells if it's the user-fixed parameter (not the varying/cost-constrained one)
+  if (!is.null(workflow_info) && 
+      workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    # Don't show cells if it's the varying parameter (cost-constrained)
+    if (!is.null(workflow_info$varying_parameter) && workflow_info$varying_parameter == "cells") {
+      return(NULL)
+    }
+  } else {
+    # For other workflows, exclude TPM_threshold and minimum_fold_change as before
+    excluded_params <- c(excluded_params, "TPM_threshold", "minimum_fold_change")
+  }
   
   if (minimizing_param %in% excluded_params || 
       is.null(optimal$cells_per_target) || is.na(optimal$cells_per_target)) {
@@ -817,8 +829,20 @@ render_fixed_cells_display <- function(optimal, minimizing_param) {
 #' @param minimizing_param Minimizing parameter name
 #' @return Shiny UI tags$div or NULL
 #' @noRd
-render_fixed_reads_display <- function(optimal, minimizing_param) {
-  excluded_params <- c("reads_per_cell", "mapped_reads_per_cell", "cost", "TPM_threshold", "minimum_fold_change")
+render_fixed_reads_display <- function(optimal, minimizing_param, workflow_info = NULL) {
+  excluded_params <- c("reads_per_cell", "mapped_reads_per_cell", "cost")
+  
+  # For workflows 10-11, only show reads if it's the user-fixed parameter (not the varying/cost-constrained one)
+  if (!is.null(workflow_info) && 
+      workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    # Don't show reads if it's the varying parameter (cost-constrained)
+    if (!is.null(workflow_info$varying_parameter) && workflow_info$varying_parameter == "reads") {
+      return(NULL)
+    }
+  } else {
+    # For other workflows, exclude TPM_threshold and minimum_fold_change as before
+    excluded_params <- c(excluded_params, "TPM_threshold", "minimum_fold_change")
+  }
   
   if (minimizing_param %in% excluded_params || 
       is.null(optimal$sequenced_reads_per_cell) || is.na(optimal$sequenced_reads_per_cell)) {
