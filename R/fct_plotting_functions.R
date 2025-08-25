@@ -451,16 +451,28 @@ create_minimization_plot <- function(analysis_results) {
     stop("No grouped data available for plotting")
   }
   
-  # Find optimal point (minimum parameter value under cost constraint)
+  # Find optimal point based on minimization type
   if (!is.null(cost_constraint) && !is.na(cost_constraint)) {
     feasible_data <- grouped_data[grouped_data$total_cost <= cost_constraint, ]
     if (nrow(feasible_data) > 0) {
-      optimal_point <- feasible_data[which.min(feasible_data[[minimizing_variable]]), ]
+      if (minimizing_variable == "minimum_fold_change") {
+        # For fold change: find point closest to 1 (optimal fold change)
+        optimal_point <- feasible_data[which.min(abs(feasible_data[[minimizing_variable]] - 1)), ]
+      } else {
+        # For other variables (like TPM): find minimum value
+        optimal_point <- feasible_data[which.min(feasible_data[[minimizing_variable]]), ]
+      }
     } else {
       optimal_point <- grouped_data[which.min(grouped_data$total_cost), ]
     }
   } else {
-    optimal_point <- grouped_data[which.min(grouped_data$total_cost), ]
+    if (minimizing_variable == "minimum_fold_change") {
+      # For fold change: find point closest to 1 (optimal fold change)
+      optimal_point <- grouped_data[which.min(abs(grouped_data[[minimizing_variable]] - 1)), ]
+    } else {
+      # For other variables: find minimum cost point
+      optimal_point <- grouped_data[which.min(grouped_data$total_cost), ]
+    }
   }
   
   # Create base plot with log scales
