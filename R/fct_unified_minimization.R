@@ -33,7 +33,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   # Step 4: Configure for minimization workflow
   perturbplan_params$minimizing_variable <- minimization_config$variable
   perturbplan_params$cost_constraint <- as.numeric(cost_constraint)
-  perturbplan_params$grid_size <- 50  # Higher accuracy for TPM/FC minimization
+  perturbplan_params$grid_size <- 30  # Balance between accuracy and performance for TPM/FC minimization
   
   # Step 5: Set fixed variable based on minimization type
   if (minimization_config$variable == "TPM_threshold") {
@@ -71,7 +71,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     gRNAs_per_target = perturbplan_params$gRNAs_per_target,
     cost_per_captured_cell = perturbplan_params$cost_per_captured_cell,
     cost_per_million_reads = perturbplan_params$cost_per_million_reads,
-    cost_grid_size = 50
+    cost_grid_size = 30
   )
   
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
