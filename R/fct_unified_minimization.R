@@ -71,7 +71,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     gRNAs_per_target = perturbplan_params$gRNAs_per_target,
     cost_per_captured_cell = perturbplan_params$cost_per_captured_cell,
     cost_per_million_reads = perturbplan_params$cost_per_million_reads,
-    cost_grid_size = 30
+    cost_grid_size = 200
   )
   
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
