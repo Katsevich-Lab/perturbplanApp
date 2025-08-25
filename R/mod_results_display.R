@@ -17,9 +17,9 @@ mod_results_display_ui <- function(id) {
   tagList(
     # Main results container
     fluidRow(
-      # Main plot column
+      # Main plot column (made wider for better visualization)
       column(
-        width = 8,
+        width = 9,
         box(
           title = "Analysis Results",
           status = "primary",
@@ -59,9 +59,9 @@ mod_results_display_ui <- function(id) {
         )
       ),
       
-      # Summary and controls column
+      # Summary and controls column (narrower to give more space to plot)
       column(
-        width = 4,
+        width = 3,
         # Analysis summary box
         box(
           title = "Solution",
