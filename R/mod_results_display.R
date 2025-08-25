@@ -807,9 +807,9 @@ render_fixed_fc_display <- function(optimal, plots, minimizing_param) {
 render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info = NULL) {
   excluded_params <- c("cells_per_target", "cost")
   
-  # For workflows 10-11, handle different varying scenarios
+  # For workflows 10-11 and constrained minimization, handle different varying scenarios
   if (!is.null(workflow_info) && 
-      workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+      workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads", "power_cost_TPM_cells", "power_cost_TPM_reads", "power_cost_fc_cells", "power_cost_fc_reads")) {
     # If both cells and reads are varying (no specific varying_parameter), don't show in Fixed Parameters
     if (is.null(workflow_info$varying_parameter)) {
       return(NULL)  # Both varying - show in main Solution section
@@ -850,9 +850,9 @@ render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info 
 render_fixed_reads_display <- function(optimal, minimizing_param, workflow_info = NULL) {
   excluded_params <- c("reads_per_cell", "mapped_reads_per_cell", "cost")
   
-  # For workflows 10-11, handle different varying scenarios
+  # For workflows 10-11 and constrained minimization, handle different varying scenarios
   if (!is.null(workflow_info) && 
-      workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+      workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads", "power_cost_TPM_cells", "power_cost_TPM_reads", "power_cost_fc_cells", "power_cost_fc_reads")) {
     # If both cells and reads are varying (no specific varying_parameter), don't show in Fixed Parameters
     if (is.null(workflow_info$varying_parameter)) {
       return(NULL)  # Both varying - show in main Solution section
