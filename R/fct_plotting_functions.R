@@ -429,16 +429,17 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
 create_minimization_plot <- function(analysis_results) {
   
   # Validate input
-  if (is.null(analysis_results) || is.null(analysis_results$power_data)) {
-    stop("Invalid analysis_results: missing power_data")
+  if (is.null(analysis_results) || is.null(analysis_results$power_data) || is.null(analysis_results$optimal_design)) {
+    stop("Invalid analysis_results: missing required data (power_data, optimal_design)")
   }
   
   # Extract data from analysis results
   power_data <- analysis_results$power_data
   minimizing_variable <- analysis_results$metadata$minimizing_variable
   cost_constraint <- analysis_results$metadata$cost_constraint
+  optimal_design <- analysis_results$optimal_design
   
-  # Group by minimizing variable and get minimum cost for each level
+  # Group by minimizing variable and get minimum cost for each level (for plotting the curve)
   grouped_data <- power_data %>%
     dplyr::group_by(.data[[minimizing_variable]]) %>%
     dplyr::slice_min(total_cost, n = 1, with_ties = FALSE) %>%
@@ -451,29 +452,14 @@ create_minimization_plot <- function(analysis_results) {
     stop("No grouped data available for plotting")
   }
   
-  # Find optimal point based on minimization type
-  if (!is.null(cost_constraint) && !is.na(cost_constraint)) {
-    feasible_data <- grouped_data[grouped_data$total_cost <= cost_constraint, ]
-    if (nrow(feasible_data) > 0) {
-      if (minimizing_variable == "minimum_fold_change") {
-        # For fold change: find point closest to 1 (optimal fold change)
-        optimal_point <- feasible_data[which.min(abs(feasible_data[[minimizing_variable]] - 1)), ]
-      } else {
-        # For other variables (like TPM): find minimum value
-        optimal_point <- feasible_data[which.min(feasible_data[[minimizing_variable]]), ]
-      }
-    } else {
-      optimal_point <- grouped_data[which.min(grouped_data$total_cost), ]
-    }
-  } else {
-    if (minimizing_variable == "minimum_fold_change") {
-      # For fold change: find point closest to 1 (optimal fold change)
-      optimal_point <- grouped_data[which.min(abs(grouped_data[[minimizing_variable]] - 1)), ]
-    } else {
-      # For other variables: find minimum cost point
-      optimal_point <- grouped_data[which.min(grouped_data$total_cost), ]
-    }
-  }
+  # Use the authoritative optimal point from analysis engine (single source of truth)
+  # This eliminates duplicate calculation and ensures consistency with solution display
+  optimal_point <- data.frame(
+    total_cost = optimal_design$total_cost,
+    stringsAsFactors = FALSE
+  )
+  # Add the minimizing variable value 
+  optimal_point[[minimizing_variable]] <- optimal_design[[minimizing_variable]]
   
   # Create base plot with log scales
   tryCatch({
