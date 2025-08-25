@@ -43,16 +43,19 @@ create_single_parameter_plots <- function(results) {
   # Use clean titles from workflow_info (no optimal parameter info in titles)
   plot_title <- workflow_info$title
   
+  # Create tooltip text before plotting
+  formatted_values <- case_when(
+    varying_param == "TPM_threshold" ~ scales::comma(power_data$parameter_value),
+    varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(power_data$parameter_value),
+    varying_param == "minimum_fold_change" ~ as.character(round(power_data$parameter_value, 2)),
+    TRUE ~ as.character(power_data$parameter_value)
+  )
+  
+  power_data$tooltip_text <- paste0(param_label, ": ", formatted_values,
+                                   "<br>Power: ", scales::percent(power_data$power, accuracy = 0.1))
+  
   # Standard single parameter power curve (same for power-only and power+cost workflows)
-  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power, 
-                              text = paste0(param_label, ": ", 
-                                          case_when(
-                                            varying_param == "TPM_threshold" ~ scales::comma(.data$parameter_value),
-                                            varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(.data$parameter_value),
-                                            varying_param == "minimum_fold_change" ~ as.character(round(.data$parameter_value, 2)),
-                                            TRUE ~ as.character(.data$parameter_value)
-                                          ),
-                                          "<br>Power: ", scales::percent(.data$power, accuracy = 0.1)))) +
+  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power, text = .data$tooltip_text)) +
     geom_line() +
     geom_point() +
     geom_hline(yintercept = target_power, linetype = "dashed")
