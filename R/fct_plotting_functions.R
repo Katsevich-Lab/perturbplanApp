@@ -145,8 +145,13 @@ create_cost_tradeoff_plots <- function(results) {
         
         if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
           # For minimization plots: show minimizing variable and cost
-          x_values <- round(10^trace_data$x, if(workflow_info$workflow_id == "power_cost_TPM_cells_reads") 1 else 3)
-          y_values <- round(10^trace_data$y)
+          # TPM uses log scale (need 10^x), FC uses linear scale (direct x)
+          if (workflow_info$workflow_id == "power_cost_TPM_cells_reads") {
+            x_values <- round(10^trace_data$x, 1)  # TPM: convert from log scale
+          } else {
+            x_values <- round(trace_data$x, 3)     # FC: already linear scale
+          }
+          y_values <- round(10^trace_data$y)       # Cost is always log scale
           
           x_label <- if (workflow_info$workflow_id == "power_cost_TPM_cells_reads") "TPM Threshold" else "Fold Change"
           
