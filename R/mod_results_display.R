@@ -522,8 +522,6 @@ render_tpm_minimization_display <- function(optimal) {
   
   tagList(
     create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 1, "18px"),
-    create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
-    create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
     create_cost_display(optimal$total_cost)
   )
 }
@@ -539,9 +537,7 @@ render_fc_minimization_display <- function(optimal) {
   }
   
   tagList(
-    create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 2, "18px"),
-    create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
-    create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
+    create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 3, "18px"),
     create_cost_display(optimal$total_cost)
   )
 }
