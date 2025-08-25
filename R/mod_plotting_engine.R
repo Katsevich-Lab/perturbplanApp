@@ -202,18 +202,19 @@ create_cost_tradeoff_plots <- function(results) {
   workflow_info <- results$workflow_info
   
   
-  # Determine plot type based on workflow category
-  is_power_only_cost <- (workflow_info$workflow_id == "power_cost_minimization")
-  
+  # Route to appropriate plot creation based on workflow type
   if (workflow_info$workflow_id == "power_cost_minimization") {
     # WORKFLOW 5: Equi-power/equi-cost curves for cost minimization
     p <- create_equi_power_cost_plot(power_data, optimal_design, target_power, workflow_info, cost_data)
   } else if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
     # WORKFLOWS 10, 11: Unified constrained minimization plots
     p <- create_minimization_plot(results)
-  } else {
-    # OTHER WORKFLOWS: Standard cost-power tradeoff visualization  
+  } else if (workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_TPM_reads", "power_cost_fc_cells", "power_cost_fc_reads")) {
+    # WORKFLOWS 6-7, 9-10: Power+cost single parameter workflows with cells/reads varying
     p <- create_standard_cost_tradeoff_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
+  } else {
+    # FALLBACK: This should not happen with proper workflow routing, but provide safe fallback
+    stop("Unknown cost tradeoff workflow: ", workflow_info$workflow_id, ". This workflow should use single_parameter_plots instead.")
   }
   
   # Convert to interactive plotly with error handling
