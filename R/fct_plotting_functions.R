@@ -520,11 +520,8 @@ create_minimization_plot <- function(analysis_results) {
         x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Fold Change",
         y = "Total Cost ($, log scale)"
       ) +
-      theme_minimal() +
-      theme(
-        plot.title = element_text(size = 14, face = "bold", hjust = 0.5),  # Center the title
-        plot.subtitle = element_text(size = 12, color = "gray60", hjust = 0.5)  # Center the subtitle
-      )
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
     
   }, error = function(e) {
     stop("Plot creation failed: ", e$message)
