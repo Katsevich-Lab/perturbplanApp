@@ -30,6 +30,9 @@ mod_sidebar_ui <- function(id) {
       # Effect sizes
       mod_effect_sizes_ui(ns("effect_sizes")),
       
+      # Advanced settings
+      mod_advanced_choices_ui(ns("advanced_choices")),
+      
       # Horizontal separator line
       tags$hr(class = "sidebar-separator"),
       
@@ -56,6 +59,7 @@ mod_sidebar_server <- function(id){
     experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
+    advanced_config <- mod_advanced_choices_server("advanced_choices")
     
     # Plan button logic
     observeEvent(input$plan_btn, {
@@ -93,6 +97,7 @@ mod_sidebar_server <- function(id){
         experimental_setup = experimental_config(),
         analysis_choices = analysis_config(),
         effect_sizes = effect_sizes_config(),
+        advanced_choices = advanced_config(),
         plan_clicked = input$plan_btn,
         timestamp = Sys.time()
       )

@@ -282,7 +282,8 @@ create_config_hash <- function(config) {
     perturbation_choices = config$perturbation_choices,
     experimental_setup = config$experimental_setup,
     analysis_choices = config$analysis_choices,
-    effect_sizes = config$effect_sizes
+    effect_sizes = config$effect_sizes,
+    advanced_choices = config$advanced_choices
   )
 
   # Create hash using digest (assuming digest package is available)
