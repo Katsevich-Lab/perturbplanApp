@@ -590,21 +590,24 @@ render_minimization_solution_display <- function(optimal, workflow_info) {
       create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 1, "18px"),
       create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
       create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
-      create_cost_display(optimal$total_cost)
+      create_cost_display(optimal$total_cost),
+      create_power_achieved_display(optimal$achieved_power)
     )
   } else if (minimizing_param == "minimum_fold_change") {
     tagList(
       create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 2, "18px"),
       create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
       create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
-      create_cost_display(optimal$total_cost)
+      create_cost_display(optimal$total_cost),
+      create_power_achieved_display(optimal$achieved_power)
     )
   } else {
     # Fallback for any other minimizing parameters
     tagList(
       create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
       create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
-      create_cost_display(optimal$total_cost)
+      create_cost_display(optimal$total_cost),
+      create_power_achieved_display(optimal$achieved_power)
     )
   }
 }
@@ -776,6 +779,26 @@ create_cost_display <- function(cost_value) {
     tags$span(
       paste0("$", scales::comma(round(cost_value))), 
       style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+    )
+  )
+}
+
+#' Create a power achieved display
+#'
+#' @param power_value Power achieved value
+#' @return Shiny UI tags$div or NULL
+#' @noRd
+create_power_achieved_display <- function(power_value) {
+  if (is.null(power_value) || is.na(power_value)) {
+    return(NULL)
+  }
+  
+  tags$div(
+    style = "margin-bottom: 8px;",
+    tags$span("Achieved power: ", style = "color: #5A6B73; font-weight: 500;"),
+    tags$span(
+      paste0(round(power_value * 100, 1), "%"), 
+      style = "color: #28A745; font-weight: bold; font-size: 16px;"
     )
   )
 }
