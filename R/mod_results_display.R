@@ -181,22 +181,13 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # REACTIVE DISPLAY STATE
     # ========================================================================
     
-    # Cache analysis results locally to avoid multiple calls
-    cached_analysis_results <- reactive({
-      analysis_results()
-    })
-    
-    # Cache plot objects locally to avoid multiple calls  
-    cached_plot_objects <- reactive({
-      plot_objects()
-    })
     
     # Determine if results should be shown
     output$show_results <- reactive({
-      # Use tryCatch to handle any errors in cached_plot_objects() or cached_analysis_results()
+      # Use tryCatch to handle any errors in plot_objects() or analysis_results()
       tryCatch({
-        plots <- cached_plot_objects()
-        results <- cached_analysis_results()
+        plots <- plot_objects()
+        results <- analysis_results()
         
         !is.null(plots) && !is.null(results) && 
           is.null(plots$error) && is.null(results$error)
@@ -210,8 +201,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # Determine if errors should be shown
     output$show_error <- reactive({
       tryCatch({
-        plots <- cached_plot_objects()
-        results <- cached_analysis_results()
+        plots <- plot_objects()
+        results <- analysis_results()
         
         # Only show error if we have actual data with errors, not when data is missing
         has_plot_error <- !is.null(plots) && !is.null(plots$error)
@@ -231,8 +222,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       error_msg <- NULL
       
       tryCatch({
-        plots <- cached_plot_objects()
-        results <- cached_analysis_results()
+        plots <- plot_objects()
+        results <- analysis_results()
         
         # Check for plotting errors first
         if (!is.null(plots) && !is.null(plots$error)) {
@@ -262,9 +253,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     
     output$main_plot <- renderPlotly({
       tryCatch({
-        req(cached_plot_objects())
+        req(plot_objects())
         
-        plots <- cached_plot_objects()
+        plots <- plot_objects()
         
         if (!is.null(plots$error)) {
           return(NULL)
@@ -296,10 +287,10 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # ========================================================================
     
     output$analysis_summary <- renderUI({
-      req(cached_analysis_results(), cached_plot_objects())
+      req(analysis_results(), plot_objects())
       
-      results <- cached_analysis_results()
-      plots <- cached_plot_objects()
+      results <- analysis_results()
+      plots <- plot_objects()
       
       if (!is.null(results$error) || !is.null(plots$error)) {
         return(tags$div(
@@ -318,276 +309,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       
       workflow_info <- results$workflow_info
       
-      tagList(
-        if (!is.null(results$optimal_design) && !is.null(results$workflow_info)) {
-          optimal <- results$optimal_design
-          workflow_info <- results$workflow_info
-          minimizing_param <- workflow_info$minimizing_parameter
-          
-          tagList(
-            # SOLUTION SECTION - Show only the minimizing variable and power achieved
-            tags$div(
-              style = "background-color: #E8F4FD; padding: 18px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #2E86AB;",
-              
-              # Solution header
-              tags$div(
-                tags$strong("Solution", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
-              ),
-              
-              # Show minimizing parameter and varying parameter (for power+cost workflows)
-              tagList(
-                # Check if this is workflows 10-11 (unified constrained minimization)
-                if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-                  # Use unified minimization solution display
-                  render_minimization_solution(results)
-                } else if (minimizing_param == "TPM_threshold" && !is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
-                  # Legacy TPM minimization workflow display (for other TPM workflows)
-                  tagList(
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal TPM threshold: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$TPM_threshold) && is.numeric(optimal$TPM_threshold)) round(optimal$TPM_threshold, 1) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
-                      )
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$cells_per_target) && is.numeric(optimal$cells_per_target)) round(optimal$cells_per_target) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
-                      )
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
-                      )
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Total cost: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$total_cost) && is.numeric(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
-                      )
-                    )
-                  )
-                } else if (minimizing_param == "minimum_fold_change" && !is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
-                  # Legacy FC minimization workflow display (for other FC workflows)
-                  tagList(
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal fold change: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$minimum_fold_change) && is.numeric(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
-                      )
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$cells_per_target) && is.numeric(optimal$cells_per_target)) round(optimal$cells_per_target) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
-                      )
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
-                      )
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Total cost: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$total_cost) && is.numeric(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
-                      )
-                    )
-                  )
-                } else if (minimizing_param == "cells_per_target" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
-                  )
-                } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell") && !is.null(optimal$sequenced_reads_per_cell) && !is.na(optimal$sequenced_reads_per_cell)) {
-                  tags$div(
-                    style = "margin-bottom: 8px;",
-                    tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(
-                      if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
-                      style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
-                    )
-                  )
-                } else if (minimizing_param == "cost" && !is.null(optimal$total_cost) && !is.na(optimal$total_cost)) {
-                  # Cost minimization workflow
-                  tagList(
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Minimum total cost: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(paste0("$", round(optimal$total_cost)), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 16px;")
-                    ),
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Optimal sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                        if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
-                        style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
-                      )
-                    )
-                  )
-                },
-                
-                # For power+cost workflows, also show the varying parameter from cost calculation
-                if (!is.null(workflow_info$category) && workflow_info$category == "power_cost_single" && 
-                    !is.null(workflow_info$varying_parameter)) {
-                  varying_param <- workflow_info$varying_parameter
-                  if (varying_param == "cells" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Cost-constrained cells per target: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(round(optimal$cells_per_target), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
-                    )
-                  } else if (varying_param == "reads" && !is.null(optimal$sequenced_reads_per_cell) && !is.na(optimal$sequenced_reads_per_cell)) {
-                    tags$div(
-                      style = "margin-bottom: 8px;",
-                      tags$span("Cost-constrained sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
-                      tags$span(
-                      if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
-                      style = "color: #2E86AB; font-weight: bold; font-size: 18px;"
-                    )
-                    )
-                  }
-                },
-                
-                # Power achieved (only for non-unified workflows)
-                if (!is.null(optimal$achieved_power) && !is.na(optimal$achieved_power) && 
-                    !workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-                  tags$div(
-                    style = "margin-top: 12px;",
-                    tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
-                    tags$span(paste0(round(optimal$achieved_power * 100, 1), "%"), style = "color: #28A745; font-weight: bold; font-size: 16px;")
-                  )
-                }
-              )
-            ),
-            
-            # FIXED PARAMETERS SECTION - Show all non-minimizing parameters + mapping efficiency
-            tags$div(
-              style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; margin-bottom: 15px;",
-              
-              # Fixed Parameters header
-              tags$div(
-                tags$strong("Fixed Parameters", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
-              ),
-              
-              # Show non-minimizing parameters
-              tagList(
-                # TPM threshold (for cost minimization, get from config or power_data)
-                if (minimizing_param != "TPM_threshold") {
-                  TPM_value <- if (!is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
-                    optimal$TPM_threshold
-                  } else if (!is.null(plots$plots$plot_data) && "TPM_threshold" %in% names(plots$plots$plot_data)) {
-                    # For cost minimization, get from nested plot data
-                    unique(plots$plots$plot_data$TPM_threshold)[1]
-                  } else {
-                    10  # Default TPM threshold commonly used
-                  }
-                  if (!is.null(TPM_value) && !is.na(TPM_value)) {
-                    tags$div(
-                      style = "margin-bottom: 6px;",
-                      tags$span("TPM analysis threshold: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-                      tags$span(round(TPM_value, 1), style = "color: #6C757D; font-weight: 500;")
-                    )
-                  }
-                },
-                
-                # Fold change (for cost minimization, get from config or power_data)
-                if (minimizing_param != "minimum_fold_change") {
-                  fc_value <- if (!is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
-                    optimal$minimum_fold_change
-                  } else {
-                    # For cost minimization, get from plot data or use common fixed value
-                    if (!is.null(plots$plots$plot_data) && "minimum_fold_change" %in% names(plots$plots$plot_data)) {
-                      fc_from_data <- unique(plots$plots$plot_data$minimum_fold_change)[1]
-                      fc_from_data
-                    } else {
-                      0.5  # Default fold change commonly used for downregulation
-                    }
-                  }
-                  if (!is.null(fc_value) && !is.na(fc_value)) {
-                    tags$div(
-                      style = "margin-bottom: 6px;",
-                      tags$span("Fold change: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-                      tags$span(round(fc_value, 2), style = "color: #6C757D; font-weight: 500;")
-                    )
-                  }
-                },
-                
-                # Cells per target (if not minimizing AND not cost/TPM/FC minimization AND not varying in power+cost)
-                if (minimizing_param != "cells_per_target" && minimizing_param != "cost" && 
-                    minimizing_param != "TPM_threshold" && minimizing_param != "minimum_fold_change" &&
-                    !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target) &&
-                    !(workflow_info$category == "power_cost_single" && workflow_info$varying_parameter == "cells")) {
-                  tags$div(
-                    style = "margin-bottom: 6px;",
-                    tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-                    tags$span(round(optimal$cells_per_target), style = "color: #6C757D; font-weight: 500;")
-                  )
-                },
-                
-                # Raw reads per cell (if not minimizing AND not cost/TPM/FC minimization AND not varying in power+cost)
-                if (!minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell") && minimizing_param != "cost" && 
-                    minimizing_param != "TPM_threshold" && minimizing_param != "minimum_fold_change" &&
-                    !is.null(optimal$sequenced_reads_per_cell) && !is.na(optimal$sequenced_reads_per_cell) &&
-                    !(workflow_info$category == "power_cost_single" && workflow_info$varying_parameter == "reads")) {
-                  tags$div(
-                    style = "margin-bottom: 6px;",
-                    tags$span("Sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-                    tags$span(
-                      if (!is.null(optimal$sequenced_reads_per_cell) && is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
-                      style = "color: #6C757D; font-weight: 500;"
-                    )
-                  )
-                },
-                
-                # Mapping efficiency (always in fixed parameters, use default if not available)
-                {
-                  mapping_eff <- if (!is.null(optimal$mapping_efficiency) && !is.na(optimal$mapping_efficiency)) {
-                    optimal$mapping_efficiency
-                  } else {
-                    0.72  # Default mapping efficiency commonly used
-                  }
-                  tags$div(
-                    style = "margin-bottom: 6px;",
-                    tags$span("Mapping efficiency: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-                    tags$span(paste0(round(mapping_eff * 100, 1), "%"), style = "color: #6C757D; font-weight: 500;")
-                  )
-                }
-              )
-            )
-          )
-        } else {
-          # Fallback if data not available
-          tags$div(
-            style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; text-align: center;",
-            tags$span("Solution information not available", style = "color: #999; font-style: italic;")
-          )
-        }
-      )
+      render_solution_section(results, plots)
     })
     
     # ========================================================================
@@ -595,9 +317,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # ========================================================================
     
     output$detailed_table <- renderDT({
-      req(cached_analysis_results())
+      req(analysis_results())
       
-      results <- cached_analysis_results()
+      results <- analysis_results()
       
       if (!is.null(results$error)) {
         return(NULL)
@@ -683,10 +405,10 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         paste0("perturbplan_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
       },
       content = function(file) {
-        req(cached_analysis_results(), cached_plot_objects())
+        req(analysis_results(), plot_objects())
         
-        results <- cached_analysis_results()
-        plots <- cached_plot_objects()
+        results <- analysis_results()
+        plots <- plot_objects()
         
         tryCatch({
           # Prepare Excel data
@@ -734,9 +456,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
       },
       content = function(file) {
-        req(cached_plot_objects())
+        req(plot_objects())
         
-        plots <- cached_plot_objects()
+        plots <- plot_objects()
         
         tryCatch({
           # Get the static ggplot (not the interactive plotly version)
@@ -775,6 +497,413 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       contentType = "image/png"
     )
   })
+}
+
+
+# ============================================================================
+# SOLUTION DISPLAY HELPER FUNCTIONS
+# ============================================================================
+
+#' Render solution section with optimal parameters
+#'
+#' @param results Analysis results object
+#' @param plots Plot objects
+#' @return Shiny UI tagList
+#' @noRd
+render_solution_section <- function(results, plots) {
+  if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
+    return(render_no_solution_fallback())
+  }
+  
+  optimal <- results$optimal_design
+  workflow_info <- results$workflow_info
+  minimizing_param <- workflow_info$minimizing_parameter
+  
+  tagList(
+    # SOLUTION SECTION
+    tags$div(
+      style = "background-color: #E8F4FD; padding: 18px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #2E86AB;",
+      
+      # Solution header
+      tags$div(
+        tags$strong("Solution", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
+      ),
+      
+      # Show minimizing parameter based on workflow type
+      render_minimizing_parameter_display(optimal, workflow_info, minimizing_param),
+      
+      # Show varying parameter for power+cost workflows
+      render_varying_parameter_display(optimal, workflow_info),
+      
+      # Power achieved (for non-unified workflows)
+      render_power_achieved_display(optimal, workflow_info)
+    ),
+    
+    # FIXED PARAMETERS SECTION
+    render_fixed_parameters_section(optimal, plots, minimizing_param)
+  )
+}
+
+#' Render minimizing parameter display based on workflow type
+#'
+#' @param optimal Optimal design results
+#' @param workflow_info Workflow information
+#' @param minimizing_param Minimizing parameter name
+#' @return Shiny UI tagList
+#' @noRd
+render_minimizing_parameter_display <- function(optimal, workflow_info, minimizing_param) {
+  # Check if this is workflows 10-11 (unified constrained minimization)
+  if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    return(render_minimization_solution(list(optimal_design = optimal, workflow_info = workflow_info)))
+  }
+  
+  # Handle different minimizing parameters
+  if (minimizing_param == "TPM_threshold") {
+    return(render_tpm_minimization_display(optimal))
+  } else if (minimizing_param == "minimum_fold_change") {
+    return(render_fc_minimization_display(optimal))
+  } else if (minimizing_param == "cells_per_target") {
+    return(render_cells_minimization_display(optimal))
+  } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) {
+    return(render_reads_minimization_display(optimal))
+  } else if (minimizing_param == "cost") {
+    return(render_cost_minimization_display(optimal))
+  }
+  
+  return(NULL)
+}
+
+#' Render TPM minimization display
+#'
+#' @param optimal Optimal design results
+#' @return Shiny UI tagList
+#' @noRd
+render_tpm_minimization_display <- function(optimal) {
+  if (is.null(optimal$TPM_threshold) || is.na(optimal$TPM_threshold)) {
+    return(NULL)
+  }
+  
+  tagList(
+    create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 1, "18px"),
+    create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+    create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
+    create_cost_display(optimal$total_cost)
+  )
+}
+
+#' Render fold change minimization display
+#'
+#' @param optimal Optimal design results
+#' @return Shiny UI tagList
+#' @noRd
+render_fc_minimization_display <- function(optimal) {
+  if (is.null(optimal$minimum_fold_change) || is.na(optimal$minimum_fold_change)) {
+    return(NULL)
+  }
+  
+  tagList(
+    create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 2, "18px"),
+    create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+    create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px"),
+    create_cost_display(optimal$total_cost)
+  )
+}
+
+#' Render cells minimization display
+#'
+#' @param optimal Optimal design results
+#' @return Shiny UI tagList
+#' @noRd
+render_cells_minimization_display <- function(optimal) {
+  if (is.null(optimal$cells_per_target) || is.na(optimal$cells_per_target)) {
+    return(NULL)
+  }
+  
+  create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "18px")
+}
+
+#' Render reads minimization display
+#'
+#' @param optimal Optimal design results
+#' @return Shiny UI tagList
+#' @noRd
+render_reads_minimization_display <- function(optimal) {
+  if (is.null(optimal$sequenced_reads_per_cell) || is.na(optimal$sequenced_reads_per_cell)) {
+    return(NULL)
+  }
+  
+  create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "18px")
+}
+
+#' Render cost minimization display
+#'
+#' @param optimal Optimal design results
+#' @return Shiny UI tagList
+#' @noRd
+render_cost_minimization_display <- function(optimal) {
+  if (is.null(optimal$total_cost) || is.na(optimal$total_cost)) {
+    return(NULL)
+  }
+  
+  tagList(
+    tags$div(
+      style = "margin-bottom: 8px;",
+      tags$span("Minimum total cost: ", style = "color: #5A6B73; font-weight: 500;"),
+      tags$span(paste0("$", round(optimal$total_cost)), style = "color: #2E86AB; font-weight: bold; font-size: 18px;")
+    ),
+    create_parameter_display("Optimal cells per target: ", optimal$cells_per_target, 0, "16px"),
+    create_parameter_display("Optimal sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "16px")
+  )
+}
+
+#' Render varying parameter display for power+cost workflows
+#'
+#' @param optimal Optimal design results
+#' @param workflow_info Workflow information
+#' @return Shiny UI tagList or NULL
+#' @noRd
+render_varying_parameter_display <- function(optimal, workflow_info) {
+  if (is.null(workflow_info$category) || workflow_info$category != "power_cost_single" || 
+      is.null(workflow_info$varying_parameter)) {
+    return(NULL)
+  }
+  
+  varying_param <- workflow_info$varying_parameter
+  
+  if (varying_param == "cells" && !is.null(optimal$cells_per_target) && !is.na(optimal$cells_per_target)) {
+    return(create_parameter_display("Cost-constrained cells per target: ", optimal$cells_per_target, 0, "18px"))
+  } else if (varying_param == "reads" && !is.null(optimal$sequenced_reads_per_cell) && !is.na(optimal$sequenced_reads_per_cell)) {
+    return(create_parameter_display("Cost-constrained sequenced reads per cell: ", optimal$sequenced_reads_per_cell, 0, "18px"))
+  }
+  
+  return(NULL)
+}
+
+#' Render power achieved display
+#'
+#' @param optimal Optimal design results
+#' @param workflow_info Workflow information
+#' @return Shiny UI tags$div or NULL
+#' @noRd
+render_power_achieved_display <- function(optimal, workflow_info) {
+  if (is.null(optimal$achieved_power) || is.na(optimal$achieved_power) || 
+      workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    return(NULL)
+  }
+  
+  tags$div(
+    style = "margin-top: 12px;",
+    tags$span("Power achieved: ", style = "color: #5A6B73; font-weight: 500;"),
+    tags$span(paste0(round(optimal$achieved_power * 100, 1), "%"), style = "color: #28A745; font-weight: bold; font-size: 16px;")
+  )
+}
+
+#' Create a standardized parameter display
+#'
+#' @param label Parameter label
+#' @param value Parameter value
+#' @param decimals Number of decimal places
+#' @param font_size Font size for the value
+#' @return Shiny UI tags$div
+#' @noRd
+create_parameter_display <- function(label, value, decimals = 0, font_size = "16px") {
+  if (is.null(value) || is.na(value)) {
+    return(NULL)
+  }
+  
+  formatted_value <- if (is.numeric(value)) {
+    round(value, decimals)
+  } else {
+    "N/A"
+  }
+  
+  tags$div(
+    style = "margin-bottom: 8px;",
+    tags$span(label, style = "color: #5A6B73; font-weight: 500;"),
+    tags$span(formatted_value, style = paste0("color: #2E86AB; font-weight: bold; font-size: ", font_size, ";"))
+  )
+}
+
+#' Create a cost display
+#'
+#' @param cost_value Cost value
+#' @return Shiny UI tags$div or NULL
+#' @noRd
+create_cost_display <- function(cost_value) {
+  if (is.null(cost_value) || is.na(cost_value)) {
+    return(NULL)
+  }
+  
+  tags$div(
+    style = "margin-bottom: 8px;",
+    tags$span("Total cost: ", style = "color: #5A6B73; font-weight: 500;"),
+    tags$span(
+      paste0("$", scales::comma(round(cost_value))), 
+      style = "color: #2E86AB; font-weight: bold; font-size: 16px;"
+    )
+  )
+}
+
+#' Render fixed parameters section
+#'
+#' @param optimal Optimal design results
+#' @param plots Plot objects
+#' @param minimizing_param Minimizing parameter name
+#' @return Shiny UI tags$div
+#' @noRd
+render_fixed_parameters_section <- function(optimal, plots, minimizing_param) {
+  tags$div(
+    style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; margin-bottom: 15px;",
+    
+    # Fixed Parameters header
+    tags$div(
+      tags$strong("Fixed Parameters", style = "color: #2E4A62; font-size: 14px; margin-bottom: 12px; display: block;")
+    ),
+    
+    # Show non-minimizing parameters
+    tagList(
+      render_fixed_tpm_display(optimal, plots, minimizing_param),
+      render_fixed_fc_display(optimal, plots, minimizing_param),
+      render_fixed_cells_display(optimal, minimizing_param),
+      render_fixed_reads_display(optimal, minimizing_param),
+      render_mapping_efficiency_display(optimal)
+    )
+  )
+}
+
+#' Render fixed TPM display
+#'
+#' @param optimal Optimal design results
+#' @param plots Plot objects
+#' @param minimizing_param Minimizing parameter name
+#' @return Shiny UI tags$div or NULL
+#' @noRd
+render_fixed_tpm_display <- function(optimal, plots, minimizing_param) {
+  if (minimizing_param == "TPM_threshold") {
+    return(NULL)
+  }
+  
+  TPM_value <- if (!is.null(optimal$TPM_threshold) && !is.na(optimal$TPM_threshold)) {
+    optimal$TPM_threshold
+  } else if (!is.null(plots$plots$plot_data) && "TPM_threshold" %in% names(plots$plots$plot_data)) {
+    unique(plots$plots$plot_data$TPM_threshold)[1]
+  } else {
+    10  # Default TPM threshold commonly used
+  }
+  
+  if (!is.null(TPM_value) && !is.na(TPM_value)) {
+    tags$div(
+      style = "margin-bottom: 6px;",
+      tags$span("TPM analysis threshold: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+      tags$span(round(TPM_value, 1), style = "color: #6C757D; font-weight: 500;")
+    )
+  }
+}
+
+#' Render fixed fold change display
+#'
+#' @param optimal Optimal design results
+#' @param plots Plot objects
+#' @param minimizing_param Minimizing parameter name
+#' @return Shiny UI tags$div or NULL
+#' @noRd
+render_fixed_fc_display <- function(optimal, plots, minimizing_param) {
+  if (minimizing_param == "minimum_fold_change") {
+    return(NULL)
+  }
+  
+  fc_value <- if (!is.null(optimal$minimum_fold_change) && !is.na(optimal$minimum_fold_change)) {
+    optimal$minimum_fold_change
+  } else {
+    if (!is.null(plots$plots$plot_data) && "minimum_fold_change" %in% names(plots$plots$plot_data)) {
+      unique(plots$plots$plot_data$minimum_fold_change)[1]
+    } else {
+      0.5  # Default fold change commonly used for downregulation
+    }
+  }
+  
+  if (!is.null(fc_value) && !is.na(fc_value)) {
+    tags$div(
+      style = "margin-bottom: 6px;",
+      tags$span("Fold change: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+      tags$span(round(fc_value, 2), style = "color: #6C757D; font-weight: 500;")
+    )
+  }
+}
+
+#' Render fixed cells display
+#'
+#' @param optimal Optimal design results
+#' @param minimizing_param Minimizing parameter name
+#' @return Shiny UI tags$div or NULL
+#' @noRd
+render_fixed_cells_display <- function(optimal, minimizing_param) {
+  excluded_params <- c("cells_per_target", "cost", "TPM_threshold", "minimum_fold_change")
+  
+  if (minimizing_param %in% excluded_params || 
+      is.null(optimal$cells_per_target) || is.na(optimal$cells_per_target)) {
+    return(NULL)
+  }
+  
+  tags$div(
+    style = "margin-bottom: 6px;",
+    tags$span("Cells per target: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+    tags$span(round(optimal$cells_per_target), style = "color: #6C757D; font-weight: 500;")
+  )
+}
+
+#' Render fixed reads display
+#'
+#' @param optimal Optimal design results
+#' @param minimizing_param Minimizing parameter name
+#' @return Shiny UI tags$div or NULL
+#' @noRd
+render_fixed_reads_display <- function(optimal, minimizing_param) {
+  excluded_params <- c("reads_per_cell", "mapped_reads_per_cell", "cost", "TPM_threshold", "minimum_fold_change")
+  
+  if (minimizing_param %in% excluded_params || 
+      is.null(optimal$sequenced_reads_per_cell) || is.na(optimal$sequenced_reads_per_cell)) {
+    return(NULL)
+  }
+  
+  tags$div(
+    style = "margin-bottom: 6px;",
+    tags$span("Sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+    tags$span(
+      if (is.numeric(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A",
+      style = "color: #6C757D; font-weight: 500;"
+    )
+  )
+}
+
+#' Render mapping efficiency display
+#'
+#' @param optimal Optimal design results
+#' @return Shiny UI tags$div
+#' @noRd
+render_mapping_efficiency_display <- function(optimal) {
+  mapping_eff <- if (!is.null(optimal$mapping_efficiency) && !is.na(optimal$mapping_efficiency)) {
+    optimal$mapping_efficiency
+  } else {
+    0.72  # Default mapping efficiency commonly used
+  }
+  
+  tags$div(
+    style = "margin-bottom: 6px;",
+    tags$span("Mapping efficiency: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
+    tags$span(paste0(round(mapping_eff * 100, 1), "%"), style = "color: #6C757D; font-weight: 500;")
+  )
+}
+
+#' Render fallback when no solution is available
+#'
+#' @return Shiny UI tags$div
+#' @noRd
+render_no_solution_fallback <- function() {
+  tags$div(
+    style = "background-color: #F8F9FA; padding: 18px; border-radius: 5px; text-align: center;",
+    tags$span("Solution information not available", style = "color: #999; font-style: italic;")
+  )
 }
 
 
