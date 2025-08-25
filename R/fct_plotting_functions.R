@@ -46,7 +46,15 @@ create_single_parameter_plots <- function(results) {
   p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power)) +
     geom_line() +
     geom_point() +
-    geom_hline(yintercept = target_power, linetype = "dashed") +
+    geom_hline(yintercept = target_power, linetype = "dashed")
+  
+  # Add log scale for TPM_threshold parameter to standardize with other TPM plots
+  if (varying_param == "TPM_threshold") {
+    p <- p + scale_x_log10(labels = scales::comma_format())
+    param_label <- "TPM Threshold (log scale)"
+  }
+  
+  p <- p +
     labs(
       title = plot_title,
       x = param_label,
