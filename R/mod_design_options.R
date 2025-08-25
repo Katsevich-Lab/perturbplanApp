@@ -232,7 +232,8 @@ mod_design_options_server <- function(id){
     })
     
     observe({
-      # Step 2 appears when power (and cost if needed) inputs are provided
+      # Step 2 appears ONLY when Step 1 is complete AND power (and cost if needed) inputs are provided
+      step1_complete <- !is.null(input$optimization_type) && input$optimization_type != ""
       power_ready <- !is.null(input$target_power) && is.numeric(input$target_power) && input$target_power > 0
       cost_ready <- TRUE  # Default to ready
       
@@ -241,7 +242,8 @@ mod_design_options_server <- function(id){
         cost_ready <- !is.null(input$cost_budget) && is.numeric(input$cost_budget) && input$cost_budget > 0
       }
       
-      if (power_ready && cost_ready) {
+      # Step 2 only shows when Step 1 is complete AND inputs are ready
+      if (step1_complete && power_ready && cost_ready) {
         shinyjs::show("step2")
       } else {
         shinyjs::hide("step2")
@@ -536,7 +538,7 @@ mod_design_options_server <- function(id){
       # Note: minimizing parameters are completely omitted (return NULL)
     }
     
-    # Business Logic: Update cost availability based on optimization type
+    # Business Logic: Update cost availability and clear Step 2 when Step 1 changes
     observe({
       if (!is.null(input$optimization_type) && input$optimization_type == "power_cost") {
         # Update choices to disable cost option
@@ -546,15 +548,16 @@ mod_design_options_server <- function(id){
                            "Select what to minimize..." = "",
                            "Minimize TPM analysis threshold" = "TPM_threshold",
                            "Minimize fold change" = "minimum_fold_change"
-                         ))
+                         ),
+                         selected = "")  # Clear selection when Step 1 changes
         
         # Update cells/reads dropdowns to remove "Minimizing" option for Power+Cost
         updateSelectInput(session, "cells_per_target_control",
                          choices = list("Varying" = "varying", "Fixed" = "fixed"))
         updateSelectInput(session, "reads_per_cell_control", 
                          choices = list("Varying" = "varying", "Fixed" = "fixed"))
-      } else {
-        # Include cost option
+      } else if (!is.null(input$optimization_type) && input$optimization_type != "") {
+        # Include cost option for power_only
         updateSelectInput(session, "minimization_target",
                          choices = list(
                            "Select what to minimize..." = "",
@@ -563,7 +566,8 @@ mod_design_options_server <- function(id){
                            "Total cost" = "cost",
                            "TPM analysis threshold" = "TPM_threshold",
                            "Fold change" = "minimum_fold_change"
-                         ))
+                         ),
+                         selected = "")  # Clear selection when Step 1 changes
         
         # Restore full choices for cells/reads dropdowns when not Power+Cost
         updateSelectInput(session, "cells_per_target_control",
