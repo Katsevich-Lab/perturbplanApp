@@ -134,24 +134,7 @@ mod_results_display_ui <- function(id) {
     conditionalPanel(
       condition = "output.show_results == true",
       ns = ns,
-      fluidRow(
-        column(
-          width = 12,
-          box(
-            title = "Detailed Results",
-            status = "primary",
-            solidHeader = TRUE,
-            collapsible = TRUE,
-            collapsed = TRUE,
-            width = NULL,
-            
-            # Detailed results table
-            h4("Parameter Analysis Details"),
-            DTOutput(ns("detailed_table")),
-            
-          )
-        )
-      )
+      # Detailed Results section removed - not useful for end users
     )
   )
 }
@@ -170,7 +153,7 @@ mod_results_display_ui <- function(id) {
 #' @importFrom shiny moduleServer reactive observe req renderUI
 #' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
 #' @importFrom plotly renderPlotly
-#' @importFrom DT renderDT datatable
+# DT import removed - detailed results table no longer used
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
 mod_results_display_server <- function(id, plot_objects, analysis_results) {
@@ -312,86 +295,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       render_solution_section(results, plots)
     })
     
-    # ========================================================================
-    # DETAILED RESULTS TABLE
-    # ========================================================================
-    
-    output$detailed_table <- renderDT({
-      req(analysis_results())
-      
-      results <- analysis_results()
-      
-      if (!is.null(results$error)) {
-        return(NULL)
-      }
-      
-      # Prepare data for table - handle different workflow structures
-      if (results$workflow_info$plot_type == "single_parameter_curve") {
-        
-        # Check if this is a power+cost single parameter workflow
-        if (results$workflow_info$category == "power_cost_single") {
-          # Power+cost single parameter: has parameter_name, parameter_value, power, meets_threshold, plus cells/reads/cost
-          table_data <- results$power_data
-          table_data$power <- round(table_data$power, 3)
-          table_data$meets_threshold <- ifelse(table_data$meets_threshold, "Yes", "No")
-          
-          # Round additional numeric columns if they exist
-          if ("cost" %in% names(table_data)) {
-            table_data$cost <- round(table_data$cost, 2)
-          }
-          if ("cells" %in% names(table_data)) {
-            table_data$cells <- round(table_data$cells, 0)
-          }
-          if ("reads" %in% names(table_data)) {
-            table_data$reads <- round(table_data$reads, 0)
-          }
-          
-          # Create appropriate column names based on available columns
-          base_cols <- c("Parameter", "Value", "Power", "Meets Target")
-          additional_cols <- c()
-          
-          if ("cells" %in% names(table_data)) {
-            additional_cols <- c(additional_cols, "Cells")
-          }
-          if ("reads" %in% names(table_data)) {
-            additional_cols <- c(additional_cols, "Reads")
-          }
-          if ("cost" %in% names(table_data)) {
-            additional_cols <- c(additional_cols, "Cost ($)")
-          }
-          
-          colnames(table_data) <- c(base_cols, additional_cols)
-          
-        } else {
-          # Regular single parameter workflow: parameter_value, power, meets_threshold (3 columns)
-          table_data <- results$power_data
-          table_data$power <- round(table_data$power, 3)
-          table_data$meets_threshold <- ifelse(table_data$meets_threshold, "Yes", "No")
-          
-          colnames(table_data) <- c("Parameter Value", "Power", "Meets Target")
-        }
-        
-      } else {
-        # Multi-parameter cost tradeoff workflows
-        table_data <- results$power_data
-        table_data$power <- round(table_data$power, 3)
-        table_data$cost <- round(table_data$cost, 2)
-        table_data$meets_threshold <- ifelse(table_data$power >= results$user_config$design_options$target_power, "Yes", "No")
-        
-        colnames(table_data) <- c("Cells", "Reads", "TPM Threshold", "Fold Change", "Power", "Cost ($)", "Meets Target")
-      }
-      
-      datatable(
-        table_data,
-        options = list(
-          pageLength = 10,
-          scrollX = TRUE,
-          dom = 'rtip',  # Removed 'f' to disable search functionality
-          searching = FALSE  # Explicitly disable searching
-        ),
-        rownames = FALSE
-      )
-    })
+    # Detailed results table removed - not useful for end users
     
     
     
