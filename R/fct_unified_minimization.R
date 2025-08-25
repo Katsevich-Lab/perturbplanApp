@@ -284,7 +284,7 @@ render_minimization_solution <- function(analysis_results) {
         )
       ),
       tags$div(style = "margin-bottom: 8px;",
-        tags$span("Reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+        tags$span("Sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
         tags$span(
           if (!is.null(reads_value) && is.numeric(reads_value)) scales::comma(round(reads_value)) else "N/A",
           style = "color: #34495E; font-weight: bold;"
@@ -324,7 +324,7 @@ render_minimization_solution <- function(analysis_results) {
         )
       ),
       tags$div(style = "margin-bottom: 8px;",
-        tags$span("Reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
+        tags$span("Sequenced reads per cell: ", style = "color: #5A6B73; font-weight: 500;"),
         tags$span(
           if (!is.null(reads_value) && is.numeric(reads_value)) scales::comma(round(reads_value)) else "N/A",
           style = "color: #34495E; font-weight: bold;"
