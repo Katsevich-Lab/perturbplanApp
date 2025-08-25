@@ -55,9 +55,9 @@ create_single_parameter_plots <- function(results) {
                                    "<br>Power: ", scales::percent(power_data$power, accuracy = 0.1))
   
   # Standard single parameter power curve (same for power-only and power+cost workflows)
-  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power, text = .data$tooltip_text)) +
+  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power)) +
     geom_line() +
-    geom_point() +
+    geom_point(aes(text = .data$tooltip_text)) +
     geom_hline(yintercept = target_power, linetype = "dashed")
   
   # Add log scale for TPM_threshold parameter to standardize with other TPM plots
