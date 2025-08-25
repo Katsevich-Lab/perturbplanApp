@@ -512,7 +512,7 @@ create_minimization_plot <- function(analysis_results) {
         } else {
           "Unconstrained Minimization"
         },
-        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Minimum Fold Change (log scale)",
+        x = if (minimizing_variable == "TPM_threshold") "TPM Threshold (log scale)" else "Fold Change (log scale)",
         y = "Total Cost ($, log scale)"
       ) +
       theme_minimal() +

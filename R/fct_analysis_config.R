@@ -296,7 +296,7 @@ format_parameter_name <- function(parameter_name) {
     "cells_per_target" = "Cells per Target",
     "mapped_reads_per_cell" = "Mapped Reads per Cell",
     "TPM_threshold" = "TPM Threshold",
-    "minimum_fold_change" = "Minimum Fold Change",
+    "minimum_fold_change" = "Fold Change",
     # Legacy abbreviated names (backward compatibility)
     "cells" = "Cells per Target",
     "reads" = "Reads per Cell", 

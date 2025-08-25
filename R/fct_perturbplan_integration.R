@@ -569,7 +569,7 @@ create_workflow_title <- function(minimizing_param) {
     "cells_per_target" = "Power Optimization: Minimize Cells per Target",
     "reads_per_cell" = "Power Optimization: Minimize Reads per Cell", 
     "TPM_threshold" = "Power Optimization: Minimize TPM Threshold",
-    "minimum_fold_change" = "Power Optimization: Minimize Minimum Fold Change",
+    "minimum_fold_change" = "Power Optimization: Minimize Fold Change",
     paste("Power Optimization: Minimize", minimizing_param)
   )
 }
