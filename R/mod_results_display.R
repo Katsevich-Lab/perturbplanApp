@@ -825,8 +825,11 @@ render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info 
     if (!is.null(workflow_info) && workflow_info$category == "cost_only") {
       return(NULL)
     }
-    # For other workflows, exclude TPM_threshold and minimum_fold_change as before
-    excluded_params <- c(excluded_params, "TPM_threshold", "minimum_fold_change")
+    # For power+cost workflows, exclude TPM_threshold and minimum_fold_change 
+    # But for power-only workflows, we want to show cells/reads even when TPM/FC is being minimized
+    if (!is.null(workflow_info) && workflow_info$category != "power_only_single") {
+      excluded_params <- c(excluded_params, "TPM_threshold", "minimum_fold_change")
+    }
   }
   
   if (minimizing_param %in% excluded_params || 
@@ -868,8 +871,11 @@ render_fixed_reads_display <- function(optimal, minimizing_param, workflow_info 
     if (!is.null(workflow_info) && workflow_info$category == "cost_only") {
       return(NULL)
     }
-    # For other workflows, exclude TPM_threshold and minimum_fold_change as before
-    excluded_params <- c(excluded_params, "TPM_threshold", "minimum_fold_change")
+    # For power+cost workflows, exclude TPM_threshold and minimum_fold_change 
+    # But for power-only workflows, we want to show cells/reads even when TPM/FC is being minimized
+    if (!is.null(workflow_info) && workflow_info$category != "power_only_single") {
+      excluded_params <- c(excluded_params, "TPM_threshold", "minimum_fold_change")
+    }
   }
   
   if (minimizing_param %in% excluded_params || 
