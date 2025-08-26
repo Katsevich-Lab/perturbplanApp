@@ -491,7 +491,7 @@ render_minimization_solution_display <- function(optimal, workflow_info) {
   # For unified workflows, show the minimizing parameter and supporting parameters
   if (minimizing_param == "TPM_threshold") {
     tagList(
-      create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 1, "18px"),
+      create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 0, "18px"),
       create_cost_display(optimal$total_cost),
       # If both cells and reads are varying (no specific varying_parameter), show them here
       if (is.null(workflow_info$varying_parameter)) {
@@ -535,7 +535,7 @@ render_tpm_minimization_display <- function(optimal) {
   }
   
   tagList(
-    create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 1, "18px"),
+    create_parameter_display("Optimal TPM threshold: ", optimal$TPM_threshold, 0, "18px"),
     create_cost_display(optimal$total_cost)
   )
 }
@@ -762,7 +762,7 @@ render_fixed_tpm_display <- function(optimal, plots, minimizing_param) {
     tags$div(
       style = "margin-bottom: 6px;",
       tags$span("TPM analysis threshold: ", style = "color: #5A6B73; font-weight: 400; font-size: 13px;"),
-      tags$span(round(TPM_value, 1), style = "color: #6C757D; font-weight: 500;")
+      tags$span(round(TPM_value), style = "color: #6C757D; font-weight: 500;")
     )
   }
 }

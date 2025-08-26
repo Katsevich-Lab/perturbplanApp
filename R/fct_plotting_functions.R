@@ -45,7 +45,7 @@ create_single_parameter_plots <- function(results) {
   
   # Create tooltip text before plotting
   formatted_values <- case_when(
-    varying_param == "TPM_threshold" ~ scales::comma(power_data$parameter_value),
+    varying_param == "TPM_threshold" ~ scales::comma(round(power_data$parameter_value)),
     varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(power_data$parameter_value),
     varying_param == "minimum_fold_change" ~ as.character(round(power_data$parameter_value, 2)),
     TRUE ~ as.character(power_data$parameter_value)
@@ -159,7 +159,7 @@ create_cost_tradeoff_plots <- function(results) {
           # For minimization plots: show minimizing variable and cost
           # TPM uses log scale (need 10^x), FC uses linear scale (direct x)
           if (workflow_info$workflow_id == "power_cost_TPM_cells_reads") {
-            x_values <- round(10^trace_data$x, 1)  # TPM: convert from log scale
+            x_values <- round(10^trace_data$x)  # TPM: convert from log scale to integer
           } else {
             x_values <- round(trace_data$x, 3)     # FC: already linear scale
           }
