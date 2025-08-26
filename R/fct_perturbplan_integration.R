@@ -536,6 +536,12 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
                                config$design_options$cost_per_million_reads %||% 0.374 else NULL
   )
   
+  # Add parameter-specific field names for plotting compatibility (CRITICAL for reads_per_cell)
+  # When minimizing reads_per_cell, plotting code expects reads_per_cell field
+  if (workflow_info$minimizing_parameter == "reads_per_cell") {
+    optimal_design$reads_per_cell <- optimal_design$sequenced_reads_per_cell %||% NA
+  }
+  
   # Create enriched workflow_info for plotting
   enriched_workflow_info <- workflow_info
   # Preserve the original plot_type from workflow detection (don't override for power+cost workflows)
