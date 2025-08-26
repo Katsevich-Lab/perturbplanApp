@@ -67,6 +67,14 @@ create_single_parameter_plots <- function(results) {
   }
   
   # Add red circle to highlight optimal solution point with custom hover
+  # SIMPLE DEBUG: Log the key values
+  cat("PLOT DEBUG - varying_param:", varying_param, "\n")
+  cat("PLOT DEBUG - optimal_design is null?", is.null(optimal_design), "\n")
+  if (!is.null(optimal_design)) {
+    cat("PLOT DEBUG - optimal_design names:", names(optimal_design), "\n")
+    cat("PLOT DEBUG - optimal_design[[varying_param]]:", optimal_design[[varying_param]], "\n")
+  }
+  
   if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
     optimal_hover_text <- paste0(param_label, ": ", 
                                 case_when(
@@ -77,6 +85,8 @@ create_single_parameter_plots <- function(results) {
                                 ),
                                 "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1),
                                 "<span style='display:none'>OPTIMAL</span>")
+    
+    cat("PLOT DEBUG - ADDING RED POINT at x =", optimal_design[[varying_param]], "y =", optimal_design$achieved_power, "\n")
     
     p <- p + suppressWarnings(geom_point(
       data = data.frame(
@@ -89,6 +99,8 @@ create_single_parameter_plots <- function(results) {
       size = 4,
       shape = 19  # Circle
     ))
+  } else {
+    cat("PLOT DEBUG - RED POINT NOT ADDED - condition failed\n")
   }
   
   p <- p +
