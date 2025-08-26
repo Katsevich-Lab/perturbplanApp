@@ -229,10 +229,10 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 
     # Effect size parameters
     gRNA_variability = advanced_opts$gRNA_variability %||% 0.15,
-    prop_non_null = effect_opts$prop_non_null %||% 0.1,
+    prop_non_null = advanced_opts$prop_non_null %||% 0.1,
 
     # Analysis parameters
-    control_group = control_mapping[analysis_opts$control_group %||% "complement"],
+    control_group = control_mapping[advanced_opts$control_group %||% "complement"],
     side = side_mapping[analysis_opts$side %||% "left"],
     multiple_testing_alpha = analysis_opts$fdr_target %||% 0.1,
 

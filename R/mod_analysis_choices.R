@@ -56,10 +56,6 @@ mod_analysis_choices_ui <- function(id) {
                                "Right (overexpression)" = "right",
                                "Both (two-sided)" = "both"),
                     selected = "left"),
-        selectInput(ns("control_group"), "Control group:",
-                    choices = c("Complement cells" = "complement",
-                               "Non-targeting cells" = "nt_cells"),
-                    selected = "complement"),
         numericInput(ns("fdr_target"), "FDR target level:", 0.1, 0.001, 0.5, 0.001),
 
         # Fixed value input for TPM analysis parameter (conditional)
@@ -136,7 +132,6 @@ mod_analysis_choices_server <- function(id, design_config){
         gene_list_mode = input$gene_list_mode,
         gene_list_data = gene_list_data(),
         side = input$side,
-        control_group = input$control_group,
         fdr_target = input$fdr_target,
         # CONSISTENT: Return TPM_threshold_fixed field using input$TPM_threshold_fixed
         TPM_threshold_fixed = input$TPM_threshold_fixed,

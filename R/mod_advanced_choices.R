@@ -51,7 +51,16 @@ mod_advanced_choices_ui <- function(id) {
                     value = 0.72, 
                     min = 0.1, 
                     max = 1.0, 
-                    step = 0.01)
+                    step = 0.01),
+        
+        # Control group (moved from analysis choices)
+        selectInput(ns("control_group"), "Control group:",
+                    choices = c("Complement cells" = "complement",
+                               "Non-targeting cells" = "nt_cells"),
+                    selected = "complement"),
+        
+        # Proportion of non-null pairs (moved from effect sizes)
+        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
       )
     )
   )
@@ -75,6 +84,8 @@ mod_advanced_choices_server <- function(id){
       list(
         gRNA_variability = input$gRNA_variability,
         mapping_efficiency = input$mapping_efficiency,
+        control_group = input$control_group,
+        prop_non_null = input$prop_non_null,
         timestamp = Sys.time()
       )
     })

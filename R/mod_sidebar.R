@@ -7,7 +7,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification
+#' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification uiOutput renderUI
 #' @importFrom shinydashboard dashboardSidebar
 #' @importFrom shinyjs show hide
 mod_sidebar_ui <- function(id) {
@@ -27,8 +27,8 @@ mod_sidebar_ui <- function(id) {
       # Analysis choices
       mod_analysis_choices_ui(ns("analysis_choices")),
       
-      # Effect sizes
-      mod_effect_sizes_ui(ns("effect_sizes")),
+      # Effect sizes (conditional - only when fold change needs to be set)
+      uiOutput(ns("effect_sizes_ui")),
       
       # Advanced settings
       mod_advanced_choices_ui(ns("advanced_choices")),
@@ -58,8 +58,29 @@ mod_sidebar_server <- function(id){
     design_config <- mod_design_options_server("design_options")
     experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
+    
+    # Conditional effect sizes module (only when fold change needs to be set)
+    effect_sizes_config <- reactive({
+      config <- design_config()
+      if (!is.null(config$parameter_controls$minimum_fold_change$type) && 
+          config$parameter_controls$minimum_fold_change$type == "fixed") {
+        mod_effect_sizes_server("effect_sizes", design_config)()
+      } else {
+        list(timestamp = Sys.time())  # Return empty config when not needed
+      }
+    })
+    
+    # Conditional UI rendering for effect sizes
+    output$effect_sizes_ui <- renderUI({
+      config <- design_config()
+      if (!is.null(config$parameter_controls$minimum_fold_change$type) && 
+          config$parameter_controls$minimum_fold_change$type == "fixed") {
+        mod_effect_sizes_ui(ns("effect_sizes"))
+      } else {
+        NULL  # Don't show the panel at all
+      }
+    })
     
     # Plan button logic
     observeEvent(input$plan_btn, {

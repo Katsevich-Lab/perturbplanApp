@@ -34,7 +34,6 @@ mod_effect_sizes_ui <- function(id) {
                       value = 0.8, min = 0.5, max = 10, step = 0.1)
         ),
         
-        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
       )
     )
   )
@@ -72,7 +71,6 @@ mod_effect_sizes_server <- function(id, design_config){
     # Return effect sizes configuration
     effect_sizes_config <- reactive({
       list(
-        prop_non_null = input$prop_non_null,
         # Fixed value input
         minimum_fold_change_fixed = input$minimum_fold_change_fixed,
         timestamp = Sys.time()
