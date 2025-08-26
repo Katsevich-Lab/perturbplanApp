@@ -504,7 +504,7 @@ render_minimization_solution_display <- function(optimal, workflow_info) {
     )
   } else if (minimizing_param == "minimum_fold_change") {
     tagList(
-      create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 3, "18px"),
+      create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 2, "18px"),
       create_cost_display(optimal$total_cost),
       # If both cells and reads are varying (no specific varying_parameter), show them here
       if (is.null(workflow_info$varying_parameter)) {
@@ -551,7 +551,7 @@ render_fc_minimization_display <- function(optimal) {
   }
   
   tagList(
-    create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 3, "18px"),
+    create_parameter_display("Optimal fold change: ", optimal$minimum_fold_change, 2, "18px"),
     create_cost_display(optimal$total_cost)
   )
 }

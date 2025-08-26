@@ -161,7 +161,7 @@ create_cost_tradeoff_plots <- function(results) {
           if (workflow_info$workflow_id == "power_cost_TPM_cells_reads") {
             x_values <- round(10^trace_data$x)  # TPM: convert from log scale to integer
           } else {
-            x_values <- round(trace_data$x, 3)     # FC: already linear scale
+            x_values <- round(trace_data$x, 2)     # FC: already linear scale, 2 decimals
           }
           y_values <- round(10^trace_data$y)       # Cost is always log scale
           
