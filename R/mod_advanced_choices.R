@@ -48,8 +48,8 @@ mod_advanced_choices_ui <- function(id) {
                                "Non-targeting cells" = "nt_cells"),
                     selected = "complement"),
         
-        # Proportion of non-null pairs (moved from effect sizes)
-        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
+        # FDR target level (moved from analysis choices)
+        numericInput(ns("fdr_target"), "FDR target level:", 0.1, 0.001, 0.5, 0.001)
       )
     )
   )
@@ -74,7 +74,7 @@ mod_advanced_choices_server <- function(id){
         gRNA_variability = input$gRNA_variability,
         mapping_efficiency = input$mapping_efficiency,
         control_group = input$control_group,
-        prop_non_null = input$prop_non_null,
+        fdr_target = input$fdr_target,
         timestamp = Sys.time()
       )
     })

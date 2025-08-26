@@ -27,8 +27,8 @@ mod_sidebar_ui <- function(id) {
       # Analysis choices
       mod_analysis_choices_ui(ns("analysis_choices")),
       
-      # Effect sizes (conditional - only when fold change needs to be set)
-      uiOutput(ns("effect_sizes_ui")),
+      # Effect sizes (always visible - contains non-null proportion)
+      mod_effect_sizes_ui(ns("effect_sizes")),
       
       # Advanced settings
       mod_advanced_choices_ui(ns("advanced_choices")),
@@ -60,27 +60,8 @@ mod_sidebar_server <- function(id){
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
     
-    # Initialize effect sizes server (always, but UI is conditionally displayed)
+    # Initialize effect sizes server (always visible now)
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
-    
-    # Conditional UI rendering for effect sizes
-    output$effect_sizes_ui <- renderUI({
-      config <- design_config()
-      
-      # Check if we have valid config and parameter controls
-      if (is.null(config) || is.null(config$parameter_controls) || 
-          is.null(config$parameter_controls$minimum_fold_change) ||
-          is.null(config$parameter_controls$minimum_fold_change$type)) {
-        return(NULL)
-      }
-      
-      # Show Effect Sizes panel only when fold change parameter is "fixed"
-      if (config$parameter_controls$minimum_fold_change$type == "fixed") {
-        mod_effect_sizes_ui(ns("effect_sizes"))
-      } else {
-        NULL  # Don't show the panel at all
-      }
-    })
     
     # Plan button logic
     observeEvent(input$plan_btn, {

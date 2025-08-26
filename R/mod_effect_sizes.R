@@ -26,9 +26,16 @@ mod_effect_sizes_ui <- function(id) {
         id = ns("effects-content"),
         style = "padding: 15px; display: none;",
         
-        # Fixed value input for fold change (always show since panel only appears when needed)
-        numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
-                    value = 0.8, min = 0.5, max = 10, step = 0.1),
+        # Fixed value input for fold change (conditional)
+        tags$div(
+          id = ns("minimum_fold_change_fixed_div"),
+          style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
+          numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
+                      value = 0.8, min = 0.5, max = 10, step = 0.1)
+        ),
+        
+        # Proportion of non-null pairs (moved back from advanced settings)
+        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01),
         
       )
     )
@@ -46,13 +53,31 @@ mod_effect_sizes_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Note: No conditional logic needed here since entire panel is conditionally displayed by sidebar
+    # Conditional display logic for fold change input (panel is now always visible)
+    observe({
+      config <- design_config()
+      
+      if (!is.null(config) && !is.null(config$parameter_controls)) {
+        fc_type <- config$parameter_controls$minimum_fold_change$type
+        
+        # Show FC fixed input only when FC parameter is set to "fixed"
+        if (!is.null(fc_type) && fc_type == "fixed") {
+          shinyjs::show("minimum_fold_change_fixed_div")
+        } else {
+          shinyjs::hide("minimum_fold_change_fixed_div")
+        }
+      } else {
+        shinyjs::hide("minimum_fold_change_fixed_div")
+      }
+    })
     
     # Return effect sizes configuration
     effect_sizes_config <- reactive({
       list(
         # Fixed value input
         minimum_fold_change_fixed = input$minimum_fold_change_fixed,
+        # Proportion of non-null pairs
+        prop_non_null = input$prop_non_null,
         timestamp = Sys.time()
       )
     })

@@ -56,7 +56,6 @@ mod_analysis_choices_ui <- function(id) {
                                "Right (overexpression)" = "right",
                                "Both (two-sided)" = "both"),
                     selected = "left"),
-        numericInput(ns("fdr_target"), "FDR target level:", 0.1, 0.001, 0.5, 0.001),
 
         # Fixed value input for TPM analysis parameter (conditional)
         # CONSISTENT VARIABLE USAGE: TPM_threshold_fixed throughout
@@ -132,7 +131,6 @@ mod_analysis_choices_server <- function(id, design_config){
         gene_list_mode = input$gene_list_mode,
         gene_list_data = gene_list_data(),
         side = input$side,
-        fdr_target = input$fdr_target,
         # CONSISTENT: Return TPM_threshold_fixed field using input$TPM_threshold_fixed
         TPM_threshold_fixed = input$TPM_threshold_fixed,
         timestamp = Sys.time()
