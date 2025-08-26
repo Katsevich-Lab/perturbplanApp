@@ -68,8 +68,7 @@ create_single_parameter_plots <- function(results) {
   
   # Add red circle to highlight optimal solution point with custom hover
   if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
-    optimal_hover_text <- paste0("🎯 OPTIMAL SOLUTION<br>",
-                                param_label, ": ", 
+    optimal_hover_text <- paste0(param_label, ": ", 
                                 case_when(
                                   varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
                                   varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
@@ -117,7 +116,7 @@ create_single_parameter_plots <- function(results) {
     for (i in 1:length(p_interactive$x$data)) {
       # Find traces that contain the optimal solution text
       if (!is.null(p_interactive$x$data[[i]]$text)) {
-        optimal_trace <- any(grepl("🎯 OPTIMAL SOLUTION", p_interactive$x$data[[i]]$text))
+        optimal_trace <- any(grepl(paste0("^", param_label, ": .*<br>Power: "), p_interactive$x$data[[i]]$text))
         if (optimal_trace) {
           # Apply red hover styling only to this trace
           p_interactive$x$data[[i]]$hoverlabel <- list(
