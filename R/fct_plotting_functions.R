@@ -75,7 +75,8 @@ create_single_parameter_plots <- function(results) {
                                   varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
                                   TRUE ~ as.character(optimal_design[[varying_param]])
                                 ),
-                                "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1))
+                                "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1),
+                                "<span style='display:none'>OPTIMAL</span>")
     
     p <- p + suppressWarnings(geom_point(
       data = data.frame(
@@ -116,7 +117,7 @@ create_single_parameter_plots <- function(results) {
     for (i in 1:length(p_interactive$x$data)) {
       # Find traces that contain the optimal solution text
       if (!is.null(p_interactive$x$data[[i]]$text)) {
-        optimal_trace <- any(grepl(paste0("^", param_label, ": .*<br>Power: "), p_interactive$x$data[[i]]$text))
+        optimal_trace <- any(grepl("OPTIMAL</span>", p_interactive$x$data[[i]]$text))
         if (optimal_trace) {
           # Apply red hover styling only to this trace
           p_interactive$x$data[[i]]$hoverlabel <- list(
