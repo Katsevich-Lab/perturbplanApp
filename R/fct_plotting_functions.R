@@ -66,6 +66,20 @@ create_single_parameter_plots <- function(results) {
     param_label <- "TPM Threshold"
   }
   
+  # Add red circle to highlight optimal solution point
+  if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
+    p <- p + geom_point(
+      data = data.frame(
+        x = optimal_design[[varying_param]], 
+        y = optimal_design$achieved_power
+      ),
+      aes(x = x, y = y),
+      color = "red",
+      size = 4,
+      shape = 19  # Circle
+    )
+  }
+  
   p <- p +
     labs(
       title = plot_title,
@@ -358,7 +372,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
         mapping = aes(x = x, y = y),
         color = "red", 
         size = 4,
-        shape = 17  # Triangle
+        shape = 19  # Circle
       )
       
       # Use log scales but we'll handle tooltips differently
@@ -578,9 +592,9 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
       geom_point(
         data = data.frame(cells = optimal_design$cells, reads = optimal_design$reads),
         aes(x = cells, y = reads),
-        color = "#F18F01",
+        color = "red",
         size = 4,
-        shape = 17  # Triangle
+        shape = 19  # Circle
       )
     }} +
     # Styling
