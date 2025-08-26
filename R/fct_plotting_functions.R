@@ -71,7 +71,7 @@ create_single_parameter_plots <- function(results) {
     optimal_hover_text <- paste0(param_label, ": ", 
                                 case_when(
                                   varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-                                  varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
+                                  varying_param %in% c("cells_per_target", "mapped_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
                                   varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
                                   TRUE ~ as.character(optimal_design[[varying_param]])
                                 ),

@@ -364,6 +364,12 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
       sequenced_reads_per_cell = optimal$sequenced_reads_per_cell %||% NA
     )
     
+    # Add parameter-specific field names for plotting compatibility
+    # When minimizing reads_per_cell, plotting code expects reads_per_cell field
+    if (workflow_info$minimizing_parameter == "reads_per_cell") {
+      optimal_design$reads_per_cell <- optimal$sequenced_reads_per_cell %||% NA
+    }
+    
     # Add cost information if available
     if ("total_cost" %in% names(optimal)) {
       optimal_design$total_cost <- optimal$total_cost
