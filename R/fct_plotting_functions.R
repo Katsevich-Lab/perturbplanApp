@@ -98,7 +98,12 @@ create_single_parameter_plots <- function(results) {
         font = list(size = 14)
       ),
       showlegend = FALSE,
-      hovermode = "closest"
+      hovermode = "closest",
+      hoverlabel = list(
+        bgcolor = "red",
+        bordercolor = "darkred",
+        font = list(color = "white", size = 12)
+      )
     ) %>%
     config(
       displayModeBar = FALSE,  # Remove all toolbar buttons
@@ -210,7 +215,12 @@ create_cost_tradeoff_plots <- function(results) {
           font = list(size = 14)
         ),
         showlegend = FALSE,
-        hovermode = "closest"
+        hovermode = "closest",
+        hoverlabel = list(
+          bgcolor = "red",
+          bordercolor = "darkred",
+          font = list(color = "white", size = 12)
+        )
       )
   }, error = function(e) {
     # Fallback: create simple plotly plot directly
@@ -224,6 +234,11 @@ create_cost_tradeoff_plots <- function(results) {
           list(text = "Plot generation failed - please check data", 
                x = 0.5, y = 0.5, showarrow = FALSE, 
                xref = "paper", yref = "paper")
+        ),
+        hoverlabel = list(
+          bgcolor = "red",
+          bordercolor = "darkred",
+          font = list(color = "white", size = 12)
         )
       )
   })
