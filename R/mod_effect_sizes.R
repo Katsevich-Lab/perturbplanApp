@@ -26,13 +26,9 @@ mod_effect_sizes_ui <- function(id) {
         id = ns("effects-content"),
         style = "padding: 15px;",
         
-        # Fixed value input for effect size parameter (conditional) - MOVED TO FIRST
-        tags$div(
-          id = ns("minimum_fold_change_fixed_div"),
-          style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
-          numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
-                      value = 0.8, min = 0.5, max = 10, step = 0.1)
-        ),
+        # Fixed value input for fold change (always show since panel only appears when needed)
+        numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
+                    value = 0.8, min = 0.5, max = 10, step = 0.1),
         
       )
     )
@@ -50,23 +46,7 @@ mod_effect_sizes_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Conditional display logic for fixed value input
-    observe({
-      config <- design_config()
-      
-      if (!is.null(config) && !is.null(config$parameter_controls)) {
-        fc_type <- config$parameter_controls$minimum_fold_change$type
-        
-        # Show FC fixed input only when FC parameter is set to "fixed"
-        if (!is.null(fc_type) && fc_type == "fixed") {
-          shinyjs::show("minimum_fold_change_fixed_div")
-        } else {
-          shinyjs::hide("minimum_fold_change_fixed_div")
-        }
-      } else {
-        shinyjs::hide("minimum_fold_change_fixed_div")
-      }
-    })
+    # Note: No conditional logic needed here since entire panel is conditionally displayed by sidebar
     
     # Return effect sizes configuration
     effect_sizes_config <- reactive({
