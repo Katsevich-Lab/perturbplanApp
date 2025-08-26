@@ -78,7 +78,7 @@ create_single_parameter_plots <- function(results) {
                                 ),
                                 "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1))
     
-    p <- p + geom_point(
+    p <- p + suppressWarnings(geom_point(
       data = data.frame(
         x = optimal_design[[varying_param]], 
         y = optimal_design$achieved_power,
@@ -88,7 +88,7 @@ create_single_parameter_plots <- function(results) {
       color = "red",
       size = 4,
       shape = 19  # Circle
-    )
+    ))
   }
   
   p <- p +
