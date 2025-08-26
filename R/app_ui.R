@@ -31,8 +31,6 @@ app_ui <- function(request) {
         # Main content area with results display module
         tags$div(
           style = "padding: 20px;",
-          h2("PerturbPlan: Constraint-Driven Experimental Design", 
-             style = "color: #2E4A62; margin-bottom: 20px; text-align: center;"),
           
           # Results Display Module - handles both welcome state and results
           mod_results_display_ui("display")
