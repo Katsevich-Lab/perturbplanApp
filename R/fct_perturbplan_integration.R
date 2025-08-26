@@ -357,8 +357,18 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
     optimal <- results[optimal_idx, ]
 
     # Base optimal design info
+    # Map minimizing parameter names to actual data field names
+    param_field_mapping <- list(
+      "reads_per_cell" = "sequenced_reads_per_cell",
+      "cells_per_target" = "cells_per_target",
+      "TPM_threshold" = "TPM_threshold",
+      "minimum_fold_change" = "minimum_fold_change"
+    )
+    
+    actual_field <- param_field_mapping[[workflow_info$minimizing_parameter]] %||% workflow_info$minimizing_parameter
+    
     optimal_design <- list(
-      parameter_value = optimal[[workflow_info$minimizing_parameter]],
+      parameter_value = optimal[[actual_field]],
       achieved_power = optimal$overall_power,
       cells_per_target = optimal$cells_per_target %||% NA,
       sequenced_reads_per_cell = optimal$sequenced_reads_per_cell %||% NA
