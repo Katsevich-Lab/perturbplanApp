@@ -66,14 +66,25 @@ create_single_parameter_plots <- function(results) {
     param_label <- "TPM Threshold"
   }
   
-  # Add red circle to highlight optimal solution point
+  # Add red circle to highlight optimal solution point with custom hover
   if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
+    optimal_hover_text <- paste0("🎯 OPTIMAL SOLUTION<br>",
+                                param_label, ": ", 
+                                case_when(
+                                  varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
+                                  varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
+                                  varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
+                                  TRUE ~ as.character(optimal_design[[varying_param]])
+                                ),
+                                "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1))
+    
     p <- p + geom_point(
       data = data.frame(
         x = optimal_design[[varying_param]], 
-        y = optimal_design$achieved_power
+        y = optimal_design$achieved_power,
+        hover_text = optimal_hover_text
       ),
-      aes(x = x, y = y),
+      aes(x = x, y = y, text = hover_text),
       color = "red",
       size = 4,
       shape = 19  # Circle
@@ -98,13 +109,28 @@ create_single_parameter_plots <- function(results) {
         font = list(size = 14)
       ),
       showlegend = FALSE,
-      hovermode = "closest",
-      hoverlabel = list(
-        bgcolor = "red",
-        bordercolor = "darkred",
-        font = list(color = "white", size = 12)
-      )
-    ) %>%
+      hovermode = "closest"
+    )
+  
+  # Apply red hover styling specifically to optimal solution points
+  if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
+    for (i in 1:length(p_interactive$x$data)) {
+      # Find traces that contain the optimal solution text
+      if (!is.null(p_interactive$x$data[[i]]$text)) {
+        optimal_trace <- any(grepl("🎯 OPTIMAL SOLUTION", p_interactive$x$data[[i]]$text))
+        if (optimal_trace) {
+          # Apply red hover styling only to this trace
+          p_interactive$x$data[[i]]$hoverlabel <- list(
+            bgcolor = "red",
+            bordercolor = "darkred",
+            font = list(color = "white", size = 12)
+          )
+        }
+      }
+    }
+  }
+  
+  p_interactive <- p_interactive %>%
     config(
       displayModeBar = FALSE,  # Remove all toolbar buttons
       displaylogo = FALSE,
@@ -215,12 +241,7 @@ create_cost_tradeoff_plots <- function(results) {
           font = list(size = 14)
         ),
         showlegend = FALSE,
-        hovermode = "closest",
-        hoverlabel = list(
-          bgcolor = "red",
-          bordercolor = "darkred",
-          font = list(color = "white", size = 12)
-        )
+        hovermode = "closest"
       )
   }, error = function(e) {
     # Fallback: create simple plotly plot directly
@@ -234,11 +255,6 @@ create_cost_tradeoff_plots <- function(results) {
           list(text = "Plot generation failed - please check data", 
                x = 0.5, y = 0.5, showarrow = FALSE, 
                xref = "paper", yref = "paper")
-        ),
-        hoverlabel = list(
-          bgcolor = "red",
-          bordercolor = "darkred",
-          font = list(color = "white", size = 12)
         )
       )
   })
