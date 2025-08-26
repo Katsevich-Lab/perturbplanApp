@@ -24,7 +24,7 @@ mod_effect_sizes_ui <- function(id) {
       ),
       tags$div(
         id = ns("effects-content"),
-        style = "padding: 15px;",
+        style = "padding: 15px; display: none;",
         
         # Fixed value input for fold change (always show since panel only appears when needed)
         numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
