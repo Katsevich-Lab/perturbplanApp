@@ -67,6 +67,14 @@ create_single_parameter_plots <- function(results) {
   }
   
   # Add red circle to highlight optimal solution point with custom hover
+  # SIMPLE DEBUG: Just check if the field exists
+  if (varying_param == "reads_per_cell") {
+    cat("SIMPLE DEBUG - reads_per_cell in optimal_design?", "reads_per_cell" %in% names(optimal_design), "\n")
+    if ("reads_per_cell" %in% names(optimal_design)) {
+      cat("SIMPLE DEBUG - reads_per_cell value:", optimal_design$reads_per_cell, "\n")
+    }
+  }
+  
   if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
     optimal_hover_text <- paste0(param_label, ": ", 
                                 case_when(
