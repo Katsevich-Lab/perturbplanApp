@@ -449,7 +449,7 @@ mod_design_options_server <- function(id){
       
       if (!param_configs$mapped_reads_per_cell$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "reads_per_cell", "Mapped reads per cell:", param_configs$mapped_reads_per_cell, 5000, 500, 20000, 500)
+          create_param_ui(ns, "reads_per_cell", "Reads per cell:", param_configs$mapped_reads_per_cell, 5000, 500, 20000, 500)
         ))
       }
       
