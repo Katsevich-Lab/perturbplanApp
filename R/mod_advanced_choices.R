@@ -26,17 +26,6 @@ mod_advanced_choices_ui <- function(id) {
         id = ns("advanced-content"),
         style = "padding: 15px;",
         
-        # Warning message for advanced users
-        tags$div(
-          class = "alert-warning",
-          style = "background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; border-radius: 4px; margin-bottom: 15px;",
-          tags$small(
-            tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
-            "These parameters have sensible defaults. Change only if you understand their impact.",
-            style = "color: #856404;"
-          )
-        ),
-        
         # gRNA variability (moved from effect sizes)
         numericInput(ns("gRNA_variability"), 
                     "gRNA variability:", 
