@@ -101,12 +101,23 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       # Configuration received successfully
 
-      # Early validation: Skip analysis if essential configuration is missing
+      # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
       design_config <- config$design_options
+      
+      # Check for missing essential fields
       if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
           is.null(design_config$minimization_target) || design_config$minimization_target == "") {
         return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
+      }
+      
+      # Check for incompatible optimization type + minimization target combinations (transition states)
+      opt_type <- design_config$optimization_type
+      target <- design_config$minimization_target
+      
+      # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
+      if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
+        return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
       }
 
       # Validate configuration (only after essential fields are present)
