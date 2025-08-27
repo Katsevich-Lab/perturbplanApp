@@ -7,7 +7,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe
+#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe updateNumericInput
 #' @importFrom shinyjs show hide
 mod_analysis_choices_ui <- function(id) {
   ns <- NS(id)
@@ -75,11 +75,24 @@ mod_analysis_choices_ui <- function(id) {
 #' @description Server logic for analysis choice parameters and gene list processing
 #'
 #' @param design_config Reactive containing design options configuration
+#' @param external_updates Reactive containing parameter updates from sliders
 #'
 #' @noRd
-mod_analysis_choices_server <- function(id, design_config){
+mod_analysis_choices_server <- function(id, design_config, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+    # Update TPM threshold from slider
+    observe({
+      updates <- external_updates()
+      
+      if (!is.null(updates) && !is.null(updates$analysis_choices) && 
+          !is.null(updates$analysis_choices$TPM_threshold_fixed) && 
+          !is.na(updates$analysis_choices$TPM_threshold_fixed)) {
+        updateNumericInput(session, "TPM_threshold_fixed", 
+                          value = updates$analysis_choices$TPM_threshold_fixed)
+      }
+    })
 
     # VARIABLE CONSISTENCY TRACKING:
     # - Parameter control key: config$parameter_controls$TPM_threshold$type

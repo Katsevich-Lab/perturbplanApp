@@ -48,20 +48,24 @@ mod_sidebar_ui <- function(id) {
 #' sidebar Server Functions
 #'
 #' @description Server logic for sidebar using modular components
+#' with support for external parameter updates from sliders
+#'
+#' @param id Module namespace ID
+#' @param external_updates Reactive containing parameter updates from sliders
 #'
 #' @noRd 
-mod_sidebar_server <- function(id){
+mod_sidebar_server <- function(id, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Initialize module servers
+    # Initialize module servers with slider update support
     design_config <- mod_design_options_server("design_options")
-    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
-    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
+    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, external_updates)
+    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, external_updates)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
     
-    # Initialize effect sizes server (always visible now)
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
+    # Initialize effect sizes server (always visible now) with slider update support
+    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, external_updates)
     
     # Plan button logic
     observeEvent(input$plan_btn, {

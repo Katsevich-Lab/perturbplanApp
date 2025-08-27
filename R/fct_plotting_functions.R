@@ -17,6 +17,9 @@
 #' @importFrom dplyr group_by slice_max slice_min ungroup arrange case_when
 NULL
 
+# Declare global variables to avoid R CMD check notes
+if(getRversion() >= "2.15.1") utils::globalVariables(c("hover_text"))
+
 # ============================================================================
 # SINGLE PARAMETER POWER CURVE PLOTS (8 workflows)
 # ============================================================================

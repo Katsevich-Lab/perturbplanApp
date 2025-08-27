@@ -7,7 +7,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe observeEvent req reactiveVal showNotification renderUI outputOptions htmlOutput HTML updateSelectInput
+#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe observeEvent req reactiveVal showNotification renderUI outputOptions htmlOutput HTML updateSelectInput updateNumericInput
 #' @importFrom shinyjs show hide
 #' @importFrom tools file_ext
 mod_experimental_setup_ui <- function(id) {
@@ -137,11 +137,46 @@ mod_experimental_setup_ui <- function(id) {
 #' @description Server logic for experimental setup parameters and file uploads
 #'
 #' @param design_config Reactive containing design options configuration
+#' @param external_updates Reactive containing parameter updates from sliders
 #'
 #' @noRd 
-mod_experimental_setup_server <- function(id, design_config){
+mod_experimental_setup_server <- function(id, design_config, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+    
+    # Update inputs when slider values change
+    observe({
+      updates <- external_updates()
+      
+      if (!is.null(updates) && !is.null(updates$experimental_setup)) {
+        exp_updates <- updates$experimental_setup
+        
+        # Update MOI from slider
+        if (!is.null(exp_updates$MOI) && !is.na(exp_updates$MOI)) {
+          updateNumericInput(session, "MOI", value = exp_updates$MOI)
+        }
+        
+        # Update number of targets from slider
+        if (!is.null(exp_updates$num_targets) && !is.na(exp_updates$num_targets)) {
+          updateNumericInput(session, "num_targets", value = exp_updates$num_targets)
+        }
+        
+        # Update gRNAs per target from slider
+        if (!is.null(exp_updates$gRNAs_per_target) && !is.na(exp_updates$gRNAs_per_target)) {
+          updateNumericInput(session, "gRNAs_per_target", value = exp_updates$gRNAs_per_target)
+        }
+        
+        # Update cells fixed from slider
+        if (!is.null(exp_updates$cells_fixed) && !is.na(exp_updates$cells_fixed)) {
+          updateNumericInput(session, "cells_fixed", value = exp_updates$cells_fixed)
+        }
+        
+        # Update reads fixed from slider
+        if (!is.null(exp_updates$mapped_reads_fixed) && !is.na(exp_updates$mapped_reads_fixed)) {
+          updateNumericInput(session, "mapped_reads_fixed", value = exp_updates$mapped_reads_fixed)
+        }
+      }
+    })
     
     # Logic for "Other" biological system selection
     observeEvent(input$biological_system, {

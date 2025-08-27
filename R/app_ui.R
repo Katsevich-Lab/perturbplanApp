@@ -17,8 +17,8 @@ app_ui <- function(request) {
         tags$li(
           class = "dropdown",
           style = "float: right; margin-right: 20px;",
-          # Placeholder for download button (will be conditionally shown later)
-          tags$div()
+          # Export buttons container (conditionally shown)
+          uiOutput("header_export_buttons")
         )
       ),
       

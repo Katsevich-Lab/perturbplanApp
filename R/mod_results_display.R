@@ -84,57 +84,23 @@ mod_results_display_ui <- function(id) {
                      style = "color: #7A8B93;")
             )
           )
-        ),
-        
-        # Export box
-        box(
-          title = "Export",
-          status = "warning",
-          solidHeader = TRUE, 
-          width = NULL,
-          
-          conditionalPanel(
-            condition = "output.show_results == true",
-            ns = ns,
-            # Export buttons
-            tags$div(
-              style = "margin-bottom: 15px;",
-              downloadButton(
-                ns("export_excel"),
-                "Export to Excel",
-                icon = icon("file-excel"),
-                class = "btn-success",
-                style = "width: 100%; margin-bottom: 8px;"
-              ),
-              downloadButton(
-                ns("export_plot"),
-                "Download Plot", 
-                icon = icon("image"),
-                class = "btn-info",
-                style = "width: 100%;"
-              )
-            ),
-            
-          ),
-          
-          conditionalPanel(
-            condition = "output.show_results == false",
-            ns = ns,
-            wellPanel(
-              style = "text-align: center; padding: 20px;",
-              tags$p("Export options will be available after analysis.",
-                     style = "color: #7A8B93;")
-            )
-          )
         )
       )
     ),
     
-    # Detailed results row (expandable)
+    # Horizontal Parameter Sliders Row (placeholder for now)
     conditionalPanel(
-      condition = "output.show_results == true",
+      condition = "output.show_sliders == true",
       ns = ns,
-      # Detailed Results section removed - not useful for end users
+      fluidRow(
+        column(12,
+          tags$div(
+            class = "slider-panel",
+            style = "background: white; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);",
+            mod_parameter_sliders_ui(ns("sliders"))
+          )
+        )
+      )
     )
   )
 }
@@ -199,6 +165,59 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       })
     })
     outputOptions(output, "show_error", suspendWhenHidden = FALSE)
+    
+    # Workflow-based slider visibility for 8 target workflows
+    output$show_sliders <- reactive({
+      tryCatch({
+        results <- analysis_results()
+        
+        if (is.null(results) || is.null(results$workflow_info)) {
+          return(FALSE)
+        }
+        
+        workflow <- results$workflow_info
+        target_workflows <- c(
+          # Power-only workflows (4 total)
+          "power_single_cells", 
+          "power_single_reads_per_cell", 
+          "power_single_TPM_threshold", 
+          "power_single_minimum_fold_change",
+          
+          # Power+cost workflows (4 total - only single-parameter varying)
+          "power_cost_TPM_cells",    # TPM min, cells vary, reads fixed
+          "power_cost_TPM_reads",    # TPM min, reads vary, cells fixed
+          "power_cost_fc_cells",     # FC min, cells vary, reads fixed  
+          "power_cost_fc_reads"      # FC min, reads vary, cells fixed
+        )
+        
+        !is.null(workflow$workflow_id) && workflow$workflow_id %in% target_workflows
+        
+      }, error = function(e) {
+        FALSE
+      })
+    })
+    outputOptions(output, "show_sliders", suspendWhenHidden = FALSE)
+    
+    # Initialize parameter sliders module
+    # Extract sidebar config and workflow info from analysis results
+    sidebar_config <- reactive({
+      results <- analysis_results()
+      if (!is.null(results) && !is.null(results$user_config)) {
+        return(results$user_config)
+      }
+      return(NULL)
+    })
+    
+    workflow_info <- reactive({
+      results <- analysis_results()
+      if (!is.null(results) && !is.null(results$workflow_info)) {
+        return(results$workflow_info)
+      }
+      return(NULL)
+    })
+    
+    # Initialize slider module server and handle updates
+    slider_updates <- mod_parameter_sliders_server("sliders", sidebar_config, workflow_info)
     
     # Error message display
     output$error_message <- renderUI({
@@ -400,6 +419,11 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
       },
       contentType = "image/png"
     )
+    
+    # Return slider updates for main app integration
+    return(list(
+      slider_updates = slider_updates
+    ))
   })
 }
 

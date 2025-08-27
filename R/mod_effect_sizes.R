@@ -6,7 +6,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div strong numericInput moduleServer reactive observe
+#' @importFrom shiny NS tagList tags div strong numericInput moduleServer reactive observe updateNumericInput
 #' @importFrom shinyjs show hide
 mod_effect_sizes_ui <- function(id) {
   ns <- NS(id)
@@ -47,11 +47,24 @@ mod_effect_sizes_ui <- function(id) {
 #' @description Server logic for effect size parameters
 #'
 #' @param design_config Reactive containing design options configuration
+#' @param external_updates Reactive containing parameter updates from sliders
 #'
 #' @noRd 
-mod_effect_sizes_server <- function(id, design_config){
+mod_effect_sizes_server <- function(id, design_config, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+    
+    # Update fold change from slider
+    observe({
+      updates <- external_updates()
+      
+      if (!is.null(updates) && !is.null(updates$effect_sizes) && 
+          !is.null(updates$effect_sizes$minimum_fold_change_fixed) && 
+          !is.na(updates$effect_sizes$minimum_fold_change_fixed)) {
+        updateNumericInput(session, "minimum_fold_change_fixed", 
+                          value = updates$effect_sizes$minimum_fold_change_fixed)
+      }
+    })
     
     # Conditional display logic for fold change input (panel is now always visible)
     observe({
