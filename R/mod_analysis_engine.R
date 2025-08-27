@@ -75,11 +75,22 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       design_config <- config$design_options
       
       # Check for missing essential fields
+      cat("=== ANALYSIS ENGINE DEBUG ===\n")
+      cat("optimization_type:", design_config$optimization_type, "\n")
+      cat("minimization_target:", design_config$minimization_target, "\n") 
+      cat("parameter_controls is NULL:", is.null(design_config$parameter_controls), "\n")
+      cat("plan_clicked:", config$plan_clicked, "\n")
+      
       if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
           is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
           is.null(design_config$parameter_controls)) {
+        cat("Returning NULL - incomplete configuration\n")
+        cat("==============================\n")
         return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
+      
+      cat("Configuration complete - continuing to analysis\n")
+      cat("===============================================\n")
       
       # Check for incompatible optimization type + minimization target combinations (transition states)
       opt_type <- design_config$optimization_type
