@@ -737,9 +737,17 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
     "power_cost_fc_cells_reads"         # FC minimization with cells+reads varying
   )
   
+  # Check if this is a workflow where one of cells/reads is cost-constrained
+  cells_or_reads_constrained <- workflow_info$workflow_id %in% c(
+    "power_cost_TPM_cells",             # TPM min with cells fixed, reads cost-constrained
+    "power_cost_TPM_reads",             # TPM min with reads fixed, cells cost-constrained
+    "power_cost_fc_cells",              # FC min with cells fixed, reads cost-constrained
+    "power_cost_fc_reads"               # FC min with reads fixed, cells cost-constrained
+  )
+  
   if (minimizing_param == "TPM_threshold") {
     if (cells_and_reads_varying) {
-      # Show TPM + optimal cells and reads
+      # Show TPM + optimal cells and reads (both varying)
       return(list(
         label = "Optimal Design",
         value = create_multi_param_display(list(
@@ -748,6 +756,27 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
           "Reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
         ))
       ))
+    } else if (cells_or_reads_constrained) {
+      # Show TPM + cost-constrained parameter
+      if (workflow_info$workflow_id == "power_cost_TPM_cells") {
+        # Cells fixed, reads cost-constrained
+        return(list(
+          label = "Optimal Design",
+          value = create_multi_param_display(list(
+            "TPM Threshold" = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A",
+            "Cost-constrained reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
+          ))
+        ))
+      } else if (workflow_info$workflow_id == "power_cost_TPM_reads") {
+        # Reads fixed, cells cost-constrained
+        return(list(
+          label = "Optimal Design",
+          value = create_multi_param_display(list(
+            "TPM Threshold" = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A",
+            "Cost-constrained cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A"
+          ))
+        ))
+      }
     } else {
       return(list(
         label = "TPM Threshold",
@@ -756,7 +785,7 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
     }
   } else if (minimizing_param == "minimum_fold_change") {
     if (cells_and_reads_varying) {
-      # Show FC + optimal cells and reads
+      # Show FC + optimal cells and reads (both varying)
       return(list(
         label = "Optimal Design",
         value = create_multi_param_display(list(
@@ -765,6 +794,27 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
           "Reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
         ))
       ))
+    } else if (cells_or_reads_constrained) {
+      # Show FC + cost-constrained parameter
+      if (workflow_info$workflow_id == "power_cost_fc_cells") {
+        # Cells fixed, reads cost-constrained
+        return(list(
+          label = "Optimal Design",
+          value = create_multi_param_display(list(
+            "Fold Change" = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
+            "Cost-constrained reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
+          ))
+        ))
+      } else if (workflow_info$workflow_id == "power_cost_fc_reads") {
+        # Reads fixed, cells cost-constrained
+        return(list(
+          label = "Optimal Design",
+          value = create_multi_param_display(list(
+            "Fold Change" = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
+            "Cost-constrained cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A"
+          ))
+        ))
+      }
     } else {
       return(list(
         label = "Fold Change",
