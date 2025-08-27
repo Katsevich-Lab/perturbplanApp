@@ -52,9 +52,11 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       if (!is.null(config) && !is.null(config$design_options$optimization_type)) {
         current_mode <- config$design_options$optimization_type
         
-        # If mode changed, clear cached results to force fresh analysis
+        # If mode changed, reset everything to show "Ready for Analysis"
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
-          cached_results(NULL)
+          cached_results(NULL)           # Clear cached results
+          previous_config(NULL)          # Reset configuration tracking
+          last_plan_count(0)             # Reset plan tracking
         }
         
         previous_optimization_mode(current_mode)
