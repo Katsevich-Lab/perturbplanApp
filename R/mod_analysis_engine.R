@@ -52,9 +52,16 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       if (!is.null(config) && !is.null(config$design_options$optimization_type)) {
         current_mode <- config$design_options$optimization_type
         
-        # If mode changed, refresh the entire app (cleanest solution)
+        # If mode changed AND there are existing results, refresh the entire app (cleanest solution)
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
-          session$reload()  # Full page refresh - resets all state completely
+          # Only reload if there are cached results (i.e., user had run analysis in previous mode)
+          if (!is.null(cached_results())) {
+            session$reload()  # Full page refresh - resets all state completely
+          } else {
+            # No results yet - just clear any cached data and let user continue configuring
+            cached_results(NULL)
+            previous_config(NULL)
+          }
         }
         
         previous_optimization_mode(current_mode)
