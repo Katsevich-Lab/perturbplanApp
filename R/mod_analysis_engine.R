@@ -68,16 +68,9 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       config <- workflow_config()
 
-      # Skip analysis if plan not clicked
-      if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
-        return(NULL)
-      }
-
-      # Configuration received successfully
-
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
-      # THIS MUST HAPPEN BEFORE CACHING LOGIC to prevent showing incompatible cached results
+      # THIS MUST HAPPEN BEFORE BOTH PLAN CHECK AND CACHING LOGIC
       design_config <- config$design_options
       
       # Check for missing essential fields
@@ -93,6 +86,11 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
       if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
         return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
+      }
+
+      # Skip analysis if plan not clicked (only after configuration is validated as compatible)
+      if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
+        return(NULL)
       }
 
       # Protection mechanism: Clear results if sidebar inputs changed since last plan
