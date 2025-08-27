@@ -173,33 +173,29 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
           }
         }
         
-        # Cells per target from experimental setup (apply default if sidebar value is NULL)
-        cells_value <- sidebar$experimental_setup$cells_fixed %||% 1000
-        if (!is.null(sidebar$experimental_setup)) {
+        # Power-determining parameters - read from design_options parameter_controls
+        if (!is.null(sidebar$design_options) && !is.null(sidebar$design_options$parameter_controls)) {
+          
+          # Cells per target from parameter controls
+          cells_value <- sidebar$design_options$parameter_controls$cells_per_target$fixed_value %||% 1000
           if (is.null(input$cells_slider) || input$cells_slider != cells_value) {
             updateSliderInput(session, "cells_slider", value = cells_value)
           }
-        }
-        
-        # Reads per cell from experimental setup (apply default if sidebar value is NULL)
-        reads_value <- sidebar$experimental_setup$mapped_reads_fixed %||% 5000
-        if (!is.null(sidebar$experimental_setup)) {
+          
+          # Reads per cell from parameter controls  
+          reads_value <- sidebar$design_options$parameter_controls$mapped_reads_per_cell$fixed_value %||% 5000
           if (is.null(input$reads_slider) || input$reads_slider != reads_value) {
             updateSliderInput(session, "reads_slider", value = reads_value)
           }
-        }
-        
-        # TPM threshold from analysis choices (apply default if sidebar value is NULL)
-        TPM_value <- sidebar$analysis_choices$TPM_threshold_fixed %||% 10
-        if (!is.null(sidebar$analysis_choices)) {
+          
+          # TPM threshold from parameter controls
+          TPM_value <- sidebar$design_options$parameter_controls$TPM_threshold$fixed_value %||% 10
           if (is.null(input$TPM_slider) || input$TPM_slider != TPM_value) {
             updateSliderInput(session, "TPM_slider", value = TPM_value)
           }
-        }
-        
-        # Fold change from effect sizes (apply default if sidebar value is NULL)
-        fc_value <- sidebar$effect_sizes$minimum_fold_change_fixed %||% 0.8
-        if (!is.null(sidebar$effect_sizes)) {
+          
+          # Fold change from parameter controls
+          fc_value <- sidebar$design_options$parameter_controls$minimum_fold_change$fixed_value %||% 0.8
           if (is.null(input$fc_slider) || input$fc_slider != fc_value) {
             updateSliderInput(session, "fc_slider", value = fc_value)
           }
