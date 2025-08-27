@@ -178,7 +178,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
         workflow <- results$workflow_info
         target_workflows <- c(
           # Power-only workflows (4 total)
-          "power_single_cells", 
+          "power_single_cells_per_target", 
           "power_single_reads_per_cell", 
           "power_single_TPM_threshold", 
           "power_single_minimum_fold_change",

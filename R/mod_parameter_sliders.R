@@ -228,7 +228,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
 get_minimized_parameter <- function(workflow_id) {
   minimized_map <- list(
     # Power-only workflows
-    "power_single_cells" = "cells_per_target",
+    "power_single_cells_per_target" = "cells_per_target",
     "power_single_reads_per_cell" = "reads_per_cell", 
     "power_single_TPM_threshold" = "TPM_threshold",
     "power_single_minimum_fold_change" = "minimum_fold_change",
