@@ -15,16 +15,24 @@ mod_parameter_sliders_ui <- function(id) {
   tagList(
     tags$div(
       id = ns("slider_container"),
-      class = "parameter-sliders-horizontal",
-      style = "padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
+      class = "parameter-sliders-grid",
+      style = "padding: 10px; background-color: #f8f9fa; border-radius: 8px;",
       
-      # ROW 1: Fixed experimental parameters (always 3 sliders)
-      uiOutput(ns("experimental_sliders")),
-      
-      # ROW 2: Power-determining parameters (dynamic - 3 out of 4 shown)
-      tags$div(
-        class = "slider-row power-params",
-        uiOutput(ns("dynamic_power_sliders"))
+      # 2-column, 3-row grid layout for all 6 parameters
+      fluidRow(
+        # Left Column (3 rows)
+        column(
+          width = 6,
+          style = "padding-right: 10px;",
+          uiOutput(ns("left_column_sliders"))
+        ),
+        
+        # Right Column (3 rows)
+        column(
+          width = 6,
+          style = "padding-left: 10px;",
+          uiOutput(ns("right_column_sliders"))
+        )
       )
     )
   )
@@ -83,21 +91,26 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     # DYNAMIC SLIDER GENERATION
     # ========================================================================
     
-    # Generate dynamic Row 1 experimental sliders with current values
-    output$experimental_sliders <- renderUI({
-      tags$div(
-        class = "slider-row experimental-params",
-        style = "margin-bottom: 20px;",
-        fluidRow(
-          column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, param_manager$parameters$MOI, 1)),
-          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, param_manager$parameters$num_targets, 50)),
-          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, param_manager$parameters$gRNAs_per_target, 1))
+    # Generate left column sliders (3 parameters from Row 1)
+    output$left_column_sliders <- renderUI({
+      tagList(
+        tags$div(
+          style = "margin-bottom: 15px;",
+          create_compact_slider(ns("moi_slider"), "MOI", 1, 50, param_manager$parameters$MOI, 1)
+        ),
+        tags$div(
+          style = "margin-bottom: 15px;",
+          create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, param_manager$parameters$num_targets, 50)
+        ),
+        tags$div(
+          style = "margin-bottom: 15px;",
+          create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, param_manager$parameters$gRNAs_per_target, 1)
         )
       )
     })
     
-    # Generate dynamic Row 2 based on workflow
-    output$dynamic_power_sliders <- renderUI({
+    # Generate right column sliders (3 parameters from Row 2 - dynamic based on workflow)
+    output$right_column_sliders <- renderUI({
       workflow <- workflow_info()
       
       if (is.null(workflow)) return(NULL)
@@ -174,16 +187,16 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         return(NULL)
       }
       
-      # Create dynamic column layout based on number of visible parameters
-      num_params <- length(visible_power_params)
-      col_width <- if (num_params == 1) 12 else if (num_params == 2) 6 else 4
-      
-      fluidRow(
+      # Create vertical layout for right column (stacked parameters)
+      tagList(
         lapply(names(visible_power_params), function(param_name) {
           param <- visible_power_params[[param_name]]
-          column(col_width, create_compact_slider(
-            ns(param$id), param$label, param$min, param$max, param$value, param$step
-          ))
+          tags$div(
+            style = "margin-bottom: 15px;",
+            create_compact_slider(
+              ns(param$id), param$label, param$min, param$max, param$value, param$step
+            )
+          )
         })
       )
     })
