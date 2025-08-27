@@ -802,10 +802,12 @@ create_multi_param_display <- function(param_list) {
 extract_experimental_choices <- function(optimal, workflow_info = NULL, user_config = reactive(NULL), param_manager = NULL) {
   params <- list()
   
-  # Get the parameter being minimized - these should NOT appear in slider columns
+  # Get the parameter being minimized and workflow type
   minimizing_param <- NULL
+  is_cost_minimization <- FALSE
   if (!is.null(workflow_info)) {
     minimizing_param <- workflow_info$minimizing_parameter
+    is_cost_minimization <- workflow_info$workflow_id == "power_cost_minimization"
   }
   
   # Show experimental parameters that appear in sliders AND are not being minimized
@@ -823,12 +825,14 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
       params[["gRNAs per target"]] <- param_manager$parameters$gRNAs_per_target
     }
     
-    # Row 2 experimental parameters (cells and reads - only show if not being minimized)
-    if (!is.null(param_manager$parameters$cells_per_target) && 
+    # Row 2 experimental parameters (cells and reads)
+    # In cost minimization, cells and reads don't have sliders (they are varying parameters)
+    # so they should NOT appear in slider columns
+    if (!is_cost_minimization && !is.null(param_manager$parameters$cells_per_target) && 
         (is.null(minimizing_param) || minimizing_param != "cells_per_target")) {
       params[["Cells per target"]] <- param_manager$parameters$cells_per_target
     }
-    if (!is.null(param_manager$parameters$reads_per_cell) && 
+    if (!is_cost_minimization && !is.null(param_manager$parameters$reads_per_cell) && 
         (is.null(minimizing_param) || !minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell"))) {
       params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
     }
