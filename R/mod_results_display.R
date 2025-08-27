@@ -903,7 +903,8 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     # they don't have sliders, so they should NOT appear in slider columns
     
     # For cells per target:
-    # Exclude if: 1) both cells+reads varying, 2) cells is being minimized, 3) cells is cost-constrained
+    # Show if: cells is fixed (i.e., reads is cost-constrained in _cells workflows)
+    # Exclude if: 1) both cells+reads varying, 2) cells is being minimized, 3) cells is cost-constrained (_reads workflows)
     cells_cost_constrained <- workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads")
     if (!cells_reads_varying && !cells_cost_constrained && !is.null(param_manager$parameters$cells_per_target) && 
         (is.null(minimizing_param) || minimizing_param != "cells_per_target")) {
@@ -911,7 +912,8 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     }
     
     # For reads per cell:
-    # Exclude if: 1) both cells+reads varying, 2) reads is being minimized, 3) reads is cost-constrained
+    # Show if: reads is fixed (i.e., cells is cost-constrained in _reads workflows)  
+    # Exclude if: 1) both cells+reads varying, 2) reads is being minimized, 3) reads is cost-constrained (_cells workflows)
     reads_cost_constrained <- workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_fc_cells")
     if (!cells_reads_varying && !reads_cost_constrained && !is.null(param_manager$parameters$reads_per_cell) && 
         (is.null(minimizing_param) || !minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell"))) {
