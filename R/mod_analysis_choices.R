@@ -86,14 +86,14 @@ mod_analysis_choices_server <- function(id, design_config, external_updates = re
     observe({
       updates <- external_updates()
       
-      # TEMPORARILY DISABLE slider -> sidebar updates to test drag issue
-      return()
-      
       if (!is.null(updates) && !is.null(updates$analysis_choices) && 
           !is.null(updates$analysis_choices$TPM_threshold_fixed) && 
           !is.na(updates$analysis_choices$TPM_threshold_fixed)) {
-        updateNumericInput(session, "TPM_threshold_fixed", 
-                          value = updates$analysis_choices$TPM_threshold_fixed)
+        # Only update if different to prevent circular loops
+        if (is.null(input$TPM_threshold_fixed) || input$TPM_threshold_fixed != updates$analysis_choices$TPM_threshold_fixed) {
+          updateNumericInput(session, "TPM_threshold_fixed", 
+                            value = updates$analysis_choices$TPM_threshold_fixed)
+        }
       }
     })
 

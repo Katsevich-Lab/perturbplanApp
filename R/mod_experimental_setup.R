@@ -144,39 +144,37 @@ mod_experimental_setup_server <- function(id, design_config, external_updates = 
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Update inputs when slider values change
+    # Update inputs when slider values change (ONLY for experimental parameters)
     observe({
       updates <- external_updates()
-      
-      # TEMPORARILY DISABLE slider -> sidebar updates to test drag issue
-      return()
       
       if (!is.null(updates) && !is.null(updates$experimental_setup)) {
         exp_updates <- updates$experimental_setup
         
-        # Update MOI from slider
+        # Update ONLY experimental parameters (these work well)
         if (!is.null(exp_updates$MOI) && !is.na(exp_updates$MOI)) {
           updateNumericInput(session, "MOI", value = exp_updates$MOI)
         }
         
-        # Update number of targets from slider
         if (!is.null(exp_updates$num_targets) && !is.na(exp_updates$num_targets)) {
           updateNumericInput(session, "num_targets", value = exp_updates$num_targets)
         }
         
-        # Update gRNAs per target from slider
         if (!is.null(exp_updates$gRNAs_per_target) && !is.na(exp_updates$gRNAs_per_target)) {
           updateNumericInput(session, "gRNAs_per_target", value = exp_updates$gRNAs_per_target)
         }
         
-        # Update cells fixed from slider
+        # Enable power-determining parameters with careful sync
         if (!is.null(exp_updates$cells_fixed) && !is.na(exp_updates$cells_fixed)) {
-          updateNumericInput(session, "cells_fixed", value = exp_updates$cells_fixed)
+          if (is.null(input$cells_fixed) || input$cells_fixed != exp_updates$cells_fixed) {
+            updateNumericInput(session, "cells_fixed", value = exp_updates$cells_fixed)
+          }
         }
         
-        # Update reads fixed from slider
         if (!is.null(exp_updates$mapped_reads_fixed) && !is.na(exp_updates$mapped_reads_fixed)) {
-          updateNumericInput(session, "mapped_reads_fixed", value = exp_updates$mapped_reads_fixed)
+          if (is.null(input$mapped_reads_fixed) || input$mapped_reads_fixed != exp_updates$mapped_reads_fixed) {
+            updateNumericInput(session, "mapped_reads_fixed", value = exp_updates$mapped_reads_fixed)
+          }
         }
       }
     })
