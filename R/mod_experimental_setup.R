@@ -85,16 +85,16 @@ mod_experimental_setup_ui <- function(id) {
           numericInput(ns("num_targets"), 
                       "Number of targets:",
                       value = 100,
-                      min = 10,
-                      max = 1000,
-                      step = 10),
+                      min = 50,
+                      max = 50000,
+                      step = 50),
           
           # gRNAs per target
           numericInput(ns("gRNAs_per_target"), 
                       "gRNAs per target:",
                       value = 4,
                       min = 1,
-                      max = 10,
+                      max = 20,
                       step = 1),
           
           # Non-targeting gRNAs
@@ -116,7 +116,7 @@ mod_experimental_setup_ui <- function(id) {
             id = ns("cells_fixed_div"),
             style = "display: none; margin-bottom: 15px;",
             numericInput(ns("cells_fixed"), "Cells per target:", 
-                        value = 1000, min = 50, max = 5000, step = 50)
+                        value = 1000, min = 20, max = 10000, step = 20)
           ),
           
           # Reads per cell fixed value (conditional)
@@ -124,7 +124,7 @@ mod_experimental_setup_ui <- function(id) {
             id = ns("mapped_reads_fixed_div"),
             style = "display: none; margin-bottom: 15px;",
             numericInput(ns("mapped_reads_fixed"), "Mapped reads per cell:", 
-                        value = 5000, min = 500, max = 20000, step = 500)
+                        value = 5000, min = 1000, max = 500000, step = 1000)
           )
         )
       )

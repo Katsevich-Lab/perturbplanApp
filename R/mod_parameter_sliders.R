@@ -26,8 +26,8 @@ mod_parameter_sliders_ui <- function(id) {
                 style = "text-align: center; margin-bottom: 15px; color: #495057; font-size: 14px;"),
         fluidRow(
           column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, 10, 1)),
-          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 10, 1000, 100, 10)),
-          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 10, 4, 1))
+          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 50000, 100, 50)),
+          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, 4, 1))
         )
       ),
       
@@ -102,9 +102,9 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
       
       # Define all 4 power-determining parameters (ranges match sidebar exactly)
       all_power_params <- list(
-        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 50, max = 5000, value = 1000, step = 50),
-        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 500, max = 20000, value = 5000, step = 500),
-        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 0, max = 100, value = 10, step = 1),
+        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = 1000, step = 20),
+        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = 5000, step = 1000),
+        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = 10, step = 1),
         minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.5, max = 10, value = 0.8, step = 0.1)
       )
       
