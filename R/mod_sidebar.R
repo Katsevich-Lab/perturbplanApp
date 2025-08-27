@@ -68,6 +68,22 @@ mod_sidebar_server <- function(id, param_manager){
     # Initialize effect sizes server with parameter manager integration
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, param_manager)
     
+    # Track optimization mode changes to reset plan button
+    previous_mode <- reactiveVal(NULL)
+    plan_count_adjustment <- reactiveVal(0)  # Adjustment to subtract from plan button count
+    
+    observe({
+      current_mode <- design_config()$optimization_type
+      if (!is.null(current_mode) && current_mode != "" && 
+          !is.null(previous_mode()) && previous_mode() != current_mode) {
+        # Mode changed - reset plan by adjusting the count
+        plan_count_adjustment(input$plan_btn)  # Store current count to subtract
+      }
+      if (!is.null(current_mode)) {
+        previous_mode(current_mode)
+      }
+    })
+    
     # Plan button logic
     observeEvent(input$plan_btn, {
       # TODO: Trigger analysis with combined configuration
@@ -106,7 +122,7 @@ mod_sidebar_server <- function(id, param_manager){
         
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
-        plan_clicked = input$plan_btn,
+        plan_clicked = input$plan_btn - plan_count_adjustment(),  # Reset plan count on mode change
         timestamp = Sys.time()
       )
       
