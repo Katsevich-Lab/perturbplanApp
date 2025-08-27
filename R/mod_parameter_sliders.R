@@ -126,58 +126,105 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
     })
     
     # ========================================================================
-    # UNIFIED INPUT COLLECTION - Sliders → Central Manager
+    # INPUT COLLECTION - SAFE: Using isolate() to break reactive cycles
     # ========================================================================
     
-    # Feed all slider changes directly to central parameter manager
-    observe({
-      if (!is.null(input$moi_slider)) {
+    # Use observeEvent + isolate to prevent circular reactive dependencies
+    observeEvent(input$moi_slider, {
+      isolate({
         param_manager$update_parameter("MOI", input$moi_slider, "slider")
-      }
+      })
     })
     
-    observe({
-      if (!is.null(input$targets_slider)) {
+    observeEvent(input$targets_slider, {
+      isolate({
         param_manager$update_parameter("num_targets", input$targets_slider, "slider")
-      }
+      })
     })
     
-    observe({
-      if (!is.null(input$grnas_slider)) {
+    observeEvent(input$grnas_slider, {
+      isolate({
         param_manager$update_parameter("gRNAs_per_target", input$grnas_slider, "slider")
-      }
+      })
     })
     
-    observe({
-      if (!is.null(input$cells_slider)) {
+    observeEvent(input$cells_slider, {
+      isolate({
         param_manager$update_parameter("cells_per_target", input$cells_slider, "slider")
-      }
+      })
     })
     
-    observe({
-      if (!is.null(input$reads_slider)) {
+    observeEvent(input$reads_slider, {
+      isolate({
         param_manager$update_parameter("reads_per_cell", input$reads_slider, "slider")
-      }
+      })
     })
     
-    observe({
-      if (!is.null(input$TPM_slider)) {
+    observeEvent(input$TPM_slider, {
+      isolate({
         param_manager$update_parameter("TPM_threshold", input$TPM_slider, "slider")
-      }
+      })
     })
     
-    observe({
-      if (!is.null(input$fc_slider)) {
+    observeEvent(input$fc_slider, {
+      isolate({
         param_manager$update_parameter("minimum_fold_change", input$fc_slider, "slider")
-      }
+      })
     })
     
     # ========================================================================
-    # UI UPDATES - TEMPORARILY DISABLED to prevent freezing
+    # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
     # ========================================================================
     
-    # TODO: Implement safer bidirectional sync later
-    # For now, sliders only feed parameter manager (one-way)
+    # Safe UI updates: Only update when parameter manager changes AND value is different
+    observeEvent(param_manager$parameters$MOI, {
+      new_value <- param_manager$parameters$MOI
+      if (!identical(isolate(input$moi_slider), new_value)) {
+        updateSliderInput(session, "moi_slider", value = new_value)
+      }
+    })
+    
+    observeEvent(param_manager$parameters$num_targets, {
+      new_value <- param_manager$parameters$num_targets
+      if (!identical(isolate(input$targets_slider), new_value)) {
+        updateSliderInput(session, "targets_slider", value = new_value)
+      }
+    })
+    
+    observeEvent(param_manager$parameters$gRNAs_per_target, {
+      new_value <- param_manager$parameters$gRNAs_per_target
+      if (!identical(isolate(input$grnas_slider), new_value)) {
+        updateSliderInput(session, "grnas_slider", value = new_value)
+      }
+    })
+    
+    observeEvent(param_manager$parameters$cells_per_target, {
+      new_value <- param_manager$parameters$cells_per_target
+      if (!identical(isolate(input$cells_slider), new_value)) {
+        updateSliderInput(session, "cells_slider", value = new_value)
+      }
+    })
+    
+    observeEvent(param_manager$parameters$reads_per_cell, {
+      new_value <- param_manager$parameters$reads_per_cell
+      if (!identical(isolate(input$reads_slider), new_value)) {
+        updateSliderInput(session, "reads_slider", value = new_value)
+      }
+    })
+    
+    observeEvent(param_manager$parameters$TPM_threshold, {
+      new_value <- param_manager$parameters$TPM_threshold
+      if (!identical(isolate(input$TPM_slider), new_value)) {
+        updateSliderInput(session, "TPM_slider", value = new_value)
+      }
+    })
+    
+    observeEvent(param_manager$parameters$minimum_fold_change, {
+      new_value <- param_manager$parameters$minimum_fold_change
+      if (!identical(isolate(input$fc_slider), new_value)) {
+        updateSliderInput(session, "fc_slider", value = new_value)
+      }
+    })
     
     # No return needed - central manager handles all data flow
     

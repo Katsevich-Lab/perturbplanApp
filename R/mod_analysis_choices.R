@@ -84,24 +84,27 @@ mod_analysis_choices_server <- function(id, design_config, param_manager){
     ns <- session$ns
 
     # ========================================================================
-    # INPUT FEEDING - TEMPORARILY DISABLED to prevent loops
+    # INPUT FEEDING - SAFE: Using isolate() to break reactive cycles
     # ========================================================================
     
-    # TODO: The sidebar reading from parameter manager while also writing to it causes loops
-    # Need to implement safer feeding mechanism
-    
-    # observe({
-    #   if (!is.null(input$TPM_threshold_fixed)) {
-    #     param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
-    #   }
-    # })
+    # Use observeEvent + isolate to prevent circular reactive dependencies
+    observeEvent(input$TPM_threshold_fixed, {
+      isolate({
+        param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
+      })
+    })
     
     # ========================================================================
-    # UI UPDATES - TEMPORARILY DISABLED to prevent freezing  
+    # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
     # ========================================================================
     
-    # TODO: Implement safer bidirectional sync later
-    # For now, sidebar only feeds parameter manager (one-way)
+    # Safe UI updates: Only update when parameter manager changes AND value is different
+    observeEvent(param_manager$parameters$TPM_threshold, {
+      new_value <- param_manager$parameters$TPM_threshold
+      if (!identical(isolate(input$TPM_threshold_fixed), new_value)) {
+        updateNumericInput(session, "TPM_threshold_fixed", value = new_value)
+      }
+    })
 
 
     # VARIABLE CONSISTENCY TRACKING:
