@@ -61,8 +61,21 @@ $(document).ready(function() {
     console.log('Restoring optimization mode:', storedMode);
     // Clear the stored mode after use
     sessionStorage.removeItem('perturbplan_optimization_mode');
-    // Send the mode to Shiny to restore the selection
+    
+    // Restore both the Shiny input value AND the visual radio button selection
     setTimeout(function() {
+      // Update the radio button selection in the DOM
+      var radioButton = document.querySelector('input[name="sidebar-design_options-optimization_type"][value="' + storedMode + '"]');
+      if (radioButton) {
+        radioButton.checked = true;
+        console.log('Visually selected radio button for:', storedMode);
+        
+        // Trigger the change event to ensure Shiny processes the selection
+        var event = new Event('change', { bubbles: true });
+        radioButton.dispatchEvent(event);
+      }
+      
+      // Also send to Shiny to ensure server-side state is updated
       Shiny.setInputValue('sidebar-design_options-optimization_type', storedMode, {priority: 'event'});
     }, 500);
   }
