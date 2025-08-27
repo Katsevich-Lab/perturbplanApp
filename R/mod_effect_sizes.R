@@ -31,7 +31,7 @@ mod_effect_sizes_ui <- function(id) {
           id = ns("minimum_fold_change_fixed_div"),
           style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
           numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
-                      value = 0.8, min = 0.3, max = 3, step = 0.1)
+                      value = 0.8, min = 0.3, max = 2, step = 0.1)
         ),
         
         # Proportion of non-null pairs (moved back from advanced settings)

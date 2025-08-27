@@ -461,7 +461,7 @@ mod_design_options_server <- function(id){
       
       if (!param_configs$minimum_fold_change$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "fc", "Fold change:", param_configs$minimum_fold_change, 1.5, 1.1, 10, 0.1)
+          create_param_ui(ns, "fc", "Fold change:", param_configs$minimum_fold_change, 1.5, 1.1, 2, 0.1)
         ))
       }
       

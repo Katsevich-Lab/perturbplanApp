@@ -94,7 +94,7 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
                 style = "text-align: center; margin-bottom: 15px; color: #495057; font-size: 14px;"),
         fluidRow(
           column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, param_manager$parameters$MOI, 1)),
-          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 50000, param_manager$parameters$num_targets, 50)),
+          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, param_manager$parameters$num_targets, 50)),
           column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, param_manager$parameters$gRNAs_per_target, 1))
         )
       )
@@ -124,7 +124,7 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = param_manager$parameters$cells_per_target, step = 20),
         reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = param_manager$parameters$reads_per_cell, step = 1000),
         TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = param_manager$parameters$TPM_threshold, step = 1),
-        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 3, value = param_manager$parameters$minimum_fold_change, step = 0.1)
+        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 2, value = param_manager$parameters$minimum_fold_change, step = 0.1)
       )
       
       # Determine which parameter is being minimized (exclude from Row 2)

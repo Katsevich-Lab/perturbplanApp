@@ -282,7 +282,7 @@ get_default_parameter_range <- function(parameter_name) {
     "cells" = seq(100, 2000, 50),
     "reads" = seq(1000, 10000, 200),
     "TPM_threshold" = seq(5, 50, 1),
-    "fold_change" = seq(1.2, 3.0, 0.1),
+    "fold_change" = seq(1.2, 2.0, 0.1),
     # Fallback
     c(1, 10, 1)
   )
