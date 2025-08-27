@@ -84,15 +84,17 @@ mod_analysis_choices_server <- function(id, design_config, param_manager){
     ns <- session$ns
 
     # ========================================================================
-    # INPUT FEEDING - Sidebar → Central Manager
+    # INPUT FEEDING - TEMPORARILY DISABLED to prevent loops
     # ========================================================================
     
-    # Feed TPM threshold changes to central manager
-    observe({
-      if (!is.null(input$TPM_threshold_fixed)) {
-        param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
-      }
-    })
+    # TODO: The sidebar reading from parameter manager while also writing to it causes loops
+    # Need to implement safer feeding mechanism
+    
+    # observe({
+    #   if (!is.null(input$TPM_threshold_fixed)) {
+    #     param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
+    #   }
+    # })
     
     # ========================================================================
     # UI UPDATES - TEMPORARILY DISABLED to prevent freezing  

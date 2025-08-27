@@ -146,39 +146,41 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     ns <- session$ns
     
     # ========================================================================
-    # INPUT FEEDING - Sidebar → Central Manager
+    # INPUT FEEDING - TEMPORARILY DISABLED to prevent loops
     # ========================================================================
     
-    # Feed all sidebar parameter changes to central manager
-    observe({
-      if (!is.null(input$MOI)) {
-        param_manager$update_parameter("MOI", input$MOI, "sidebar")
-      }
-    })
+    # TODO: The sidebar reading from parameter manager while also writing to it causes loops
+    # Need to implement safer feeding mechanism that doesn't create circular dependencies
     
-    observe({
-      if (!is.null(input$num_targets)) {
-        param_manager$update_parameter("num_targets", input$num_targets, "sidebar")
-      }
-    })
-    
-    observe({
-      if (!is.null(input$gRNAs_per_target)) {
-        param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "sidebar")
-      }
-    })
-    
-    observe({
-      if (!is.null(input$cells_fixed)) {
-        param_manager$update_parameter("cells_per_target", input$cells_fixed, "sidebar")
-      }
-    })
-    
-    observe({
-      if (!is.null(input$mapped_reads_fixed)) {
-        param_manager$update_parameter("reads_per_cell", input$mapped_reads_fixed, "sidebar")
-      }
-    })
+    # observe({
+    #   if (!is.null(input$MOI)) {
+    #     param_manager$update_parameter("MOI", input$MOI, "sidebar")
+    #   }
+    # })
+    # 
+    # observe({
+    #   if (!is.null(input$num_targets)) {
+    #     param_manager$update_parameter("num_targets", input$num_targets, "sidebar")
+    #   }
+    # })
+    # 
+    # observe({
+    #   if (!is.null(input$gRNAs_per_target)) {
+    #     param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "sidebar")
+    #   }
+    # })
+    # 
+    # observe({
+    #   if (!is.null(input$cells_fixed)) {
+    #     param_manager$update_parameter("cells_per_target", input$cells_fixed, "sidebar")
+    #   }
+    # })
+    # 
+    # observe({
+    #   if (!is.null(input$mapped_reads_fixed)) {
+    #     param_manager$update_parameter("reads_per_cell", input$mapped_reads_fixed, "sidebar")
+    #   }
+    # })
     
     # ========================================================================
     # UI UPDATES - TEMPORARILY DISABLED to prevent freezing

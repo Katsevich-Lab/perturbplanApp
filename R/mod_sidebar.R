@@ -74,35 +74,27 @@ mod_sidebar_server <- function(id, param_manager){
       showNotification("Plan button clicked - analysis will be implemented", type = "message")
     })
     
-    # Return configuration from central parameter manager with design options integration
+    # Return configuration from sidebar modules (avoiding parameter manager loops)
     combined_config <- reactive({
-      # Get current values directly from parameter manager's reactiveValues
+      # Get configurations from all modules (avoiding parameter manager to prevent loops)
       design_opts <- design_config()
+      experimental_opts <- experimental_config()
+      analysis_opts <- analysis_config()
+      effect_sizes_opts <- effect_sizes_config()
       
-      # Build config structure manually to avoid reactive-within-reactive issues
+      # Build config using sidebar module data (not parameter manager)
       config <- list(
         # Design options with complete configuration from design module
         design_options = design_opts,
         
-        # Experimental setup from parameter manager
-        experimental_setup = list(
-          MOI = param_manager$parameters$MOI,
-          num_targets = param_manager$parameters$num_targets,
-          gRNAs_per_target = param_manager$parameters$gRNAs_per_target,
-          non_targeting_gRNAs = param_manager$parameters$non_targeting_gRNAs,
-          cells_fixed = param_manager$parameters$cells_per_target,
-          mapped_reads_fixed = param_manager$parameters$reads_per_cell
-        ),
+        # Experimental setup from sidebar modules
+        experimental_setup = experimental_opts,
         
-        # Analysis choices
-        analysis_choices = list(
-          TPM_threshold_fixed = param_manager$parameters$TPM_threshold
-        ),
+        # Analysis choices from sidebar modules
+        analysis_choices = analysis_opts,
         
-        # Effect sizes
-        effect_sizes = list(
-          minimum_fold_change_fixed = param_manager$parameters$minimum_fold_change
-        ),
+        # Effect sizes from sidebar modules
+        effect_sizes = effect_sizes_opts,
         
         # Sidebar-only configuration
         advanced_choices = advanced_config(),
@@ -110,12 +102,20 @@ mod_sidebar_server <- function(id, param_manager){
         timestamp = Sys.time()
       )
       
-      # Update parameter controls with current parameter manager values
+      # Merge fixed values from logical sidebar sections into design options (if they exist)
       if (!is.null(config$design_options) && !is.null(config$design_options$parameter_controls)) {
-        config$design_options$parameter_controls$cells_per_target$fixed_value <- param_manager$parameters$cells_per_target
-        config$design_options$parameter_controls$mapped_reads_per_cell$fixed_value <- param_manager$parameters$reads_per_cell
-        config$design_options$parameter_controls$TPM_threshold$fixed_value <- param_manager$parameters$TPM_threshold
-        config$design_options$parameter_controls$minimum_fold_change$fixed_value <- param_manager$parameters$minimum_fold_change
+        if (!is.null(experimental_opts$cells_fixed)) {
+          config$design_options$parameter_controls$cells_per_target$fixed_value <- experimental_opts$cells_fixed
+        }
+        if (!is.null(experimental_opts$mapped_reads_fixed)) {
+          config$design_options$parameter_controls$mapped_reads_per_cell$fixed_value <- experimental_opts$mapped_reads_fixed
+        }
+        if (!is.null(analysis_opts$TPM_threshold_fixed)) {
+          config$design_options$parameter_controls$TPM_threshold$fixed_value <- analysis_opts$TPM_threshold_fixed
+        }
+        if (!is.null(effect_sizes_opts$minimum_fold_change_fixed)) {
+          config$design_options$parameter_controls$minimum_fold_change$fixed_value <- effect_sizes_opts$minimum_fold_change_fixed
+        }
       }
       
       return(config)

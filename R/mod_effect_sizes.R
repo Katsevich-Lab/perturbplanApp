@@ -56,15 +56,17 @@ mod_effect_sizes_server <- function(id, design_config, param_manager){
     ns <- session$ns
     
     # ========================================================================
-    # INPUT FEEDING - Sidebar → Central Manager
+    # INPUT FEEDING - TEMPORARILY DISABLED to prevent loops
     # ========================================================================
     
-    # Feed fold change changes to central manager
-    observe({
-      if (!is.null(input$minimum_fold_change_fixed)) {
-        param_manager$update_parameter("minimum_fold_change", input$minimum_fold_change_fixed, "sidebar")
-      }
-    })
+    # TODO: The sidebar reading from parameter manager while also writing to it causes loops
+    # Need to implement safer feeding mechanism
+    
+    # observe({
+    #   if (!is.null(input$minimum_fold_change_fixed)) {
+    #     param_manager$update_parameter("minimum_fold_change", input$minimum_fold_change_fixed, "sidebar")
+    #   }
+    # })
     
     # ========================================================================
     # UI UPDATES - TEMPORARILY DISABLED to prevent freezing
