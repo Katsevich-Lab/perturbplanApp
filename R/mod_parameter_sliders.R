@@ -173,38 +173,49 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
     })
     
     # ========================================================================
-    # UI UPDATES - Central Manager → Sliders 
+    # UI UPDATES - Central Manager → Sliders (Direct Reactive Observers)
     # ========================================================================
     
-    # Register this module's UI updater with the central manager
-    param_manager$register_ui_updater("sliders", function(params) {
-      # Update sliders only if values are different (prevent loops)
-      if (!identical(input$moi_slider, params$MOI)) {
-        updateSliderInput(session, "moi_slider", value = params$MOI)
+    # Direct reactive observers to update sliders when parameter manager changes
+    observe({
+      if (!identical(input$moi_slider, param_manager$parameters$MOI)) {
+        updateSliderInput(session, "moi_slider", value = param_manager$parameters$MOI)
       }
-      
-      if (!identical(input$targets_slider, params$num_targets)) {
-        updateSliderInput(session, "targets_slider", value = params$num_targets)
+    })
+    
+    observe({
+      if (!identical(input$targets_slider, param_manager$parameters$num_targets)) {
+        updateSliderInput(session, "targets_slider", value = param_manager$parameters$num_targets)
       }
-      
-      if (!identical(input$grnas_slider, params$gRNAs_per_target)) {
-        updateSliderInput(session, "grnas_slider", value = params$gRNAs_per_target)
+    })
+    
+    observe({
+      if (!identical(input$grnas_slider, param_manager$parameters$gRNAs_per_target)) {
+        updateSliderInput(session, "grnas_slider", value = param_manager$parameters$gRNAs_per_target)
       }
-      
-      if (!identical(input$cells_slider, params$cells_per_target)) {
-        updateSliderInput(session, "cells_slider", value = params$cells_per_target)
+    })
+    
+    observe({
+      if (!identical(input$cells_slider, param_manager$parameters$cells_per_target)) {
+        updateSliderInput(session, "cells_slider", value = param_manager$parameters$cells_per_target)
       }
-      
-      if (!identical(input$reads_slider, params$reads_per_cell)) {
-        updateSliderInput(session, "reads_slider", value = params$reads_per_cell)
+    })
+    
+    observe({
+      if (!identical(input$reads_slider, param_manager$parameters$reads_per_cell)) {
+        updateSliderInput(session, "reads_slider", value = param_manager$parameters$reads_per_cell)
       }
-      
-      if (!identical(input$TPM_slider, params$TPM_threshold)) {
-        updateSliderInput(session, "TPM_slider", value = params$TPM_threshold)
+    })
+    
+    observe({
+      if (!identical(input$TPM_slider, param_manager$parameters$TPM_threshold)) {
+        updateSliderInput(session, "TPM_slider", value = param_manager$parameters$TPM_threshold)
       }
-      
-      if (!identical(input$fc_slider, params$minimum_fold_change)) {
-        updateSliderInput(session, "fc_slider", value = params$minimum_fold_change)
+    })
+    
+    observe({
+      if (!identical(input$fc_slider, param_manager$parameters$minimum_fold_change)) {
+        updateSliderInput(session, "fc_slider", value = param_manager$parameters$minimum_fold_change)
       }
     })
     

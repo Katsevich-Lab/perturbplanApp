@@ -67,13 +67,13 @@ mod_effect_sizes_server <- function(id, design_config, param_manager){
     })
     
     # ========================================================================
-    # UI UPDATES - Central Manager → Sidebar
+    # UI UPDATES - Central Manager → Sidebar (Direct Reactive Observer)
     # ========================================================================
     
-    # Register sidebar updater for fold change
-    param_manager$register_ui_updater("effect_sizes", function(params) {
-      if (!identical(input$minimum_fold_change_fixed, params$minimum_fold_change)) {
-        updateNumericInput(session, "minimum_fold_change_fixed", value = params$minimum_fold_change)
+    # Direct reactive observer to update sidebar when parameter manager changes
+    observe({
+      if (!identical(input$minimum_fold_change_fixed, param_manager$parameters$minimum_fold_change)) {
+        updateNumericInput(session, "minimum_fold_change_fixed", value = param_manager$parameters$minimum_fold_change)
       }
     })
     

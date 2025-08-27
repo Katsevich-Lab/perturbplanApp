@@ -66,33 +66,17 @@ mod_parameter_manager_server <- function(id) {
     }
     
     # ========================================================================
-    # UI UPDATE COORDINATION - One Source → Multiple Destinations
+    # UI UPDATE COORDINATION - DISABLED to prevent infinite loops
     # ========================================================================
     
-    # This will be called by other modules to register their update functions
-    ui_updaters <- reactiveValues()
+    # UI updates will be handled by individual reactive observers in each module
+    # that watch the parameter manager's reactive values directly
     
+    # Placeholder for potential future targeted updates
     register_ui_updater <- function(component_name, updater_function) {
-      ui_updaters[[component_name]] <- updater_function
+      # Currently disabled to prevent circular dependencies
+      return(NULL)
     }
-    
-    # Notify all registered UI components when parameters change
-    observe({
-      # Trigger on any parameter change
-      params <- reactiveValuesToList(parameters)
-      
-      # Call all registered UI updaters
-      for (component_name in names(ui_updaters)) {
-        tryCatch({
-          if (is.function(ui_updaters[[component_name]])) {
-            ui_updaters[[component_name]](params)
-          }
-        }, error = function(e) {
-          # Silent error handling - don't break other updates
-          # cat(sprintf("Error updating %s: %s\n", component_name, e$message))
-        })
-      }
-    })
     
     # ========================================================================
     # COMPATIBILITY LAYER - For Existing Analysis Engine

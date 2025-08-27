@@ -181,30 +181,37 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     })
     
     # ========================================================================
-    # UI UPDATES - Central Manager → Sidebar
+    # UI UPDATES - Central Manager → Sidebar (Direct Reactive Observers)
     # ========================================================================
     
-    # Register sidebar updater with parameter manager
-    param_manager$register_ui_updater("experimental_setup", function(params) {
-      # Update sidebar inputs only if values are different
-      if (!identical(input$MOI, params$MOI)) {
-        updateNumericInput(session, "MOI", value = params$MOI)
+    # Direct reactive observers to update sidebar when parameter manager changes
+    observe({
+      if (!identical(input$MOI, param_manager$parameters$MOI)) {
+        updateNumericInput(session, "MOI", value = param_manager$parameters$MOI)
       }
-      
-      if (!identical(input$num_targets, params$num_targets)) {
-        updateNumericInput(session, "num_targets", value = params$num_targets)
+    })
+    
+    observe({
+      if (!identical(input$num_targets, param_manager$parameters$num_targets)) {
+        updateNumericInput(session, "num_targets", value = param_manager$parameters$num_targets)
       }
-      
-      if (!identical(input$gRNAs_per_target, params$gRNAs_per_target)) {
-        updateNumericInput(session, "gRNAs_per_target", value = params$gRNAs_per_target)
+    })
+    
+    observe({
+      if (!identical(input$gRNAs_per_target, param_manager$parameters$gRNAs_per_target)) {
+        updateNumericInput(session, "gRNAs_per_target", value = param_manager$parameters$gRNAs_per_target)
       }
-      
-      if (!identical(input$cells_fixed, params$cells_per_target)) {
-        updateNumericInput(session, "cells_fixed", value = params$cells_per_target)
+    })
+    
+    observe({
+      if (!identical(input$cells_fixed, param_manager$parameters$cells_per_target)) {
+        updateNumericInput(session, "cells_fixed", value = param_manager$parameters$cells_per_target)
       }
-      
-      if (!identical(input$mapped_reads_fixed, params$reads_per_cell)) {
-        updateNumericInput(session, "mapped_reads_fixed", value = params$reads_per_cell)
+    })
+    
+    observe({
+      if (!identical(input$mapped_reads_fixed, param_manager$parameters$reads_per_cell)) {
+        updateNumericInput(session, "mapped_reads_fixed", value = param_manager$parameters$reads_per_cell)
       }
     })
     

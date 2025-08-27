@@ -95,13 +95,13 @@ mod_analysis_choices_server <- function(id, design_config, param_manager){
     })
     
     # ========================================================================
-    # UI UPDATES - Central Manager → Sidebar
+    # UI UPDATES - Central Manager → Sidebar (Direct Reactive Observer)
     # ========================================================================
     
-    # Register sidebar updater for TPM threshold
-    param_manager$register_ui_updater("analysis_choices", function(params) {
-      if (!identical(input$TPM_threshold_fixed, params$TPM_threshold)) {
-        updateNumericInput(session, "TPM_threshold_fixed", value = params$TPM_threshold)
+    # Direct reactive observer to update sidebar when parameter manager changes
+    observe({
+      if (!identical(input$TPM_threshold_fixed, param_manager$parameters$TPM_threshold)) {
+        updateNumericInput(session, "TPM_threshold_fixed", value = param_manager$parameters$TPM_threshold)
       }
     })
 
