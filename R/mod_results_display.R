@@ -511,7 +511,7 @@ extract_solution_data <- function(optimal, workflow_info, user_config = reactive
     index = index,
     achieved_power = extract_achieved_power(optimal),
     optimal_design = extract_optimal_design_value(optimal, workflow_info),
-    experimental_choices = extract_experimental_choices(optimal, user_config, param_manager),
+    experimental_choices = extract_experimental_choices(optimal, workflow_info, user_config, param_manager),
     analysis_choices = extract_analysis_choices(optimal, workflow_info, user_config, param_manager),
     effect_sizes = extract_effect_sizes(optimal, workflow_info, user_config, param_manager)
   )
@@ -799,14 +799,20 @@ create_multi_param_display <- function(param_list) {
 #' @param param_manager Parameter manager instance
 #' @return Named list of experimental choice parameters (only those with sliders)
 #' @noRd
-extract_experimental_choices <- function(optimal, user_config = reactive(NULL), param_manager = NULL) {
+extract_experimental_choices <- function(optimal, workflow_info = NULL, user_config = reactive(NULL), param_manager = NULL) {
   params <- list()
   
-  # Show experimental parameters that appear in sliders 
+  # Get the parameter being minimized - these should NOT appear in slider columns
+  minimizing_param <- NULL
+  if (!is.null(workflow_info)) {
+    minimizing_param <- workflow_info$minimizing_parameter
+  }
+  
+  # Show experimental parameters that appear in sliders AND are not being minimized
   # This includes both Row 1 (MOI, targets, gRNAs) and Row 2 experimental parameters (cells, reads)
   if (!is.null(param_manager) && !is.null(param_manager$parameters)) {
     
-    # Row 1 parameters (always experimental choices when present)
+    # Row 1 parameters (always experimental choices when present and not minimized)
     if (!is.null(param_manager$parameters$MOI)) {
       params[["MOI"]] <- param_manager$parameters$MOI
     }
@@ -817,11 +823,13 @@ extract_experimental_choices <- function(optimal, user_config = reactive(NULL), 
       params[["gRNAs per target"]] <- param_manager$parameters$gRNAs_per_target
     }
     
-    # Row 2 experimental parameters (cells and reads - these are experimental design choices)
-    if (!is.null(param_manager$parameters$cells_per_target)) {
+    # Row 2 experimental parameters (cells and reads - only show if not being minimized)
+    if (!is.null(param_manager$parameters$cells_per_target) && 
+        (is.null(minimizing_param) || minimizing_param != "cells_per_target")) {
       params[["Cells per target"]] <- param_manager$parameters$cells_per_target
     }
-    if (!is.null(param_manager$parameters$reads_per_cell)) {
+    if (!is.null(param_manager$parameters$reads_per_cell) && 
+        (is.null(minimizing_param) || !minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell"))) {
       params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
     }
   }
