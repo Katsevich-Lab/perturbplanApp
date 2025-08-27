@@ -129,14 +129,25 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
     # BIDIRECTIONAL SYNCHRONIZATION
     # ========================================================================
     
-    # Create reactive values for parameter updates
+    # Create reactive values for parameter updates and user interaction tracking
     parameter_updates <- reactiveValues()
+    user_interaction <- reactiveValues(
+      active = FALSE,
+      last_change = Sys.time()
+    )
     
-    # Sidebar → Sliders: Update sliders when sidebar changes
+    # Sidebar → Sliders: Update sliders when sidebar changes (only if user not actively dragging)
     observe({
       sidebar <- sidebar_config()
       
       if (is.null(sidebar)) return()
+      
+      # Check if user is actively interacting - if so, skip sidebar updates
+      current_time <- Sys.time()
+      if (user_interaction$active && 
+          difftime(current_time, user_interaction$last_change, units = "secs") < 2) {
+        return() # Skip sidebar updates during active user interaction
+      }
       
       # Extract parameter values from sidebar configuration
       # Handle the complex nested structure of sidebar config
@@ -192,27 +203,55 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
       })
     })
     
-    # Sliders → Parameter Updates: Track slider changes for return to main app
+    # Sliders → Parameter Updates: Track slider changes for return to main app + user interaction
     observe({
-      parameter_updates$moi <- input$moi_slider
+      if (!is.null(input$moi_slider)) {
+        user_interaction$active <- TRUE
+        user_interaction$last_change <- Sys.time()
+        parameter_updates$moi <- input$moi_slider
+      }
     })
     observe({
-      parameter_updates$num_targets <- input$targets_slider  
+      if (!is.null(input$targets_slider)) {
+        user_interaction$active <- TRUE
+        user_interaction$last_change <- Sys.time()
+        parameter_updates$num_targets <- input$targets_slider  
+      }
     })
     observe({
-      parameter_updates$gRNAs_per_target <- input$grnas_slider
+      if (!is.null(input$grnas_slider)) {
+        user_interaction$active <- TRUE
+        user_interaction$last_change <- Sys.time()
+        parameter_updates$gRNAs_per_target <- input$grnas_slider
+      }
     })
     observe({
-      parameter_updates$cells_fixed <- input$cells_slider
+      if (!is.null(input$cells_slider)) {
+        user_interaction$active <- TRUE
+        user_interaction$last_change <- Sys.time()
+        parameter_updates$cells_fixed <- input$cells_slider
+      }
     })
     observe({
-      parameter_updates$mapped_reads_fixed <- input$reads_slider
+      if (!is.null(input$reads_slider)) {
+        user_interaction$active <- TRUE
+        user_interaction$last_change <- Sys.time()
+        parameter_updates$mapped_reads_fixed <- input$reads_slider
+      }
     })
     observe({
-      parameter_updates$TPM_threshold_fixed <- input$TPM_slider
+      if (!is.null(input$TPM_slider)) {
+        user_interaction$active <- TRUE
+        user_interaction$last_change <- Sys.time()
+        parameter_updates$TPM_threshold_fixed <- input$TPM_slider
+      }
     })
     observe({
-      parameter_updates$minimum_fold_change_fixed <- input$fc_slider
+      if (!is.null(input$fc_slider)) {
+        user_interaction$active <- TRUE
+        user_interaction$last_change <- Sys.time()
+        parameter_updates$minimum_fold_change_fixed <- input$fc_slider
+      }
     })
     
     # Return parameter updates for consumption by parent app
