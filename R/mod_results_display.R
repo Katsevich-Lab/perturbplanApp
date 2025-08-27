@@ -226,7 +226,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     # Initialize slider module server with parameter manager
     if (!is.null(param_manager)) {
-      mod_parameter_sliders_server("sliders", param_manager, workflow_info)
+      mod_parameter_sliders_server("sliders", param_manager, workflow_info, user_config)
     }
     
     # Error message display

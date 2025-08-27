@@ -74,9 +74,10 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
 #' @param id Module namespace ID
 #' @param param_manager Parameter manager instance (central hub)
 #' @param workflow_info Reactive containing workflow information
+#' @param user_config Reactive containing full user configuration (optional, for power+cost filtering)
 #'
 #' @noRd 
-mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
+mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_config = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -105,6 +106,19 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
       
       if (is.null(workflow)) return(NULL)
       
+      # Get design configuration from user_config to check parameter control types
+      config <- user_config()
+      if (is.null(config) || is.null(config$design_options)) {
+        # Fallback to basic workflow-based filtering if config not available
+        design_config <- NULL
+        param_controls <- NULL
+        optimization_type <- NULL
+      } else {
+        design_config <- config$design_options
+        param_controls <- design_config$parameter_controls
+        optimization_type <- design_config$optimization_type
+      }
+      
       # Define all 4 power-determining parameters (use current parameter manager values)
       all_power_params <- list(
         cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = param_manager$parameters$cells_per_target, step = 20),
@@ -119,11 +133,44 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
       # Filter out the minimized parameter
       visible_power_params <- all_power_params[!names(all_power_params) %in% minimized_param]
       
-      # Create 3-column layout for the remaining 3 parameters
+      # POWER+COST MODE FILTERING: Show sliders only for "fixed" parameters
+      if (!is.null(optimization_type) && optimization_type == "power_cost" && !is.null(param_controls)) {
+        # Map parameter names to their control types
+        param_name_mapping <- list(
+          "cells_per_target" = "cells_per_target",
+          "reads_per_cell" = "mapped_reads_per_cell",  # UI uses different name
+          "TPM_threshold" = "TPM_threshold",
+          "minimum_fold_change" = "minimum_fold_change"
+        )
+        
+        # Filter to show only parameters that are set to "fixed"
+        filtered_params <- list()
+        for (param_name in names(visible_power_params)) {
+          control_name <- param_name_mapping[[param_name]]
+          if (!is.null(control_name) && !is.null(param_controls[[control_name]])) {
+            param_type <- param_controls[[control_name]]$type
+            # Show slider only if parameter is set to "fixed"
+            if (!is.null(param_type) && param_type == "fixed") {
+              filtered_params[[param_name]] <- visible_power_params[[param_name]]
+            }
+          }
+        }
+        visible_power_params <- filtered_params
+      }
+      
+      # If no parameters to show, return empty
+      if (length(visible_power_params) == 0) {
+        return(NULL)
+      }
+      
+      # Create dynamic column layout based on number of visible parameters
+      num_params <- length(visible_power_params)
+      col_width <- if (num_params == 1) 12 else if (num_params == 2) 6 else 4
+      
       fluidRow(
         lapply(names(visible_power_params), function(param_name) {
           param <- visible_power_params[[param_name]]
-          column(4, create_compact_slider(
+          column(col_width, create_compact_slider(
             ns(param$id), param$label, param$min, param$max, param$value, param$step
           ))
         })
