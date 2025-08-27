@@ -137,14 +137,78 @@ mod_experimental_setup_ui <- function(id) {
 #' @description Server logic for experimental setup parameters and file uploads
 #'
 #' @param design_config Reactive containing design options configuration
-#' @param external_updates Reactive containing parameter updates from sliders
+#' @param param_manager Parameter manager instance (central hub)
+#' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_experimental_setup_server <- function(id, design_config, external_updates = reactive(NULL)){
+mod_experimental_setup_server <- function(id, design_config, param_manager, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Update inputs when slider values change (ONLY for experimental parameters)
+    # ========================================================================
+    # INPUT FEEDING - Sidebar → Central Manager
+    # ========================================================================
+    
+    # Feed all sidebar parameter changes to central manager
+    observe({
+      if (!is.null(input$MOI)) {
+        param_manager$update_parameter("MOI", input$MOI, "sidebar")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$num_targets)) {
+        param_manager$update_parameter("num_targets", input$num_targets, "sidebar")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$gRNAs_per_target)) {
+        param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "sidebar")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$cells_fixed)) {
+        param_manager$update_parameter("cells_per_target", input$cells_fixed, "sidebar")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$mapped_reads_fixed)) {
+        param_manager$update_parameter("reads_per_cell", input$mapped_reads_fixed, "sidebar")
+      }
+    })
+    
+    # ========================================================================
+    # UI UPDATES - Central Manager → Sidebar
+    # ========================================================================
+    
+    # Register sidebar updater with parameter manager
+    param_manager$register_ui_updater("experimental_setup", function(params) {
+      # Update sidebar inputs only if values are different
+      if (!identical(input$MOI, params$MOI)) {
+        updateNumericInput(session, "MOI", value = params$MOI)
+      }
+      
+      if (!identical(input$num_targets, params$num_targets)) {
+        updateNumericInput(session, "num_targets", value = params$num_targets)
+      }
+      
+      if (!identical(input$gRNAs_per_target, params$gRNAs_per_target)) {
+        updateNumericInput(session, "gRNAs_per_target", value = params$gRNAs_per_target)
+      }
+      
+      if (!identical(input$cells_fixed, params$cells_per_target)) {
+        updateNumericInput(session, "cells_fixed", value = params$cells_per_target)
+      }
+      
+      if (!identical(input$mapped_reads_fixed, params$reads_per_cell)) {
+        updateNumericInput(session, "mapped_reads_fixed", value = params$reads_per_cell)
+      }
+    })
+    
+    # Update inputs when slider values change (ONLY for experimental parameters) - DEPRECATED
     observe({
       updates <- external_updates()
       

@@ -122,7 +122,7 @@ mod_results_display_ui <- function(id) {
 # DT import removed - detailed results table no longer used
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
-mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL)) {
+mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), param_manager = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -224,8 +224,10 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       return(NULL)
     })
     
-    # Initialize slider module server and handle updates
-    slider_updates <- mod_parameter_sliders_server("sliders", sidebar_config, workflow_info)
+    # Initialize slider module server with parameter manager
+    if (!is.null(param_manager)) {
+      mod_parameter_sliders_server("sliders", param_manager, workflow_info)
+    }
     
     # Error message display
     output$error_message <- renderUI({

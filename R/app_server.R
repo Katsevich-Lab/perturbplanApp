@@ -13,9 +13,15 @@
 app_server <- function(input, output, session) {
   
   # ========================================================================
-  # MODULE 1: INPUT COLLECTION
+  # MODULE 0: CENTRAL PARAMETER MANAGEMENT
   # ========================================================================
-  # Extract slider updates for passing to sidebar
+  # Initialize the central parameter manager (single source of truth)
+  param_manager <- mod_parameter_manager_server("param_manager")
+  
+  # ========================================================================
+  # MODULE 1: INPUT COLLECTION 
+  # ========================================================================
+  # Extract slider updates for passing to sidebar (TEMPORARY: backward compatibility)
   slider_updates <- reactive({
     if (!is.null(display_outputs) && !is.null(display_outputs$slider_updates)) {
       return(display_outputs$slider_updates())
@@ -23,8 +29,8 @@ app_server <- function(input, output, session) {
     return(NULL)
   })
   
-  # Collect all user inputs through sidebar with slider integration
-  user_workflow_config <- mod_sidebar_server("sidebar", slider_updates)
+  # Collect all user inputs through sidebar with parameter manager integration
+  user_workflow_config <- mod_sidebar_server("sidebar", param_manager, slider_updates)
   
   # ========================================================================  
   # MODULE 2: ANALYSIS ENGINE (Perturbplan Integration)
@@ -41,8 +47,8 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # MODULE 4: RESULTS DISPLAY (Always Same)  
   # ========================================================================
-  # Handle UI presentation of plots and tables and capture slider updates
-  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config)
+  # Handle UI presentation of plots and tables with parameter manager integration
+  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config, param_manager)
   
   # ========================================================================
   # HEADER EXPORT FUNCTIONALITY

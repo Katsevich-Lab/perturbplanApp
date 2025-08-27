@@ -48,24 +48,25 @@ mod_sidebar_ui <- function(id) {
 #' sidebar Server Functions
 #'
 #' @description Server logic for sidebar using modular components
-#' with support for external parameter updates from sliders
+#' with central parameter manager integration
 #'
 #' @param id Module namespace ID
-#' @param external_updates Reactive containing parameter updates from sliders
+#' @param param_manager Parameter manager instance (central hub)
+#' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_sidebar_server <- function(id, external_updates = reactive(NULL)){
+mod_sidebar_server <- function(id, param_manager, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Initialize module servers with slider update support
+    # Initialize module servers with parameter manager integration
     design_config <- mod_design_options_server("design_options")
-    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, external_updates)
-    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, external_updates)
+    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, param_manager, external_updates)
+    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, param_manager, external_updates)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
     
-    # Initialize effect sizes server (always visible now) with slider update support
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, external_updates)
+    # Initialize effect sizes server with parameter manager integration
+    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, param_manager, external_updates)
     
     # Plan button logic
     observeEvent(input$plan_btn, {
@@ -73,40 +74,17 @@ mod_sidebar_server <- function(id, external_updates = reactive(NULL)){
       showNotification("Plan button clicked - analysis will be implemented", type = "message")
     })
     
-    # Return combined configuration from all modules
+    # Return configuration from central parameter manager (TEMPORARY: with compatibility layer)
     combined_config <- reactive({
-      # Get configurations from all modules
-      design_opts <- design_config()
-      experimental_opts <- experimental_config()
-      analysis_opts <- analysis_config()
-      effect_sizes_opts <- effect_sizes_config()
+      # Use parameter manager's unified config but add sidebar-specific data
+      base_config <- param_manager$combined_config()
       
-      # Merge fixed values from logical sidebar sections into design options
-      if (!is.null(design_opts) && !is.null(design_opts$parameter_controls)) {
-        # Update fixed values from their logical locations
-        if (!is.null(experimental_opts$cells_fixed)) {
-          design_opts$parameter_controls$cells_per_target$fixed_value <- experimental_opts$cells_fixed
-        }
-        if (!is.null(experimental_opts$mapped_reads_fixed)) {
-          design_opts$parameter_controls$mapped_reads_per_cell$fixed_value <- experimental_opts$mapped_reads_fixed
-        }
-        if (!is.null(analysis_opts$TPM_threshold_fixed)) {
-          design_opts$parameter_controls$TPM_threshold$fixed_value <- analysis_opts$TPM_threshold_fixed
-        }
-        if (!is.null(effect_sizes_opts$minimum_fold_change_fixed)) {
-          design_opts$parameter_controls$minimum_fold_change$fixed_value <- effect_sizes_opts$minimum_fold_change_fixed
-        }
-      }
+      # Add sidebar-only configuration that's not parameter-related
+      base_config$advanced_choices <- advanced_config()
+      base_config$plan_clicked <- input$plan_btn
+      base_config$timestamp <- Sys.time()
       
-      list(
-        design_options = design_opts,
-        experimental_setup = experimental_config(),
-        analysis_choices = analysis_config(),
-        effect_sizes = effect_sizes_config(),
-        advanced_choices = advanced_config(),
-        plan_clicked = input$plan_btn,
-        timestamp = Sys.time()
-      )
+      return(base_config)
     })
     
     return(combined_config)

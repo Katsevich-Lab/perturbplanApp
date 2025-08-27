@@ -75,14 +75,37 @@ mod_analysis_choices_ui <- function(id) {
 #' @description Server logic for analysis choice parameters and gene list processing
 #'
 #' @param design_config Reactive containing design options configuration
-#' @param external_updates Reactive containing parameter updates from sliders
+#' @param param_manager Parameter manager instance (central hub)
+#' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd
-mod_analysis_choices_server <- function(id, design_config, external_updates = reactive(NULL)){
+mod_analysis_choices_server <- function(id, design_config, param_manager, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    # Update TPM threshold from slider
+    # ========================================================================
+    # INPUT FEEDING - Sidebar → Central Manager
+    # ========================================================================
+    
+    # Feed TPM threshold changes to central manager
+    observe({
+      if (!is.null(input$TPM_threshold_fixed)) {
+        param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
+      }
+    })
+    
+    # ========================================================================
+    # UI UPDATES - Central Manager → Sidebar
+    # ========================================================================
+    
+    # Register sidebar updater for TPM threshold
+    param_manager$register_ui_updater("analysis_choices", function(params) {
+      if (!identical(input$TPM_threshold_fixed, params$TPM_threshold)) {
+        updateNumericInput(session, "TPM_threshold_fixed", value = params$TPM_threshold)
+      }
+    })
+
+    # Update TPM threshold from slider - DEPRECATED
     observe({
       updates <- external_updates()
       

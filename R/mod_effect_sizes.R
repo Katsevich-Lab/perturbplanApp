@@ -47,14 +47,37 @@ mod_effect_sizes_ui <- function(id) {
 #' @description Server logic for effect size parameters
 #'
 #' @param design_config Reactive containing design options configuration
-#' @param external_updates Reactive containing parameter updates from sliders
+#' @param param_manager Parameter manager instance (central hub)
+#' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_effect_sizes_server <- function(id, design_config, external_updates = reactive(NULL)){
+mod_effect_sizes_server <- function(id, design_config, param_manager, external_updates = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Update fold change from slider
+    # ========================================================================
+    # INPUT FEEDING - Sidebar → Central Manager
+    # ========================================================================
+    
+    # Feed fold change changes to central manager
+    observe({
+      if (!is.null(input$minimum_fold_change_fixed)) {
+        param_manager$update_parameter("minimum_fold_change", input$minimum_fold_change_fixed, "sidebar")
+      }
+    })
+    
+    # ========================================================================
+    # UI UPDATES - Central Manager → Sidebar
+    # ========================================================================
+    
+    # Register sidebar updater for fold change
+    param_manager$register_ui_updater("effect_sizes", function(params) {
+      if (!identical(input$minimum_fold_change_fixed, params$minimum_fold_change)) {
+        updateNumericInput(session, "minimum_fold_change_fixed", value = params$minimum_fold_change)
+      }
+    })
+    
+    # Update fold change from slider - DEPRECATED
     observe({
       updates <- external_updates()
       

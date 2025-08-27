@@ -79,14 +79,14 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
 #' parameter_sliders Server Functions
 #'
 #' @description Server logic for smart horizontal parameter sliders with
-#' dynamic Row 2 generation based on workflow type
+#' dynamic Row 2 generation based on workflow type. Now uses central parameter manager.
 #'
 #' @param id Module namespace ID
-#' @param sidebar_config Reactive containing sidebar configuration
+#' @param param_manager Parameter manager instance (central hub)
 #' @param workflow_info Reactive containing workflow information
 #'
 #' @noRd 
-mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
+mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -126,157 +126,89 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
     })
     
     # ========================================================================
-    # BIDIRECTIONAL SYNCHRONIZATION
+    # UNIFIED INPUT COLLECTION - Sliders → Central Manager
     # ========================================================================
     
-    # Create reactive values for parameter updates and user interaction tracking
-    parameter_updates <- reactiveValues()
-    user_interaction <- reactiveValues(
-      active = FALSE,
-      last_change = Sys.time()
-    )
-    
-    # Sidebar → Sliders: Update sliders when sidebar changes (COMPLETELY DISABLED during user interaction)
-    # Use invalidateLater to check periodically instead of direct reactive dependency
-    observe({
-      invalidateLater(500, session)  # Check every 500ms (slower to reduce conflicts)
-      
-      # Check if user is actively interacting - if so, COMPLETELY SKIP ALL UPDATES
-      current_time <- Sys.time()
-      if (user_interaction$active && 
-          difftime(current_time, user_interaction$last_change, units = "secs") < 5) {
-        return() # Skip ALL sidebar updates during active user interaction (5 second window)
-      }
-      
-      # Access sidebar_config() only when user is not interacting
-      sidebar <- isolate(sidebar_config())
-      
-      if (is.null(sidebar)) return()
-      
-      # Extract parameter values from sidebar configuration
-      # Handle the complex nested structure of sidebar config  
-      isolate({
-        # MOI from experimental setup (only update if different to prevent snap-back)
-        if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$MOI)) {
-          if (is.null(input$moi_slider) || input$moi_slider != sidebar$experimental_setup$MOI) {
-            updateSliderInput(session, "moi_slider", value = sidebar$experimental_setup$MOI)
-          }
-        }
-        
-        # Number of targets from experimental setup (only update if different)
-        if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$num_targets)) {
-          if (is.null(input$targets_slider) || input$targets_slider != sidebar$experimental_setup$num_targets) {
-            updateSliderInput(session, "targets_slider", value = sidebar$experimental_setup$num_targets)
-          }
-        }
-        
-        # gRNAs per target from experimental setup (only update if different)
-        if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$gRNAs_per_target)) {
-          if (is.null(input$grnas_slider) || input$grnas_slider != sidebar$experimental_setup$gRNAs_per_target) {
-            updateSliderInput(session, "grnas_slider", value = sidebar$experimental_setup$gRNAs_per_target)
-          }
-        }
-        
-        # Power-determining parameters - read from design_options parameter_controls
-        if (!is.null(sidebar$design_options) && !is.null(sidebar$design_options$parameter_controls)) {
-          
-          # Cells per target from parameter controls
-          cells_value <- sidebar$design_options$parameter_controls$cells_per_target$fixed_value %||% 1000
-          if (is.null(input$cells_slider) || input$cells_slider != cells_value) {
-            updateSliderInput(session, "cells_slider", value = cells_value)
-          }
-          
-          # Reads per cell from parameter controls  
-          reads_value <- sidebar$design_options$parameter_controls$mapped_reads_per_cell$fixed_value %||% 5000
-          if (is.null(input$reads_slider) || input$reads_slider != reads_value) {
-            updateSliderInput(session, "reads_slider", value = reads_value)
-          }
-          
-          # TPM threshold from parameter controls
-          TPM_value <- sidebar$design_options$parameter_controls$TPM_threshold$fixed_value %||% 10
-          if (is.null(input$TPM_slider) || input$TPM_slider != TPM_value) {
-            updateSliderInput(session, "TPM_slider", value = TPM_value)
-          }
-          
-          # Fold change from parameter controls
-          fc_value <- sidebar$design_options$parameter_controls$minimum_fold_change$fixed_value %||% 0.8
-          if (is.null(input$fc_slider) || input$fc_slider != fc_value) {
-            updateSliderInput(session, "fc_slider", value = fc_value)
-          }
-        }
-      })
-    })
-    
-    # Sliders → Parameter Updates: Track slider changes for return to main app + user interaction
+    # Feed all slider changes directly to central parameter manager
     observe({
       if (!is.null(input$moi_slider)) {
-        user_interaction$active <- TRUE
-        user_interaction$last_change <- Sys.time()
-        parameter_updates$moi <- input$moi_slider
-      }
-    })
-    observe({
-      if (!is.null(input$targets_slider)) {
-        user_interaction$active <- TRUE
-        user_interaction$last_change <- Sys.time()
-        parameter_updates$num_targets <- input$targets_slider  
-      }
-    })
-    observe({
-      if (!is.null(input$grnas_slider)) {
-        user_interaction$active <- TRUE
-        user_interaction$last_change <- Sys.time()
-        parameter_updates$gRNAs_per_target <- input$grnas_slider
-      }
-    })
-    observe({
-      if (!is.null(input$cells_slider)) {
-        user_interaction$active <- TRUE
-        user_interaction$last_change <- Sys.time()
-        parameter_updates$cells_fixed <- input$cells_slider
-      }
-    })
-    observe({
-      if (!is.null(input$reads_slider)) {
-        user_interaction$active <- TRUE
-        user_interaction$last_change <- Sys.time()
-        parameter_updates$mapped_reads_fixed <- input$reads_slider
-      }
-    })
-    observe({
-      if (!is.null(input$TPM_slider)) {
-        user_interaction$active <- TRUE
-        user_interaction$last_change <- Sys.time()
-        parameter_updates$TPM_threshold_fixed <- input$TPM_slider
-      }
-    })
-    observe({
-      if (!is.null(input$fc_slider)) {
-        user_interaction$active <- TRUE
-        user_interaction$last_change <- Sys.time()
-        parameter_updates$minimum_fold_change_fixed <- input$fc_slider
+        param_manager$update_parameter("MOI", input$moi_slider, "slider")
       }
     })
     
-    # Return parameter updates for consumption by parent app
-    return(reactive({
-      list(
-        experimental_setup = list(
-          MOI = parameter_updates$moi,
-          num_targets = parameter_updates$num_targets,
-          gRNAs_per_target = parameter_updates$gRNAs_per_target,
-          cells_fixed = parameter_updates$cells_fixed,
-          mapped_reads_fixed = parameter_updates$mapped_reads_fixed
-        ),
-        analysis_choices = list(
-          TPM_threshold_fixed = parameter_updates$TPM_threshold_fixed
-        ),
-        effect_sizes = list(
-          minimum_fold_change_fixed = parameter_updates$minimum_fold_change_fixed
-        ),
-        timestamp = Sys.time()
-      )
-    }))
+    observe({
+      if (!is.null(input$targets_slider)) {
+        param_manager$update_parameter("num_targets", input$targets_slider, "slider")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$grnas_slider)) {
+        param_manager$update_parameter("gRNAs_per_target", input$grnas_slider, "slider")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$cells_slider)) {
+        param_manager$update_parameter("cells_per_target", input$cells_slider, "slider")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$reads_slider)) {
+        param_manager$update_parameter("reads_per_cell", input$reads_slider, "slider")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$TPM_slider)) {
+        param_manager$update_parameter("TPM_threshold", input$TPM_slider, "slider")
+      }
+    })
+    
+    observe({
+      if (!is.null(input$fc_slider)) {
+        param_manager$update_parameter("minimum_fold_change", input$fc_slider, "slider")
+      }
+    })
+    
+    # ========================================================================
+    # UI UPDATES - Central Manager → Sliders 
+    # ========================================================================
+    
+    # Register this module's UI updater with the central manager
+    param_manager$register_ui_updater("sliders", function(params) {
+      # Update sliders only if values are different (prevent loops)
+      if (!identical(input$moi_slider, params$MOI)) {
+        updateSliderInput(session, "moi_slider", value = params$MOI)
+      }
+      
+      if (!identical(input$targets_slider, params$num_targets)) {
+        updateSliderInput(session, "targets_slider", value = params$num_targets)
+      }
+      
+      if (!identical(input$grnas_slider, params$gRNAs_per_target)) {
+        updateSliderInput(session, "grnas_slider", value = params$gRNAs_per_target)
+      }
+      
+      if (!identical(input$cells_slider, params$cells_per_target)) {
+        updateSliderInput(session, "cells_slider", value = params$cells_per_target)
+      }
+      
+      if (!identical(input$reads_slider, params$reads_per_cell)) {
+        updateSliderInput(session, "reads_slider", value = params$reads_per_cell)
+      }
+      
+      if (!identical(input$TPM_slider, params$TPM_threshold)) {
+        updateSliderInput(session, "TPM_slider", value = params$TPM_threshold)
+      }
+      
+      if (!identical(input$fc_slider, params$minimum_fold_change)) {
+        updateSliderInput(session, "fc_slider", value = params$minimum_fold_change)
+      }
+    })
+    
+    # No return needed - central manager handles all data flow
     
   })
 }
