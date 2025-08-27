@@ -181,39 +181,11 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     })
     
     # ========================================================================
-    # UI UPDATES - Central Manager → Sidebar (Direct Reactive Observers)
+    # UI UPDATES - TEMPORARILY DISABLED to prevent freezing
     # ========================================================================
     
-    # Direct reactive observers to update sidebar when parameter manager changes
-    observe({
-      if (!identical(input$MOI, param_manager$parameters$MOI)) {
-        updateNumericInput(session, "MOI", value = param_manager$parameters$MOI)
-      }
-    })
-    
-    observe({
-      if (!identical(input$num_targets, param_manager$parameters$num_targets)) {
-        updateNumericInput(session, "num_targets", value = param_manager$parameters$num_targets)
-      }
-    })
-    
-    observe({
-      if (!identical(input$gRNAs_per_target, param_manager$parameters$gRNAs_per_target)) {
-        updateNumericInput(session, "gRNAs_per_target", value = param_manager$parameters$gRNAs_per_target)
-      }
-    })
-    
-    observe({
-      if (!identical(input$cells_fixed, param_manager$parameters$cells_per_target)) {
-        updateNumericInput(session, "cells_fixed", value = param_manager$parameters$cells_per_target)
-      }
-    })
-    
-    observe({
-      if (!identical(input$mapped_reads_fixed, param_manager$parameters$reads_per_cell)) {
-        updateNumericInput(session, "mapped_reads_fixed", value = param_manager$parameters$reads_per_cell)
-      }
-    })
+    # TODO: Implement safer bidirectional sync later  
+    # For now, sidebar only feeds parameter manager (one-way)
     
     
     # Logic for "Other" biological system selection

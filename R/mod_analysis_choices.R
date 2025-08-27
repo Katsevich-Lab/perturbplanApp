@@ -95,15 +95,11 @@ mod_analysis_choices_server <- function(id, design_config, param_manager){
     })
     
     # ========================================================================
-    # UI UPDATES - Central Manager → Sidebar (Direct Reactive Observer)
+    # UI UPDATES - TEMPORARILY DISABLED to prevent freezing  
     # ========================================================================
     
-    # Direct reactive observer to update sidebar when parameter manager changes
-    observe({
-      if (!identical(input$TPM_threshold_fixed, param_manager$parameters$TPM_threshold)) {
-        updateNumericInput(session, "TPM_threshold_fixed", value = param_manager$parameters$TPM_threshold)
-      }
-    })
+    # TODO: Implement safer bidirectional sync later
+    # For now, sidebar only feeds parameter manager (one-way)
 
 
     # VARIABLE CONSISTENCY TRACKING:

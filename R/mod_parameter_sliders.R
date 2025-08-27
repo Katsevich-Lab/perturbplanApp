@@ -173,51 +173,11 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
     })
     
     # ========================================================================
-    # UI UPDATES - Central Manager → Sliders (Direct Reactive Observers)
+    # UI UPDATES - TEMPORARILY DISABLED to prevent freezing
     # ========================================================================
     
-    # Direct reactive observers to update sliders when parameter manager changes
-    observe({
-      if (!identical(input$moi_slider, param_manager$parameters$MOI)) {
-        updateSliderInput(session, "moi_slider", value = param_manager$parameters$MOI)
-      }
-    })
-    
-    observe({
-      if (!identical(input$targets_slider, param_manager$parameters$num_targets)) {
-        updateSliderInput(session, "targets_slider", value = param_manager$parameters$num_targets)
-      }
-    })
-    
-    observe({
-      if (!identical(input$grnas_slider, param_manager$parameters$gRNAs_per_target)) {
-        updateSliderInput(session, "grnas_slider", value = param_manager$parameters$gRNAs_per_target)
-      }
-    })
-    
-    observe({
-      if (!identical(input$cells_slider, param_manager$parameters$cells_per_target)) {
-        updateSliderInput(session, "cells_slider", value = param_manager$parameters$cells_per_target)
-      }
-    })
-    
-    observe({
-      if (!identical(input$reads_slider, param_manager$parameters$reads_per_cell)) {
-        updateSliderInput(session, "reads_slider", value = param_manager$parameters$reads_per_cell)
-      }
-    })
-    
-    observe({
-      if (!identical(input$TPM_slider, param_manager$parameters$TPM_threshold)) {
-        updateSliderInput(session, "TPM_slider", value = param_manager$parameters$TPM_threshold)
-      }
-    })
-    
-    observe({
-      if (!identical(input$fc_slider, param_manager$parameters$minimum_fold_change)) {
-        updateSliderInput(session, "fc_slider", value = param_manager$parameters$minimum_fold_change)
-      }
-    })
+    # TODO: Implement safer bidirectional sync later
+    # For now, sliders only feed parameter manager (one-way)
     
     # No return needed - central manager handles all data flow
     
