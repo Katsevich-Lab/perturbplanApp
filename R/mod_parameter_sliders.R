@@ -133,8 +133,10 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       # Filter out the minimized parameter
       visible_power_params <- all_power_params[!names(all_power_params) %in% minimized_param]
       
-      # POWER+COST MODE FILTERING: Show sliders only for "fixed" parameters
-      if (!is.null(optimization_type) && optimization_type == "power_cost" && !is.null(param_controls)) {
+      # POWER+COST MODE FILTERING OR COST MINIMIZATION: Show sliders for "fixed" parameters
+      if ((!is.null(optimization_type) && optimization_type == "power_cost" && !is.null(param_controls)) ||
+          (!is.null(minimized_param) && minimized_param == "cost")) {
+        
         # Map parameter names to their control types
         param_name_mapping <- list(
           "cells_per_target" = "cells_per_target",
@@ -143,19 +145,32 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
           "minimum_fold_change" = "minimum_fold_change"
         )
         
-        # Filter to show only parameters that are set to "fixed"
-        filtered_params <- list()
-        for (param_name in names(visible_power_params)) {
-          control_name <- param_name_mapping[[param_name]]
-          if (!is.null(control_name) && !is.null(param_controls[[control_name]])) {
-            param_type <- param_controls[[control_name]]$type
-            # Show slider only if parameter is set to "fixed"
-            if (!is.null(param_type) && param_type == "fixed") {
-              filtered_params[[param_name]] <- visible_power_params[[param_name]]
+        # For cost minimization, show TPM and FC sliders (both are fixed)
+        if (!is.null(minimized_param) && minimized_param == "cost") {
+          # Cost minimization: show only TPM and FC sliders (they are fixed)
+          cost_min_params <- list()
+          if ("TPM_threshold" %in% names(visible_power_params)) {
+            cost_min_params[["TPM_threshold"]] <- visible_power_params[["TPM_threshold"]]
+          }
+          if ("minimum_fold_change" %in% names(visible_power_params)) {
+            cost_min_params[["minimum_fold_change"]] <- visible_power_params[["minimum_fold_change"]]
+          }
+          visible_power_params <- cost_min_params
+        } else {
+          # Power+cost mode: Filter to show only parameters that are set to "fixed"
+          filtered_params <- list()
+          for (param_name in names(visible_power_params)) {
+            control_name <- param_name_mapping[[param_name]]
+            if (!is.null(control_name) && !is.null(param_controls[[control_name]])) {
+              param_type <- param_controls[[control_name]]$type
+              # Show slider only if parameter is set to "fixed"
+              if (!is.null(param_type) && param_type == "fixed") {
+                filtered_params[[param_name]] <- visible_power_params[[param_name]]
+              }
             }
           }
+          visible_power_params <- filtered_params
         }
-        visible_power_params <- filtered_params
       }
       
       # If no parameters to show, return empty
@@ -291,6 +306,9 @@ get_minimized_parameter <- function(workflow_id) {
     "power_single_reads_per_cell" = "reads_per_cell", 
     "power_single_TPM_threshold" = "TPM_threshold",
     "power_single_minimum_fold_change" = "minimum_fold_change",
+    
+    # Cost minimization workflow
+    "power_cost_minimization" = "cost",
     
     # Power+cost workflows
     "power_cost_TPM_cells" = "TPM_threshold",      # TPM being minimized

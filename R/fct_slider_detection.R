@@ -56,6 +56,9 @@ detect_slider_workflow <- function(design_config) {
     "power_single_TPM_threshold", 
     "power_single_minimum_fold_change",
     
+    # Cost minimization workflow
+    "power_cost_minimization",
+    
     # Power+cost workflows  
     "power_cost_TPM_cells",
     "power_cost_TPM_reads", 
