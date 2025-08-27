@@ -127,37 +127,20 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       }
 
       # Early validation: Skip analysis if essential configuration is missing
+      # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
       design_config <- config$design_options
       if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
           is.null(design_config$minimization_target) || design_config$minimization_target == "") {
-        return(list(
-          error = paste("Configuration incomplete: Please select optimization type and minimization target.",
-                       "If switching between modes, please wait for the UI to fully update."),
-          metadata = list(
-            analysis_mode = get_analysis_mode(),
-            workflow_type = "incomplete",
-            timestamp = Sys.time(),
-            configuration_incomplete = TRUE
-          )
-        ))
+        return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
       
       # Detect workflow scenario (with translated parameter names)
       workflow_info <- detect_workflow_scenario(config)
       
       # Skip analysis if workflow detection failed (prevents invalid configurations)
+      # Return NULL during transitions to show "Ready for Analysis" instead of errors
       if (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id == "unknown") {
-        return(list(
-          error = paste("Configuration Error: Unable to detect valid workflow.",
-                       "Please ensure all design options are properly configured.",
-                       "If switching between optimization modes, wait for UI to update completely."),
-          metadata = list(
-            analysis_mode = get_analysis_mode(),
-            workflow_type = "unknown",
-            timestamp = Sys.time(),
-            configuration_incomplete = TRUE
-          )
-        ))
+        return(NULL)  # Let UI show "Ready for Analysis" instead of error messages
       }
 
       # PERTURBPLAN ANALYSIS: Call perturbplan package functions
