@@ -597,19 +597,16 @@ create_solutions_table_ui <- function(solution_rows) {
       tags$td(
         style = "text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
         if (!is.null(row_data$optimal_design)) {
-          tags$div(
-            tags$div(row_data$optimal_design$label, style = "font-size: 11px; color: #6c757d; margin-bottom: 4px;"),
-            if (grepl("<br>", row_data$optimal_design$value)) {
-              # Multi-line content - render as HTML
-              tags$div(
-                HTML(row_data$optimal_design$value), 
-                style = "font-size: 13px; font-weight: bold; color: #2E86AB; line-height: 1.4;"
-              )
-            } else {
-              # Single line content
-              tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold; color: #2E86AB;")
-            }
-          )
+          if (grepl("<br>", row_data$optimal_design$value)) {
+            # Multi-line content - render as HTML
+            tags$div(
+              HTML(row_data$optimal_design$value), 
+              style = "font-size: 13px; font-weight: bold; color: #2E86AB; line-height: 1.4;"
+            )
+          } else {
+            # Single line content
+            tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold; color: #2E86AB;")
+          }
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
