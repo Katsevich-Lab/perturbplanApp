@@ -40,13 +40,19 @@ function toggleSection(contentId, chevronId) {
 
 // Shiny message handlers for optimization mode persistence
 Shiny.addCustomMessageHandler('storeOptimizationMode', function(data) {
-  console.log('Storing optimization mode:', data.mode);
+  console.log('=== STORING MODE ===');
+  console.log('Received data:', data);
+  console.log('Mode to store:', data.mode);
   sessionStorage.setItem('perturbplan_optimization_mode', data.mode);
+  console.log('Stored in sessionStorage:', sessionStorage.getItem('perturbplan_optimization_mode'));
+  console.log('===================');
 });
 
 Shiny.addCustomMessageHandler('reloadAfterDelay', function(data) {
-  console.log('Reloading page after delay:', data.delay);
+  console.log('=== RELOADING PAGE ===');
+  console.log('Reload delay:', data.delay);
   setTimeout(function() {
+    console.log('Executing reload now...');
     window.location.reload();
   }, data.delay);
 });
@@ -54,9 +60,14 @@ Shiny.addCustomMessageHandler('reloadAfterDelay', function(data) {
 // Initialize on page load
 $(document).ready(function() {
   console.log('PerturbPlan JavaScript loaded');
+  console.log('=== CHECKING FOR STORED MODE ===');
+  console.log('All sessionStorage keys:', Object.keys(sessionStorage));
+  console.log('Looking for key: perturbplan_optimization_mode');
   
   // Restore optimization mode if stored
   var storedMode = sessionStorage.getItem('perturbplan_optimization_mode');
+  console.log('Retrieved stored mode:', storedMode);
+  
   if (storedMode) {
     console.log('Restoring optimization mode:', storedMode);
     // Clear the stored mode after use
