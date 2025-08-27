@@ -144,8 +144,8 @@ mod_analysis_choices_server <- function(id, design_config, external_updates = re
         gene_list_mode = input$gene_list_mode,
         gene_list_data = gene_list_data(),
         side = input$side,
-        # CONSISTENT: Return TPM_threshold_fixed field using input$TPM_threshold_fixed (provide default for slider sync)
-        TPM_threshold_fixed = input$TPM_threshold_fixed %||% 10,
+        # CONSISTENT: Return TPM_threshold_fixed field using input$TPM_threshold_fixed (only default if actually hidden)
+        TPM_threshold_fixed = input$TPM_threshold_fixed,
         timestamp = Sys.time()
       )
     })

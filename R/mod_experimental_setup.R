@@ -392,9 +392,9 @@ mod_experimental_setup_server <- function(id, design_config, external_updates = 
         biological_system = input$biological_system,
         pilot_data_choice = input$pilot_data_choice,
         pilot_data = pilot_data(),
-        # Fixed value inputs (provide defaults if NULL for slider sync)
-        cells_fixed = input$cells_fixed %||% 1000,
-        mapped_reads_fixed = input$mapped_reads_fixed %||% 5000,
+        # Fixed value inputs (only provide defaults if inputs are actually hidden/NULL)
+        cells_fixed = input$cells_fixed,
+        mapped_reads_fixed = input$mapped_reads_fixed,
         # Perturbation choices (integrated from mod_perturbation_choices)
         MOI = input$MOI %||% 10,
         num_targets = input$num_targets %||% 100,

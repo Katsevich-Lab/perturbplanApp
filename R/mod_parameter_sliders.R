@@ -173,31 +173,35 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
           }
         }
         
-        # Cells per target from experimental setup (only update if different)
-        if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$cells_fixed)) {
-          if (is.null(input$cells_slider) || input$cells_slider != sidebar$experimental_setup$cells_fixed) {
-            updateSliderInput(session, "cells_slider", value = sidebar$experimental_setup$cells_fixed)
+        # Cells per target from experimental setup (apply default if sidebar value is NULL)
+        cells_value <- sidebar$experimental_setup$cells_fixed %||% 1000
+        if (!is.null(sidebar$experimental_setup)) {
+          if (is.null(input$cells_slider) || input$cells_slider != cells_value) {
+            updateSliderInput(session, "cells_slider", value = cells_value)
           }
         }
         
-        # Reads per cell from experimental setup (only update if different)
-        if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$mapped_reads_fixed)) {
-          if (is.null(input$reads_slider) || input$reads_slider != sidebar$experimental_setup$mapped_reads_fixed) {
-            updateSliderInput(session, "reads_slider", value = sidebar$experimental_setup$mapped_reads_fixed)
+        # Reads per cell from experimental setup (apply default if sidebar value is NULL)
+        reads_value <- sidebar$experimental_setup$mapped_reads_fixed %||% 5000
+        if (!is.null(sidebar$experimental_setup)) {
+          if (is.null(input$reads_slider) || input$reads_slider != reads_value) {
+            updateSliderInput(session, "reads_slider", value = reads_value)
           }
         }
         
-        # TPM threshold from analysis choices (only update if different)
-        if (!is.null(sidebar$analysis_choices) && !is.null(sidebar$analysis_choices$TPM_threshold_fixed)) {
-          if (is.null(input$TPM_slider) || input$TPM_slider != sidebar$analysis_choices$TPM_threshold_fixed) {
-            updateSliderInput(session, "TPM_slider", value = sidebar$analysis_choices$TPM_threshold_fixed)
+        # TPM threshold from analysis choices (apply default if sidebar value is NULL)
+        TPM_value <- sidebar$analysis_choices$TPM_threshold_fixed %||% 10
+        if (!is.null(sidebar$analysis_choices)) {
+          if (is.null(input$TPM_slider) || input$TPM_slider != TPM_value) {
+            updateSliderInput(session, "TPM_slider", value = TPM_value)
           }
         }
         
-        # Fold change from effect sizes (only update if different)
-        if (!is.null(sidebar$effect_sizes) && !is.null(sidebar$effect_sizes$minimum_fold_change_fixed)) {
-          if (is.null(input$fc_slider) || input$fc_slider != sidebar$effect_sizes$minimum_fold_change_fixed) {
-            updateSliderInput(session, "fc_slider", value = sidebar$effect_sizes$minimum_fold_change_fixed)
+        # Fold change from effect sizes (apply default if sidebar value is NULL)
+        fc_value <- sidebar$effect_sizes$minimum_fold_change_fixed %||% 0.8
+        if (!is.null(sidebar$effect_sizes)) {
+          if (is.null(input$fc_slider) || input$fc_slider != fc_value) {
+            updateSliderInput(session, "fc_slider", value = fc_value)
           }
         }
       })
