@@ -58,6 +58,9 @@ mod_effect_sizes_server <- function(id, design_config, external_updates = reacti
     observe({
       updates <- external_updates()
       
+      # TEMPORARILY DISABLE slider -> sidebar updates to test drag issue
+      return()
+      
       if (!is.null(updates) && !is.null(updates$effect_sizes) && 
           !is.null(updates$effect_sizes$minimum_fold_change_fixed) && 
           !is.na(updates$effect_sizes$minimum_fold_change_fixed)) {

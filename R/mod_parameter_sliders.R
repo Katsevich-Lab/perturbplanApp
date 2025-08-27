@@ -136,16 +136,16 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
       last_change = Sys.time()
     )
     
-    # Sidebar → Sliders: Update sliders when sidebar changes (only if user not actively dragging)
+    # Sidebar → Sliders: Update sliders when sidebar changes (COMPLETELY DISABLED during user interaction)
     # Use invalidateLater to check periodically instead of direct reactive dependency
     observe({
-      invalidateLater(100, session)  # Check every 100ms
+      invalidateLater(500, session)  # Check every 500ms (slower to reduce conflicts)
       
-      # Check if user is actively interacting - if so, skip sidebar updates
+      # Check if user is actively interacting - if so, COMPLETELY SKIP ALL UPDATES
       current_time <- Sys.time()
       if (user_interaction$active && 
-          difftime(current_time, user_interaction$last_change, units = "secs") < 2) {
-        return() # Skip sidebar updates during active user interaction
+          difftime(current_time, user_interaction$last_change, units = "secs") < 5) {
+        return() # Skip ALL sidebar updates during active user interaction (5 second window)
       }
       
       # Access sidebar_config() only when user is not interacting
@@ -154,7 +154,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
       if (is.null(sidebar)) return()
       
       # Extract parameter values from sidebar configuration
-      # Handle the complex nested structure of sidebar config
+      # Handle the complex nested structure of sidebar config  
       isolate({
         # MOI from experimental setup (only update if different to prevent snap-back)
         if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$MOI)) {

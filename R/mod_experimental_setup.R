@@ -148,6 +148,9 @@ mod_experimental_setup_server <- function(id, design_config, external_updates = 
     observe({
       updates <- external_updates()
       
+      # TEMPORARILY DISABLE slider -> sidebar updates to test drag issue
+      return()
+      
       if (!is.null(updates) && !is.null(updates$experimental_setup)) {
         exp_updates <- updates$experimental_setup
         
