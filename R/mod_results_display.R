@@ -580,7 +580,16 @@ create_solutions_table_ui <- function(solution_rows) {
         if (!is.null(row_data$optimal_design)) {
           tags$div(
             tags$div(row_data$optimal_design$label, style = "font-size: 11px; color: #6c757d; margin-bottom: 4px;"),
-            tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold; color: #2E86AB;")
+            if (grepl("<br>", row_data$optimal_design$value)) {
+              # Multi-line content - render as HTML
+              tags$div(
+                HTML(row_data$optimal_design$value), 
+                style = "font-size: 13px; font-weight: bold; color: #2E86AB; line-height: 1.4;"
+              )
+            } else {
+              # Single line content
+              tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold; color: #2E86AB;")
+            }
           )
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
@@ -704,34 +713,83 @@ extract_achieved_power <- function(optimal) {
 extract_optimal_design_value <- function(optimal, workflow_info) {
   minimizing_param <- workflow_info$minimizing_parameter
   
+  # Check if this is a workflow where cells and reads are varying
+  # (cost minimization or TPM/FC minimization with cells+reads varying)
+  cells_and_reads_varying <- workflow_info$workflow_id %in% c(
+    "power_cost_minimization",           # Cost minimization (cells+reads vary)
+    "power_cost_TPM_cells_reads",       # TPM minimization with cells+reads varying
+    "power_cost_fc_cells_reads"         # FC minimization with cells+reads varying
+  )
+  
   if (minimizing_param == "TPM_threshold") {
-    return(list(
-      label = "TPM Threshold",
-      value = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A"
-    ))
+    if (cells_and_reads_varying) {
+      # Show TPM + optimal cells and reads
+      return(list(
+        label = "Optimal Design",
+        value = create_multi_param_display(list(
+          "TPM Threshold" = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A",
+          "Cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A",
+          "Reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
+        ))
+      ))
+    } else {
+      return(list(
+        label = "TPM Threshold",
+        value = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A"
+      ))
+    }
   } else if (minimizing_param == "minimum_fold_change") {
-    return(list(
-      label = "Fold Change",
-      value = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A"
-    ))
+    if (cells_and_reads_varying) {
+      # Show FC + optimal cells and reads
+      return(list(
+        label = "Optimal Design",
+        value = create_multi_param_display(list(
+          "Fold Change" = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
+          "Cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A",
+          "Reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
+        ))
+      ))
+    } else {
+      return(list(
+        label = "Fold Change",
+        value = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A"
+      ))
+    }
   } else if (minimizing_param == "cells_per_target") {
     return(list(
       label = "Cells per Target",
-      value = if (!is.null(optimal$cells_per_target)) round(optimal$cells_per_target) else "N/A"
+      value = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A"
     ))
   } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) {
     return(list(
       label = "Reads per Cell",
-      value = if (!is.null(optimal$sequenced_reads_per_cell)) round(optimal$sequenced_reads_per_cell) else "N/A"
+      value = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
     ))
   } else if (minimizing_param == "cost") {
+    # Cost minimization: Show total cost + optimal cells and reads
     return(list(
-      label = "Total Cost",
-      value = if (!is.null(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A"
+      label = "Optimal Design",
+      value = create_multi_param_display(list(
+        "Total Cost" = if (!is.null(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A",
+        "Cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A",
+        "Reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
+      ))
     ))
   }
   
   return(list(label = "Unknown", value = "N/A"))
+}
+
+#' Create formatted display for multiple parameters in optimal design
+#'
+#' @param param_list Named list of parameters and their values
+#' @return HTML formatted string
+#' @noRd
+create_multi_param_display <- function(param_list) {
+  param_strings <- lapply(names(param_list), function(name) {
+    paste0(name, ": ", param_list[[name]])
+  })
+  paste(param_strings, collapse = "<br>")
 }
 
 #' Extract experimental choices for display
@@ -744,9 +802,11 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
 extract_experimental_choices <- function(optimal, user_config = reactive(NULL), param_manager = NULL) {
   params <- list()
   
-  # Only show parameters that appear in sliders (Row 1 of parameter sliders)
-  # These are always shown when sliders are visible
+  # Show experimental parameters that appear in sliders 
+  # This includes both Row 1 (MOI, targets, gRNAs) and Row 2 experimental parameters (cells, reads)
   if (!is.null(param_manager) && !is.null(param_manager$parameters)) {
+    
+    # Row 1 parameters (always experimental choices when present)
     if (!is.null(param_manager$parameters$MOI)) {
       params[["MOI"]] <- param_manager$parameters$MOI
     }
@@ -755,6 +815,14 @@ extract_experimental_choices <- function(optimal, user_config = reactive(NULL), 
     }
     if (!is.null(param_manager$parameters$gRNAs_per_target)) {
       params[["gRNAs per target"]] <- param_manager$parameters$gRNAs_per_target
+    }
+    
+    # Row 2 experimental parameters (cells and reads - these are experimental design choices)
+    if (!is.null(param_manager$parameters$cells_per_target)) {
+      params[["Cells per target"]] <- param_manager$parameters$cells_per_target
+    }
+    if (!is.null(param_manager$parameters$reads_per_cell)) {
+      params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
     }
   }
   
@@ -776,25 +844,14 @@ extract_analysis_choices <- function(optimal, workflow_info, user_config = react
   # Only show parameters that appear in sliders AND are not being minimized
   if (!is.null(param_manager) && !is.null(param_manager$parameters)) {
     
+    # Analysis choices should only include analysis-specific parameters (TPM threshold)
+    # Cells and reads are now handled in experimental choices
+    
     # Check if TPM threshold slider is visible (Row 2) and not being minimized
-    if (minimizing_param != "TPM_threshold" && 
+    if ((is.null(minimizing_param) || minimizing_param != "TPM_threshold") && 
         parameter_has_slider("TPM_threshold", user_config, workflow_info) &&
         !is.null(param_manager$parameters$TPM_threshold)) {
       params[["TPM threshold"]] <- param_manager$parameters$TPM_threshold
-    }
-    
-    # Check if cells per target slider is visible (Row 2) and not being minimized
-    if (minimizing_param != "cells_per_target" && minimizing_param != "cost" &&
-        parameter_has_slider("cells_per_target", user_config, workflow_info) &&
-        !is.null(param_manager$parameters$cells_per_target)) {
-      params[["Cells per target"]] <- param_manager$parameters$cells_per_target
-    }
-    
-    # Check if reads per cell slider is visible (Row 2) and not being minimized
-    if (!minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell", "cost") &&
-        parameter_has_slider("reads_per_cell", user_config, workflow_info) &&
-        !is.null(param_manager$parameters$reads_per_cell)) {
-      params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
     }
   }
   
@@ -817,7 +874,7 @@ extract_effect_sizes <- function(optimal, workflow_info, user_config = reactive(
   if (!is.null(param_manager) && !is.null(param_manager$parameters)) {
     
     # Check if fold change slider is visible (Row 2) and not being minimized
-    if (minimizing_param != "minimum_fold_change" && 
+    if ((is.null(minimizing_param) || minimizing_param != "minimum_fold_change") && 
         parameter_has_slider("minimum_fold_change", user_config, workflow_info) &&
         !is.null(param_manager$parameters$minimum_fold_change)) {
       params[["Fold change"]] <- param_manager$parameters$minimum_fold_change
@@ -875,7 +932,7 @@ parameter_has_slider <- function(param_name, user_config = reactive(NULL), workf
   if (param_name %in% names(param_mapping)) {
     mapped_param <- param_mapping[[param_name]]
     is_in_row2 <- mapped_param %in% row2_params
-    is_not_minimized <- mapped_param != minimized_param
+    is_not_minimized <- is.null(minimized_param) || length(minimized_param) == 0 || mapped_param != minimized_param
     
     # For cost minimization workflow, also check power+cost filtering logic
     if (!is.null(user_config)) {
@@ -902,7 +959,7 @@ parameter_has_slider <- function(param_name, user_config = reactive(NULL), workf
         }
         
         # For cost minimization, check if it's TPM or FC (they are shown as sliders)
-        if (minimized_param == "cost") {
+        if (!is.null(minimized_param) && length(minimized_param) > 0 && minimized_param == "cost") {
           return(param_name %in% c("TPM_threshold", "minimum_fold_change"))
         }
       }
