@@ -38,70 +38,9 @@ function toggleSection(contentId, chevronId) {
   }
 }
 
-// Shiny message handlers for optimization mode persistence
-Shiny.addCustomMessageHandler('storeOptimizationMode', function(data) {
-  console.log('=== STORING MODE ===');
-  console.log('Received data:', data);
-  console.log('Mode to store:', data.mode);
-  sessionStorage.setItem('perturbplan_optimization_mode', data.mode);
-  console.log('Stored in sessionStorage:', sessionStorage.getItem('perturbplan_optimization_mode'));
-  console.log('===================');
-});
-
-Shiny.addCustomMessageHandler('reloadAfterDelay', function(data) {
-  console.log('=== RELOADING PAGE ===');
-  console.log('Reload delay:', data.delay);
-  setTimeout(function() {
-    console.log('Executing reload now...');
-    window.location.reload();
-  }, data.delay);
-});
-
 // Initialize on page load
 $(document).ready(function() {
   console.log('PerturbPlan JavaScript loaded');
-  console.log('=== CHECKING FOR STORED MODE ===');
-  console.log('All sessionStorage keys:', Object.keys(sessionStorage));
-  console.log('Looking for key: perturbplan_optimization_mode');
-  
-  // Restore optimization mode if stored
-  var storedMode = sessionStorage.getItem('perturbplan_optimization_mode');
-  console.log('Retrieved stored mode:', storedMode);
-  
-  if (storedMode) {
-    console.log('Restoring optimization mode:', storedMode);
-    // Clear the stored mode after use
-    sessionStorage.removeItem('perturbplan_optimization_mode');
-    
-    // Restore both the Shiny input value AND the visual select dropdown selection
-    setTimeout(function() {
-      // Update the select dropdown selection in the DOM
-      var selectElement = document.getElementById('sidebar-design_options-optimization_type');
-      if (selectElement) {
-        console.log('Found select element:', selectElement);
-        console.log('Available options:', Array.from(selectElement.options).map(opt => opt.value + ': ' + opt.text));
-        console.log('Attempting to set value to:', storedMode);
-        
-        selectElement.value = storedMode;
-        console.log('Select element value after setting:', selectElement.value);
-        
-        // Trigger the change event to ensure Shiny processes the selection
-        var event = new Event('change', { bubbles: true });
-        selectElement.dispatchEvent(event);
-        
-        // Double-check the value was set correctly
-        setTimeout(function() {
-          console.log('Final select element value:', selectElement.value);
-          console.log('Final selected option text:', selectElement.options[selectElement.selectedIndex]?.text);
-        }, 100);
-      } else {
-        console.log('Select element not found!');
-      }
-      
-      // Also send to Shiny to ensure server-side state is updated
-      Shiny.setInputValue('sidebar-design_options-optimization_type', storedMode, {priority: 'event'});
-    }, 1000); // Increased timeout to ensure DOM is ready
-  }
   
   // Set initial states after a delay to ensure Shiny is loaded
   setTimeout(function() {
