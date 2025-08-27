@@ -901,11 +901,19 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     # Row 2 experimental parameters (cells and reads)
     # In workflows where cells and reads are varying parameters (cost minimization or TPM/FC min with both varying),
     # they don't have sliders, so they should NOT appear in slider columns
-    if (!cells_reads_varying && !is.null(param_manager$parameters$cells_per_target) && 
+    
+    # For cells per target:
+    # Exclude if: 1) both cells+reads varying, 2) cells is being minimized, 3) cells is cost-constrained
+    cells_cost_constrained <- workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads")
+    if (!cells_reads_varying && !cells_cost_constrained && !is.null(param_manager$parameters$cells_per_target) && 
         (is.null(minimizing_param) || minimizing_param != "cells_per_target")) {
       params[["Cells per target"]] <- param_manager$parameters$cells_per_target
     }
-    if (!cells_reads_varying && !is.null(param_manager$parameters$reads_per_cell) && 
+    
+    # For reads per cell:
+    # Exclude if: 1) both cells+reads varying, 2) reads is being minimized, 3) reads is cost-constrained
+    reads_cost_constrained <- workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_fc_cells")
+    if (!cells_reads_varying && !reads_cost_constrained && !is.null(param_manager$parameters$reads_per_cell) && 
         (is.null(minimizing_param) || !minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell"))) {
       params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
     }
