@@ -45,6 +45,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     
     # Track optimization mode changes to clear cache and refresh state
     previous_optimization_mode <- reactiveVal(NULL)
+    in_mode_transition <- reactiveVal(FALSE)
     
     # Clear cache when optimization mode changes
     observe({
@@ -54,9 +55,12 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         
         # If mode changed, reset everything to show "Ready for Analysis"
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
+          in_mode_transition(TRUE)       # Mark as in transition
           cached_results(NULL)           # Clear cached results
           previous_config(NULL)          # Reset configuration tracking
           last_plan_count(0)             # Reset plan tracking
+        } else {
+          in_mode_transition(FALSE)      # Not in transition
         }
         
         previous_optimization_mode(current_mode)
@@ -65,17 +69,11 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
     analysis_results <- reactive({
       req(workflow_config())
+      
+      # CRITICAL: Stop reactive execution entirely during mode transitions
+      req(!in_mode_transition())
 
       config <- workflow_config()
-
-      # CRITICAL: Check for mode transitions first - if optimization mode changed, always return NULL
-      # This prevents any analysis from running during mode switching, regardless of other conditions
-      current_opt_mode <- config$design_options$optimization_type
-      if (!is.null(previous_optimization_mode()) && 
-          !is.null(current_opt_mode) &&
-          previous_optimization_mode() != current_opt_mode) {
-        return(NULL)  # Mode transition in progress - show "Ready for Analysis"
-      }
 
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
