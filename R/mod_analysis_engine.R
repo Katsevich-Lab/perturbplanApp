@@ -128,6 +128,21 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       # Detect workflow scenario (with translated parameter names)
       workflow_info <- detect_workflow_scenario(config)
+      
+      # Skip analysis if workflow detection failed (prevents invalid configurations)
+      if (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id == "unknown") {
+        return(list(
+          error = paste("Configuration Error: Unable to detect valid workflow.",
+                       "Please ensure all design options are properly configured.",
+                       "If switching between optimization modes, wait for UI to update completely."),
+          metadata = list(
+            analysis_mode = get_analysis_mode(),
+            workflow_type = "unknown",
+            timestamp = Sys.time(),
+            configuration_incomplete = TRUE
+          )
+        ))
+      }
 
       # PERTURBPLAN ANALYSIS: Call perturbplan package functions
       # Wrap in comprehensive error handling to prevent app crashes

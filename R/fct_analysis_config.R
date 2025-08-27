@@ -153,11 +153,18 @@ detect_workflow_scenario <- function(workflow_config) {
   }
   
   # Fallback for unknown configurations
+  # Choose a safer default minimizing parameter based on optimization type
+  safe_minimizing_param <- if (!is.null(opt_type) && opt_type == "power_cost") {
+    "TPM_threshold"  # Safe default for power+cost mode
+  } else {
+    "cells_per_target"  # Safe default for power_only mode
+  }
+  
   return(list(
     workflow_id = "unknown",
     plot_type = "single_parameter_curve",  # Default to safe plot type
     category = "unknown",
-    minimizing_parameter = "cells_per_target",  # Safe default
+    minimizing_parameter = safe_minimizing_param,  # Context-aware safe default
     title = "Unknown Workflow Configuration",
     description = "Unable to detect workflow from configuration"
   ))
@@ -185,6 +192,24 @@ validate_workflow_config <- function(workflow_config) {
   
   if (is.null(design_config$minimization_target) || design_config$minimization_target == "") {
     errors <- c(errors, "Minimization target not selected")
+  }
+  
+  # Validate minimization target compatibility with optimization type
+  if (!is.null(design_config$optimization_type) && !is.null(design_config$minimization_target) &&
+      design_config$optimization_type != "" && design_config$minimization_target != "") {
+    
+    opt_type <- design_config$optimization_type
+    target <- design_config$minimization_target
+    
+    # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
+    if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
+      errors <- c(errors, paste("Power+cost optimization can only minimize TPM threshold or fold change, not", target))
+    }
+    
+    # Power-only mode supports all targets
+    if (opt_type == "power_only" && !target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change", "cost")) {
+      errors <- c(errors, paste("Invalid minimization target for power-only optimization:", target))
+    }
   }
   
   # Check cost budget for power+cost optimization
