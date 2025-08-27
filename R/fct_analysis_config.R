@@ -190,8 +190,13 @@ validate_workflow_config <- function(workflow_config) {
     errors <- c(errors, "Target power must be between 0 and 1")
   }
   
-  if (is.null(design_config$minimization_target) || design_config$minimization_target == "") {
-    errors <- c(errors, "Minimization target not selected")
+  # Allow empty minimization target during UI transitions to prevent premature validation errors
+  # Only validate if both optimization type and minimization target are properly set
+  if (!is.null(design_config$optimization_type) && design_config$optimization_type != "" &&
+      (is.null(design_config$minimization_target) || design_config$minimization_target == "")) {
+    # During mode switching, minimization target gets temporarily cleared
+    # Only report as error if this appears to be a stable configuration attempt
+    errors <- c(errors, "Please select a minimization target to continue analysis")
   }
   
   # Validate minimization target compatibility with optimization type

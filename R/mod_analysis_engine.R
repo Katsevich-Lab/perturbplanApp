@@ -126,6 +126,22 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         )
       }
 
+      # Early validation: Skip analysis if essential configuration is missing
+      design_config <- config$design_options
+      if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
+          is.null(design_config$minimization_target) || design_config$minimization_target == "") {
+        return(list(
+          error = paste("Configuration incomplete: Please select optimization type and minimization target.",
+                       "If switching between modes, please wait for the UI to fully update."),
+          metadata = list(
+            analysis_mode = get_analysis_mode(),
+            workflow_type = "incomplete",
+            timestamp = Sys.time(),
+            configuration_incomplete = TRUE
+          )
+        ))
+      }
+      
       # Detect workflow scenario (with translated parameter names)
       workflow_info <- detect_workflow_scenario(config)
       
