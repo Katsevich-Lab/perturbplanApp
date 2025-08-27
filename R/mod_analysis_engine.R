@@ -84,9 +84,11 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       } else {
         # Check if sidebar inputs changed since last plan
         if (!is.null(previous_hash) && current_config_hash != previous_hash) {
-          # Sidebar changed but no new plan click - return NULL to clear results
-          cached_results(NULL)  # Clear cache
-          return(NULL)
+          # Sidebar changed but no new plan click - keep showing old results
+          if (!is.null(cached_results())) {
+            return(cached_results())  # Show old results instead of clearing
+          }
+          # If no cached results, continue to analysis (shouldn't happen normally)
         }
 
         # Same config as before - return cached results if available
