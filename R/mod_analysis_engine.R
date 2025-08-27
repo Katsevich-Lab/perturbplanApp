@@ -101,7 +101,15 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       # Configuration received successfully
 
-      # Validate configuration
+      # Early validation: Skip analysis if essential configuration is missing
+      # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
+      design_config <- config$design_options
+      if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
+          is.null(design_config$minimization_target) || design_config$minimization_target == "") {
+        return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
+      }
+
+      # Validate configuration (only after essential fields are present)
       validation <- validate_workflow_config(config)
       if (!validation$is_valid) {
         return(list(
@@ -126,14 +134,6 @@ mod_analysis_engine_server <- function(id, workflow_config) {
           "fold_change" = "minimum_fold_change",  # "Fold change" → backend
           config$design_options$minimization_target  # No change for TPM_threshold, cost
         )
-      }
-
-      # Early validation: Skip analysis if essential configuration is missing
-      # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
-      design_config <- config$design_options
-      if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
-          is.null(design_config$minimization_target) || design_config$minimization_target == "") {
-        return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
       
       # Detect workflow scenario (with translated parameter names)
