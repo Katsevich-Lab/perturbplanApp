@@ -19,17 +19,7 @@ mod_parameter_sliders_ui <- function(id) {
       style = "padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
       
       # ROW 1: Fixed experimental parameters (always 3 sliders)
-      tags$div(
-        class = "slider-row experimental-params",
-        style = "margin-bottom: 20px;",
-        tags$h5("Experimental Parameters", 
-                style = "text-align: center; margin-bottom: 15px; color: #495057; font-size: 14px;"),
-        fluidRow(
-          column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, 10, 1)),
-          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 50000, 100, 50)),
-          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, 4, 1))
-        )
-      ),
+      uiOutput(ns("experimental_sliders")),
       
       # ROW 2: Power-determining parameters (dynamic - 3 out of 4 shown)
       tags$div(
@@ -91,8 +81,23 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
     ns <- session$ns
     
     # ========================================================================
-    # DYNAMIC ROW 2 GENERATION
+    # DYNAMIC SLIDER GENERATION
     # ========================================================================
+    
+    # Generate dynamic Row 1 experimental sliders with current values
+    output$experimental_sliders <- renderUI({
+      tags$div(
+        class = "slider-row experimental-params",
+        style = "margin-bottom: 20px;",
+        tags$h5("Experimental Parameters", 
+                style = "text-align: center; margin-bottom: 15px; color: #495057; font-size: 14px;"),
+        fluidRow(
+          column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, param_manager$parameters$MOI, 1)),
+          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 50000, param_manager$parameters$num_targets, 50)),
+          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, param_manager$parameters$gRNAs_per_target, 1))
+        )
+      )
+    })
     
     # Generate dynamic Row 2 based on workflow
     output$dynamic_power_sliders <- renderUI({
@@ -100,12 +105,12 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info){
       
       if (is.null(workflow)) return(NULL)
       
-      # Define all 4 power-determining parameters (ranges match sidebar exactly)
+      # Define all 4 power-determining parameters (use current parameter manager values)
       all_power_params <- list(
-        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = 1000, step = 20),
-        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = 5000, step = 1000),
-        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = 10, step = 1),
-        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 3, value = 0.8, step = 0.1)
+        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = param_manager$parameters$cells_per_target, step = 20),
+        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = param_manager$parameters$reads_per_cell, step = 1000),
+        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = param_manager$parameters$TPM_threshold, step = 1),
+        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 3, value = param_manager$parameters$minimum_fold_change, step = 0.1)
       )
       
       # Determine which parameter is being minimized (exclude from Row 2)
