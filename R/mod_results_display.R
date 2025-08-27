@@ -190,35 +190,35 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Initialize parameter sliders module
     # Extract sidebar config and workflow info from analysis results
     sidebar_config <- reactive({
-      # First try to get from analysis results (if available)
-      results <- analysis_results()
-      if (!is.null(results) && !is.null(results$user_config)) {
-        return(results$user_config)
-      }
-      
-      # Fallback: use direct user config for immediate slider functionality
+      # Use direct user config for immediate slider functionality (primary source)
       config <- user_config()
       if (!is.null(config)) {
         return(config)
+      }
+      
+      # Fallback: get from analysis results (if user_config not available for some reason)
+      results <- analysis_results()
+      if (!is.null(results) && !is.null(results$user_config)) {
+        return(results$user_config)
       }
       
       return(NULL)
     })
     
     workflow_info <- reactive({
-      # First try to get from analysis results (if available)
-      results <- analysis_results()
-      if (!is.null(results) && !is.null(results$workflow_info)) {
-        return(results$workflow_info)
-      }
-      
-      # Fallback: generate workflow info from design config for immediate slider visibility
+      # Primary: generate workflow info from design config for immediate slider visibility
       config <- user_config()
       if (!is.null(config) && !is.null(config$design_options)) {
         workflow_detection <- detect_slider_workflow(config$design_options)
         if (!is.null(workflow_detection$workflow_id)) {
           return(list(workflow_id = workflow_detection$workflow_id))
         }
+      }
+      
+      # Fallback: try to get from analysis results (if design config not available)
+      results <- analysis_results()
+      if (!is.null(results) && !is.null(results$workflow_info)) {
+        return(results$workflow_info)
       }
       
       return(NULL)
