@@ -105,7 +105,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
         cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = 1000, step = 20),
         reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = 5000, step = 1000),
         TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = 10, step = 1),
-        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.5, max = 10, value = 0.8, step = 0.1)
+        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 3, value = 0.8, step = 0.1)
       )
       
       # Determine which parameter is being minimized (exclude from Row 2)
