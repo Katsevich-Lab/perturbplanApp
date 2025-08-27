@@ -52,19 +52,12 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       if (!is.null(config) && !is.null(config$design_options$optimization_type)) {
         current_mode <- config$design_options$optimization_type
         
-        # If mode changed AND there are existing results, refresh the entire app (cleanest solution)
+        # If mode changed, clear cached results to show "Ready for Analysis"
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
-          # Only reload if there are cached results (i.e., user had run analysis in previous mode)
-          if (!is.null(cached_results())) {
-            # Store the new mode in sessionStorage before reloading
-            session$sendCustomMessage("storeOptimizationMode", list(mode = current_mode))
-            # Small delay to ensure storage completes before reload
-            session$sendCustomMessage("reloadAfterDelay", list(delay = 100))
-          } else {
-            # No results yet - just clear any cached data and let user continue configuring
-            cached_results(NULL)
-            previous_config(NULL)
-          }
+          cached_results(NULL)           # Clear cached results
+          previous_config(NULL)          # Reset configuration tracking
+          # Note: We don't clear parameter controls here - that would cause UI issues
+          # Instead, the early validation (lines 85-88) will return NULL during transitions
         }
         
         previous_optimization_mode(current_mode)
@@ -83,7 +76,8 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       
       # Check for missing essential fields
       if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
-          is.null(design_config$minimization_target) || design_config$minimization_target == "") {
+          is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
+          is.null(design_config$parameter_controls)) {
         return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
       

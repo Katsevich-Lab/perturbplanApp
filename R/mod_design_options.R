@@ -789,7 +789,12 @@ mod_design_options_server <- function(id){
         cost_per_million_reads = if (input$optimization_type == "power_cost") input$cost_per_million_reads 
                                 else if (input$minimization_target == "cost") input$cost_per_million_reads_min 
                                 else NULL,
-        parameter_controls = get_resolved_param_controls(input$optimization_type, target, input),
+        parameter_controls = if (!is.null(input$optimization_type) && input$optimization_type != "" && 
+                                 !is.null(target) && target != "") {
+          get_resolved_param_controls(input$optimization_type, target, input)
+        } else {
+          NULL  # No parameter controls during transitions - this prevents analysis from running
+        },
         timestamp = Sys.time()
       )
     })
