@@ -45,6 +45,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     
     # Track optimization mode changes to clear cache and refresh state
     previous_optimization_mode <- reactiveVal(NULL)
+    in_mode_transition <- reactiveVal(FALSE)
     
     # Clear cache when optimization mode changes
     observe({
@@ -54,10 +55,14 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         
         # If mode changed, clear cached results to show "Ready for Analysis"
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
+          in_mode_transition(TRUE)       # Mark as in transition
           cached_results(NULL)           # Clear cached results
           previous_config(NULL)          # Reset configuration tracking
+          last_plan_count(0)             # Reset plan tracking
           # Note: We don't clear parameter controls here - that would cause UI issues
           # Instead, the early validation (lines 85-88) will return NULL during transitions
+        } else {
+          in_mode_transition(FALSE)      # Not in transition
         }
         
         previous_optimization_mode(current_mode)
@@ -66,6 +71,9 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
     analysis_results <- reactive({
       req(workflow_config())
+      
+      # CRITICAL: Stop reactive execution entirely during mode transitions
+      req(!in_mode_transition())
 
       config <- workflow_config()
 
