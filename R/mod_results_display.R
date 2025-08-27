@@ -15,99 +15,112 @@
 mod_results_display_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    # Main results container - changed from horizontal to vertical layout
-    tagList(
-      # Plot section (full width, top row)
-      fluidRow(
-        column(
-          width = 12,
-          box(
-            title = "Analysis Results",
-            status = "primary",
-            solidHeader = TRUE,
-            width = NULL,
-            height = 500,
-            
-            # Conditional display based on analysis state (mutually exclusive)
-            conditionalPanel(
-              condition = "output.show_results == false && output.show_error == false",
-              ns = ns,
-              wellPanel(
-                style = "text-align: center; padding: 60px;",
-                h3("Ready for Analysis", style = "color: #5A6B73;"),
-                tags$p("Configure your experimental design in the sidebar and click 'Plan' to generate results.",
-                       style = "color: #7A8B93; font-size: 16px;")
-              )
-            ),
-            
-            conditionalPanel(
-              condition = "output.show_results == true && output.show_error == false",
-              ns = ns,
-              # Interactive plot output
-              plotlyOutput(ns("main_plot"), height = "400px")
-            ),
-            
-            # Error display panel (only when there's an actual error)
-            conditionalPanel(
-              condition = "output.show_error == true",
-              ns = ns,
-              tags$div(
-                style = "background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 20px; margin: 20px 0;",
-                tags$h4("Analysis Error", style = "color: #721c24; margin-top: 0;"),
-                uiOutput(ns("error_message"))
-              )
+    # Three-column layout: Plot | Solutions | Sliders  
+    fluidRow(
+      # Plot Column (left)
+      column(
+        width = 4,
+        box(
+          title = "Analysis Results",
+          status = "primary",
+          solidHeader = TRUE,
+          width = NULL,
+          height = 500,
+          
+          # Conditional display based on analysis state (mutually exclusive)
+          conditionalPanel(
+            condition = "output.show_results == false && output.show_error == false",
+            ns = ns,
+            wellPanel(
+              style = "text-align: center; padding: 50px;",
+              h4("Ready for Analysis", style = "color: #5A6B73;"),
+              tags$p("Configure your experimental design and click 'Plan'.",
+                     style = "color: #7A8B93; font-size: 14px;")
+            )
+          ),
+          
+          conditionalPanel(
+            condition = "output.show_results == true && output.show_error == false",
+            ns = ns,
+            # Interactive plot output - adjusted for column layout
+            plotlyOutput(ns("main_plot"), height = "380px")
+          ),
+          
+          # Error display panel (only when there's an actual error)
+          conditionalPanel(
+            condition = "output.show_error == true",
+            ns = ns,
+            tags$div(
+              style = "background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 15px; margin: 15px 0;",
+              tags$h4("Error", style = "color: #721c24; margin-top: 0; font-size: 14px;"),
+              uiOutput(ns("error_message"))
             )
           )
         )
       ),
       
-      # Solution table section (full width, bottom row)
-      conditionalPanel(
-        condition = "output.show_results == true",
-        ns = ns,
-        fluidRow(
-          column(
-            width = 12,
-            box(
-              title = "Solutions",
-              status = "info",
-              solidHeader = TRUE,
-              width = NULL,
-              
-              # Solution table will be implemented in Phase 2
+      # Solutions Column (middle)
+      column(
+        width = 4,
+        box(
+          title = "Solutions",
+          status = "info",
+          solidHeader = TRUE,
+          width = NULL,
+          height = 500,
+          
+          # Solution table with scrollable content
+          conditionalPanel(
+            condition = "output.show_results == true",
+            ns = ns,
+            tags$div(
+              style = "max-height: 400px; overflow-y: auto;",
               uiOutput(ns("solutions_table"))
             )
+          ),
+          
+          # Placeholder when no results
+          conditionalPanel(
+            condition = "output.show_results == false && output.show_error == false",
+            ns = ns,
+            wellPanel(
+              style = "text-align: center; padding: 50px;",
+              tags$p("Solutions table will appear here after analysis.", 
+                     style = "color: #7A8B93; font-size: 14px;")
+            )
           )
         )
       ),
       
-      # Placeholder message when no results (replacing old solution panel)
-      conditionalPanel(
-        condition = "output.show_results == false && output.show_error == false",
-        ns = ns,
-        fluidRow(
-          column(
-            width = 12,
-            wellPanel(
-              style = "text-align: center; padding: 20px; margin-top: 20px;",
-              tags$p("Solutions table will appear here after running the analysis.",
-                     style = "color: #7A8B93;")
+      # Sliders Column (right) 
+      column(
+        width = 4,
+        box(
+          title = "Parameters",
+          status = "success",
+          solidHeader = TRUE,
+          width = NULL,
+          height = 500,
+          
+          # Parameter sliders with scrollable content
+          conditionalPanel(
+            condition = "output.show_sliders == true",
+            ns = ns,
+            tags$div(
+              style = "max-height: 400px; overflow-y: auto;",
+              mod_parameter_sliders_ui(ns("sliders"))
             )
-          )
-        )
-      )
-    ),
-    
-    # Horizontal Parameter Sliders Row (placeholder for now)
-    conditionalPanel(
-      condition = "output.show_sliders == true",
-      ns = ns,
-      fluidRow(
-        column(12,
-          tags$div(
-            class = "slider-panel",
-            style = "background: white; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);",
-            mod_parameter_sliders_ui(ns("sliders"))
+          ),
+          
+          # Placeholder when no sliders
+          conditionalPanel(
+            condition = "output.show_sliders == false",
+            ns = ns,
+            wellPanel(
+              style = "text-align: center; padding: 50px;",
+              tags$p("Parameter sliders will appear here after analysis.", 
+                     style = "color: #7A8B93; font-size: 14px;")
+            )
           )
         )
       )
