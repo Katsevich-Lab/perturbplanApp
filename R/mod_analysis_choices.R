@@ -79,7 +79,7 @@ mod_analysis_choices_ui <- function(id) {
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd
-mod_analysis_choices_server <- function(id, design_config, param_manager, external_updates = reactive(NULL)){
+mod_analysis_choices_server <- function(id, design_config, param_manager){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
@@ -105,20 +105,6 @@ mod_analysis_choices_server <- function(id, design_config, param_manager, extern
       }
     })
 
-    # Update TPM threshold from slider - DEPRECATED
-    observe({
-      updates <- external_updates()
-      
-      if (!is.null(updates) && !is.null(updates$analysis_choices) && 
-          !is.null(updates$analysis_choices$TPM_threshold_fixed) && 
-          !is.na(updates$analysis_choices$TPM_threshold_fixed)) {
-        # Only update if different to prevent circular loops
-        if (is.null(input$TPM_threshold_fixed) || input$TPM_threshold_fixed != updates$analysis_choices$TPM_threshold_fixed) {
-          updateNumericInput(session, "TPM_threshold_fixed", 
-                            value = updates$analysis_choices$TPM_threshold_fixed)
-        }
-      }
-    })
 
     # VARIABLE CONSISTENCY TRACKING:
     # - Parameter control key: config$parameter_controls$TPM_threshold$type

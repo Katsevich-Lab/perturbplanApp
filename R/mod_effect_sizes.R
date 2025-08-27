@@ -51,7 +51,7 @@ mod_effect_sizes_ui <- function(id) {
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_effect_sizes_server <- function(id, design_config, param_manager, external_updates = reactive(NULL)){
+mod_effect_sizes_server <- function(id, design_config, param_manager){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -77,20 +77,6 @@ mod_effect_sizes_server <- function(id, design_config, param_manager, external_u
       }
     })
     
-    # Update fold change from slider - DEPRECATED
-    observe({
-      updates <- external_updates()
-      
-      if (!is.null(updates) && !is.null(updates$effect_sizes) && 
-          !is.null(updates$effect_sizes$minimum_fold_change_fixed) && 
-          !is.na(updates$effect_sizes$minimum_fold_change_fixed)) {
-        # Only update if different to prevent circular loops
-        if (is.null(input$minimum_fold_change_fixed) || input$minimum_fold_change_fixed != updates$effect_sizes$minimum_fold_change_fixed) {
-          updateNumericInput(session, "minimum_fold_change_fixed", 
-                            value = updates$effect_sizes$minimum_fold_change_fixed)
-        }
-      }
-    })
     
     # Conditional display logic for fold change input (panel is now always visible)
     observe({

@@ -21,16 +21,9 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # MODULE 1: INPUT COLLECTION 
   # ========================================================================
-  # Extract slider updates for passing to sidebar (TEMPORARY: backward compatibility)
-  slider_updates <- reactive({
-    if (!is.null(display_outputs) && !is.null(display_outputs$slider_updates)) {
-      return(display_outputs$slider_updates())
-    }
-    return(NULL)
-  })
-  
   # Collect all user inputs through sidebar with parameter manager integration
-  user_workflow_config <- mod_sidebar_server("sidebar", param_manager, slider_updates)
+  # No more slider_updates needed - parameter manager handles all coordination
+  user_workflow_config <- mod_sidebar_server("sidebar", param_manager)
   
   # ========================================================================  
   # MODULE 2: ANALYSIS ENGINE (Perturbplan Integration)

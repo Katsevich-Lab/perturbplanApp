@@ -55,18 +55,18 @@ mod_sidebar_ui <- function(id) {
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_sidebar_server <- function(id, param_manager, external_updates = reactive(NULL)){
+mod_sidebar_server <- function(id, param_manager){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
     # Initialize module servers with parameter manager integration
     design_config <- mod_design_options_server("design_options")
-    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, param_manager, external_updates)
-    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, param_manager, external_updates)
+    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, param_manager)
+    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, param_manager)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
     
     # Initialize effect sizes server with parameter manager integration
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, param_manager, external_updates)
+    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, param_manager)
     
     # Plan button logic
     observeEvent(input$plan_btn, {
