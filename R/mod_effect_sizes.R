@@ -87,8 +87,8 @@ mod_effect_sizes_server <- function(id, design_config, external_updates = reacti
     # Return effect sizes configuration
     effect_sizes_config <- reactive({
       list(
-        # Fixed value input
-        minimum_fold_change_fixed = input$minimum_fold_change_fixed,
+        # Fixed value input (provide default for slider sync)
+        minimum_fold_change_fixed = input$minimum_fold_change_fixed %||% 0.8,
         # Proportion of non-null pairs
         prop_non_null = input$prop_non_null,
         timestamp = Sys.time()
