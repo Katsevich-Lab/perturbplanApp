@@ -68,6 +68,15 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       config <- workflow_config()
 
+      # CRITICAL: Check for mode transitions first - if optimization mode changed, always return NULL
+      # This prevents any analysis from running during mode switching, regardless of other conditions
+      current_opt_mode <- config$design_options$optimization_type
+      if (!is.null(previous_optimization_mode()) && 
+          !is.null(current_opt_mode) &&
+          previous_optimization_mode() != current_opt_mode) {
+        return(NULL)  # Mode transition in progress - show "Ready for Analysis"
+      }
+
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
       # THIS MUST HAPPEN BEFORE BOTH PLAN CHECK AND CACHING LOGIC
