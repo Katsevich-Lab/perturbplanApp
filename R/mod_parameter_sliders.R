@@ -141,39 +141,53 @@ mod_parameter_sliders_server <- function(id, sidebar_config, workflow_info){
       # Extract parameter values from sidebar configuration
       # Handle the complex nested structure of sidebar config
       isolate({
-        # MOI from experimental setup
+        # MOI from experimental setup (only update if different to prevent snap-back)
         if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$MOI)) {
-          updateSliderInput(session, "moi_slider", value = sidebar$experimental_setup$MOI)
+          if (is.null(input$moi_slider) || input$moi_slider != sidebar$experimental_setup$MOI) {
+            updateSliderInput(session, "moi_slider", value = sidebar$experimental_setup$MOI)
+          }
         }
         
-        # Number of targets from experimental setup
+        # Number of targets from experimental setup (only update if different)
         if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$num_targets)) {
-          updateSliderInput(session, "targets_slider", value = sidebar$experimental_setup$num_targets)
+          if (is.null(input$targets_slider) || input$targets_slider != sidebar$experimental_setup$num_targets) {
+            updateSliderInput(session, "targets_slider", value = sidebar$experimental_setup$num_targets)
+          }
         }
         
-        # gRNAs per target from experimental setup
+        # gRNAs per target from experimental setup (only update if different)
         if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$gRNAs_per_target)) {
-          updateSliderInput(session, "grnas_slider", value = sidebar$experimental_setup$gRNAs_per_target)
+          if (is.null(input$grnas_slider) || input$grnas_slider != sidebar$experimental_setup$gRNAs_per_target) {
+            updateSliderInput(session, "grnas_slider", value = sidebar$experimental_setup$gRNAs_per_target)
+          }
         }
         
-        # Cells per target from experimental setup (fixed value)
+        # Cells per target from experimental setup (only update if different)
         if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$cells_fixed)) {
-          updateSliderInput(session, "cells_slider", value = sidebar$experimental_setup$cells_fixed)
+          if (is.null(input$cells_slider) || input$cells_slider != sidebar$experimental_setup$cells_fixed) {
+            updateSliderInput(session, "cells_slider", value = sidebar$experimental_setup$cells_fixed)
+          }
         }
         
-        # Reads per cell from experimental setup (fixed value) 
+        # Reads per cell from experimental setup (only update if different)
         if (!is.null(sidebar$experimental_setup) && !is.null(sidebar$experimental_setup$mapped_reads_fixed)) {
-          updateSliderInput(session, "reads_slider", value = sidebar$experimental_setup$mapped_reads_fixed)
+          if (is.null(input$reads_slider) || input$reads_slider != sidebar$experimental_setup$mapped_reads_fixed) {
+            updateSliderInput(session, "reads_slider", value = sidebar$experimental_setup$mapped_reads_fixed)
+          }
         }
         
-        # TPM threshold from analysis choices (fixed value)
+        # TPM threshold from analysis choices (only update if different)
         if (!is.null(sidebar$analysis_choices) && !is.null(sidebar$analysis_choices$TPM_threshold_fixed)) {
-          updateSliderInput(session, "TPM_slider", value = sidebar$analysis_choices$TPM_threshold_fixed)
+          if (is.null(input$TPM_slider) || input$TPM_slider != sidebar$analysis_choices$TPM_threshold_fixed) {
+            updateSliderInput(session, "TPM_slider", value = sidebar$analysis_choices$TPM_threshold_fixed)
+          }
         }
         
-        # Fold change from effect sizes (fixed value)
+        # Fold change from effect sizes (only update if different)
         if (!is.null(sidebar$effect_sizes) && !is.null(sidebar$effect_sizes$minimum_fold_change_fixed)) {
-          updateSliderInput(session, "fc_slider", value = sidebar$effect_sizes$minimum_fold_change_fixed)
+          if (is.null(input$fc_slider) || input$fc_slider != sidebar$effect_sizes$minimum_fold_change_fixed) {
+            updateSliderInput(session, "fc_slider", value = sidebar$effect_sizes$minimum_fold_change_fixed)
+          }
         }
       })
     })

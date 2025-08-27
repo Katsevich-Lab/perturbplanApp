@@ -42,7 +42,7 @@ app_server <- function(input, output, session) {
   # MODULE 4: RESULTS DISPLAY (Always Same)  
   # ========================================================================
   # Handle UI presentation of plots and tables and capture slider updates
-  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw)
+  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config)
   
   # ========================================================================
   # HEADER EXPORT FUNCTIONALITY

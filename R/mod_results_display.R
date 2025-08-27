@@ -122,7 +122,7 @@ mod_results_display_ui <- function(id) {
 # DT import removed - detailed results table no longer used
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
-mod_results_display_server <- function(id, plot_objects, analysis_results) {
+mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -169,28 +169,17 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # Workflow-based slider visibility for 8 target workflows
     output$show_sliders <- reactive({
       tryCatch({
-        results <- analysis_results()
+        # Use design configuration instead of analysis results for immediate visibility
+        config <- user_config()
         
-        if (is.null(results) || is.null(results$workflow_info)) {
+        if (is.null(config) || is.null(config$design_options)) {
           return(FALSE)
         }
         
-        workflow <- results$workflow_info
-        target_workflows <- c(
-          # Power-only workflows (4 total)
-          "power_single_cells_per_target", 
-          "power_single_reads_per_cell", 
-          "power_single_TPM_threshold", 
-          "power_single_minimum_fold_change",
-          
-          # Power+cost workflows (4 total - only single-parameter varying)
-          "power_cost_TPM_cells",    # TPM min, cells vary, reads fixed
-          "power_cost_TPM_reads",    # TPM min, reads vary, cells fixed
-          "power_cost_fc_cells",     # FC min, cells vary, reads fixed  
-          "power_cost_fc_reads"      # FC min, reads vary, cells fixed
-        )
+        # Use the new lightweight detection function
+        workflow_detection <- detect_slider_workflow(config$design_options)
         
-        !is.null(workflow$workflow_id) && workflow$workflow_id %in% target_workflows
+        return(workflow_detection$should_show_sliders)
         
       }, error = function(e) {
         FALSE
@@ -201,18 +190,37 @@ mod_results_display_server <- function(id, plot_objects, analysis_results) {
     # Initialize parameter sliders module
     # Extract sidebar config and workflow info from analysis results
     sidebar_config <- reactive({
+      # First try to get from analysis results (if available)
       results <- analysis_results()
       if (!is.null(results) && !is.null(results$user_config)) {
         return(results$user_config)
       }
+      
+      # Fallback: use direct user config for immediate slider functionality
+      config <- user_config()
+      if (!is.null(config)) {
+        return(config)
+      }
+      
       return(NULL)
     })
     
     workflow_info <- reactive({
+      # First try to get from analysis results (if available)
       results <- analysis_results()
       if (!is.null(results) && !is.null(results$workflow_info)) {
         return(results$workflow_info)
       }
+      
+      # Fallback: generate workflow info from design config for immediate slider visibility
+      config <- user_config()
+      if (!is.null(config) && !is.null(config$design_options)) {
+        workflow_detection <- detect_slider_workflow(config$design_options)
+        if (!is.null(workflow_detection$workflow_id)) {
+          return(list(workflow_id = workflow_detection$workflow_id))
+        }
+      }
+      
       return(NULL)
     })
     
