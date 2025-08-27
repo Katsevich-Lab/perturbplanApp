@@ -871,9 +871,16 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
   # Get the parameter being minimized and workflow type
   minimizing_param <- NULL
   is_cost_minimization <- FALSE
+  cells_reads_varying <- FALSE
   if (!is.null(workflow_info)) {
     minimizing_param <- workflow_info$minimizing_parameter
     is_cost_minimization <- workflow_info$workflow_id == "power_cost_minimization"
+    # Also check for TPM/FC minimization workflows where cells and reads are both varying
+    cells_reads_varying <- workflow_info$workflow_id %in% c(
+      "power_cost_minimization",           # Cost minimization (cells+reads vary)
+      "power_cost_TPM_cells_reads",       # TPM minimization with cells+reads varying
+      "power_cost_fc_cells_reads"         # FC minimization with cells+reads varying
+    )
   }
   
   # Show experimental parameters that appear in sliders AND are not being minimized
@@ -892,13 +899,13 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     }
     
     # Row 2 experimental parameters (cells and reads)
-    # In cost minimization, cells and reads don't have sliders (they are varying parameters)
-    # so they should NOT appear in slider columns
-    if (!is_cost_minimization && !is.null(param_manager$parameters$cells_per_target) && 
+    # In workflows where cells and reads are varying parameters (cost minimization or TPM/FC min with both varying),
+    # they don't have sliders, so they should NOT appear in slider columns
+    if (!cells_reads_varying && !is.null(param_manager$parameters$cells_per_target) && 
         (is.null(minimizing_param) || minimizing_param != "cells_per_target")) {
       params[["Cells per target"]] <- param_manager$parameters$cells_per_target
     }
-    if (!is_cost_minimization && !is.null(param_manager$parameters$reads_per_cell) && 
+    if (!cells_reads_varying && !is.null(param_manager$parameters$reads_per_cell) && 
         (is.null(minimizing_param) || !minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell"))) {
       params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
     }
