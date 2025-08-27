@@ -24,8 +24,6 @@ mod_parameter_sliders_ui <- function(id) {
       # ROW 2: Power-determining parameters (dynamic - 3 out of 4 shown)
       tags$div(
         class = "slider-row power-params",
-        tags$h5("Power-Determining Parameters", 
-                style = "text-align: center; margin-bottom: 15px; color: #495057; font-size: 14px;"),
         uiOutput(ns("dynamic_power_sliders"))
       )
     )
@@ -90,8 +88,6 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       tags$div(
         class = "slider-row experimental-params",
         style = "margin-bottom: 20px;",
-        tags$h5("Experimental Parameters", 
-                style = "text-align: center; margin-bottom: 15px; color: #495057; font-size: 14px;"),
         fluidRow(
           column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, param_manager$parameters$MOI, 1)),
           column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, param_manager$parameters$num_targets, 50)),
