@@ -38,9 +38,34 @@ function toggleSection(contentId, chevronId) {
   }
 }
 
+// Shiny message handlers for optimization mode persistence
+Shiny.addCustomMessageHandler('storeOptimizationMode', function(data) {
+  console.log('Storing optimization mode:', data.mode);
+  sessionStorage.setItem('perturbplan_optimization_mode', data.mode);
+});
+
+Shiny.addCustomMessageHandler('reloadAfterDelay', function(data) {
+  console.log('Reloading page after delay:', data.delay);
+  setTimeout(function() {
+    window.location.reload();
+  }, data.delay);
+});
+
 // Initialize on page load
 $(document).ready(function() {
   console.log('PerturbPlan JavaScript loaded');
+  
+  // Restore optimization mode if stored
+  var storedMode = sessionStorage.getItem('perturbplan_optimization_mode');
+  if (storedMode) {
+    console.log('Restoring optimization mode:', storedMode);
+    // Clear the stored mode after use
+    sessionStorage.removeItem('perturbplan_optimization_mode');
+    // Send the mode to Shiny to restore the selection
+    setTimeout(function() {
+      Shiny.setInputValue('sidebar-design_options-optimization_type', storedMode, {priority: 'event'});
+    }, 500);
+  }
   
   // Set initial states after a delay to ensure Shiny is loaded
   setTimeout(function() {

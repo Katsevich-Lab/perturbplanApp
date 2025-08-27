@@ -56,7 +56,10 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
           # Only reload if there are cached results (i.e., user had run analysis in previous mode)
           if (!is.null(cached_results())) {
-            session$reload()  # Full page refresh - resets all state completely
+            # Store the new mode in sessionStorage before reloading
+            session$sendCustomMessage("storeOptimizationMode", list(mode = current_mode))
+            # Small delay to ensure storage completes before reload
+            session$sendCustomMessage("reloadAfterDelay", list(delay = 100))
           } else {
             # No results yet - just clear any cached data and let user continue configuring
             cached_results(NULL)
