@@ -19,9 +19,9 @@ mod_results_display_ui <- function(id) {
     tagList(
       # Top row: Plot and Parameters side by side
       fluidRow(
-        # Plot Column (left)
+        # Plot Column (left) - 80% of width
         column(
-          width = 6,
+          width = 9,
           box(
             title = "Analysis Results",
             status = "primary",
@@ -61,9 +61,9 @@ mod_results_display_ui <- function(id) {
           )
         ),
         
-        # Parameters Column (right) - split into 2 sub-columns with 3 rows each
+        # Parameters Column (right) - 20% of width, split into 2 sub-columns with 3 rows each
         column(
-          width = 6,
+          width = 3,
           box(
             title = "Parameters",
             status = "success",
