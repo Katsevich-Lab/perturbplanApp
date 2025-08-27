@@ -74,10 +74,24 @@ mod_sidebar_server <- function(id, param_manager){
       showNotification("Plan button clicked - analysis will be implemented", type = "message")
     })
     
-    # Return configuration from central parameter manager (TEMPORARY: with compatibility layer)
+    # Return configuration from central parameter manager with design options integration
     combined_config <- reactive({
-      # Use parameter manager's unified config but add sidebar-specific data
+      # Use parameter manager's unified config but merge in design options
       base_config <- param_manager$combined_config()
+      design_opts <- design_config()
+      
+      # Override design_options with complete configuration from design module
+      if (!is.null(design_opts)) {
+        base_config$design_options <- design_opts
+        
+        # Update parameter controls with current parameter manager values
+        if (!is.null(base_config$design_options$parameter_controls)) {
+          base_config$design_options$parameter_controls$cells_per_target$fixed_value <- param_manager$parameters$cells_per_target
+          base_config$design_options$parameter_controls$mapped_reads_per_cell$fixed_value <- param_manager$parameters$reads_per_cell
+          base_config$design_options$parameter_controls$TPM_threshold$fixed_value <- param_manager$parameters$TPM_threshold
+          base_config$design_options$parameter_controls$minimum_fold_change$fixed_value <- param_manager$parameters$minimum_fold_change
+        }
+      }
       
       # Add sidebar-only configuration that's not parameter-related
       base_config$advanced_choices <- advanced_config()
