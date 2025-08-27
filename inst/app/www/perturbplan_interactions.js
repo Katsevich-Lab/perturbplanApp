@@ -67,17 +67,29 @@ $(document).ready(function() {
       // Update the select dropdown selection in the DOM
       var selectElement = document.getElementById('sidebar-design_options-optimization_type');
       if (selectElement) {
+        console.log('Found select element:', selectElement);
+        console.log('Available options:', Array.from(selectElement.options).map(opt => opt.value + ': ' + opt.text));
+        console.log('Attempting to set value to:', storedMode);
+        
         selectElement.value = storedMode;
-        console.log('Visually selected dropdown option for:', storedMode);
+        console.log('Select element value after setting:', selectElement.value);
         
         // Trigger the change event to ensure Shiny processes the selection
         var event = new Event('change', { bubbles: true });
         selectElement.dispatchEvent(event);
+        
+        // Double-check the value was set correctly
+        setTimeout(function() {
+          console.log('Final select element value:', selectElement.value);
+          console.log('Final selected option text:', selectElement.options[selectElement.selectedIndex]?.text);
+        }, 100);
+      } else {
+        console.log('Select element not found!');
       }
       
       // Also send to Shiny to ensure server-side state is updated
       Shiny.setInputValue('sidebar-design_options-optimization_type', storedMode, {priority: 'event'});
-    }, 500);
+    }, 1000); // Increased timeout to ensure DOM is ready
   }
   
   // Set initial states after a delay to ensure Shiny is loaded
