@@ -15,72 +15,82 @@
 mod_results_display_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    # Main results container
-    fluidRow(
-      # Main plot column (made wider for better visualization)
-      column(
-        width = 9,
-        box(
-          title = "Analysis Results",
-          status = "primary",
-          solidHeader = TRUE,
-          width = NULL,
-          height = 500,
-          
-          # Conditional display based on analysis state (mutually exclusive)
-          conditionalPanel(
-            condition = "output.show_results == false && output.show_error == false",
-            ns = ns,
-            wellPanel(
-              style = "text-align: center; padding: 60px;",
-              h3("Ready for Analysis", style = "color: #5A6B73;"),
-              tags$p("Configure your experimental design in the sidebar and click 'Plan' to generate results.",
-                     style = "color: #7A8B93; font-size: 16px;")
-            )
-          ),
-          
-          conditionalPanel(
-            condition = "output.show_results == true && output.show_error == false",
-            ns = ns,
-            # Interactive plot output
-            plotlyOutput(ns("main_plot"), height = "400px")
-          ),
-          
-          # Error display panel (only when there's an actual error)
-          conditionalPanel(
-            condition = "output.show_error == true",
-            ns = ns,
-            tags$div(
-              style = "background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 20px; margin: 20px 0;",
-              tags$h4("Analysis Error", style = "color: #721c24; margin-top: 0;"),
-              uiOutput(ns("error_message"))
+    # Main results container - changed from horizontal to vertical layout
+    tagList(
+      # Plot section (full width, top row)
+      fluidRow(
+        column(
+          width = 12,
+          box(
+            title = "Analysis Results",
+            status = "primary",
+            solidHeader = TRUE,
+            width = NULL,
+            height = 500,
+            
+            # Conditional display based on analysis state (mutually exclusive)
+            conditionalPanel(
+              condition = "output.show_results == false && output.show_error == false",
+              ns = ns,
+              wellPanel(
+                style = "text-align: center; padding: 60px;",
+                h3("Ready for Analysis", style = "color: #5A6B73;"),
+                tags$p("Configure your experimental design in the sidebar and click 'Plan' to generate results.",
+                       style = "color: #7A8B93; font-size: 16px;")
+              )
+            ),
+            
+            conditionalPanel(
+              condition = "output.show_results == true && output.show_error == false",
+              ns = ns,
+              # Interactive plot output
+              plotlyOutput(ns("main_plot"), height = "400px")
+            ),
+            
+            # Error display panel (only when there's an actual error)
+            conditionalPanel(
+              condition = "output.show_error == true",
+              ns = ns,
+              tags$div(
+                style = "background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; padding: 20px; margin: 20px 0;",
+                tags$h4("Analysis Error", style = "color: #721c24; margin-top: 0;"),
+                uiOutput(ns("error_message"))
+              )
             )
           )
         )
       ),
       
-      # Summary and controls column (narrower to give more space to plot)
-      column(
-        width = 3,
-        # Analysis summary box
-        box(
-          title = "Solution",
-          status = "info", 
-          solidHeader = TRUE,
-          width = NULL,
-          
-          conditionalPanel(
-            condition = "output.show_results == true",
-            ns = ns,
-            uiOutput(ns("analysis_summary"))
-          ),
-          
-          conditionalPanel(
-            condition = "output.show_results == false", 
-            ns = ns,
+      # Solution table section (full width, bottom row)
+      conditionalPanel(
+        condition = "output.show_results == true",
+        ns = ns,
+        fluidRow(
+          column(
+            width = 12,
+            box(
+              title = "Solutions",
+              status = "info",
+              solidHeader = TRUE,
+              width = NULL,
+              
+              # Solution table will be implemented in Phase 2
+              uiOutput(ns("solutions_table"))
+            )
+          )
+        )
+      ),
+      
+      # Placeholder message when no results (replacing old solution panel)
+      conditionalPanel(
+        condition = "output.show_results == false && output.show_error == false",
+        ns = ns,
+        fluidRow(
+          column(
+            width = 12,
             wellPanel(
-              style = "text-align: center; padding: 20px;",
-              tags$p("Analysis summary will appear here after running the analysis.",
+              style = "text-align: center; padding: 20px; margin-top: 20px;",
+              tags$p("Solutions table will appear here after running the analysis.",
                      style = "color: #7A8B93;")
             )
           )
@@ -295,9 +305,20 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     })
     
     # ========================================================================
-    # ANALYSIS SUMMARY
+    # SOLUTIONS TABLE (Phase 2 - to be implemented)
     # ========================================================================
     
+    output$solutions_table <- renderUI({
+      # Placeholder for Phase 2 implementation
+      tags$div(
+        style = "text-align: center; padding: 40px; color: #7A8B93;",
+        tags$p("Solutions table will be implemented in Phase 2", style = "font-style: italic;")
+      )
+    })
+    
+    # ========================================================================
+    # ANALYSIS SUMMARY
+    # ========================================================================
     output$analysis_summary <- renderUI({
       req(analysis_results(), plot_objects())
       
