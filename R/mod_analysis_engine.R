@@ -56,7 +56,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
           cached_results(NULL)           # Clear cached results
           previous_config(NULL)          # Reset configuration tracking
-          last_plan_count(0)             # Reset plan tracking
+          # DON'T reset last_plan_count - prevents false "new plan" detection
         }
         
         previous_optimization_mode(current_mode)
