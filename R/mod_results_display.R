@@ -430,10 +430,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       contentType = "image/png"
     )
     
-    # Return slider updates for main app integration
-    return(list(
-      slider_updates = slider_updates
-    ))
+    # No return needed - parameter manager handles all coordination
   })
 }
 
