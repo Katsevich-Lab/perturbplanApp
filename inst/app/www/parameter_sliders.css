@@ -67,8 +67,8 @@
 }
 
 .compact-slider-container .irs-handle {
-  width: 16px;
-  height: 16px;
+  width: 8px !important;
+  height: 8px !important;
 }
 
 /* Hide only slider scale/tick marks for cleaner appearance */
@@ -156,8 +156,16 @@
    INTEGRATION WITH EXISTING STYLES
    ======================================================================== */
 
+/* Global slider handle size override - applies to all sliders */
+.irs-handle {
+  width: 8px !important;
+  height: 8px !important;
+}
+
 /* Ensure sliders work well with existing dashboard theme */
 .parameter-sliders-horizontal .irs-handle {
+  width: 8px !important;
+  height: 8px !important;
   background: #007bff;
   border: 1px solid #0056b3;
 }
