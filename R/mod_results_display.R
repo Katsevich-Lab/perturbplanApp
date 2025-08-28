@@ -759,21 +759,21 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
     } else if (cells_or_reads_constrained) {
       # Show TPM + cost-constrained parameter
       if (workflow_info$workflow_id == "power_cost_TPM_cells") {
-        # Cells fixed, reads cost-constrained
-        return(list(
-          label = "Optimal Design",
-          value = create_multi_param_display(list(
-            "TPM Threshold" = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A",
-            "Cost-constrained reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
-          ))
-        ))
-      } else if (workflow_info$workflow_id == "power_cost_TPM_reads") {
-        # Reads fixed, cells cost-constrained
+        # Cells varying (cost-constrained), reads fixed
         return(list(
           label = "Optimal Design",
           value = create_multi_param_display(list(
             "TPM Threshold" = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A",
             "Cost-constrained cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A"
+          ))
+        ))
+      } else if (workflow_info$workflow_id == "power_cost_TPM_reads") {
+        # Reads varying (cost-constrained), cells fixed
+        return(list(
+          label = "Optimal Design",
+          value = create_multi_param_display(list(
+            "TPM Threshold" = if (!is.null(optimal$TPM_threshold)) round(optimal$TPM_threshold) else "N/A",
+            "Cost-constrained reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
           ))
         ))
       }
@@ -797,21 +797,21 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
     } else if (cells_or_reads_constrained) {
       # Show FC + cost-constrained parameter
       if (workflow_info$workflow_id == "power_cost_fc_cells") {
-        # Cells fixed, reads cost-constrained
-        return(list(
-          label = "Optimal Design",
-          value = create_multi_param_display(list(
-            "Fold Change" = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
-            "Cost-constrained reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
-          ))
-        ))
-      } else if (workflow_info$workflow_id == "power_cost_fc_reads") {
-        # Reads fixed, cells cost-constrained
+        # Cells varying (cost-constrained), reads fixed
         return(list(
           label = "Optimal Design",
           value = create_multi_param_display(list(
             "Fold Change" = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
             "Cost-constrained cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A"
+          ))
+        ))
+      } else if (workflow_info$workflow_id == "power_cost_fc_reads") {
+        # Reads varying (cost-constrained), cells fixed
+        return(list(
+          label = "Optimal Design",
+          value = create_multi_param_display(list(
+            "Fold Change" = if (!is.null(optimal$minimum_fold_change)) round(optimal$minimum_fold_change, 2) else "N/A",
+            "Cost-constrained reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
           ))
         ))
       }
@@ -907,7 +907,7 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     # Exclude if: 1) both cells+reads varying, 2) cells is being minimized, 3) cells is cost-constrained
     cells_should_exclude <- cells_reads_varying ||  # Both varying
                            (!is.null(minimizing_param) && minimizing_param == "cells_per_target") ||  # Cells minimized
-                           (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads"))  # Cells cost-constrained (reads is fixed)
+                           (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_fc_cells"))  # Cells cost-constrained (reads is fixed)
     
     if (!cells_should_exclude && !is.null(param_manager$parameters$cells_per_target)) {
       params[["Cells per target"]] <- param_manager$parameters$cells_per_target
@@ -918,7 +918,7 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     # Exclude if: 1) both cells+reads varying, 2) reads is being minimized, 3) reads is cost-constrained  
     reads_should_exclude <- cells_reads_varying ||  # Both varying
                            (!is.null(minimizing_param) && minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) ||  # Reads minimized
-                           (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_fc_cells"))  # Reads cost-constrained (cells is fixed)
+                           (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads"))  # Reads cost-constrained (cells is fixed)
     
     if (!reads_should_exclude && !is.null(param_manager$parameters$reads_per_cell)) {
       params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
