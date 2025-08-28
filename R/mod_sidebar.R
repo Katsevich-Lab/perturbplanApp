@@ -60,7 +60,7 @@ mod_sidebar_server <- function(id, param_manager){
     ns <- session$ns
     
     # Initialize module servers with parameter manager integration
-    design_config <- mod_design_options_server("design_options")
+    design_config <- mod_design_options_server("design_options", param_manager)
     experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, param_manager)
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, param_manager)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
@@ -132,6 +132,11 @@ mod_sidebar_server <- function(id, param_manager){
         config$design_options$parameter_controls$mapped_reads_per_cell$fixed_value <- param_manager$parameters$reads_per_cell
         config$design_options$parameter_controls$TPM_threshold$fixed_value <- param_manager$parameters$TPM_threshold
         config$design_options$parameter_controls$minimum_fold_change$fixed_value <- param_manager$parameters$minimum_fold_change
+      }
+      
+      # Update cost budget with current parameter manager value (critical for slider sync)
+      if (!is.null(config$design_options)) {
+        config$design_options$cost_budget <- param_manager$parameters$cost_budget
       }
       
       return(config)

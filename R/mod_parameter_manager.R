@@ -41,6 +41,9 @@ mod_parameter_manager_server <- function(id) {
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       
+      # Cost parameters
+      cost_budget = 10000,
+      
       # Meta information
       last_updated_by = "system",
       last_updated_at = Sys.time()
@@ -92,7 +95,8 @@ mod_parameter_manager_server <- function(id) {
             mapped_reads_per_cell = list(fixed_value = parameters$reads_per_cell),
             TPM_threshold = list(fixed_value = parameters$TPM_threshold),
             minimum_fold_change = list(fixed_value = parameters$minimum_fold_change)
-          )
+          ),
+          cost_budget = parameters$cost_budget
         ),
         
         # Experimental setup

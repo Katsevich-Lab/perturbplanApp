@@ -199,7 +199,7 @@ mod_design_options_ui <- function(id) {
 #' design_options Server Functions
 #'
 #' @noRd 
-mod_design_options_server <- function(id){
+mod_design_options_server <- function(id, param_manager = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -802,6 +802,23 @@ mod_design_options_server <- function(id){
         timestamp = Sys.time()
       )
     })
+    
+    # Two-way sync: Update cost budget input when parameter manager changes
+    if (!is.null(param_manager)) {
+      observe({
+        new_value <- param_manager$parameters$cost_budget
+        if (!is.null(new_value) && !identical(isolate(input$cost_budget), new_value)) {
+          updateNumericInput(session, "cost_budget", value = new_value)
+        }
+      })
+      
+      # Sync cost budget from design section to parameter manager
+      observeEvent(input$cost_budget, {
+        if (!is.null(input$cost_budget)) {
+          param_manager$update_parameter("cost_budget", input$cost_budget, "design_section")
+        }
+      })
+    }
     
     return(design_config)
   })

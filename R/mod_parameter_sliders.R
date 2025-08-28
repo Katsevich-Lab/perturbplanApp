@@ -128,12 +128,13 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         optimization_type <- design_config$optimization_type
       }
       
-      # Define all 4 power-determining parameters (use current parameter manager values)
+      # Define all power-determining parameters + cost budget (use current parameter manager values)
       all_power_params <- list(
         cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = param_manager$parameters$cells_per_target, step = 20),
         reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = param_manager$parameters$reads_per_cell, step = 1000),
         TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = param_manager$parameters$TPM_threshold, step = 1),
-        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 2, value = param_manager$parameters$minimum_fold_change, step = 0.1)
+        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 2, value = param_manager$parameters$minimum_fold_change, step = 0.1),
+        cost_budget = list(id = "cost_budget_slider", label = "Cost Budget ($)", min = 100, max = 1000000, value = param_manager$parameters$cost_budget, step = 500)
       )
       
       # Determine which parameter is being minimized (exclude from Row 2)
@@ -141,6 +142,14 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       
       # Filter out the minimized parameter
       visible_power_params <- all_power_params[!names(all_power_params) %in% minimized_param]
+      
+      # Filter out cost_budget unless in power+cost mode or cost minimization workflow
+      show_cost_budget <- (!is.null(optimization_type) && optimization_type == "power_cost") ||
+                          (!is.null(minimized_param) && minimized_param == "cost")
+      
+      if (!show_cost_budget) {
+        visible_power_params <- visible_power_params[names(visible_power_params) != "cost_budget"]
+      }
       
       # POWER+COST MODE FILTERING OR COST MINIMIZATION: Show sliders for "fixed" parameters
       if ((!is.null(optimization_type) && optimization_type == "power_cost" && !is.null(param_controls)) ||
@@ -166,15 +175,21 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
           }
           visible_power_params <- cost_min_params
         } else {
-          # Power+cost mode: Filter to show only parameters that are set to "fixed"
+          # Power+cost mode: Filter to show only parameters that are set to "fixed" + cost budget
           filtered_params <- list()
           for (param_name in names(visible_power_params)) {
-            control_name <- param_name_mapping[[param_name]]
-            if (!is.null(control_name) && !is.null(param_controls[[control_name]])) {
-              param_type <- param_controls[[control_name]]$type
-              # Show slider only if parameter is set to "fixed"
-              if (!is.null(param_type) && param_type == "fixed") {
-                filtered_params[[param_name]] <- visible_power_params[[param_name]]
+            # Cost budget always shows in power+cost mode
+            if (param_name == "cost_budget") {
+              filtered_params[[param_name]] <- visible_power_params[[param_name]]
+            } else {
+              # Other parameters: show only if set to "fixed"
+              control_name <- param_name_mapping[[param_name]]
+              if (!is.null(control_name) && !is.null(param_controls[[control_name]])) {
+                param_type <- param_controls[[control_name]]$type
+                # Show slider only if parameter is set to "fixed"
+                if (!is.null(param_type) && param_type == "fixed") {
+                  filtered_params[[param_name]] <- visible_power_params[[param_name]]
+                }
               }
             }
           }
@@ -248,6 +263,12 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       })
     })
     
+    observeEvent(input$cost_budget_slider, {
+      isolate({
+        param_manager$update_parameter("cost_budget", input$cost_budget_slider, "slider")
+      })
+    })
+    
     # ========================================================================
     # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
     # ========================================================================
@@ -299,6 +320,13 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       new_value <- param_manager$parameters$minimum_fold_change
       if (!identical(isolate(input$fc_slider), new_value)) {
         updateSliderInput(session, "fc_slider", value = new_value)
+      }
+    })
+    
+    observeEvent(param_manager$parameters$cost_budget, {
+      new_value <- param_manager$parameters$cost_budget
+      if (!identical(isolate(input$cost_budget_slider), new_value)) {
+        updateSliderInput(session, "cost_budget_slider", value = new_value)
       }
     })
     
