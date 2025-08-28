@@ -247,7 +247,11 @@ mod_design_options_server <- function(id){
         shinyjs::show("step2")
       } else {
         shinyjs::hide("step2")
-        shinyjs::hide("step3")
+        # Only hide Step 3 if Step 1 is not complete or power is invalid
+        # Don't hide Step 3 just because cost budget is temporarily invalid during typing
+        if (!step1_complete || !power_ready) {
+          shinyjs::hide("step3")
+        }
       }
     })
     
