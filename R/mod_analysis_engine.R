@@ -37,7 +37,8 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     # ========================================================================
 
     # Track previous configuration to detect sidebar changes
-    previous_config <- reactiveVal(NULL)
+    previous_config_hash <- reactiveVal(NULL)
+    previous_config_object <- reactiveVal(NULL)
     last_plan_count <- reactiveVal(0)
 
     # Cache for expensive computation results
@@ -57,7 +58,8 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
           in_mode_transition(TRUE)       # Mark as in transition
           cached_results(NULL)           # Clear cached results
-          previous_config(NULL)          # Reset configuration tracking
+          previous_config_hash(NULL)     # Reset configuration tracking
+          previous_config_object(NULL)   # Reset configuration object
           last_plan_count(0)             # Reset plan tracking
           # Note: We don't clear parameter controls here - that would cause UI issues
           # Instead, the early validation (lines 85-88) will return NULL during transitions
@@ -116,22 +118,33 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       # Protection mechanism: Clear results if sidebar inputs changed since last plan
       current_config_hash <- create_config_hash(config)
-      previous_hash <- previous_config()
+      previous_hash <- previous_config_hash()
       current_plan_count <- config$plan_clicked
 
       # If this is a new plan click, update tracking and clear cache
       if (current_plan_count > last_plan_count()) {
-        previous_config(current_config_hash)
+        previous_config_hash(current_config_hash)
+        previous_config_object(config)
         last_plan_count(current_plan_count)
         cached_results(NULL)  # Clear cache for new plan
       } else {
         # Check if sidebar inputs changed since last plan
         if (!is.null(previous_hash) && current_config_hash != previous_hash) {
-          # Sidebar changed but no new plan click - keep showing old results
-          if (!is.null(cached_results())) {
-            return(cached_results())  # Show old results instead of clearing
+          # Check if the change is only in "live" parameters that should trigger immediate re-analysis
+          live_params_changed <- detect_live_parameter_change(config, previous_config_object())
+          
+          if (live_params_changed) {
+            # Live parameter changed - clear cache and allow new analysis without Plan button click
+            cached_results(NULL)
+            previous_config_hash(current_config_hash)  # Update hash to prevent repeated computation
+            previous_config_object(config)             # Update stored config
+          } else {
+            # Non-live parameter changed but no new plan click - keep showing old results
+            if (!is.null(cached_results())) {
+              return(cached_results())  # Show old results instead of clearing
+            }
+            # If no cached results, continue to analysis (shouldn't happen normally)
           }
-          # If no cached results, continue to analysis (shouldn't happen normally)
         }
 
         # Same config as before - return cached results if available
@@ -343,5 +356,71 @@ create_config_hash <- function(config) {
     # Fallback: use serialization and simple hash
     paste(collapse = "", as.character(serialize(config_for_hash, NULL)))
   })
+}
+
+#' Detect if only live parameters changed between configurations
+#'
+#' @description Compares two configuration objects to determine if only
+#' "live" parameters (prop_non_null, fdr_target) changed, which should
+#' trigger immediate re-analysis without requiring Plan button click.
+#'
+#' @param current_config Current configuration object
+#' @param previous_config Previous configuration object
+#' @return Boolean indicating if only live parameters changed
+#' @noRd
+detect_live_parameter_change <- function(current_config, previous_config) {
+  # If no previous config, this isn't a live parameter change
+  if (is.null(previous_config)) {
+    return(FALSE)
+  }
+  
+  # Check if live parameters changed
+  prop_non_null_changed <- !identical(
+    current_config$effect_sizes$prop_non_null, 
+    previous_config$effect_sizes$prop_non_null
+  )
+  
+  fdr_target_changed <- !identical(
+    current_config$advanced_choices$fdr_target, 
+    previous_config$advanced_choices$fdr_target
+  )
+  
+  mapping_efficiency_changed <- !identical(
+    current_config$advanced_choices$mapping_efficiency, 
+    previous_config$advanced_choices$mapping_efficiency
+  )
+  
+  # If no live parameters changed, return FALSE
+  if (!prop_non_null_changed && !fdr_target_changed && !mapping_efficiency_changed) {
+    return(FALSE)
+  }
+  
+  # If live parameters changed, check if ONLY live parameters changed
+  # Create copies without live parameters to compare everything else
+  current_copy <- current_config
+  previous_copy <- previous_config
+  
+  # Remove live parameters from both configs
+  if (!is.null(current_copy$effect_sizes)) {
+    current_copy$effect_sizes$prop_non_null <- NULL
+  }
+  if (!is.null(current_copy$advanced_choices)) {
+    current_copy$advanced_choices$fdr_target <- NULL
+    current_copy$advanced_choices$mapping_efficiency <- NULL
+  }
+  if (!is.null(previous_copy$effect_sizes)) {
+    previous_copy$effect_sizes$prop_non_null <- NULL
+  }
+  if (!is.null(previous_copy$advanced_choices)) {
+    previous_copy$advanced_choices$fdr_target <- NULL
+    previous_copy$advanced_choices$mapping_efficiency <- NULL
+  }
+  
+  # Compare hashes of configs without live parameters
+  current_hash_no_live <- create_config_hash(current_copy)
+  previous_hash_no_live <- create_config_hash(previous_copy)
+  
+  # If configs are identical without live parameters, then only live parameters changed
+  return(current_hash_no_live == previous_hash_no_live)
 }
 

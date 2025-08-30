@@ -96,6 +96,7 @@ extract_pilot_data <- function(experimental_config) {
 #' @noRd
 map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) {
   
+  
   # Use pre-extracted pilot data (passed as parameter to avoid duplication)
 
   # Extract design options
@@ -167,14 +168,32 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     # Only apply if exactly one of cells/reads is fixed (our target workflows)
     if ((has_cells_fixed && !has_reads_fixed) || (!has_cells_fixed && has_reads_fixed)) {
       
-      # Extract cost parameters with perturbplan API defaults
-      cost_constraint <- design_opts$cost_budget %||% 1000
-      cost_per_cell <- design_opts$cost_per_cell %||% 0.086
-      cost_per_million_reads <- design_opts$cost_per_million_reads %||% 0.374
+      # Extract cost parameters directly from UI
+      # NOTE: cost_constraint will be passed to obtain_fixed_variable_constraining_cost, not cost_power_computation
+      cost_constraint <- design_opts$cost_budget
+      cost_per_cell <- design_opts$cost_per_cell
+      cost_per_million_reads <- design_opts$cost_per_million_reads
       
       
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
       tryCatch({
+        # DEBUG: Log all parameters being passed to perturbplan
+        mapping_eff_value <- advanced_opts$mapping_efficiency
+        cat("=== DEBUG: ALL COST CONSTRAINT PARAMETERS ===\n")
+        cat("cost_per_captured_cell:", cost_per_cell, "\n")
+        cat("cost_per_million_reads:", cost_per_million_reads, "\n")
+        cat("cost_constraint:", cost_constraint, "\n")
+        cat("MOI:", experimental_opts$MOI, "\n")
+        cat("num_targets:", experimental_opts$num_targets, "\n")
+        cat("non_targeting_gRNAs:", experimental_opts$non_targeting_gRNAs, "\n")
+        cat("gRNAs_per_target:", experimental_opts$gRNAs_per_target, "\n")
+        cat("reads_per_cell:", if(has_reads_fixed) fixed_variable$reads_per_cell else NULL, "\n")
+        cat("cells_per_target:", if(has_cells_fixed) fixed_variable$cells_per_target else NULL, "\n")
+        cat("mapping_efficiency:", mapping_eff_value, "\n")
+        cat("has_cells_fixed:", has_cells_fixed, "\n")
+        cat("has_reads_fixed:", has_reads_fixed, "\n")
+        cat("=============================================\n")
+        
         cost_result <- perturbplan::obtain_fixed_variable_constraining_cost(
           cost_per_captured_cell = cost_per_cell,
           cost_per_million_reads = cost_per_million_reads,
@@ -185,7 +204,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
           gRNAs_per_target = experimental_opts$gRNAs_per_target,
           reads_per_cell = if(has_reads_fixed) fixed_variable$reads_per_cell else NULL,
           cells_per_target = if(has_cells_fixed) fixed_variable$cells_per_target else NULL,
-          mapping_efficiency = config$experimental_setup$mapping_efficiency
+          mapping_efficiency = mapping_eff_value
         )
         
         # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
@@ -249,7 +268,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     grid_size = 100,
     
     # Mapping efficiency - PERTURBPLAN API REQUIREMENT
-    mapping_efficiency = advanced_opts$mapping_efficiency %||% 0.72,
+    mapping_efficiency = advanced_opts$mapping_efficiency,
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
@@ -519,7 +538,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
     total_cost = optimal_row$total_cost %||% NA,
     # Add mapping efficiency used in the analysis (from advanced choices)
-    mapping_efficiency = config$advanced_choices$mapping_efficiency %||% 0.72,
+    mapping_efficiency = config$advanced_choices$mapping_efficiency,
     # Add cost calculation metadata for power+cost workflows
     is_cost_optimized = !is.null(config$design_options$optimization_type) && 
                         config$design_options$optimization_type == "power_cost",
