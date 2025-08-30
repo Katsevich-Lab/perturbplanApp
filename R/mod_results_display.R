@@ -152,7 +152,50 @@ mod_results_display_ui <- function(id) {
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
 #' @importFrom scales comma
-mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), param_manager = NULL) {
+
+#' Helper function to check if two parameter sets are identical
+#'
+#' @param params1 First parameter set
+#' @param params2 Second parameter set
+#' @return TRUE if parameters are identical, FALSE otherwise
+#' @noRd
+are_parameters_identical <- function(params1, params2) {
+  if (is.null(params1) || is.null(params2)) {
+    return(FALSE)
+  }
+  
+  # Get relevant parameters for comparison (exclude NA values)
+  relevant_params <- c("MOI", "num_targets", "gRNAs_per_target", "cells_per_target", 
+                      "reads_per_cell", "TPM_threshold", "minimum_fold_change", "cost_budget")
+  
+  for (param_name in relevant_params) {
+    val1 <- params1[[param_name]]
+    val2 <- params2[[param_name]]
+    
+    # Skip comparison if both are NULL/NA
+    if ((is.null(val1) || is.na(val1)) && (is.null(val2) || is.na(val2))) {
+      next
+    }
+    
+    # Different if one is NULL/NA and other is not
+    if ((is.null(val1) || is.na(val1)) != (is.null(val2) || is.na(val2))) {
+      return(FALSE)
+    }
+    
+    # Compare actual values with tolerance for numeric
+    if (is.numeric(val1) && is.numeric(val2)) {
+      if (abs(val1 - val2) > 1e-6) {  # Small tolerance for floating point
+        return(FALSE)
+      }
+    } else if (!identical(val1, val2)) {
+      return(FALSE)
+    }
+  }
+  
+  return(TRUE)
+}
+
+mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), param_manager = NULL, slider_actions = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -291,20 +334,35 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           current_plot_data <- current_plots$plot_data
         }
         
-        # Create solution entry
-        new_solution <- list(
-          index = pinned_solutions$next_index,
-          timestamp = Sys.time(),
-          parameters = current_params,
-          results = current_results,
-          plot_data = current_plot_data
-        )
+        # Check for duplicates before pinning
+        is_duplicate <- FALSE
+        if (length(pinned_solutions$solutions) > 0) {
+          for (existing_solution in pinned_solutions$solutions) {
+            if (are_parameters_identical(current_params, existing_solution$parameters)) {
+              is_duplicate <- TRUE
+              break
+            }
+          }
+        }
         
-        # Add to pinned solutions
-        pinned_solutions$solutions <- append(pinned_solutions$solutions, list(new_solution))
-        pinned_solutions$next_index <- pinned_solutions$next_index + 1
-        
-        showNotification("Solution pinned successfully!", duration = 2)
+        if (is_duplicate) {
+          showNotification("Solution already pinned! Please change parameters to pin a different solution.", duration = 3)
+        } else {
+          # Create solution entry
+          new_solution <- list(
+            index = pinned_solutions$next_index,
+            timestamp = Sys.time(),
+            parameters = current_params,
+            results = current_results,
+            plot_data = current_plot_data
+          )
+          
+          # Add to pinned solutions
+          pinned_solutions$solutions <- append(pinned_solutions$solutions, list(new_solution))
+          pinned_solutions$next_index <- pinned_solutions$next_index + 1
+          
+          showNotification("Solution pinned successfully!", duration = 2)
+        }
       })
       
       # Clear pins button handler - reset to empty
@@ -696,11 +754,14 @@ create_enhanced_solutions_table <- function(results, plots, user_config = reacti
       
       # Extract solution data for pinned solution using its stored results
       if (!is.null(pinned_solution$results) && !is.null(pinned_solution$results$optimal_design)) {
+        # Create a mock param_manager with pinned values instead of live values
+        pinned_param_manager <- list(parameters = pinned_solution$parameters)
+        
         solution_row <- extract_solution_data(
           pinned_solution$results$optimal_design, 
           pinned_solution$results$workflow_info, 
           reactive(pinned_solution$results$user_config),
-          param_manager, 
+          pinned_param_manager, 
           index = pinned_solution$index
         )
         # Mark as pinned for visual distinction

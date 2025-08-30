@@ -240,18 +240,14 @@ create_multi_solution_parameter_plots <- function(results) {
   
   # Create base ggplot
   p <- ggplot() +
-    geom_hline(yintercept = target_power, linetype = "dashed", alpha = 0.7) +
+    geom_hline(yintercept = target_power, linetype = "dashed") +
     labs(
       title = plot_title,
       x = param_label,
       y = "Power"
     ) +
     theme_bw() +
-    theme(
-      plot.title = element_text(hjust = 0.5),
-      legend.position = "right",
-      legend.title = element_blank()
-    )
+    theme(plot.title = element_text(hjust = 0.5))
   
   # Add log scale for TPM_threshold parameter
   if (varying_param == "TPM_threshold") {
@@ -399,17 +395,14 @@ create_multi_solution_parameter_plots <- function(results) {
     layout(
       title = list(
         text = paste0("<b>", workflow_info$title, "</b><br>",
-                     "<sup>", workflow_info$description, " (", length(solutions_data), " solutions)</sup>"),
+                     "<sup>", workflow_info$description, "</sup>"),
         font = list(size = 14)
       ),
       yaxis = list(title = "Power"),
       legend = list(
         orientation = "h",
         x = 0.5, y = -0.25,
-        xanchor = "center",
-        bgcolor = "rgba(255,255,255,0.8)",
-        bordercolor = "rgba(0,0,0,0.2)",
-        borderwidth = 1
+        xanchor = "center"
       ),
       hovermode = "closest"
     ) %>%
