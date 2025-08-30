@@ -207,6 +207,11 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     # Determine if results should be shown
     output$show_results <- reactive({
+      # Don't show results if we're waiting for user to act after design change
+      if (design_changed_waiting()) {
+        return(FALSE)
+      }
+      
       # Use tryCatch to handle any errors in plot_objects() or analysis_results()
       tryCatch({
         plots <- plot_objects()
@@ -223,6 +228,11 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     # Determine if errors should be shown
     output$show_error <- reactive({
+      # Don't show errors if we're waiting for user to act after design change
+      if (design_changed_waiting()) {
+        return(FALSE)
+      }
+      
       tryCatch({
         plots <- plot_objects()
         results <- analysis_results()
@@ -353,6 +363,44 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         }
         
         previous_design_config(current_design)
+      }
+    })
+    
+    # Track when design has changed and we're waiting for user to click Plan
+    design_changed_waiting <- reactiveVal(FALSE)
+    
+    # Update waiting state when design changes
+    observe({
+      config <- user_config()
+      if (!is.null(config) && !is.null(config$design_options)) {
+        param_control_types <- NULL
+        if (!is.null(config$design_options$parameter_controls)) {
+          param_control_types <- lapply(config$design_options$parameter_controls, function(control) {
+            list(type = control$type)
+          })
+        }
+        
+        current_design <- list(
+          optimization_type = config$design_options$optimization_type,
+          minimization_target = config$design_options$minimization_target,
+          parameter_control_types = param_control_types
+        )
+        
+        prev_design <- previous_design_config()
+        if (!is.null(prev_design) && !identical(prev_design, current_design)) {
+          design_changed_waiting(TRUE)  # Mark as waiting for user action
+        }
+      }
+    })
+    
+    # Reset waiting state when analysis completes successfully
+    observe({
+      results <- analysis_results()
+      plots <- plot_objects()
+      
+      if (!is.null(results) && !is.null(plots) && 
+          is.null(results$error) && is.null(plots$error)) {
+        design_changed_waiting(FALSE)  # Reset waiting state when analysis succeeds
       }
     })
     
