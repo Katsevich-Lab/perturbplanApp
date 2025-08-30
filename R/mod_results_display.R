@@ -324,10 +324,18 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     observe({
       config <- user_config()
       if (!is.null(config) && !is.null(config$design_options)) {
+        # Extract only the control types (not fixed_values) to avoid slider triggers
+        param_control_types <- NULL
+        if (!is.null(config$design_options$parameter_controls)) {
+          param_control_types <- lapply(config$design_options$parameter_controls, function(control) {
+            list(type = control$type)  # Only track the type, not fixed_value
+          })
+        }
+        
         current_design <- list(
           optimization_type = config$design_options$optimization_type,
           minimization_target = config$design_options$minimization_target,
-          parameter_controls = config$design_options$parameter_controls
+          parameter_control_types = param_control_types
         )
         
         prev_design <- previous_design_config()
