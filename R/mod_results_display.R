@@ -493,9 +493,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         ))
       }
       
-      # Create solutions table with current solution as first row
+      # Create enhanced solutions table with pinned solutions + current solution
       # Pass user_config and param_manager to access actual slider values
-      create_solutions_table(results, plots, user_config, param_manager)
+      create_enhanced_solutions_table(results, plots, user_config, param_manager, pinned_solutions)
     })
     
     # ========================================================================
@@ -668,6 +668,64 @@ create_solutions_table <- function(results, plots, user_config = reactive(NULL),
   create_solutions_table_ui(list(solution_row))
 }
 
+#' Enhanced solutions table with pinned solutions support
+#'
+#' @description Creates solutions table showing pinned solutions + current solution
+#' with visual distinction between pinned and current rows.
+#'
+#' @param results Analysis results object
+#' @param plots Plot objects
+#' @param user_config Reactive containing user configuration
+#' @param param_manager Parameter manager instance
+#' @param pinned_solutions ReactiveValues containing pinned solutions
+#' @return Shiny UI tagList with enhanced table
+#' @noRd
+create_enhanced_solutions_table <- function(results, plots, user_config = reactive(NULL), param_manager = NULL, pinned_solutions) {
+  if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
+    return(create_empty_solutions_table())
+  }
+  
+  optimal <- results$optimal_design
+  workflow_info <- results$workflow_info
+  all_solution_rows <- list()
+  
+  # Add pinned solutions first
+  if (!is.null(pinned_solutions) && length(pinned_solutions$solutions) > 0) {
+    for (i in seq_along(pinned_solutions$solutions)) {
+      pinned_solution <- pinned_solutions$solutions[[i]]
+      
+      # Extract solution data for pinned solution using its stored results
+      if (!is.null(pinned_solution$results) && !is.null(pinned_solution$results$optimal_design)) {
+        solution_row <- extract_solution_data(
+          pinned_solution$results$optimal_design, 
+          pinned_solution$results$workflow_info, 
+          reactive(pinned_solution$results$user_config),
+          param_manager, 
+          index = pinned_solution$index
+        )
+        # Mark as pinned for visual distinction
+        solution_row$is_pinned <- TRUE
+        all_solution_rows[[length(all_solution_rows) + 1]] <- solution_row
+      }
+    }
+  }
+  
+  # Add current solution as the last row (if there are pinned solutions)
+  if (length(all_solution_rows) > 0) {
+    current_row <- extract_solution_data(optimal, workflow_info, user_config, param_manager, index = "Current")
+    current_row$is_pinned <- FALSE
+    all_solution_rows[[length(all_solution_rows) + 1]] <- current_row
+  } else {
+    # No pinned solutions - show just current solution with index 1
+    current_row <- extract_solution_data(optimal, workflow_info, user_config, param_manager, index = 1)
+    current_row$is_pinned <- FALSE
+    all_solution_rows[[1]] <- current_row
+  }
+  
+  # Create enhanced table structure
+  create_enhanced_solutions_table_ui(all_solution_rows)
+}
+
 #' Extract solution data for table row
 #'
 #' @param optimal Optimal design results
@@ -788,6 +846,141 @@ create_solutions_table_ui <- function(solution_rows) {
       row_cells <- append(row_cells, list(
         tags$td(
           style = "padding: 12px; vertical-align: top;",
+          create_parameter_section_display(row_data$effect_sizes, "Effect")
+        )
+      ))
+    }
+    
+    do.call(tags$tr, row_cells)
+  })
+  
+  # Return complete table
+  tags$div(
+    style = "overflow-x: auto;",
+    tags$table(
+      class = "table table-bordered",
+      style = "width: 100%; margin: 0; border-collapse: collapse; font-size: 13px;",
+      tags$thead(table_header),
+      tags$tbody(table_rows)
+    )
+  )
+}
+
+#' Create enhanced solutions table UI with visual distinction for pinned vs current
+#'
+#' @description Enhanced version of create_solutions_table_ui that adds visual
+#' distinction between pinned solutions (solid background) and current solution
+#' (highlighted background with "Current" styling).
+#'
+#' @param solution_rows List of solution row data (with is_pinned property)
+#' @return Shiny UI tags
+#' @noRd
+create_enhanced_solutions_table_ui <- function(solution_rows) {
+  # Determine which columns to show based on whether they have content
+  visible_columns <- determine_visible_columns(solution_rows)
+  
+  # Create dynamic table header based on visible columns
+  header_cells <- list(
+    tags$th("Index", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
+    tags$th("Achieved Power", style = "width: 12%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
+    tags$th("Optimal Design", style = "width: 25%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+  )
+  
+  # Add conditional parameter columns
+  if (visible_columns$experimental_choices) {
+    header_cells <- append(header_cells, list(
+      tags$th("Experimental Parameters", style = "width: 20%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    ))
+  }
+  
+  if (visible_columns$analysis_choices) {
+    header_cells <- append(header_cells, list(
+      tags$th("TPM threshold", style = "width: 18%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    ))
+  }
+  
+  if (visible_columns$effect_sizes) {
+    header_cells <- append(header_cells, list(
+      tags$th("Effect Sizes", style = "width: 16%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    ))
+  }
+  
+  table_header <- do.call(tags$tr, header_cells)
+  
+  # Create table rows with visual distinction for pinned vs current
+  table_rows <- lapply(solution_rows, function(row_data) {
+    # Visual distinction: pinned solutions have normal background, current has highlighted background
+    row_bg_color <- if (!is.null(row_data$is_pinned) && !row_data$is_pinned) {
+      "#fff3cd"  # Light yellow background for current solution
+    } else {
+      "white"    # White background for pinned solutions
+    }
+    
+    row_cells <- list(
+      # Index column with visual distinction
+      tags$td(
+        style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+        if (!is.null(row_data$is_pinned) && !row_data$is_pinned) {
+          tags$span(row_data$index, style = "font-size: 18px; font-weight: bold; color: #856404;")  # Darker color for current
+        } else {
+          tags$span(row_data$index, style = "font-size: 18px; font-weight: bold; color: #2E86AB;")  # Blue for pinned
+        }
+      ),
+      
+      # Achieved Power column
+      tags$td(
+        style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+        if (!is.null(row_data$achieved_power)) {
+          tags$span(paste0(round(row_data$achieved_power * 100, 1), "%"), 
+                   style = "font-size: 16px; font-weight: bold; color: #28A745;")
+        } else {
+          tags$span("N/A", style = "color: #6c757d; font-style: italic;")
+        }
+      ),
+      
+      # Optimal Design column
+      tags$td(
+        style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+        if (!is.null(row_data$optimal_design)) {
+          if (grepl("<br>", row_data$optimal_design$value)) {
+            # Multi-line content - render as HTML
+            tags$div(
+              HTML(row_data$optimal_design$value), 
+              style = "font-size: 13px; font-weight: bold; color: #2E86AB; line-height: 1.4;"
+            )
+          } else {
+            # Single line content
+            tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold; color: #2E86AB;")
+          }
+        } else {
+          tags$span("N/A", style = "color: #6c757d; font-style: italic;")
+        }
+      )
+    )
+    
+    # Add conditional parameter columns with background color
+    if (visible_columns$experimental_choices) {
+      row_cells <- append(row_cells, list(
+        tags$td(
+          style = paste0("padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+          create_parameter_section_display(row_data$experimental_choices, "Experimental")
+        )
+      ))
+    }
+    
+    if (visible_columns$analysis_choices) {
+      row_cells <- append(row_cells, list(
+        tags$td(
+          style = paste0("padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+          create_parameter_section_display(row_data$analysis_choices, "Analysis")
+        )
+      ))
+    }
+    
+    if (visible_columns$effect_sizes) {
+      row_cells <- append(row_cells, list(
+        tags$td(
+          style = paste0("padding: 12px; vertical-align: top; background-color: ", row_bg_color, ";"),
           create_parameter_section_display(row_data$effect_sizes, "Effect")
         )
       ))
