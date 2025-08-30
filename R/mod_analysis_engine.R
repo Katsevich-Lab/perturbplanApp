@@ -82,9 +82,6 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
     analysis_results <- reactive({
       req(workflow_config())
-      
-      # CRITICAL: Stop reactive execution entirely during mode transitions
-      req(!in_mode_transition())
 
       config <- workflow_config()
 
@@ -94,22 +91,11 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       design_config <- config$design_options
       
       # Check for missing essential fields
-      cat("=== ANALYSIS ENGINE DEBUG ===\n")
-      cat("optimization_type:", design_config$optimization_type, "\n")
-      cat("minimization_target:", design_config$minimization_target, "\n") 
-      cat("parameter_controls is NULL:", is.null(design_config$parameter_controls), "\n")
-      cat("plan_clicked:", config$plan_clicked, "\n")
-      
       if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
           is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
           is.null(design_config$parameter_controls)) {
-        cat("Returning NULL - incomplete configuration\n")
-        cat("==============================\n")
         return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
-      
-      cat("Configuration complete - continuing to analysis\n")
-      cat("===============================================\n")
       
       # Check for incompatible optimization type + minimization target combinations (transition states)
       opt_type <- design_config$optimization_type
@@ -162,6 +148,11 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         if (!is.null(cached_results())) {
           return(cached_results())
         }
+      }
+      
+      # Check if we're still in transition mode after handling plan clicks and live params
+      if (in_mode_transition()) {
+        return(NULL)  # Don't run analysis during design transitions
       }
 
       # Validate configuration (only after essential fields are present)
