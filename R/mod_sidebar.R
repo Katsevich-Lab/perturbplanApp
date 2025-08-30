@@ -100,15 +100,8 @@ mod_sidebar_server <- function(id, param_manager){
         # Design options with complete configuration from design module
         design_options = design_opts,
         
-        # Experimental setup from parameter manager
-        experimental_setup = list(
-          MOI = param_manager$parameters$MOI,
-          num_targets = param_manager$parameters$num_targets,
-          gRNAs_per_target = param_manager$parameters$gRNAs_per_target,
-          non_targeting_gRNAs = param_manager$parameters$non_targeting_gRNAs,
-          cells_fixed = param_manager$parameters$cells_per_target,
-          mapped_reads_fixed = param_manager$parameters$reads_per_cell
-        ),
+        # Experimental setup from experimental setup module (includes biological_system, pilot_data, etc.)
+        experimental_setup = experimental_config(),
         
         # Analysis choices from parameter manager
         analysis_choices = list(
