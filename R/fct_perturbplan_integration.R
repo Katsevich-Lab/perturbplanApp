@@ -6,6 +6,29 @@
 #' @name perturbplan-integration
 NULL
 
+#' Validate and extract parameter with explicit defaults
+#'
+#' @description Replaces the %||% operator with explicit validation and error reporting
+#' for better debugging. Only logs when defaults are used to avoid console spam.
+#'
+#' @param value The parameter value to check
+#' @param default The default value to use if missing
+#' @param param_name Name of the parameter (for logging)
+#' @param source Source of the parameter (e.g., "experimental_opts", "design_opts")
+#' @return The validated parameter value
+#' @noRd
+validate_parameter <- function(value, default, param_name, source = "config") {
+  if (is.null(value) || (is.numeric(value) && is.na(value))) {
+    # Only log when using defaults - this helps with debugging missing parameters
+    cat(sprintf("[PARAM_DEFAULT] %s$%s was NULL/NA, using default: %s\n", 
+                source, param_name, default))
+    return(default)
+  }
+  
+  # Value is present - return it without logging (avoid console spam)
+  return(value)
+}
+
 #' Extract pilot data from experimental setup configuration
 #'
 #' @description Extracts baseline expression stats and library parameters
@@ -24,7 +47,7 @@ extract_pilot_data <- function(experimental_config) {
   tryCatch({
     if (is.null(pilot_data) || pilot_data$type == "default") {
       # Use built-in data for the selected biological system
-      biological_system <- experimental_config$biological_system %||% "K562"
+      biological_system <- validate_parameter(experimental_config$biological_system, "K562", "biological_system", "experimental_config")
 
       # Use extract_expression_info to process built-in data
       expression_info <- perturbplan::extract_expression_info(
@@ -170,10 +193,10 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     # Only apply if exactly one of cells/reads is fixed (our target workflows)
     if ((has_cells_fixed && !has_reads_fixed) || (!has_cells_fixed && has_reads_fixed)) {
       
-      # Extract cost parameters
-      cost_constraint <- design_opts$cost_budget %||% 1000  # Default budget
-      cost_per_cell <- design_opts$cost_per_cell %||% 0.086  # Default cost per cell
-      cost_per_million_reads <- design_opts$cost_per_million_reads %||% 0.374  # Default cost per million reads
+      # Extract cost parameters with explicit validation
+      cost_constraint <- validate_parameter(design_opts$cost_budget, 1000, "cost_budget", "design_opts")
+      cost_per_cell <- validate_parameter(design_opts$cost_per_cell, 0.086, "cost_per_cell", "design_opts")
+      cost_per_million_reads <- validate_parameter(design_opts$cost_per_million_reads, 0.374, "cost_per_million_reads", "design_opts")
       
       
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
@@ -182,13 +205,13 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
           cost_per_captured_cell = cost_per_cell,
           cost_per_million_reads = cost_per_million_reads,
           cost_constraint = cost_constraint,
-          MOI = experimental_opts$MOI %||% 10,
-          num_targets = experimental_opts$num_targets %||% 100,
-          non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs %||% 10,
-          gRNAs_per_target = experimental_opts$gRNAs_per_target %||% 4,
+          MOI = validate_parameter(experimental_opts$MOI, 10, "MOI", "experimental_opts"),
+          num_targets = validate_parameter(experimental_opts$num_targets, 100, "num_targets", "experimental_opts"),
+          non_targeting_gRNAs = validate_parameter(experimental_opts$non_targeting_gRNAs, 10, "non_targeting_gRNAs", "experimental_opts"),
+          gRNAs_per_target = validate_parameter(experimental_opts$gRNAs_per_target, 4, "gRNAs_per_target", "experimental_opts"),
           reads_per_cell = if(has_reads_fixed) fixed_variable$reads_per_cell else NULL,
           cells_per_target = if(has_cells_fixed) fixed_variable$cells_per_target else NULL,
-          mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72
+          mapping_efficiency = validate_parameter(config$experimental_setup$mapping_efficiency, 0.72, "mapping_efficiency", "config$experimental_setup")
         )
         
         # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
@@ -217,41 +240,42 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   }
 
   # Build parameter list
+  # Validate and extract parameters with explicit logging
   params <- list(
     minimizing_variable = minimizing_variable,
     fixed_variable = fixed_variable,
 
     # Experimental parameters
-    MOI = experimental_opts$MOI %||% 10,
-    num_targets = experimental_opts$num_targets %||% 100,
-    non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs %||% 10,
-    gRNAs_per_target = experimental_opts$gRNAs_per_target %||% 4,
+    MOI = validate_parameter(experimental_opts$MOI, 10, "MOI", "experimental_opts"),
+    num_targets = validate_parameter(experimental_opts$num_targets, 100, "num_targets", "experimental_opts"),
+    non_targeting_gRNAs = validate_parameter(experimental_opts$non_targeting_gRNAs, 10, "non_targeting_gRNAs", "experimental_opts"),
+    gRNAs_per_target = validate_parameter(experimental_opts$gRNAs_per_target, 4, "gRNAs_per_target", "experimental_opts"),
 
     # Effect size parameters
-    gRNA_variability = advanced_opts$gRNA_variability %||% 0.15,
-    prop_non_null = effect_opts$prop_non_null %||% 0.1,
+    gRNA_variability = validate_parameter(advanced_opts$gRNA_variability, 0.15, "gRNA_variability", "advanced_opts"),
+    prop_non_null = validate_parameter(effect_opts$prop_non_null, 0.1, "prop_non_null", "effect_opts"),
 
     # Analysis parameters
-    control_group = control_mapping[advanced_opts$control_group %||% "complement"],
-    side = side_mapping[analysis_opts$side %||% "left"],
-    multiple_testing_alpha = advanced_opts$fdr_target %||% 0.1,
+    control_group = control_mapping[validate_parameter(advanced_opts$control_group, "complement", "control_group", "advanced_opts")],
+    side = side_mapping[validate_parameter(analysis_opts$side, "left", "side", "analysis_opts")],
+    multiple_testing_alpha = validate_parameter(advanced_opts$fdr_target, 0.1, "fdr_target", "advanced_opts"),
 
     # Power and cost parameters
-    power_target = design_opts$target_power %||% 0.8,
+    power_target = validate_parameter(design_opts$target_power, 0.8, "target_power", "design_opts"),
     
     # Cost constraint logic:
     # - For the 4 specific power+cost workflows, cost_constraint should be NULL 
     #   because the constraint was already applied via obtain_fixed_variable_constraining_cost
     # - For other power+cost workflows, use the budget
     cost_constraint = NULL,  # Set to NULL for all workflows - cost constraint already applied if needed
-    cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
-    cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
+    cost_per_captured_cell = validate_parameter(design_opts$cost_per_cell, 0.086, "cost_per_cell", "design_opts"),
+    cost_per_million_reads = validate_parameter(design_opts$cost_per_million_reads, 0.374, "cost_per_million_reads", "design_opts"),
     
     # Grid parameters
     grid_size = 100,
     
     # Mapping efficiency (from advanced settings)
-    mapping_efficiency = advanced_opts$mapping_efficiency %||% 0.72,
+    mapping_efficiency = validate_parameter(advanced_opts$mapping_efficiency, 0.72, "mapping_efficiency", "advanced_opts"),
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
