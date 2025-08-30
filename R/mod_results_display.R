@@ -394,13 +394,25 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     })
     
     # Reset waiting state when analysis completes successfully
+    # IMPORTANT: Only reset if we're not currently waiting due to a recent design change
     observe({
       results <- analysis_results()
       plots <- plot_objects()
       
+      # Only reset waiting state if analysis actually completed AND we have fresh results
       if (!is.null(results) && !is.null(plots) && 
-          is.null(results$error) && is.null(plots$error)) {
-        design_changed_waiting(FALSE)  # Reset waiting state when analysis succeeds
+          is.null(results$error) && is.null(plots$error) &&
+          !is.null(results$metadata) && !is.null(results$metadata$timestamp)) {
+        
+        # Only reset if this is a genuinely new analysis (not stale results)
+        current_time <- Sys.time()
+        result_age <- as.numeric(difftime(current_time, results$metadata$timestamp, units = "secs"))
+        
+        # Only reset waiting state if results are very fresh (< 5 seconds old)
+        # This prevents stale results from resetting the waiting state
+        if (result_age < 5) {
+          design_changed_waiting(FALSE)  # Reset waiting state when analysis succeeds
+        }
       }
     })
     
