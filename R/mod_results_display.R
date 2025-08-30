@@ -295,14 +295,14 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         pinned_solutions$solutions <- append(pinned_solutions$solutions, list(new_solution))
         pinned_solutions$next_index <- pinned_solutions$next_index + 1
         
-        showNotification("Solution pinned successfully!", type = "success", duration = 2)
+        showNotification("Solution pinned successfully!", duration = 2)
       })
       
       # Clear pins button handler - reset to empty
       observeEvent(slider_actions$clear_requested(), {
         pinned_solutions$solutions <- list()
         pinned_solutions$next_index <- 1
-        showNotification("All pins cleared.", type = "info", duration = 2)
+        showNotification("All pins cleared.", duration = 2)
       })
     }
     
