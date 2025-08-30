@@ -16,7 +16,13 @@ NULL
 #' @return List with baseline_expression_stats and library_parameters, or NULL if not available
 #' @noRd
 extract_pilot_data <- function(experimental_config) {
+  cat("=== PILOT DATA DEBUG ===\n")
+  cat("experimental_config structure:\n")
+  str(experimental_config)
+  cat("========================\n")
+  
   if (is.null(experimental_config)) {
+    cat("experimental_config is NULL!\n")
     return(NULL)
   }
 
@@ -26,7 +32,9 @@ extract_pilot_data <- function(experimental_config) {
     if (is.null(pilot_data) || pilot_data$type == "default") {
       # Use built-in data for the selected biological system
       biological_system <- experimental_config$biological_system
-      # DEBUG: Let's see if this is actually NULL and why
+      cat("biological_system value:", biological_system, "\n")
+      cat("biological_system is.null:", is.null(biological_system), "\n")
+      cat("biological_system length:", length(biological_system), "\n")
 
       # Use extract_expression_info to process built-in data
       expression_info <- perturbplan::extract_expression_info(
