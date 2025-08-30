@@ -346,7 +346,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           pinned_solutions$next_index <- 1
           
           showNotification(
-            "Design options changed - cleared pinned solutions",
+            "Design options changed - cleared pinned solutions and refreshing all plots",
             type = "message",
             duration = 3
           )

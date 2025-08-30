@@ -44,18 +44,29 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     # Cache for expensive computation results
     cached_results <- reactiveVal(NULL)
     
-    # Track optimization mode changes to clear cache and refresh state
-    previous_optimization_mode <- reactiveVal(NULL)
+    # Track design option changes to clear cache and refresh state
+    previous_design_options <- reactiveVal(NULL)
     in_mode_transition <- reactiveVal(FALSE)
     
-    # Clear cache when optimization mode changes
+    # Clear cache when any design options change (optimization type, minimization target, parameter controls)
     observe({
       config <- workflow_config()
-      if (!is.null(config) && !is.null(config$design_options$optimization_type)) {
-        current_mode <- config$design_options$optimization_type
+      if (!is.null(config) && !is.null(config$design_options)) {
+        # Track all key design options that should trigger plot refresh
+        current_design <- list(
+          optimization_type = config$design_options$optimization_type,
+          minimization_target = config$design_options$minimization_target,
+          parameter_control_types = if (!is.null(config$design_options$parameter_controls)) {
+            lapply(config$design_options$parameter_controls, function(control) {
+              list(type = control$type)  # Only track the type, not fixed_value
+            })
+          } else {
+            NULL
+          }
+        )
         
-        # If mode changed, clear cached results to show "Ready for Analysis"
-        if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
+        # If any design options changed, clear cached results
+        if (!is.null(previous_design_options()) && !identical(previous_design_options(), current_design)) {
           in_mode_transition(TRUE)       # Mark as in transition
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
@@ -67,7 +78,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
           in_mode_transition(FALSE)      # Not in transition
         }
         
-        previous_optimization_mode(current_mode)
+        previous_design_options(current_design)
       }
     })
 
