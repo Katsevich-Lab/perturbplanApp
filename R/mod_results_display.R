@@ -152,6 +152,7 @@ mod_results_display_ui <- function(id) {
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
 #' @importFrom scales comma
+NULL
 
 #' Helper function to check if two parameter sets are identical
 #'
