@@ -207,9 +207,13 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     # Determine if results should be shown
     output$show_results <- reactive({
-      # Don't show results if we're waiting for user to act after design change
-      if (design_changed_waiting()) {
-        return(FALSE)
+      # Don't show results if design changed more recently than the last Plan click
+      design_change_time <- last_design_change_time()
+      plan_click_time <- last_plan_click_time()
+      
+      if (!is.null(design_change_time) && 
+          (is.null(plan_click_time) || design_change_time > plan_click_time)) {
+        return(FALSE)  # Design changed after last Plan click - don't show results
       }
       
       # Use tryCatch to handle any errors in plot_objects() or analysis_results()
@@ -228,9 +232,13 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     # Determine if errors should be shown
     output$show_error <- reactive({
-      # Don't show errors if we're waiting for user to act after design change
-      if (design_changed_waiting()) {
-        return(FALSE)
+      # Don't show errors if design changed more recently than the last Plan click
+      design_change_time <- last_design_change_time()
+      plan_click_time <- last_plan_click_time()
+      
+      if (!is.null(design_change_time) && 
+          (is.null(plan_click_time) || design_change_time > plan_click_time)) {
+        return(FALSE)  # Design changed after last Plan click - don't show errors
       }
       
       tryCatch({
@@ -364,14 +372,14 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       }
     })
     
-    # Track when design has changed and we're waiting for user to click Plan
-    design_changed_waiting <- reactiveVal(FALSE)
+    # Track design changes and plan clicks with timestamps
+    last_design_change_time <- reactiveVal(NULL)
+    last_plan_click_time <- reactiveVal(NULL)
     
-    # Update waiting state when design changes (mirror analysis engine detection)
+    # Update design change timestamp when design changes
     observe({
       config <- user_config()
       if (!is.null(config) && !is.null(config$design_options)) {
-        # Use EXACT same logic as analysis engine
         current_design <- list(
           optimization_type = config$design_options$optimization_type,
           minimization_target = config$design_options$minimization_target,
@@ -386,33 +394,18 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         
         prev_design <- previous_design_config()
         if (!is.null(prev_design) && !identical(prev_design, current_design)) {
-          design_changed_waiting(TRUE)  # Mark as waiting for user action
+          last_design_change_time(Sys.time())  # Record when design changed
         }
         
         previous_design_config(current_design)  # Update tracking state
       }
     })
     
-    # Reset waiting state when analysis completes successfully
-    # IMPORTANT: Only reset if we're not currently waiting due to a recent design change
+    # Track when user clicks Plan by monitoring plan_clicked counter
     observe({
-      results <- analysis_results()
-      plots <- plot_objects()
-      
-      # Only reset waiting state if analysis actually completed AND we have fresh results
-      if (!is.null(results) && !is.null(plots) && 
-          is.null(results$error) && is.null(plots$error) &&
-          !is.null(results$metadata) && !is.null(results$metadata$timestamp)) {
-        
-        # Only reset if this is a genuinely new analysis (not stale results)
-        current_time <- Sys.time()
-        result_age <- as.numeric(difftime(current_time, results$metadata$timestamp, units = "secs"))
-        
-        # Only reset waiting state if results are very fresh (< 5 seconds old)
-        # This prevents stale results from resetting the waiting state
-        if (result_age < 5) {
-          design_changed_waiting(FALSE)  # Reset waiting state when analysis succeeds
-        }
+      config <- user_config()
+      if (!is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0) {
+        last_plan_click_time(Sys.time())  # Record when Plan was clicked
       }
     })
     
