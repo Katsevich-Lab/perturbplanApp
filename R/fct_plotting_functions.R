@@ -118,7 +118,7 @@ create_single_parameter_plots <- function(results) {
   # Create tooltip text before plotting
   formatted_values <- case_when(
     varying_param == "TPM_threshold" ~ scales::comma(round(power_data$parameter_value)),
-    varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(power_data$parameter_value),
+    varying_param %in% c("cells_per_target", "sequenced_reads_per_cell") ~ scales::comma(power_data$parameter_value),
     varying_param == "minimum_fold_change" ~ as.character(round(power_data$parameter_value, 2)),
     TRUE ~ as.character(power_data$parameter_value)
   )
@@ -143,7 +143,7 @@ create_single_parameter_plots <- function(results) {
     optimal_hover_text <- paste0(param_label, ": ", 
                                 case_when(
                                   varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-                                  varying_param %in% c("cells_per_target", "mapped_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
+                                  varying_param %in% c("cells_per_target", "sequenced_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
                                   varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
                                   TRUE ~ as.character(optimal_design[[varying_param]])
                                 ),
@@ -283,7 +283,7 @@ create_multi_solution_parameter_plots <- function(results) {
     # Create tooltip text for this solution
     formatted_values <- case_when(
       varying_param == "TPM_threshold" ~ scales::comma(round(solution_data$parameter_value)),
-      varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(solution_data$parameter_value),
+      varying_param %in% c("cells_per_target", "sequenced_reads_per_cell") ~ scales::comma(solution_data$parameter_value),
       varying_param == "minimum_fold_change" ~ as.character(round(solution_data$parameter_value, 2)),
       TRUE ~ as.character(solution_data$parameter_value)
     )
@@ -334,7 +334,7 @@ create_multi_solution_parameter_plots <- function(results) {
           param_label, ": ", 
           case_when(
             varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-            varying_param %in% c("cells_per_target", "mapped_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
+            varying_param %in% c("cells_per_target", "sequenced_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
             varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
             TRUE ~ as.character(optimal_design[[varying_param]])
           ),

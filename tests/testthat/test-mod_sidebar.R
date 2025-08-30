@@ -1,7 +1,16 @@
 testServer(
   mod_sidebar_server,
-  # Add here your module params
-  args = list()
+  # Add here your module params  
+  args = list(param_manager = list(parameters = list(
+    MOI = 10,
+    num_targets = 100,
+    gRNAs_per_target = 4,
+    cells_per_target = 1000,
+    reads_per_cell = 5000,
+    TPM_threshold = 10,
+    minimum_fold_change = 0.8,
+    cost_budget = 50000
+  )))
   , {
     ns <- session$ns
     expect_true(

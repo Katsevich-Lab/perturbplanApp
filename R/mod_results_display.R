@@ -693,19 +693,35 @@ create_parameter_section_display <- function(params, section_type = "default") {
     return(tags$span("-", style = "color: #6c757d; font-style: italic;"))
   }
   
-  tags$div(
-    style = "line-height: 1.5;",
-    lapply(names(params), function(param_name) {
-      if (!is.null(params[[param_name]])) {
-        tags$div(
-          style = "margin-bottom: 4px;",
-          tags$span(param_name, style = "color: #5A6B73; font-size: 12px; font-weight: 500;"),
-          tags$span(": ", style = "color: #6c757d;"),
-          tags$span(params[[param_name]], style = "color: #495057; font-weight: 500;")
-        )
-      }
-    })
-  )
+  # Special handling for Analysis section (TPM threshold column) - show only values
+  if (section_type == "Analysis") {
+    tags$div(
+      style = "line-height: 1.5;",
+      lapply(names(params), function(param_name) {
+        if (!is.null(params[[param_name]])) {
+          tags$div(
+            style = "margin-bottom: 4px; text-align: center;",
+            tags$span(params[[param_name]], style = "color: #495057; font-weight: 500; font-size: 14px;")
+          )
+        }
+      })
+    )
+  } else {
+    # Default format for other sections - show parameter name and value
+    tags$div(
+      style = "line-height: 1.5;",
+      lapply(names(params), function(param_name) {
+        if (!is.null(params[[param_name]])) {
+          tags$div(
+            style = "margin-bottom: 4px;",
+            tags$span(param_name, style = "color: #5A6B73; font-size: 12px; font-weight: 500;"),
+            tags$span(": ", style = "color: #6c757d;"),
+            tags$span(params[[param_name]], style = "color: #495057; font-weight: 500;")
+          )
+        }
+      })
+    )
+  }
 }
 
 #' Extract achieved power value
@@ -826,7 +842,7 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
       label = "Cells per Target",
       value = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A"
     ))
-  } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) {
+  } else if (minimizing_param %in% c("reads_per_cell", "sequenced_reads_per_cell")) {
     return(list(
       label = "Reads per Cell",
       value = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
@@ -917,7 +933,7 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     # Show ONLY if reads is fixed (not cost-constrained or varying)
     # Exclude if: 1) both cells+reads varying, 2) reads is being minimized, 3) reads is cost-constrained  
     reads_should_exclude <- cells_reads_varying ||  # Both varying
-                           (!is.null(minimizing_param) && minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) ||  # Reads minimized
+                           (!is.null(minimizing_param) && minimizing_param %in% c("reads_per_cell", "sequenced_reads_per_cell")) ||  # Reads minimized
                            (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads"))  # Reads cost-constrained (cells is fixed)
     
     if (!reads_should_exclude && !is.null(param_manager$parameters$reads_per_cell)) {
@@ -1061,7 +1077,7 @@ parameter_has_slider <- function(param_name, user_config = reactive(NULL), workf
         if (!is.null(optimization_type) && optimization_type == "power_cost" && !is.null(param_controls)) {
           control_name_mapping <- list(
             "cells_per_target" = "cells_per_target",
-            "reads_per_cell" = "mapped_reads_per_cell",
+            "reads_per_cell" = "sequenced_reads_per_cell",
             "TPM_threshold" = "TPM_threshold", 
             "minimum_fold_change" = "minimum_fold_change"
           )
@@ -1178,7 +1194,7 @@ render_minimizing_parameter_display <- function(optimal, workflow_info, minimizi
     return(render_fc_minimization_display(optimal))
   } else if (minimizing_param == "cells_per_target") {
     return(render_cells_minimization_display(optimal))
-  } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) {
+  } else if (minimizing_param %in% c("reads_per_cell", "sequenced_reads_per_cell")) {
     return(render_reads_minimization_display(optimal))
   } else if (minimizing_param == "cost") {
     return(render_cost_minimization_display(optimal))
@@ -1559,7 +1575,7 @@ render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info 
 #' @return Shiny UI tags$div or NULL
 #' @noRd
 render_fixed_reads_display <- function(optimal, minimizing_param, workflow_info = NULL) {
-  excluded_params <- c("reads_per_cell", "mapped_reads_per_cell", "cost")
+  excluded_params <- c("reads_per_cell", "sequenced_reads_per_cell", "cost")
   
   # For workflows 10-11 and constrained minimization, handle different varying scenarios
   if (!is.null(workflow_info) && 

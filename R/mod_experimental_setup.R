@@ -78,7 +78,7 @@ mod_experimental_setup_ui <- function(id) {
                       "Multiplicity of infection (MOI):",
                       value = 10,
                       min = 1,
-                      max = 50,
+                      max = 20,
                       step = 1),
           
           # Number of targets
@@ -86,7 +86,7 @@ mod_experimental_setup_ui <- function(id) {
                       "Number of targets:",
                       value = 100,
                       min = 50,
-                      max = 20000,
+                      max = 12000,
                       step = 50),
           
           # gRNAs per target
@@ -116,15 +116,15 @@ mod_experimental_setup_ui <- function(id) {
             id = ns("cells_fixed_div"),
             style = "display: none; margin-bottom: 15px;",
             numericInput(ns("cells_fixed"), "Cells per target:", 
-                        value = 1000, min = 20, max = 10000, step = 20)
+                        value = 1000, min = 20, max = 2500, step = 20)
           ),
           
           # Reads per cell fixed value (conditional)
           tags$div(
-            id = ns("mapped_reads_fixed_div"),
+            id = ns("sequenced_reads_fixed_div"),
             style = "display: none; margin-bottom: 15px;",
-            numericInput(ns("mapped_reads_fixed"), "Mapped reads per cell:", 
-                        value = 5000, min = 1000, max = 500000, step = 1000)
+            numericInput(ns("sequenced_reads_fixed"), "Sequenced reads per cell:", 
+                        value = 5000, min = 1000, max = 100000, step = 1000)
           )
         )
       )
@@ -174,9 +174,9 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
       })
     })
     
-    observeEvent(input$mapped_reads_fixed, {
+    observeEvent(input$sequenced_reads_fixed, {
       isolate({
-        param_manager$update_parameter("reads_per_cell", input$mapped_reads_fixed, "sidebar")
+        param_manager$update_parameter("reads_per_cell", input$sequenced_reads_fixed, "sidebar")
       })
     })
     
@@ -215,8 +215,8 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     
     observeEvent(param_manager$parameters$reads_per_cell, {
       new_value <- param_manager$parameters$reads_per_cell
-      if (!identical(isolate(input$mapped_reads_fixed), new_value)) {
-        updateNumericInput(session, "mapped_reads_fixed", value = new_value)
+      if (!identical(isolate(input$sequenced_reads_fixed), new_value)) {
+        updateNumericInput(session, "sequenced_reads_fixed", value = new_value)
       }
     })
     
@@ -259,12 +259,12 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
         if (!is.null(previous_mode()) && previous_mode() != current_mode) {
           # Reset fixed value inputs when switching modes
           updateNumericInput(session, "cells_fixed", value = 1000)
-          updateNumericInput(session, "mapped_reads_fixed", value = 5000)
+          updateNumericInput(session, "sequenced_reads_fixed", value = 5000)
           
           # Hide all fixed parameter sections initially
           shinyjs::hide("experimental_fixed_params")
           shinyjs::hide("cells_fixed_div")
-          shinyjs::hide("mapped_reads_fixed_div")
+          shinyjs::hide("sequenced_reads_fixed_div")
         }
         
         # Update previous mode tracker
@@ -273,7 +273,7 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
       
       if (!is.null(config) && !is.null(config$parameter_controls)) {
         cells_type <- config$parameter_controls$cells_per_target$type
-        reads_type <- config$parameter_controls$mapped_reads_per_cell$type
+        reads_type <- config$parameter_controls$sequenced_reads_per_cell$type
         
         # Show cells fixed input when cells parameter is set to "fixed" 
         # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode
@@ -287,10 +287,10 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
         # Show reads fixed input when reads parameter is set to "fixed"
         # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode  
         if (!is.null(reads_type) && reads_type == "fixed") {
-          shinyjs::show("mapped_reads_fixed_div")
+          shinyjs::show("sequenced_reads_fixed_div")
           shinyjs::show("experimental_fixed_params")
         } else {
-          shinyjs::hide("mapped_reads_fixed_div")
+          shinyjs::hide("sequenced_reads_fixed_div")
         }
         
         # Hide the entire section if neither parameter is fixed
@@ -301,7 +301,7 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
       } else {
         shinyjs::hide("experimental_fixed_params")
         shinyjs::hide("cells_fixed_div")
-        shinyjs::hide("mapped_reads_fixed_div")
+        shinyjs::hide("sequenced_reads_fixed_div")
       }
     })
     
@@ -437,7 +437,7 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
         pilot_data = pilot_data(),
         # Fixed value inputs (only provide defaults if inputs are actually hidden/NULL)
         cells_fixed = input$cells_fixed,
-        mapped_reads_fixed = input$mapped_reads_fixed,
+        sequenced_reads_fixed = input$sequenced_reads_fixed,
         # Perturbation choices (integrated from mod_perturbation_choices)
         MOI = input$MOI,
         num_targets = input$num_targets,

@@ -128,12 +128,26 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         optimization_type <- design_config$optimization_type
       }
       
+      # Get side parameter from user config to adjust fold change range
+      config <- user_config()
+      side <- if (!is.null(config) && !is.null(config$analysis_choices)) config$analysis_choices$side else "left"
+      
+      # Dynamic fold change range based on side parameter
+      fc_min <- if (!is.null(side) && side == "right") 1.0 else 0.3
+      fc_max <- if (!is.null(side) && side == "right") 2.0 else 1.0
+      fc_value <- param_manager$parameters$minimum_fold_change
+      
+      # Ensure current value is within new range
+      if (!is.null(fc_value)) {
+        fc_value <- max(fc_min, min(fc_max, fc_value))
+      }
+      
       # Define all power-determining parameters + cost budget (use current parameter manager values)
       all_power_params <- list(
-        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = param_manager$parameters$cells_per_target, step = 20),
-        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = param_manager$parameters$reads_per_cell, step = 1000),
-        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = param_manager$parameters$TPM_threshold, step = 1),
-        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 2, value = param_manager$parameters$minimum_fold_change, step = 0.1),
+        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 2500, value = param_manager$parameters$cells_per_target, step = 20),
+        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 100000, value = param_manager$parameters$reads_per_cell, step = 1000),
+        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 200, value = param_manager$parameters$TPM_threshold, step = 1),
+        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = fc_min, max = fc_max, value = fc_value, step = 0.02),
         cost_budget = list(id = "cost_budget_slider", label = "Cost Budget ($)", min = 100, max = 1000000, value = param_manager$parameters$cost_budget, step = 500)
       )
       
@@ -158,7 +172,7 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         # Map parameter names to their control types
         param_name_mapping <- list(
           "cells_per_target" = "cells_per_target",
-          "reads_per_cell" = "mapped_reads_per_cell",  # UI uses different name
+          "reads_per_cell" = "sequenced_reads_per_cell",  # UI uses different name
           "TPM_threshold" = "TPM_threshold",
           "minimum_fold_change" = "minimum_fold_change"
         )

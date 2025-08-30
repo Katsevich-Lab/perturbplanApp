@@ -72,7 +72,7 @@ mod_design_options_ui <- function(id) {
                 
                 # Cost per cell column
                 tags$div(
-                  style = "flex: 1;",
+                  style = "flex: 0.8;",
                   tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
                   tags$div(
                     class = "cost-input-container",
@@ -89,7 +89,7 @@ mod_design_options_ui <- function(id) {
                 
                 # Cost per million reads column  
                 tags$div(
-                  style = "flex: 1;",
+                  style = "flex: 1.2;",
                   tags$label("Cost per million reads:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
                   tags$div(
                     class = "cost-input-container",
@@ -136,7 +136,7 @@ mod_design_options_ui <- function(id) {
               
               # Cost per cell column
               tags$div(
-                style = "flex: 1;",
+                style = "flex: 0.8;",
                 tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
                 tags$div(
                   class = "cost-input-container",
@@ -153,7 +153,7 @@ mod_design_options_ui <- function(id) {
               
               # Cost per million reads column  
               tags$div(
-                style = "flex: 1;",
+                style = "flex: 1.2;",
                 tags$label("Cost per million reads:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
                 tags$div(
                   class = "cost-input-container",
@@ -232,26 +232,15 @@ mod_design_options_server <- function(id, param_manager = NULL){
     })
     
     observe({
-      # Step 2 appears ONLY when Step 1 is complete AND power (and cost if needed) inputs are provided
+      # Step 2 appears ONLY when Step 1 (optimization mode) is complete
+      # Don't hide/show Step 2 based on power/cost input changes - only on mode selection
       step1_complete <- !is.null(input$optimization_type) && input$optimization_type != ""
-      power_ready <- !is.null(input$target_power) && is.numeric(input$target_power) && input$target_power > 0
-      cost_ready <- TRUE  # Default to ready
       
-      # If power+cost is selected, also check cost budget
-      if (!is.null(input$optimization_type) && input$optimization_type == "power_cost") {
-        cost_ready <- !is.null(input$cost_budget) && is.numeric(input$cost_budget) && input$cost_budget > 0
-      }
-      
-      # Step 2 only shows when Step 1 is complete AND inputs are ready
-      if (step1_complete && power_ready && cost_ready) {
+      if (step1_complete) {
         shinyjs::show("step2")
       } else {
         shinyjs::hide("step2")
-        # Only hide Step 3 if Step 1 is not complete or power is invalid
-        # Don't hide Step 3 just because cost budget is temporarily invalid during typing
-        if (!step1_complete || !power_ready) {
-          shinyjs::hide("step3")
-        }
+        shinyjs::hide("step3")
       }
     })
     
@@ -269,7 +258,7 @@ mod_design_options_server <- function(id, param_manager = NULL){
           # Count how many parameters need UI controls (only varying parameters)
           has_controls <- 
             (param_configs$cells_per_target$type == "varying") ||
-            (param_configs$mapped_reads_per_cell$type == "varying") ||
+            (param_configs$sequenced_reads_per_cell$type == "varying") ||
             (param_configs$TPM_threshold$type == "varying") ||
             (param_configs$minimum_fold_change$type == "varying")
           
@@ -381,7 +370,7 @@ mod_design_options_server <- function(id, param_manager = NULL){
           actual_cells_type <- param_configs$cells_per_target$type
         }
         if (is.null(actual_reads_type) && !is.null(param_configs)) {
-          actual_reads_type <- param_configs$mapped_reads_per_cell$type
+          actual_reads_type <- param_configs$sequenced_reads_per_cell$type
         }
         
         if (!is.null(actual_cells_type) && !is.null(actual_reads_type)) {
@@ -447,19 +436,19 @@ mod_design_options_server <- function(id, param_manager = NULL){
       # Only show parameters that are not being minimized or optimized automatically
       if (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "cells_per_target", "Cells per target:", param_configs$cells_per_target, 1000, 50, 5000, 50)
+          create_param_ui(ns, "cells_per_target", "Cells per target:", param_configs$cells_per_target, 1000, 50, 2500, 50)
         ))
       }
       
-      if (!param_configs$mapped_reads_per_cell$type %in% c("minimizing", "optimizing")) {
+      if (!param_configs$sequenced_reads_per_cell$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "reads_per_cell", "Reads per cell:", param_configs$mapped_reads_per_cell, 5000, 500, 20000, 500)
+          create_param_ui(ns, "reads_per_cell", "Reads per cell:", param_configs$sequenced_reads_per_cell, 5000, 500, 100000, 500)
         ))
       }
       
       if (!param_configs$TPM_threshold$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "TPM", "TPM threshold:", param_configs$TPM_threshold, 10, 0, 100, 1)
+          create_param_ui(ns, "TPM", "TPM threshold:", param_configs$TPM_threshold, 10, 0, 200, 1)
         ))
       }
       
@@ -485,7 +474,7 @@ mod_design_options_server <- function(id, param_manager = NULL){
     get_param_configs <- function(opt_type, target) {
       configs <- list(
         cells_per_target = list(type = "varying", enabled = TRUE),
-        mapped_reads_per_cell = list(type = "varying", enabled = TRUE),
+        sequenced_reads_per_cell = list(type = "varying", enabled = TRUE),
         TPM_threshold = list(type = "varying", enabled = TRUE),
         minimum_fold_change = list(type = "varying", enabled = TRUE)
       )
@@ -494,13 +483,13 @@ mod_design_options_server <- function(id, param_manager = NULL){
         if (target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change")) {
           # Power-only + single parameter minimization: minimize target, fix all others
           configs$cells_per_target$type <- if (target == "cells_per_target") "minimizing" else "fixed"
-          configs$mapped_reads_per_cell$type <- if (target == "reads_per_cell") "minimizing" else "fixed"
+          configs$sequenced_reads_per_cell$type <- if (target == "reads_per_cell") "minimizing" else "fixed"
           configs$TPM_threshold$type <- if (target == "TPM_threshold") "minimizing" else "fixed"
           configs$minimum_fold_change$type <- if (target == "minimum_fold_change") "minimizing" else "fixed"
         } else if (target == "cost") {
           # Cost minimization: cells/reads vary simultaneously (omit both), TPM/fc fixed
           configs$cells_per_target$type <- "optimizing"
-          configs$mapped_reads_per_cell$type <- "optimizing"
+          configs$sequenced_reads_per_cell$type <- "optimizing"
           configs$TPM_threshold$type <- "fixed"
           configs$minimum_fold_change$type <- "fixed"
         }
@@ -508,13 +497,13 @@ mod_design_options_server <- function(id, param_manager = NULL){
         if (target == "TPM_threshold") {
           # Power+cost + TPM minimization: TPM minimizing, FC fixed, cells/reads constrained varying/fixed
           configs$cells_per_target$type <- "varying"
-          configs$mapped_reads_per_cell$type <- "varying"
+          configs$sequenced_reads_per_cell$type <- "varying"
           configs$TPM_threshold$type <- "minimizing"
           configs$minimum_fold_change$type <- "fixed"
         } else if (target == "minimum_fold_change") {
           # Power+cost + FC minimization: FC minimizing, TPM fixed, cells/reads constrained varying/fixed
           configs$cells_per_target$type <- "varying"
-          configs$mapped_reads_per_cell$type <- "varying"
+          configs$sequenced_reads_per_cell$type <- "varying"
           configs$TPM_threshold$type <- "fixed"
           configs$minimum_fold_change$type <- "minimizing"
         }
@@ -727,9 +716,9 @@ mod_design_options_server <- function(id, param_manager = NULL){
       }
       
       
-      reads_type <- param_configs$mapped_reads_per_cell$type
+      reads_type <- param_configs$sequenced_reads_per_cell$type
       if (!is.null(input_vals$reads_per_cell_control) && 
-          param_configs$mapped_reads_per_cell$type == "varying") {
+          param_configs$sequenced_reads_per_cell$type == "varying") {
         reads_type <- input_vals$reads_per_cell_control
       }
       
@@ -752,7 +741,7 @@ mod_design_options_server <- function(id, param_manager = NULL){
           type = cells_type,
           fixed_value = if(!is.null(input_vals$cells_fixed)) input_vals$cells_fixed else NULL
         ),
-        mapped_reads_per_cell = list(
+        sequenced_reads_per_cell = list(
           type = reads_type,
           fixed_value = if(!is.null(input_vals$reads_fixed)) input_vals$reads_fixed else NULL
         ),

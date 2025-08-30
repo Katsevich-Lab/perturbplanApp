@@ -134,12 +134,14 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
       fixed_variable$cells_per_target <- round(param_controls$cells_per_target$fixed_value)
     }
 
-    if (!is.null(param_controls$mapped_reads_per_cell) &&
-        param_controls$mapped_reads_per_cell$type == "fixed" &&
-        !is.null(param_controls$mapped_reads_per_cell$fixed_value)) {
-      # Pass mapped reads directly to perturbplan (perturbplan will apply mapping efficiency internally)
-      mapped_value <- param_controls$mapped_reads_per_cell$fixed_value
-      fixed_variable$reads_per_cell <- round(mapped_value)
+    if (!is.null(param_controls$sequenced_reads_per_cell) &&
+        param_controls$sequenced_reads_per_cell$type == "fixed" &&
+        !is.null(param_controls$sequenced_reads_per_cell$fixed_value)) {
+      # Transform sequenced reads to mapped reads using mapping efficiency
+      # mapped_reads = sequenced_reads × mapping_efficiency
+      sequenced_reads <- param_controls$sequenced_reads_per_cell$fixed_value
+      mapped_reads <- sequenced_reads * advanced_opts$mapping_efficiency
+      fixed_variable$reads_per_cell <- round(mapped_reads)
     }
 
     if (!is.null(param_controls$TPM_threshold) &&

@@ -65,8 +65,8 @@ mod_sidebar_server <- function(id, param_manager){
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, param_manager)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
     
-    # Initialize effect sizes server with parameter manager integration
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, param_manager)
+    # Initialize effect sizes server with parameter manager integration and analysis choices
+    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, param_manager, analysis_config)
     
     # Track optimization mode changes to reset plan button
     previous_mode <- reactiveVal(NULL)
@@ -118,7 +118,7 @@ mod_sidebar_server <- function(id, param_manager){
       # Update parameter controls with current parameter manager values
       if (!is.null(config$design_options) && !is.null(config$design_options$parameter_controls)) {
         config$design_options$parameter_controls$cells_per_target$fixed_value <- param_manager$parameters$cells_per_target
-        config$design_options$parameter_controls$mapped_reads_per_cell$fixed_value <- param_manager$parameters$reads_per_cell
+        config$design_options$parameter_controls$sequenced_reads_per_cell$fixed_value <- param_manager$parameters$reads_per_cell
         config$design_options$parameter_controls$TPM_threshold$fixed_value <- param_manager$parameters$TPM_threshold
         config$design_options$parameter_controls$minimum_fold_change$fixed_value <- param_manager$parameters$minimum_fold_change
       }

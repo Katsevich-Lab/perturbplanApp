@@ -91,7 +91,7 @@ detect_workflow_scenario <- function(workflow_config) {
     varying_params <- get_varying_parameters(param_controls)
     
     if (target == "TPM_threshold") {
-      if (length(varying_params) == 2 && all(c("cells_per_target", "mapped_reads_per_cell") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "sequenced_reads_per_cell") %in% varying_params)) {
         # Workflow 8: TPM + cells + reads varying
         return(list(
           workflow_id = "power_cost_TPM_cells_reads",
@@ -107,7 +107,7 @@ detect_workflow_scenario <- function(workflow_config) {
         # Map UI control name to internal name
         other_param <- switch(other_param_ui,
           "cells_per_target" = "cells",
-          "mapped_reads_per_cell" = "reads",
+          "sequenced_reads_per_cell" = "reads",
           other_param_ui  # fallback
         )
         return(list(
@@ -122,7 +122,7 @@ detect_workflow_scenario <- function(workflow_config) {
       }
     } else if (target %in% c("minimum_fold_change", "fold_change")) {
       # Similar logic for fold change workflows 9-11
-      if (length(varying_params) == 2 && all(c("cells_per_target", "mapped_reads_per_cell") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "sequenced_reads_per_cell") %in% varying_params)) {
         return(list(
           workflow_id = "power_cost_fc_cells_reads",
           plot_type = "cost_tradeoff_curves",
@@ -136,7 +136,7 @@ detect_workflow_scenario <- function(workflow_config) {
         # Map UI control name to internal name
         other_param <- switch(other_param_ui,
           "cells_per_target" = "cells",
-          "mapped_reads_per_cell" = "reads",
+          "sequenced_reads_per_cell" = "reads",
           other_param_ui  # fallback
         )
         return(list(
@@ -319,7 +319,7 @@ format_parameter_name <- function(parameter_name) {
   switch(parameter_name,
     # Full parameter names (preferred)
     "cells_per_target" = "Cells per Target",
-    "mapped_reads_per_cell" = "Mapped Reads per Cell",
+    "sequenced_reads_per_cell" = "Sequenced Reads per Cell",
     "TPM_threshold" = "TPM Threshold",
     "minimum_fold_change" = "Fold Change",
     # Legacy abbreviated names (backward compatibility)

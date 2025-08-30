@@ -31,7 +31,7 @@ mod_effect_sizes_ui <- function(id) {
           id = ns("minimum_fold_change_fixed_div"),
           style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
           numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
-                      value = 0.8, min = 0.3, max = 2, step = 0.1)
+                      value = 0.8, min = 0.3, max = 2, step = 0.02)
         ),
         
         # Proportion of non-null pairs (moved back from advanced settings)
@@ -51,7 +51,7 @@ mod_effect_sizes_ui <- function(id) {
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_effect_sizes_server <- function(id, design_config, param_manager){
+mod_effect_sizes_server <- function(id, design_config, param_manager, analysis_config = reactive(NULL)){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -94,6 +94,23 @@ mod_effect_sizes_server <- function(id, design_config, param_manager){
         }
       } else {
         shinyjs::hide("minimum_fold_change_fixed_div")
+      }
+    })
+    
+    # Update fold change input range based on analysis side parameter
+    observe({
+      analysis_choices <- analysis_config()
+      if (!is.null(analysis_choices) && !is.null(analysis_choices$side)) {
+        side <- analysis_choices$side
+        
+        # Dynamic range based on side
+        if (side == "right") {
+          # Right-sided test: fold change from 1.0 to 2.0 (upregulation)
+          updateNumericInput(session, "minimum_fold_change_fixed", min = 1.0, max = 2.0)
+        } else {
+          # Left-sided or both: fold change from 0.3 to 1.0 (downregulation)
+          updateNumericInput(session, "minimum_fold_change_fixed", min = 0.3, max = 1.0)
+        }
       }
     })
     

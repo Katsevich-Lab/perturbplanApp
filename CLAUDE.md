@@ -201,7 +201,7 @@ results <- perturbplan::cost_power_computation(
 ```
 
 ### **Parameter Translation System:**
-- **UI Layer**: `TPM_threshold`, `cells_per_target`, `mapped_reads_per_cell` 
+- **UI Layer**: `TPM_threshold`, `cells_per_target`, `sequenced_reads_per_cell` 
 - **Backend Layer**: Automatic translation to perturbplan-compatible parameters
 - **Column Standardization**: `raw_reads_per_cell` → `sequenced_reads_per_cell`
 
@@ -339,8 +339,8 @@ cp ../perturbplan/inst/shiny/ui/* inst/app/www/
 
 ```r
 # Reads Parameter: Complex 5-layer transformation
-UI Input:     "mapped_reads_per_cell"           # User's mental model
-Config:       "mapped_reads_fixed"              # Module parameter passing  
+UI Input:     "sequenced_reads_per_cell"         # User's mental model
+Config:       "sequenced_reads_fixed"           # Module parameter passing  
 API Input:    "reads_per_cell"                  # perturbplan expects
 API Output:   "raw_reads_per_cell"              # perturbplan returns
 Internal:     "sequenced_reads_per_cell"        # Standard for processing/display
