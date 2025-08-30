@@ -16,13 +16,7 @@ NULL
 #' @return List with baseline_expression_stats and library_parameters, or NULL if not available
 #' @noRd
 extract_pilot_data <- function(experimental_config) {
-  cat("=== PILOT DATA DEBUG ===\n")
-  cat("experimental_config structure:\n")
-  str(experimental_config)
-  cat("========================\n")
-  
   if (is.null(experimental_config)) {
-    cat("experimental_config is NULL!\n")
     return(NULL)
   }
 
@@ -31,10 +25,8 @@ extract_pilot_data <- function(experimental_config) {
   tryCatch({
     if (is.null(pilot_data) || pilot_data$type == "default") {
       # Use built-in data for the selected biological system
-      biological_system <- experimental_config$biological_system
-      cat("biological_system value:", biological_system, "\n")
-      cat("biological_system is.null:", is.null(biological_system), "\n")
-      cat("biological_system length:", length(biological_system), "\n")
+      # PERTURBPLAN API REQUIREMENT: biological_system must be a valid string
+      biological_system <- experimental_config$biological_system %||% "K562"
 
       # Use extract_expression_info to process built-in data
       expression_info <- perturbplan::extract_expression_info(
@@ -103,19 +95,6 @@ extract_pilot_data <- function(experimental_config) {
 #' @return Named list of parameters for cost_power_computation
 #' @noRd
 map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) {
-  # DEBUG: Log what the UI is sending to understand why parameters are NULL
-  cat("=== PARAMETER FLOW DEBUG ===\n")
-  cat("experimental_opts structure:\n")
-  str(config$experimental_setup)
-  cat("advanced_opts structure:\n") 
-  str(config$advanced_choices)
-  cat("effect_opts structure:\n")
-  str(config$effect_sizes)
-  cat("analysis_opts structure:\n")
-  str(config$analysis_choices)
-  cat("design_opts structure:\n")
-  str(config$design_options)
-  cat("================================\n")
   
   # Use pre-extracted pilot data (passed as parameter to avoid duplication)
 
@@ -188,10 +167,10 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     # Only apply if exactly one of cells/reads is fixed (our target workflows)
     if ((has_cells_fixed && !has_reads_fixed) || (!has_cells_fixed && has_reads_fixed)) {
       
-      # Extract cost parameters directly - DEBUG: Let's see what's actually NULL
-      cost_constraint <- design_opts$cost_budget
-      cost_per_cell <- design_opts$cost_per_cell
-      cost_per_million_reads <- design_opts$cost_per_million_reads
+      # Extract cost parameters with perturbplan API defaults
+      cost_constraint <- design_opts$cost_budget %||% 1000
+      cost_per_cell <- design_opts$cost_per_cell %||% 0.086
+      cost_per_million_reads <- design_opts$cost_per_million_reads %||% 0.374
       
       
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
@@ -240,37 +219,37 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     minimizing_variable = minimizing_variable,
     fixed_variable = fixed_variable,
 
-    # Experimental parameters - DEBUG: Let's see what's actually NULL
-    MOI = experimental_opts$MOI,
-    num_targets = experimental_opts$num_targets,
-    non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs,
-    gRNAs_per_target = experimental_opts$gRNAs_per_target,
+    # Experimental parameters - PERTURBPLAN API REQUIREMENTS
+    MOI = experimental_opts$MOI %||% 10,
+    num_targets = experimental_opts$num_targets %||% 100,
+    non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs %||% 10,
+    gRNAs_per_target = experimental_opts$gRNAs_per_target %||% 4,
 
-    # Effect size parameters - DEBUG: Let's see what's actually NULL  
-    gRNA_variability = advanced_opts$gRNA_variability,
-    prop_non_null = effect_opts$prop_non_null,
+    # Effect size parameters - PERTURBPLAN API REQUIREMENTS
+    gRNA_variability = advanced_opts$gRNA_variability %||% 0.15,
+    prop_non_null = effect_opts$prop_non_null %||% 0.1,
 
-    # Analysis parameters - DEBUG: Let's see what's actually NULL
-    control_group = control_mapping[advanced_opts$control_group],
-    side = side_mapping[analysis_opts$side],
-    multiple_testing_alpha = advanced_opts$fdr_target,
+    # Analysis parameters - UI should provide these, but perturbplan needs valid values
+    control_group = control_mapping[advanced_opts$control_group %||% "complement"],
+    side = side_mapping[analysis_opts$side %||% "left"],
+    multiple_testing_alpha = advanced_opts$fdr_target %||% 0.1,
 
-    # Power and cost parameters - DEBUG: Let's see what's actually NULL
-    power_target = design_opts$target_power,
+    # Power and cost parameters - PERTURBPLAN API REQUIREMENTS
+    power_target = design_opts$target_power %||% 0.8,
     
     # Cost constraint logic:
     # - For the 4 specific power+cost workflows, cost_constraint should be NULL 
     #   because the constraint was already applied via obtain_fixed_variable_constraining_cost
     # - For other power+cost workflows, use the budget
     cost_constraint = NULL,  # Set to NULL for all workflows - cost constraint already applied if needed
-    cost_per_captured_cell = design_opts$cost_per_cell,
-    cost_per_million_reads = design_opts$cost_per_million_reads,
+    cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
+    cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
     
     # Grid parameters
     grid_size = 100,
     
-    # Mapping efficiency (from advanced settings) - DEBUG: Let's see what's actually NULL
-    mapping_efficiency = advanced_opts$mapping_efficiency,
+    # Mapping efficiency - PERTURBPLAN API REQUIREMENT
+    mapping_efficiency = advanced_opts$mapping_efficiency %||% 0.72,
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
