@@ -561,13 +561,13 @@ create_solutions_table_ui <- function(solution_rows) {
   
   if (visible_columns$analysis_choices) {
     header_cells <- append(header_cells, list(
-      tags$th("Analysis Choices", style = "width: 16%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("Analysis Choices", style = "width: 18%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
   if (visible_columns$effect_sizes) {
     header_cells <- append(header_cells, list(
-      tags$th("Effect Sizes", style = "width: 21%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("Effect Sizes", style = "width: 18%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
