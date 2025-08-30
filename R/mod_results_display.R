@@ -393,18 +393,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     output$main_plot <- renderPlotly({
       tryCatch({
-        req(analysis_results())
-        
-        # Get unified plot data (contains pinned + current solutions)
-        unified_data <- unified_plot_data()
+        # First check if we should use Pin functionality (single parameter workflows with pinned solutions)
         current_results <- analysis_results()
-        
-        if (is.null(unified_data) || is.null(current_results)) {
-          return(NULL)
-        }
-        
-        # Check if this is a single parameter optimization workflow
-        if (!is.null(current_results$workflow_info)) {
+        if (!is.null(current_results) && !is.null(current_results$workflow_info)) {
           workflow_id <- current_results$workflow_info$workflow_id
           
           # Only handle Pin functionality for single parameter optimization workflows
@@ -415,25 +406,25 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             "power_single_minimum_fold_change"
           )
           
-          if (workflow_id %in% single_param_workflows) {
-            # If we have multi-solution data (pinned solutions exist), generate multi-solution plot
-            if (is.list(unified_data) && "solutions" %in% names(unified_data)) {
-              # Create enhanced results with unified plot data for multi-solution rendering
+          if (workflow_id %in% single_param_workflows && length(pinned_solutions$solutions) > 0) {
+            # We have pinned solutions - use multi-solution plotting
+            unified_data <- unified_plot_data()
+            
+            if (!is.null(unified_data) && is.list(unified_data) && "solutions" %in% names(unified_data)) {
               enhanced_results <- current_results
               enhanced_results$plot_data <- unified_data
               
               multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
               
-              # Return the interactive plot
               if (!is.null(multi_plots$plotly$main_plot)) {
                 return(multi_plots$plotly$main_plot)
               }
             }
-            # For single solution (no pins yet), still use standard plot_objects
           }
         }
         
-        # Fallback: use standard plot_objects for single solution
+        # Standard plot rendering (original logic)
+        req(plot_objects())
         plots <- plot_objects()
         
         if (!is.null(plots$error)) {
