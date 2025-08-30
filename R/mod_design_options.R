@@ -777,7 +777,7 @@ mod_design_options_server <- function(id, param_manager = NULL){
       input$fc_control
       
       # Safe access to input values with NULL checking
-      target <- input$minimization_target %||% ""
+      target <- input$minimization_target
       
       list(
         # Design Options

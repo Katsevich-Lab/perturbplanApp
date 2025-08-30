@@ -299,9 +299,9 @@ standardize_perturbplan_results <- function(results, config, workflow_info) {
       cost_constraint = if (config$design_options$optimization_type == "power_cost") 
                          config$design_options$cost_budget else NULL,
       cost_per_cell = if (config$design_options$optimization_type == "power_cost") 
-                       config$design_options$cost_per_cell %||% 0.086 else NULL,
+                       config$design_options$cost_per_cell else NULL,
       cost_per_million_reads = if (config$design_options$optimization_type == "power_cost") 
-                                config$design_options$cost_per_million_reads %||% 0.374 else NULL,
+                                config$design_options$cost_per_million_reads else NULL,
       timestamp = Sys.time(),
       n_rows = nrow(results),
       parameter_ranges = extract_parameter_ranges_from_results(results)

@@ -73,10 +73,10 @@ mod_perturbation_choices_server <- function(id){
     # Return reactive list with core perturbation parameters
     reactive({
       list(
-        MOI = input$MOI %||% 10,
-        num_targets = input$num_targets %||% 100,
-        gRNAs_per_target = input$gRNAs_per_target %||% 4,
-        non_targeting_gRNAs = input$non_targeting_gRNAs %||% 10
+        MOI = input$MOI,
+        num_targets = input$num_targets,
+        gRNAs_per_target = input$gRNAs_per_target,
+        non_targeting_gRNAs = input$non_targeting_gRNAs
       )
     })
   })

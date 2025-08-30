@@ -439,10 +439,10 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
         cells_fixed = input$cells_fixed,
         mapped_reads_fixed = input$mapped_reads_fixed,
         # Perturbation choices (integrated from mod_perturbation_choices)
-        MOI = input$MOI %||% 10,
-        num_targets = input$num_targets %||% 100,
-        gRNAs_per_target = input$gRNAs_per_target %||% 4,
-        non_targeting_gRNAs = input$non_targeting_gRNAs %||% 10,
+        MOI = input$MOI,
+        num_targets = input$num_targets,
+        gRNAs_per_target = input$gRNAs_per_target,
+        non_targeting_gRNAs = input$non_targeting_gRNAs,
         timestamp = Sys.time()
       )
     })
