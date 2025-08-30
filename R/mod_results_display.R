@@ -935,8 +935,8 @@ determine_effect_sizes_subcolumns <- function(solution_rows) {
   
   # Define parameter order and column headers for effect sizes
   param_order <- list(
-    "minimum_fold_change" = list(header = "Fold Change", width = "8%"),
-    "prop_non_null" = list(header = "Non-null Prop", width = "8%")
+    "Fold change" = list(header = "Fold Change", width = "8%"),
+    "Proportion non-null pairs" = list(header = "Non-null Prop", width = "8%")
   )
   
   # Return only the parameters that actually appear
@@ -1114,9 +1114,9 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
       for (param_name in names(effect_sizes_subcolumns)) {
         param_info <- effect_sizes_subcolumns[[param_name]]
         param_value <- if (!is.null(row_data$effect_sizes[[param_name]])) {
-          if (param_name == "minimum_fold_change") {
+          if (param_name == "Fold change") {
             format(round(as.numeric(row_data$effect_sizes[[param_name]]), 2), nsmall = 2)
-          } else if (param_name == "prop_non_null") {
+          } else if (param_name == "Proportion non-null pairs") {
             paste0(round(as.numeric(row_data$effect_sizes[[param_name]]) * 100, 1), "%")
           } else {
             row_data$effect_sizes[[param_name]]
@@ -1336,9 +1336,9 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
       for (param_name in names(effect_sizes_subcolumns)) {
         param_info <- effect_sizes_subcolumns[[param_name]]
         param_value <- if (!is.null(row_data$effect_sizes[[param_name]])) {
-          if (param_name == "minimum_fold_change") {
+          if (param_name == "Fold change") {
             format(round(as.numeric(row_data$effect_sizes[[param_name]]), 2), nsmall = 2)
-          } else if (param_name == "prop_non_null") {
+          } else if (param_name == "Proportion non-null pairs") {
             paste0(round(as.numeric(row_data$effect_sizes[[param_name]]) * 100, 1), "%")
           } else {
             row_data$effect_sizes[[param_name]]
