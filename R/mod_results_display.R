@@ -980,8 +980,24 @@ extract_effect_sizes <- function(optimal, workflow_info, user_config = reactive(
     }
   }
   
-  # Note: Prop non-null is typically not a slider parameter, so we don't include it
-  # unless it specifically appears in sliders
+  # Add proportion of non-null pairs as a fixed parameter (always shown)
+  # This comes from the optimal design results or user config
+  prop_non_null_value <- NULL
+  if (!is.null(optimal$prop_non_null)) {
+    prop_non_null_value <- optimal$prop_non_null
+  } else if (!is.null(user_config)) {
+    config <- user_config()
+    if (!is.null(config$effect_sizes) && !is.null(config$effect_sizes$prop_non_null)) {
+      prop_non_null_value <- config$effect_sizes$prop_non_null
+    }
+  }
+  
+  # Default value if not found elsewhere
+  if (is.null(prop_non_null_value)) {
+    prop_non_null_value <- 0.1  # Default proportion commonly used
+  }
+  
+  params[["Proportion non-null pairs"]] <- prop_non_null_value
   
   return(params)
 }
