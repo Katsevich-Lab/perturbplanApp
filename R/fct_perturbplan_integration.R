@@ -26,10 +26,7 @@ extract_pilot_data <- function(experimental_config) {
     if (is.null(pilot_data) || pilot_data$type == "default") {
       # Use built-in data for the selected biological system
       biological_system <- experimental_config$biological_system
-      # REQUIRED: perturbplan needs a valid biological system - default to K562 if not set
-      if (is.null(biological_system) || length(biological_system) == 0) {
-        biological_system <- "K562"
-      }
+      # DEBUG: Let's see if this is actually NULL and why
 
       # Use extract_expression_info to process built-in data
       expression_info <- perturbplan::extract_expression_info(
@@ -183,10 +180,10 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     # Only apply if exactly one of cells/reads is fixed (our target workflows)
     if ((has_cells_fixed && !has_reads_fixed) || (!has_cells_fixed && has_reads_fixed)) {
       
-      # Extract cost parameters with required defaults for perturbplan
-      cost_constraint <- if (is.null(design_opts$cost_budget)) 1000 else design_opts$cost_budget
-      cost_per_cell <- if (is.null(design_opts$cost_per_cell)) 0.086 else design_opts$cost_per_cell
-      cost_per_million_reads <- if (is.null(design_opts$cost_per_million_reads)) 0.374 else design_opts$cost_per_million_reads
+      # Extract cost parameters directly - DEBUG: Let's see what's actually NULL
+      cost_constraint <- design_opts$cost_budget
+      cost_per_cell <- design_opts$cost_per_cell
+      cost_per_million_reads <- design_opts$cost_per_million_reads
       
       
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
@@ -235,37 +232,37 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     minimizing_variable = minimizing_variable,
     fixed_variable = fixed_variable,
 
-    # Experimental parameters - REQUIRED by perturbplan
-    MOI = if (is.null(experimental_opts$MOI)) 10 else experimental_opts$MOI,
-    num_targets = if (is.null(experimental_opts$num_targets)) 100 else experimental_opts$num_targets,
-    non_targeting_gRNAs = if (is.null(experimental_opts$non_targeting_gRNAs)) 10 else experimental_opts$non_targeting_gRNAs,
-    gRNAs_per_target = if (is.null(experimental_opts$gRNAs_per_target)) 4 else experimental_opts$gRNAs_per_target,
+    # Experimental parameters - DEBUG: Let's see what's actually NULL
+    MOI = experimental_opts$MOI,
+    num_targets = experimental_opts$num_targets,
+    non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs,
+    gRNAs_per_target = experimental_opts$gRNAs_per_target,
 
-    # Effect size parameters - REQUIRED by perturbplan
-    gRNA_variability = if (is.null(advanced_opts$gRNA_variability)) 0.15 else advanced_opts$gRNA_variability,
-    prop_non_null = if (is.null(effect_opts$prop_non_null)) 0.1 else effect_opts$prop_non_null,
+    # Effect size parameters - DEBUG: Let's see what's actually NULL  
+    gRNA_variability = advanced_opts$gRNA_variability,
+    prop_non_null = effect_opts$prop_non_null,
 
-    # Analysis parameters - REQUIRED by perturbplan
-    control_group = control_mapping[if (is.null(advanced_opts$control_group)) "complement" else advanced_opts$control_group],
-    side = side_mapping[if (is.null(analysis_opts$side)) "left" else analysis_opts$side],
-    multiple_testing_alpha = if (is.null(advanced_opts$fdr_target)) 0.1 else advanced_opts$fdr_target,
+    # Analysis parameters - DEBUG: Let's see what's actually NULL
+    control_group = control_mapping[advanced_opts$control_group],
+    side = side_mapping[analysis_opts$side],
+    multiple_testing_alpha = advanced_opts$fdr_target,
 
-    # Power and cost parameters - REQUIRED by perturbplan
-    power_target = if (is.null(design_opts$target_power)) 0.8 else design_opts$target_power,
+    # Power and cost parameters - DEBUG: Let's see what's actually NULL
+    power_target = design_opts$target_power,
     
     # Cost constraint logic:
     # - For the 4 specific power+cost workflows, cost_constraint should be NULL 
     #   because the constraint was already applied via obtain_fixed_variable_constraining_cost
     # - For other power+cost workflows, use the budget
     cost_constraint = NULL,  # Set to NULL for all workflows - cost constraint already applied if needed
-    cost_per_captured_cell = if (is.null(design_opts$cost_per_cell)) 0.086 else design_opts$cost_per_cell,
-    cost_per_million_reads = if (is.null(design_opts$cost_per_million_reads)) 0.374 else design_opts$cost_per_million_reads,
+    cost_per_captured_cell = design_opts$cost_per_cell,
+    cost_per_million_reads = design_opts$cost_per_million_reads,
     
     # Grid parameters
     grid_size = 100,
     
-    # Mapping efficiency (from advanced settings) - REQUIRED by perturbplan
-    mapping_efficiency = if (is.null(advanced_opts$mapping_efficiency)) 0.72 else advanced_opts$mapping_efficiency,
+    # Mapping efficiency (from advanced settings) - DEBUG: Let's see what's actually NULL
+    mapping_efficiency = advanced_opts$mapping_efficiency,
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
