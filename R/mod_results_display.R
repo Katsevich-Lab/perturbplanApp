@@ -934,8 +934,8 @@ determine_effect_sizes_subcolumns <- function(solution_rows) {
   
   # Define parameter order and column headers for effect sizes
   param_order <- list(
-    "Fold change" = list(header = "Fold Change", width = "8%"),
-    "Non-null proportion" = list(header = "Non-null Prop", width = "8%")
+    "minimum_fold_change" = list(header = "Fold Change", width = "8%"),
+    "prop_non_null" = list(header = "Non-null Prop", width = "8%")
   )
   
   # Return only the parameters that actually appear
