@@ -115,10 +115,8 @@ mod_sidebar_server <- function(id, param_manager){
           TPM_threshold_fixed = param_manager$parameters$TPM_threshold
         ),
         
-        # Effect sizes from parameter manager
-        effect_sizes = list(
-          minimum_fold_change_fixed = param_manager$parameters$minimum_fold_change
-        ),
+        # Effect sizes from effect sizes module (includes prop_non_null)
+        effect_sizes = effect_sizes_config(),
         
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
