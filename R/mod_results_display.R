@@ -314,6 +314,40 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     )
     
     # ========================================================================
+    # DESIGN OPTION CHANGE DETECTION - Clear solutions when workflow changes
+    # ========================================================================
+    
+    # Track previous design configuration to detect changes
+    previous_design_config <- reactiveVal(NULL)
+    
+    # Clear pinned solutions and plots when design options change
+    observe({
+      config <- user_config()
+      if (!is.null(config) && !is.null(config$design_options)) {
+        current_design <- list(
+          optimization_type = config$design_options$optimization_type,
+          minimization_target = config$design_options$minimization_target,
+          parameter_controls = config$design_options$parameter_controls
+        )
+        
+        prev_design <- previous_design_config()
+        if (!is.null(prev_design) && !identical(prev_design, current_design)) {
+          # Design options changed - clear pinned solutions
+          pinned_solutions$solutions <- list()
+          pinned_solutions$next_index <- 1
+          
+          showNotification(
+            "Design options changed - cleared pinned solutions",
+            type = "message",
+            duration = 3
+          )
+        }
+        
+        previous_design_config(current_design)
+      }
+    })
+    
+    # ========================================================================
     # PIN BUTTON HANDLERS
     # ========================================================================
     
@@ -836,6 +870,43 @@ get_optimal_design_column_name <- function(workflow_info) {
   return(column_name)
 }
 
+#' Determine which experimental parameter subcolumns to show
+#'
+#' @param solution_rows List of solution row data
+#' @return List of experimental parameter column information
+#' @noRd
+determine_experimental_subcolumns <- function(solution_rows) {
+  # Check which experimental parameters appear across all solutions
+  all_exp_params <- list()
+  for (row in solution_rows) {
+    if (!is.null(row$experimental_choices) && length(row$experimental_choices) > 0) {
+      all_exp_params <- c(all_exp_params, names(row$experimental_choices))
+    }
+  }
+  
+  # Get unique parameter names and create ordered list
+  unique_params <- unique(all_exp_params)
+  
+  # Define parameter order and column headers
+  param_order <- list(
+    "MOI" = list(header = "MOI", width = "6%"),
+    "Number of targets" = list(header = "# Targets", width = "6%"),
+    "gRNAs per target" = list(header = "gRNAs/Target", width = "6%"),
+    "Cells per target" = list(header = "Cells/Target", width = "6%"),
+    "Reads per cell" = list(header = "Reads/Cell", width = "6%")
+  )
+  
+  # Return only the parameters that actually appear
+  visible_params <- list()
+  for (param_name in names(param_order)) {
+    if (param_name %in% unique_params) {
+      visible_params[[param_name]] <- param_order[[param_name]]
+    }
+  }
+  
+  return(visible_params)
+}
+
 #' Create the actual table UI
 #'
 #' @param solution_rows List of solution row data
@@ -845,35 +916,64 @@ get_optimal_design_column_name <- function(workflow_info) {
 create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
   # Determine which columns to show based on whether they have content
   visible_columns <- determine_visible_columns(solution_rows)
+  experimental_subcolumns <- determine_experimental_subcolumns(solution_rows)
   
-  # Create dynamic table header based on visible columns
+  # Calculate experimental parameters total width
+  exp_param_count <- length(experimental_subcolumns)
+  exp_total_width <- if (exp_param_count > 0) 30 else 0  # 30% total for experimental params
+  exp_subcolumn_width <- if (exp_param_count > 0) paste0(round(exp_total_width / exp_param_count, 1), "%") else "0%"
+  
+  # Create two-row header structure
   optimal_design_column_name <- get_optimal_design_column_name(workflow_info)
-  header_cells <- list(
-    tags$th("Solution ID", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th("Power", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th(optimal_design_column_name, style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+  
+  # First header row (main column headers with colspan)
+  header_row_1 <- list(
+    tags$th("Solution ID", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
+    tags$th("Power", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
+    tags$th(optimal_design_column_name, rowspan = "2", style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
   )
   
-  # Add conditional parameter columns
-  if (visible_columns$experimental_choices) {
-    header_cells <- append(header_cells, list(
-      tags$th("Experimental Parameters", style = "width: 35%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+  # Add experimental parameters main header if needed
+  if (visible_columns$experimental_choices && exp_param_count > 0) {
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Experimental Parameters", colspan = as.character(exp_param_count), 
+              style = paste0("width: ", exp_total_width, "%; text-align: center; font-weight: bold; background-color: #f8f9fa;"))
     ))
   }
   
+  # Add other single-row headers
   if (visible_columns$analysis_choices) {
-    header_cells <- append(header_cells, list(
-      tags$th("TPM threshold", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    header_row_1 <- append(header_row_1, list(
+      tags$th("TPM threshold", rowspan = "2", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
     ))
   }
   
   if (visible_columns$effect_sizes) {
-    header_cells <- append(header_cells, list(
-      tags$th("Effect Sizes", style = "width: 16%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Effect Sizes", rowspan = "2", style = "width: 16%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
     ))
   }
   
-  table_header <- do.call(tags$tr, header_cells)
+  # Second header row (subcolumn headers for experimental parameters)
+  header_row_2 <- list()
+  if (visible_columns$experimental_choices && exp_param_count > 0) {
+    for (param_name in names(experimental_subcolumns)) {
+      param_info <- experimental_subcolumns[[param_name]]
+      header_row_2 <- append(header_row_2, list(
+        tags$th(param_info$header, style = paste0("width: ", exp_subcolumn_width, "; text-align: center; font-weight: bold; background-color: #e9ecef; font-size: 12px;"))
+      ))
+    }
+  }
+  
+  # Create table header (two rows if experimental parameters have subcolumns)
+  table_header <- if (length(header_row_2) > 0) {
+    list(
+      do.call(tags$tr, header_row_1),
+      do.call(tags$tr, header_row_2)
+    )
+  } else {
+    list(do.call(tags$tr, header_row_1))
+  }
   
   # Create table rows with dynamic columns
   table_rows <- lapply(solution_rows, function(row_data) {
@@ -915,14 +1015,22 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
       )
     )
     
-    # Add conditional parameter columns
-    if (visible_columns$experimental_choices) {
-      row_cells <- append(row_cells, list(
-        tags$td(
-          style = "padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
-          create_parameter_section_display(row_data$experimental_choices, "Experimental")
-        )
-      ))
+    # Add experimental parameter subcolumns
+    if (visible_columns$experimental_choices && exp_param_count > 0) {
+      for (param_name in names(experimental_subcolumns)) {
+        param_value <- if (!is.null(row_data$experimental_choices[[param_name]])) {
+          row_data$experimental_choices[[param_name]]
+        } else {
+          "-"
+        }
+        
+        row_cells <- append(row_cells, list(
+          tags$td(
+            style = "text-align: center; padding: 8px; vertical-align: top; border-right: 1px solid #dee2e6;",
+            tags$span(param_value, style = "font-size: 13px; font-weight: 500;")
+          )
+        ))
+      }
     }
     
     if (visible_columns$analysis_choices) {
@@ -971,35 +1079,64 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
 create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
   # Determine which columns to show based on whether they have content
   visible_columns <- determine_visible_columns(solution_rows)
+  experimental_subcolumns <- determine_experimental_subcolumns(solution_rows)
   
-  # Create dynamic table header based on visible columns
+  # Calculate experimental parameters total width
+  exp_param_count <- length(experimental_subcolumns)
+  exp_total_width <- if (exp_param_count > 0) 30 else 0  # 30% total for experimental params
+  exp_subcolumn_width <- if (exp_param_count > 0) paste0(round(exp_total_width / exp_param_count, 1), "%") else "0%"
+  
+  # Create two-row header structure
   optimal_design_column_name <- get_optimal_design_column_name(workflow_info)
-  header_cells <- list(
-    tags$th("Solution ID", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th("Power", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th(optimal_design_column_name, style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+  
+  # First header row (main column headers with colspan)
+  header_row_1 <- list(
+    tags$th("Solution ID", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
+    tags$th("Power", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
+    tags$th(optimal_design_column_name, rowspan = "2", style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
   )
   
-  # Add conditional parameter columns
-  if (visible_columns$experimental_choices) {
-    header_cells <- append(header_cells, list(
-      tags$th("Experimental Parameters", style = "width: 35%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+  # Add experimental parameters main header if needed
+  if (visible_columns$experimental_choices && exp_param_count > 0) {
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Experimental Parameters", colspan = as.character(exp_param_count), 
+              style = paste0("width: ", exp_total_width, "%; text-align: center; font-weight: bold; background-color: #f8f9fa;"))
     ))
   }
   
+  # Add other single-row headers
   if (visible_columns$analysis_choices) {
-    header_cells <- append(header_cells, list(
-      tags$th("TPM threshold", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    header_row_1 <- append(header_row_1, list(
+      tags$th("TPM threshold", rowspan = "2", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
     ))
   }
   
   if (visible_columns$effect_sizes) {
-    header_cells <- append(header_cells, list(
-      tags$th("Effect Sizes", style = "width: 16%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Effect Sizes", rowspan = "2", style = "width: 16%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
     ))
   }
   
-  table_header <- do.call(tags$tr, header_cells)
+  # Second header row (subcolumn headers for experimental parameters)
+  header_row_2 <- list()
+  if (visible_columns$experimental_choices && exp_param_count > 0) {
+    for (param_name in names(experimental_subcolumns)) {
+      param_info <- experimental_subcolumns[[param_name]]
+      header_row_2 <- append(header_row_2, list(
+        tags$th(param_info$header, style = paste0("width: ", exp_subcolumn_width, "; text-align: center; font-weight: bold; background-color: #e9ecef; font-size: 12px;"))
+      ))
+    }
+  }
+  
+  # Create table header (two rows if experimental parameters have subcolumns)
+  table_header <- if (length(header_row_2) > 0) {
+    list(
+      do.call(tags$tr, header_row_1),
+      do.call(tags$tr, header_row_2)
+    )
+  } else {
+    list(do.call(tags$tr, header_row_1))
+  }
   
   # Create table rows with visual distinction for pinned vs current
   table_rows <- lapply(solution_rows, function(row_data) {
@@ -1052,14 +1189,22 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
       )
     )
     
-    # Add conditional parameter columns with background color
-    if (visible_columns$experimental_choices) {
-      row_cells <- append(row_cells, list(
-        tags$td(
-          style = paste0("padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
-          create_parameter_section_display(row_data$experimental_choices, "Experimental")
-        )
-      ))
+    # Add experimental parameter subcolumns with background color
+    if (visible_columns$experimental_choices && exp_param_count > 0) {
+      for (param_name in names(experimental_subcolumns)) {
+        param_value <- if (!is.null(row_data$experimental_choices[[param_name]])) {
+          row_data$experimental_choices[[param_name]]
+        } else {
+          "-"
+        }
+        
+        row_cells <- append(row_cells, list(
+          tags$td(
+            style = paste0("text-align: center; padding: 8px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+            tags$span(param_value, style = "font-size: 13px; font-weight: 500;")
+          )
+        ))
+      }
     }
     
     if (visible_columns$analysis_choices) {
