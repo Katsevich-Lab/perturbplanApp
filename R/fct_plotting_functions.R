@@ -9,7 +9,7 @@
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate geom_smooth geom_text
 #' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_linetype_discrete scale_color_viridis_c
-#' @importFrom plotly ggplotly layout config plot_ly
+#' @importFrom plotly ggplotly layout config plot_ly add_lines add_markers
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma comma_format dollar_format
 #' @importFrom stats rnorm median power
@@ -262,14 +262,14 @@ create_multi_solution_parameter_plots <- function(results) {
   # Create plotly object for interactive features
   p_interactive <- plot_ly()
   
-  # Add target power line to plotly
+  # Add target power line to plotly (hidden from legend)
   p_interactive <- p_interactive %>%
     add_lines(
       x = range(solutions_data[[1]]$data$parameter_value, na.rm = TRUE),
       y = rep(target_power, 2),
       line = list(dash = "dash", color = "grey", width = 1),
       name = paste("Target Power (", scales::percent(target_power, accuracy = 1), ")", sep = ""),
-      showlegend = TRUE,
+      showlegend = FALSE,
       hovertemplate = paste("Target Power:", scales::percent(target_power, accuracy = 0.1), "<extra></extra>")
     )
   
@@ -404,8 +404,9 @@ create_multi_solution_parameter_plots <- function(results) {
       ),
       yaxis = list(title = "Power"),
       legend = list(
-        orientation = "v",
-        x = 1.02, y = 1,
+        orientation = "h",
+        x = 0.5, y = -0.15,
+        xanchor = "center",
         bgcolor = "rgba(255,255,255,0.8)",
         bordercolor = "rgba(0,0,0,0.2)",
         borderwidth = 1

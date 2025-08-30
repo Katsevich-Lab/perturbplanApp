@@ -280,7 +280,16 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         req(analysis_results())
         
         current_results <- analysis_results()
+        current_plots <- plot_objects()
         current_params <- slider_actions$current_parameters()
+        
+        # Extract plot data from plot_objects
+        current_plot_data <- NULL
+        if (!is.null(current_plots$plots) && !is.null(current_plots$plots$plot_data)) {
+          current_plot_data <- current_plots$plots$plot_data
+        } else if (!is.null(current_plots$plot_data)) {
+          current_plot_data <- current_plots$plot_data
+        }
         
         # Create solution entry
         new_solution <- list(
@@ -288,7 +297,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           timestamp = Sys.time(),
           parameters = current_params,
           results = current_results,
-          plot_data = current_results$plot_data
+          plot_data = current_plot_data
         )
         
         # Add to pinned solutions
@@ -313,15 +322,29 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Create unified plot data combining pinned + current solutions
     unified_plot_data <- reactive({
       current_results <- analysis_results()
+      current_plots <- plot_objects()
       
-      # If no current results, return NULL
-      if (is.null(current_results) || is.null(current_results$plot_data)) {
+      
+      # If no current results or plots, return NULL
+      if (is.null(current_results) || is.null(current_plots)) {
+        return(NULL)
+      }
+      
+      # Extract plot data from plot_objects instead of analysis_results
+      current_plot_data <- NULL
+      if (!is.null(current_plots$plots) && !is.null(current_plots$plots$plot_data)) {
+        current_plot_data <- current_plots$plots$plot_data
+      } else if (!is.null(current_plots$plot_data)) {
+        current_plot_data <- current_plots$plot_data
+      }
+      
+      if (is.null(current_plot_data)) {
         return(NULL)
       }
       
       # If no pinned solutions, return current data as-is (single solution)
       if (length(pinned_solutions$solutions) == 0) {
-        return(current_results$plot_data)
+        return(current_plot_data)
       }
       
       # Create multi-solution structure for pinned + current
@@ -336,6 +359,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         pinned <- pinned_solutions$solutions[[i]]
         color_index <- ((pinned$index - 1) %% length(multi_data$color_palette)) + 1
         
+        
         multi_data$solutions[[i]] <- list(
           id = pinned$index,
           color = multi_data$color_palette[color_index],
@@ -349,7 +373,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
         id = "pending",
         color = "#FF6B6B",  # Distinct pending color (red-ish)
-        data = current_results$plot_data,
+        data = current_plot_data,
         label = "Current",
         style = "dashed"
       )
@@ -414,11 +438,15 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
               enhanced_results <- current_results
               enhanced_results$plot_data <- unified_data
               
-              multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
-              
-              if (!is.null(multi_plots$plotly$main_plot)) {
-                return(multi_plots$plotly$main_plot)
-              }
+              tryCatch({
+                multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
+                
+                if (!is.null(multi_plots$interactive_plot)) {
+                  return(multi_plots$interactive_plot)
+                }
+              }, error = function(e) {
+                # Silent error handling - fall back to standard plot
+              })
             }
           }
         }
