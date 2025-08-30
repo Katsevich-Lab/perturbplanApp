@@ -78,7 +78,7 @@ mod_experimental_setup_ui <- function(id) {
                       "Multiplicity of infection (MOI):",
                       value = 10,
                       min = 1,
-                      max = 20,
+                      max = 30,
                       step = 1),
           
           # Number of targets

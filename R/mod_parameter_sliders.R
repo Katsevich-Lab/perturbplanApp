@@ -96,7 +96,7 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       tagList(
         tags$div(
           style = "margin-bottom: 15px;",
-          create_compact_slider(ns("moi_slider"), "MOI", 1, 20, param_manager$parameters$MOI, 1)
+          create_compact_slider(ns("moi_slider"), "MOI", 1, 30, param_manager$parameters$MOI, 1)
         ),
         tags$div(
           style = "margin-bottom: 15px;",
