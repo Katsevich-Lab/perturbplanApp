@@ -915,6 +915,40 @@ determine_experimental_subcolumns <- function(solution_rows) {
   return(visible_params)
 }
 
+#' Determine which effect sizes parameter subcolumns to show
+#'
+#' @param solution_rows List of solution row data
+#' @return List of effect sizes parameter column information
+#' @noRd
+determine_effect_sizes_subcolumns <- function(solution_rows) {
+  # Check which effect sizes parameters appear across all solutions
+  all_effect_params <- list()
+  for (row in solution_rows) {
+    if (!is.null(row$effect_sizes) && length(row$effect_sizes) > 0) {
+      all_effect_params <- c(all_effect_params, names(row$effect_sizes))
+    }
+  }
+  
+  # Get unique parameter names and create ordered list
+  unique_params <- unique(all_effect_params)
+  
+  # Define parameter order and column headers for effect sizes
+  param_order <- list(
+    "Fold change" = list(header = "Fold Change", width = "8%"),
+    "Non-null proportion" = list(header = "Non-null Prop", width = "8%")
+  )
+  
+  # Return only the parameters that actually appear
+  visible_params <- list()
+  for (param_name in names(param_order)) {
+    if (param_name %in% unique_params) {
+      visible_params[[param_name]] <- param_order[[param_name]]
+    }
+  }
+  
+  return(visible_params)
+}
+
 #' Create the actual table UI
 #'
 #' @param solution_rows List of solution row data
@@ -925,11 +959,17 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
   # Determine which columns to show based on whether they have content
   visible_columns <- determine_visible_columns(solution_rows)
   experimental_subcolumns <- determine_experimental_subcolumns(solution_rows)
+  effect_sizes_subcolumns <- determine_effect_sizes_subcolumns(solution_rows)
   
   # Calculate experimental parameters total width
   exp_param_count <- length(experimental_subcolumns)
   exp_total_width <- if (exp_param_count > 0) 30 else 0  # 30% total for experimental params
   exp_subcolumn_width <- if (exp_param_count > 0) paste0(round(exp_total_width / exp_param_count, 1), "%") else "0%"
+  
+  # Calculate effect sizes total width
+  effect_param_count <- length(effect_sizes_subcolumns)
+  effect_total_width <- if (effect_param_count > 0) 16 else 0  # 16% total for effect sizes
+  effect_subcolumn_width <- if (effect_param_count > 0) paste0(round(effect_total_width / effect_param_count, 1), "%") else "0%"
   
   # Create two-row header structure
   optimal_design_column_name <- get_optimal_design_column_name(workflow_info)
@@ -956,13 +996,20 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
     ))
   }
   
-  if (visible_columns$effect_sizes) {
+  # Add effect sizes main header if subcolumns are needed
+  if (visible_columns$effect_sizes && effect_param_count > 0) {
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Effect Sizes", colspan = as.character(effect_param_count), 
+              style = paste0("width: ", effect_total_width, "%; text-align: center; font-weight: bold; background-color: #f8f9fa;"))
+    ))
+  } else if (visible_columns$effect_sizes) {
+    # Single effect sizes column if no subcolumns
     header_row_1 <- append(header_row_1, list(
       tags$th("Effect Sizes", rowspan = "2", style = "width: 16%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
     ))
   }
   
-  # Second header row (subcolumn headers for experimental parameters)
+  # Second header row (subcolumn headers for experimental parameters and effect sizes)
   header_row_2 <- list()
   if (visible_columns$experimental_choices && exp_param_count > 0) {
     for (param_name in names(experimental_subcolumns)) {
@@ -973,7 +1020,17 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
     }
   }
   
-  # Create table header (two rows if experimental parameters have subcolumns)
+  # Add effect sizes subcolumn headers if needed
+  if (visible_columns$effect_sizes && effect_param_count > 0) {
+    for (param_name in names(effect_sizes_subcolumns)) {
+      param_info <- effect_sizes_subcolumns[[param_name]]
+      header_row_2 <- append(header_row_2, list(
+        tags$th(param_info$header, style = paste0("width: ", effect_subcolumn_width, "; text-align: center; font-weight: bold; background-color: #e9ecef; font-size: 12px;"))
+      ))
+    }
+  }
+  
+  # Create table header (two rows if experimental parameters or effect sizes have subcolumns)
   table_header <- if (length(header_row_2) > 0) {
     list(
       do.call(tags$tr, header_row_1),
@@ -1050,7 +1107,32 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
       ))
     }
     
-    if (visible_columns$effect_sizes) {
+    # Effect sizes - use subcolumns if available, otherwise single column
+    if (visible_columns$effect_sizes && effect_param_count > 0) {
+      # Generate individual cells for each effect size parameter
+      for (param_name in names(effect_sizes_subcolumns)) {
+        param_info <- effect_sizes_subcolumns[[param_name]]
+        param_value <- if (!is.null(row_data$effect_sizes[[param_name]])) {
+          if (param_name == "minimum_fold_change") {
+            format(round(as.numeric(row_data$effect_sizes[[param_name]]), 2), nsmall = 2)
+          } else if (param_name == "prop_non_null") {
+            paste0(round(as.numeric(row_data$effect_sizes[[param_name]]) * 100, 1), "%")
+          } else {
+            row_data$effect_sizes[[param_name]]
+          }
+        } else {
+          "-"
+        }
+        
+        row_cells <- append(row_cells, list(
+          tags$td(
+            style = "padding: 8px; text-align: center; vertical-align: top; border-right: 1px solid #dee2e6;",
+            tags$span(param_value, style = "font-size: 13px;")
+          )
+        ))
+      }
+    } else if (visible_columns$effect_sizes) {
+      # Single effect sizes column
       row_cells <- append(row_cells, list(
         tags$td(
           style = "padding: 12px; vertical-align: top;",
@@ -1088,11 +1170,17 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
   # Determine which columns to show based on whether they have content
   visible_columns <- determine_visible_columns(solution_rows)
   experimental_subcolumns <- determine_experimental_subcolumns(solution_rows)
+  effect_sizes_subcolumns <- determine_effect_sizes_subcolumns(solution_rows)
   
   # Calculate experimental parameters total width
   exp_param_count <- length(experimental_subcolumns)
   exp_total_width <- if (exp_param_count > 0) 30 else 0  # 30% total for experimental params
   exp_subcolumn_width <- if (exp_param_count > 0) paste0(round(exp_total_width / exp_param_count, 1), "%") else "0%"
+  
+  # Calculate effect sizes total width
+  effect_param_count <- length(effect_sizes_subcolumns)
+  effect_total_width <- if (effect_param_count > 0) 16 else 16  # 16% total for effect sizes
+  effect_subcolumn_width <- if (effect_param_count > 0) paste0(round(effect_total_width / effect_param_count, 1), "%") else "16%"
   
   # Create two-row header structure
   optimal_design_column_name <- get_optimal_design_column_name(workflow_info)
@@ -1119,13 +1207,20 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
     ))
   }
   
-  if (visible_columns$effect_sizes) {
+  # Add effect sizes main header if subcolumns are needed
+  if (visible_columns$effect_sizes && effect_param_count > 0) {
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Effect Sizes", colspan = as.character(effect_param_count), 
+              style = paste0("width: ", effect_total_width, "%; text-align: center; font-weight: bold; background-color: #f8f9fa;"))
+    ))
+  } else if (visible_columns$effect_sizes) {
+    # Single effect sizes column if no subcolumns
     header_row_1 <- append(header_row_1, list(
       tags$th("Effect Sizes", rowspan = "2", style = "width: 16%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
     ))
   }
   
-  # Second header row (subcolumn headers for experimental parameters)
+  # Second header row (subcolumn headers for experimental parameters and effect sizes)
   header_row_2 <- list()
   if (visible_columns$experimental_choices && exp_param_count > 0) {
     for (param_name in names(experimental_subcolumns)) {
@@ -1136,7 +1231,17 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
     }
   }
   
-  # Create table header (two rows if experimental parameters have subcolumns)
+  # Add effect sizes subcolumn headers if needed
+  if (visible_columns$effect_sizes && effect_param_count > 0) {
+    for (param_name in names(effect_sizes_subcolumns)) {
+      param_info <- effect_sizes_subcolumns[[param_name]]
+      header_row_2 <- append(header_row_2, list(
+        tags$th(param_info$header, style = paste0("width: ", effect_subcolumn_width, "; text-align: center; font-weight: bold; background-color: #e9ecef; font-size: 12px;"))
+      ))
+    }
+  }
+  
+  # Create table header (two rows if experimental parameters or effect sizes have subcolumns)
   table_header <- if (length(header_row_2) > 0) {
     list(
       do.call(tags$tr, header_row_1),
@@ -1224,7 +1329,32 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
       ))
     }
     
-    if (visible_columns$effect_sizes) {
+    # Effect sizes - use subcolumns if available, otherwise single column
+    if (visible_columns$effect_sizes && effect_param_count > 0) {
+      # Generate individual cells for each effect size parameter
+      for (param_name in names(effect_sizes_subcolumns)) {
+        param_info <- effect_sizes_subcolumns[[param_name]]
+        param_value <- if (!is.null(row_data$effect_sizes[[param_name]])) {
+          if (param_name == "minimum_fold_change") {
+            format(round(as.numeric(row_data$effect_sizes[[param_name]]), 2), nsmall = 2)
+          } else if (param_name == "prop_non_null") {
+            paste0(round(as.numeric(row_data$effect_sizes[[param_name]]) * 100, 1), "%")
+          } else {
+            row_data$effect_sizes[[param_name]]
+          }
+        } else {
+          "-"
+        }
+        
+        row_cells <- append(row_cells, list(
+          tags$td(
+            style = paste0("padding: 8px; text-align: center; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+            tags$span(param_value, style = "font-size: 13px;")
+          )
+        ))
+      }
+    } else if (visible_columns$effect_sizes) {
+      # Single effect sizes column
       row_cells <- append(row_cells, list(
         tags$td(
           style = paste0("padding: 12px; vertical-align: top; background-color: ", row_bg_color, ";"),
