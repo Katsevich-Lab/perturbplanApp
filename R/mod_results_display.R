@@ -361,35 +361,35 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             duration = 4
           )
         }
-        
-        previous_design_config(current_design)
       }
     })
     
     # Track when design has changed and we're waiting for user to click Plan
     design_changed_waiting <- reactiveVal(FALSE)
     
-    # Update waiting state when design changes
+    # Update waiting state when design changes (mirror analysis engine detection)
     observe({
       config <- user_config()
       if (!is.null(config) && !is.null(config$design_options)) {
-        param_control_types <- NULL
-        if (!is.null(config$design_options$parameter_controls)) {
-          param_control_types <- lapply(config$design_options$parameter_controls, function(control) {
-            list(type = control$type)
-          })
-        }
-        
+        # Use EXACT same logic as analysis engine
         current_design <- list(
           optimization_type = config$design_options$optimization_type,
           minimization_target = config$design_options$minimization_target,
-          parameter_control_types = param_control_types
+          parameter_control_types = if (!is.null(config$design_options$parameter_controls)) {
+            lapply(config$design_options$parameter_controls, function(control) {
+              list(type = control$type)  # Only track the type, not fixed_value
+            })
+          } else {
+            NULL
+          }
         )
         
         prev_design <- previous_design_config()
         if (!is.null(prev_design) && !identical(prev_design, current_design)) {
           design_changed_waiting(TRUE)  # Mark as waiting for user action
         }
+        
+        previous_design_config(current_design)  # Update tracking state
       }
     })
     
