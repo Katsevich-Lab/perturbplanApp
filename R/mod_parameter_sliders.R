@@ -33,6 +33,23 @@ mod_parameter_sliders_ui <- function(id) {
           style = "padding-left: 10px;",
           uiOutput(ns("right_column_sliders"))
         )
+      ),
+      
+      # Pin button section (full width below sliders)
+      tags$div(
+        style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px;",
+        actionButton(
+          ns("pin_solution"),
+          "Pin Current Solution",
+          class = "btn btn-success btn-sm",
+          style = "width: 80%; margin-right: 10px;"
+        ),
+        actionButton(
+          ns("clear_pins"),
+          "Clear All",
+          class = "btn btn-outline-secondary btn-sm",
+          style = "width: 15%; font-size: 11px;"
+        )
       )
     )
   )
@@ -344,7 +361,27 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       }
     })
     
-    # No return needed - central manager handles all data flow
+    # ========================================================================
+    # PIN BUTTON FUNCTIONALITY - Return values for module communication
+    # ========================================================================
+    
+    # Return button actions and current parameters for parent module
+    return(list(
+      pin_requested = reactive(input$pin_solution),
+      clear_requested = reactive(input$clear_pins),
+      current_parameters = reactive({
+        list(
+          MOI = input$moi_slider,
+          num_targets = input$targets_slider,
+          gRNAs_per_target = input$grnas_slider,
+          cells_per_target = input$cells_slider,
+          reads_per_cell = input$reads_slider,
+          TPM_threshold = input$TPM_slider,
+          minimum_fold_change = input$fc_slider,
+          cost_budget = input$cost_budget_slider
+        )
+      })
+    ))
     
   })
 }

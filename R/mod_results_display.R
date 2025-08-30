@@ -254,9 +254,56 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       return(NULL)
     })
     
-    # Initialize slider module server with parameter manager
+    # Initialize slider module server with parameter manager and capture return values
+    slider_actions <- NULL
     if (!is.null(param_manager)) {
-      mod_parameter_sliders_server("sliders", param_manager, workflow_info, user_config)
+      slider_actions <- mod_parameter_sliders_server("sliders", param_manager, workflow_info, user_config)
+    }
+    
+    # ========================================================================
+    # PINNED SOLUTIONS STORAGE
+    # ========================================================================
+    
+    # Reactive storage for pinned solutions
+    pinned_solutions <- reactiveValues(
+      solutions = list(),
+      next_index = 1
+    )
+    
+    # ========================================================================
+    # PIN BUTTON HANDLERS
+    # ========================================================================
+    
+    # Pin button handler - add current solution to pinned solutions
+    if (!is.null(slider_actions)) {
+      observeEvent(slider_actions$pin_requested(), {
+        req(analysis_results())
+        
+        current_results <- analysis_results()
+        current_params <- slider_actions$current_parameters()
+        
+        # Create solution entry
+        new_solution <- list(
+          index = pinned_solutions$next_index,
+          timestamp = Sys.time(),
+          parameters = current_params,
+          results = current_results,
+          plot_data = current_results$plot_data
+        )
+        
+        # Add to pinned solutions
+        pinned_solutions$solutions <- append(pinned_solutions$solutions, list(new_solution))
+        pinned_solutions$next_index <- pinned_solutions$next_index + 1
+        
+        showNotification("Solution pinned successfully!", type = "success", duration = 2)
+      })
+      
+      # Clear pins button handler - reset to empty
+      observeEvent(slider_actions$clear_requested(), {
+        pinned_solutions$solutions <- list()
+        pinned_solutions$next_index <- 1
+        showNotification("All pins cleared.", type = "info", duration = 2)
+      })
     }
     
     # Error message display
