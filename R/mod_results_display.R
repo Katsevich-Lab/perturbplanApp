@@ -555,7 +555,7 @@ create_solutions_table_ui <- function(solution_rows) {
   # Add conditional parameter columns
   if (visible_columns$experimental_choices) {
     header_cells <- append(header_cells, list(
-      tags$th("Experimental Choices", style = "width: 18%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("Experimental Parameters", style = "width: 20%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
@@ -567,7 +567,7 @@ create_solutions_table_ui <- function(solution_rows) {
   
   if (visible_columns$effect_sizes) {
     header_cells <- append(header_cells, list(
-      tags$th("Effect Sizes", style = "width: 18%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("Effect Sizes", style = "width: 16%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
