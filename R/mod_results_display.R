@@ -580,7 +580,12 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             "power_single_cells_per_target",
             "power_single_reads_per_cell", 
             "power_single_TPM_threshold",
-            "power_single_minimum_fold_change"
+            "power_single_minimum_fold_change",
+            # Power+cost TPM/FC minimization workflows (6-9)
+            "power_cost_TPM_cells",
+            "power_cost_TPM_reads",
+            "power_cost_fc_cells",
+            "power_cost_fc_reads"
           )
           
           if (workflow_id %in% single_param_workflows && length(pinned_solutions$solutions) > 0) {
