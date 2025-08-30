@@ -204,7 +204,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # REACTIVE DISPLAY STATE
     # ========================================================================
     
-    
     # Determine if results should be shown
     output$show_results <- reactive({
       # Don't show results if design changed more recently than the last Plan click
