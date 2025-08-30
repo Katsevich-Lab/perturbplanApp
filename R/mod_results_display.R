@@ -561,7 +561,7 @@ create_solutions_table_ui <- function(solution_rows) {
   
   if (visible_columns$analysis_choices) {
     header_cells <- append(header_cells, list(
-      tags$th("Analysis Choices", style = "width: 18%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("Expression Level", style = "width: 18%; text-align: left; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
