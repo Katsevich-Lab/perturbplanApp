@@ -103,10 +103,8 @@ mod_sidebar_server <- function(id, param_manager){
         # Experimental setup from experimental setup module (includes biological_system, pilot_data, etc.)
         experimental_setup = experimental_config(),
         
-        # Analysis choices from parameter manager
-        analysis_choices = list(
-          TPM_threshold_fixed = param_manager$parameters$TPM_threshold
-        ),
+        # Analysis choices from analysis choices module (includes side, gene_list_mode, etc.)
+        analysis_choices = analysis_config(),
         
         # Effect sizes from effect sizes module (includes prop_non_null)
         effect_sizes = effect_sizes_config(),
