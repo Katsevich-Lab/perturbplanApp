@@ -570,6 +570,25 @@ mod_design_options_server <- function(id, param_manager = NULL){
       }
     })
     
+    # Business Logic: Clear Step 3 parameter controls when Step 2 changes
+    observe({
+      # When minimization target changes, reset all parameter controls to default
+      input$minimization_target
+      
+      # Clear all Step 3 parameter controls when Step 2 changes
+      if (!is.null(input$minimization_target) && input$minimization_target != "") {
+        # Reset all parameter controls to "varying" (default state)
+        updateSelectInput(session, "cells_per_target_control", selected = "varying")
+        updateSelectInput(session, "reads_per_cell_control", selected = "varying")
+        updateSelectInput(session, "TPM_threshold_control", selected = "varying")
+        updateSelectInput(session, "minimum_fold_change_control", selected = "varying")
+        updateSelectInput(session, "MOI_control", selected = "varying")
+        updateSelectInput(session, "num_targets_control", selected = "varying")
+        updateSelectInput(session, "gRNAs_per_target_control", selected = "varying")
+        updateSelectInput(session, "non_targeting_gRNAs_control", selected = "varying")
+      }
+    })
+    
     # Business Logic: Show minimizing parameter and control other parameters
     observe({
       target <- input$minimization_target

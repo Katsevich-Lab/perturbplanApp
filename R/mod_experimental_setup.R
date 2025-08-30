@@ -270,6 +270,38 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
         # Update previous mode tracker
         previous_mode(current_mode)
       }
+    })
+    
+    # Track minimization target changes to clear fixed parameter inputs
+    previous_target <- reactiveVal(NULL)
+    
+    observe({
+      config <- design_config()
+      
+      # Check if minimization target has changed - if so, refresh UI state
+      if (!is.null(config) && !is.null(config$minimization_target)) {
+        current_target <- config$minimization_target
+        
+        # If target switched, reset all fixed parameter inputs  
+        if (!is.null(previous_target()) && previous_target() != current_target) {
+          # Reset fixed value inputs when switching minimization targets
+          updateNumericInput(session, "cells_fixed", value = 1000)
+          updateNumericInput(session, "sequenced_reads_fixed", value = 5000)
+          
+          # Hide all fixed parameter sections initially
+          shinyjs::hide("experimental_fixed_params")
+          shinyjs::hide("cells_fixed_div")
+          shinyjs::hide("sequenced_reads_fixed_div")
+        }
+        
+        # Update previous target tracker
+        previous_target(current_target)
+      }
+    })
+    
+    # Original observe block for parameter controls
+    observe({
+      config <- design_config()
       
       if (!is.null(config) && !is.null(config$parameter_controls)) {
         cells_type <- config$parameter_controls$cells_per_target$type
