@@ -96,11 +96,11 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       tagList(
         tags$div(
           style = "margin-bottom: 15px;",
-          create_compact_slider(ns("moi_slider"), "MOI", 1, 50, param_manager$parameters$MOI, 1)
+          create_compact_slider(ns("moi_slider"), "MOI", 1, 20, param_manager$parameters$MOI, 1)
         ),
         tags$div(
           style = "margin-bottom: 15px;",
-          create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, param_manager$parameters$num_targets, 50)
+          create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 12000, param_manager$parameters$num_targets, 50)
         ),
         tags$div(
           style = "margin-bottom: 15px;",
@@ -148,7 +148,7 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 100000, value = param_manager$parameters$reads_per_cell, step = 1000),
         TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 200, value = param_manager$parameters$TPM_threshold, step = 1),
         minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = fc_min, max = fc_max, value = fc_value, step = 0.02),
-        cost_budget = list(id = "cost_budget_slider", label = "Cost Budget ($)", min = 100, max = 1000000, value = param_manager$parameters$cost_budget, step = 500)
+        cost_budget = list(id = "cost_budget_slider", label = "Cost Budget ($)", min = 100, max = 100000, value = param_manager$parameters$cost_budget, step = 500)
       )
       
       # Determine which parameter is being minimized (exclude from Row 2)

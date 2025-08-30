@@ -59,7 +59,7 @@ mod_design_options_ui <- function(id) {
             style = "display: none; margin-top: 10px;",
             tags$h6("Cost Budget ($):", style = "color: #4A6B82; margin-bottom: 5px; font-weight: bold;"),
             numericInput(ns("cost_budget"), NULL, 
-                        value = 10000, min = 100, max = 1000000, step = 500),
+                        value = 10000, min = 100, max = 100000, step = 500),
             
             # Cost parameters (below cost budget)
             tags$div(
@@ -72,7 +72,7 @@ mod_design_options_ui <- function(id) {
                 
                 # Cost per cell column
                 tags$div(
-                  style = "flex: 0.8;",
+                  style = "flex: 1;",
                   tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
                   tags$div(
                     class = "cost-input-container",
@@ -136,7 +136,7 @@ mod_design_options_ui <- function(id) {
               
               # Cost per cell column
               tags$div(
-                style = "flex: 0.8;",
+                style = "flex: 1;",
                 tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
                 tags$div(
                   class = "cost-input-container",
