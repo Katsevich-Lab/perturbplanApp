@@ -405,7 +405,7 @@ create_multi_solution_parameter_plots <- function(results) {
       yaxis = list(title = "Power"),
       legend = list(
         orientation = "h",
-        x = 0.5, y = -0.15,
+        x = 0.5, y = -0.25,
         xanchor = "center",
         bgcolor = "rgba(255,255,255,0.8)",
         bordercolor = "rgba(0,0,0,0.2)",
