@@ -22,9 +22,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   minimization_config <- get_minimization_config(workflow_info$workflow_id)
   
   # Step 2: Extract cost constraint from user (always use config$design_options$cost_budget for workflows 10-11)
-  cost_constraint <- config$design_options$cost_budget %||% 
-                     config$cost_budget %||% 
-                     10000
+  cost_constraint <- config$design_options$cost_budget
   
   
   # Step 3: Get comprehensive parameters from UI using existing mapping function
@@ -38,16 +36,12 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   # Step 5: Set fixed variable based on minimization type
   if (minimization_config$variable == "TPM_threshold") {
     # TPM minimization: fix fold change, let TPM vary
-    fc_value <- config$effect_sizes$minimum_fold_change_fixed %||% 
-               config$design_options$parameter_controls$minimum_fold_change$fixed_value %||% 
-               0.5
+    fc_value <- config$effect_sizes$minimum_fold_change_fixed
     perturbplan_params$fixed_variable$minimum_fold_change <- fc_value
     perturbplan_params$fixed_variable$TPM_threshold <- NULL
   } else {
     # FC minimization: fix TPM, let fold change vary
-    TPM_value <- config$analysis_choices$TPM_threshold_fixed %||%
-                config$design_options$parameter_controls$TPM_threshold$fixed_value %||%
-                10
+    TPM_value <- config$analysis_choices$TPM_threshold_fixed
     perturbplan_params$fixed_variable$TPM_threshold <- as.numeric(TPM_value)
     perturbplan_params$fixed_variable$minimum_fold_change <- NULL
   }
@@ -109,7 +103,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,  # Map overall_power to achieved_power
     optimal_minimized_param = optimal_point[[minimization_config$variable]],  # The minimized parameter value
-    mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72  # Use user input or standard default
+    mapping_efficiency = config$experimental_setup$mapping_efficiency
   )
   
   # Add the minimizing parameter to the optimal design

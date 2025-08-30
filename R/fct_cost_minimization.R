@@ -30,15 +30,11 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
   perturbplan_params$minimizing_variable <- "cost"
   
   # Always ensure minimum_fold_change is fixed for cost minimization
-  fc_value <- config$effect_sizes$minimum_fold_change_fixed %||% 
-             config$design_options$parameter_controls$minimum_fold_change$fixed_value %||% 
-             0.5  # Default for downregulation
+  fc_value <- config$effect_sizes$minimum_fold_change_fixed
   perturbplan_params$fixed_variable$minimum_fold_change <- fc_value
   
   # Always ensure TPM_threshold is fixed  
-  TPM_value <- config$analysis_choices$TPM_threshold_fixed %||%
-              config$design_options$parameter_controls$TPM_threshold$fixed_value %||%
-              10  # Default TPM threshold
+  TPM_value <- config$analysis_choices$TPM_threshold_fixed
   perturbplan_params$fixed_variable$TPM_threshold <- as.numeric(TPM_value)
   
   # Remove cells/reads from fixed_variable so they can vary for cost optimization
