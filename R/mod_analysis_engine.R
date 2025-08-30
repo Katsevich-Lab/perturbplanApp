@@ -65,17 +65,15 @@ mod_analysis_engine_server <- function(id, workflow_config) {
           }
         )
         
-        # If any design options changed, clear cached results
+        # If any design options changed, clear cached results and stay in transition until user acts
         if (!is.null(previous_design_options()) && !identical(previous_design_options(), current_design)) {
-          in_mode_transition(TRUE)       # Mark as in transition
+          in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
           previous_config_object(NULL)   # Reset configuration object
           last_plan_count(0)             # Reset plan tracking
           # Note: We don't clear parameter controls here - that would cause UI issues
-          # Instead, the early validation (lines 85-88) will return NULL during transitions
-        } else {
-          in_mode_transition(FALSE)      # Not in transition
+          # Note: We don't set in_mode_transition(FALSE) here - user must explicitly trigger analysis
         }
         
         previous_design_options(current_design)
@@ -138,6 +136,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         previous_config_object(config)
         last_plan_count(current_plan_count)
         cached_results(NULL)  # Clear cache for new plan
+        in_mode_transition(FALSE)  # Exit transition mode - user explicitly triggered analysis
       } else {
         # Check if sidebar inputs changed since last plan
         if (!is.null(previous_hash) && current_config_hash != previous_hash) {
@@ -149,6 +148,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
             cached_results(NULL)
             previous_config_hash(current_config_hash)  # Update hash to prevent repeated computation
             previous_config_object(config)             # Update stored config
+            in_mode_transition(FALSE)  # Exit transition mode - live parameters triggered analysis
           } else {
             # Non-live parameter changed but no new plan click - keep showing old results
             if (!is.null(cached_results())) {
