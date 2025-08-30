@@ -403,26 +403,25 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           return(NULL)
         }
         
-        # If we have multi-solution data (pinned solutions exist), generate multi-solution plot
-        # ONLY FOR SINGLE PARAMETER OPTIMIZATION WORKFLOWS
-        if (is.list(unified_data) && "solutions" %in% names(unified_data)) {
-          # Create enhanced results with unified plot data for multi-solution rendering
-          enhanced_results <- current_results
-          enhanced_results$plot_data <- unified_data
+        # Check if this is a single parameter optimization workflow
+        if (!is.null(current_results$workflow_info)) {
+          workflow_id <- current_results$workflow_info$workflow_id
           
-          # Check if this is a single parameter optimization workflow
-          if (!is.null(current_results$workflow_info)) {
-            workflow_id <- current_results$workflow_info$workflow_id
-            
-            # Only handle multi-solution for single parameter optimization workflows
-            single_param_workflows <- c(
-              "power_single_cells_per_target",
-              "power_single_reads_per_cell", 
-              "power_single_TPM_threshold",
-              "power_single_minimum_fold_change"
-            )
-            
-            if (workflow_id %in% single_param_workflows) {
+          # Only handle Pin functionality for single parameter optimization workflows
+          single_param_workflows <- c(
+            "power_single_cells_per_target",
+            "power_single_reads_per_cell", 
+            "power_single_TPM_threshold",
+            "power_single_minimum_fold_change"
+          )
+          
+          if (workflow_id %in% single_param_workflows) {
+            # If we have multi-solution data (pinned solutions exist), generate multi-solution plot
+            if (is.list(unified_data) && "solutions" %in% names(unified_data)) {
+              # Create enhanced results with unified plot data for multi-solution rendering
+              enhanced_results <- current_results
+              enhanced_results$plot_data <- unified_data
+              
               multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
               
               # Return the interactive plot
@@ -430,6 +429,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
                 return(multi_plots$plotly$main_plot)
               }
             }
+            # For single solution (no pins yet), still use standard plot_objects
           }
         }
         
