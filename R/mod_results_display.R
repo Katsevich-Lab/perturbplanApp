@@ -306,6 +306,57 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       })
     }
     
+    # ========================================================================
+    # UNIFIED PLOT DATA STRUCTURE
+    # ========================================================================
+    
+    # Create unified plot data combining pinned + current solutions
+    unified_plot_data <- reactive({
+      current_results <- analysis_results()
+      
+      # If no current results, return NULL
+      if (is.null(current_results) || is.null(current_results$plot_data)) {
+        return(NULL)
+      }
+      
+      # If no pinned solutions, return current data as-is (single solution)
+      if (length(pinned_solutions$solutions) == 0) {
+        return(current_results$plot_data)
+      }
+      
+      # Create multi-solution structure for pinned + current
+      multi_data <- list(
+        solutions = list(),
+        color_palette = c("#2E86AB", "#A23B72", "#F18F01", "#4CAF50", "#E91E63", 
+                         "#FF9800", "#9C27B0", "#00BCD4", "#607D8B", "#C73E1D")
+      )
+      
+      # Add pinned solutions with solid styling
+      for (i in seq_along(pinned_solutions$solutions)) {
+        pinned <- pinned_solutions$solutions[[i]]
+        color_index <- ((pinned$index - 1) %% length(multi_data$color_palette)) + 1
+        
+        multi_data$solutions[[i]] <- list(
+          id = pinned$index,
+          color = multi_data$color_palette[color_index],
+          data = pinned$plot_data,
+          label = paste("Solution", pinned$index),
+          style = "solid"
+        )
+      }
+      
+      # Add current pending solution with dashed styling
+      multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
+        id = "pending",
+        color = "#FF6B6B",  # Distinct pending color (red-ish)
+        data = current_results$plot_data,
+        label = "Current",
+        style = "dashed"
+      )
+      
+      return(multi_data)
+    })
+    
     # Error message display
     output$error_message <- renderUI({
       error_msg <- NULL
@@ -342,16 +393,51 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     output$main_plot <- renderPlotly({
       tryCatch({
-        req(plot_objects())
+        req(analysis_results())
         
+        # Get unified plot data (contains pinned + current solutions)
+        unified_data <- unified_plot_data()
+        current_results <- analysis_results()
+        
+        if (is.null(unified_data) || is.null(current_results)) {
+          return(NULL)
+        }
+        
+        # If we have multi-solution data (pinned solutions exist), generate multi-solution plot
+        # ONLY FOR SINGLE PARAMETER OPTIMIZATION WORKFLOWS
+        if (is.list(unified_data) && "solutions" %in% names(unified_data)) {
+          # Create enhanced results with unified plot data for multi-solution rendering
+          enhanced_results <- current_results
+          enhanced_results$plot_data <- unified_data
+          
+          # Check if this is a single parameter optimization workflow
+          if (!is.null(current_results$workflow_info)) {
+            workflow_id <- current_results$workflow_info$workflow_id
+            
+            # Only handle multi-solution for single parameter optimization workflows
+            single_param_workflows <- c(
+              "power_single_cells_per_target",
+              "power_single_reads_per_cell", 
+              "power_single_TPM_threshold",
+              "power_single_minimum_fold_change"
+            )
+            
+            if (workflow_id %in% single_param_workflows) {
+              multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
+              
+              # Return the interactive plot
+              if (!is.null(multi_plots$plotly$main_plot)) {
+                return(multi_plots$plotly$main_plot)
+              }
+            }
+          }
+        }
+        
+        # Fallback: use standard plot_objects for single solution
         plots <- plot_objects()
         
         if (!is.null(plots$error)) {
           return(NULL)
-        }
-        
-        # Return the interactive plot - handle different data structures
-        if (!is.null(plots)) {
         }
         
         # Check for direct interactive_plot (cost minimization)

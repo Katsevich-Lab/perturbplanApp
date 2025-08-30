@@ -294,13 +294,20 @@ create_multi_solution_parameter_plots <- function(results) {
       "Power: ", scales::percent(solution_data$power, accuracy = 0.1)
     )
     
+    # Determine line style (solid for pinned, dashed for pending)
+    line_type <- if (!is.null(solution$style) && solution$style == "dashed") "dashed" else "solid"
+    line_width <- if (!is.null(solution$style) && solution$style == "dashed") 1.5 else 1.2
+    line_alpha <- if (!is.null(solution$style) && solution$style == "dashed") 0.8 else 1.0
+    
     # Add line to ggplot
     p <- p + 
       geom_line(
         data = solution_data, 
         aes(x = .data$parameter_value, y = .data$power),
         color = solution_color,
-        size = 1.2
+        linetype = line_type,
+        size = line_width,
+        alpha = line_alpha
       ) +
       geom_point(
         data = solution_data,
@@ -310,7 +317,10 @@ create_multi_solution_parameter_plots <- function(results) {
         alpha = 0.6
       )
     
-    # Add line to plotly
+    # Add line to plotly with appropriate dash style
+    plotly_dash <- if (line_type == "dashed") "dash" else "solid"
+    plotly_width <- if (line_type == "dashed") 4 else 3
+    
     p_interactive <- p_interactive %>%
       add_lines(
         data = solution_data,
@@ -318,7 +328,7 @@ create_multi_solution_parameter_plots <- function(results) {
         y = ~power,
         color = I(solution_color),
         name = solution_label,
-        line = list(width = 3),
+        line = list(width = plotly_width, dash = plotly_dash),
         text = ~tooltip_text,
         hovertemplate = "%{text}<extra></extra>",
         showlegend = TRUE
@@ -654,14 +664,19 @@ create_multi_solution_cost_plots <- function(results) {
       "Power: ", scales::percent(solution_data$power, accuracy = 0.1)
     )
     
+    # Determine marker style (different opacity for pending vs pinned)
+    point_alpha <- if (!is.null(solution$style) && solution$style == "dashed") 0.5 else 0.7
+    point_size <- if (!is.null(solution$style) && solution$style == "dashed") 2.5 else 2
+    marker_size <- if (!is.null(solution$style) && solution$style == "dashed") 10 else 8
+    
     # Add scatter points to ggplot
     p <- p + 
       geom_point(
         data = solution_data, 
         aes(x = .data$cost, y = .data$power),
         color = solution_color,
-        size = 2,
-        alpha = 0.7
+        size = point_size,
+        alpha = point_alpha
       )
     
     # Add scatter points to plotly
@@ -672,7 +687,7 @@ create_multi_solution_cost_plots <- function(results) {
         y = ~power,
         color = I(solution_color),
         name = solution_label,
-        marker = list(size = 8),
+        marker = list(size = marker_size, opacity = point_alpha),
         text = ~tooltip_text,
         hovertemplate = "%{text}<extra></extra>",
         showlegend = TRUE

@@ -35,22 +35,8 @@ mod_parameter_sliders_ui <- function(id) {
         )
       ),
       
-      # Pin button section (full width below sliders)
-      tags$div(
-        style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px;",
-        actionButton(
-          ns("pin_solution"),
-          "Pin Current Solution",
-          class = "btn btn-success btn-sm",
-          style = "width: 80%; margin-right: 10px;"
-        ),
-        actionButton(
-          ns("clear_pins"),
-          "Clear All",
-          class = "btn btn-outline-secondary btn-sm",
-          style = "width: 15%; font-size: 11px;"
-        )
-      )
+      # Pin button section (conditionally rendered based on workflow)
+      uiOutput(ns("pin_buttons_section"))
     )
   )
 }
@@ -245,6 +231,43 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
           )
         })
       )
+    })
+    
+    # Generate Pin buttons section conditionally for single parameter workflows only
+    output$pin_buttons_section <- renderUI({
+      workflow <- workflow_info()
+      
+      if (is.null(workflow) || is.null(workflow$workflow_id)) {
+        return(NULL)
+      }
+      
+      # Only show Pin buttons for single parameter optimization workflows
+      single_param_workflows <- c(
+        "power_single_cells_per_target",
+        "power_single_reads_per_cell", 
+        "power_single_TPM_threshold",
+        "power_single_minimum_fold_change"
+      )
+      
+      if (workflow$workflow_id %in% single_param_workflows) {
+        tags$div(
+          style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px;",
+          actionButton(
+            ns("pin_solution"),
+            "Pin Current Solution",
+            class = "btn btn-success btn-sm",
+            style = "width: 80%; margin-right: 10px;"
+          ),
+          actionButton(
+            ns("clear_pins"),
+            "Clear All",
+            class = "btn btn-outline-secondary btn-sm",
+            style = "width: 15%; font-size: 11px;"
+          )
+        )
+      } else {
+        return(NULL)
+      }
     })
     
     # ========================================================================
