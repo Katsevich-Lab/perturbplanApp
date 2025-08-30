@@ -723,7 +723,7 @@ create_solutions_table <- function(results, plots, user_config = reactive(NULL),
   solution_row <- extract_solution_data(optimal, workflow_info, user_config, param_manager, index = 1)
   
   # Create table structure
-  create_solutions_table_ui(list(solution_row))
+  create_solutions_table_ui(list(solution_row), workflow_info)
 }
 
 #' Enhanced solutions table with pinned solutions support
@@ -784,7 +784,7 @@ create_enhanced_solutions_table <- function(results, plots, user_config = reacti
   }
   
   # Create enhanced table structure
-  create_enhanced_solutions_table_ui(all_solution_rows)
+  create_enhanced_solutions_table_ui(all_solution_rows, workflow_info)
 }
 
 #' Extract solution data for table row
@@ -807,32 +807,63 @@ extract_solution_data <- function(optimal, workflow_info, user_config = reactive
   )
 }
 
+#' Get optimal design column name based on minimizing parameter
+#'
+#' @param workflow_info Workflow information containing minimizing parameter
+#' @return Column title string
+#' @noRd
+get_optimal_design_column_name <- function(workflow_info) {
+  if (is.null(workflow_info) || is.null(workflow_info$minimizing_parameter)) {
+    return("Optimal Design")
+  }
+  
+  # Map minimizing parameters to readable column names
+  param_name_mapping <- list(
+    "cells_per_target" = "Optimal Cells per Target",
+    "reads_per_cell" = "Optimal Reads per Cell", 
+    "sequenced_reads_per_cell" = "Optimal Reads per Cell",
+    "TPM_threshold" = "Optimal TPM Threshold",
+    "minimum_fold_change" = "Optimal Fold Change",
+    "cost" = "Optimal Cost"
+  )
+  
+  column_name <- param_name_mapping[[workflow_info$minimizing_parameter]]
+  if (is.null(column_name)) {
+    # Fallback for unknown parameters
+    return(paste("Optimal", tools::toTitleCase(gsub("_", " ", workflow_info$minimizing_parameter))))
+  }
+  
+  return(column_name)
+}
+
 #' Create the actual table UI
 #'
 #' @param solution_rows List of solution row data
+#' @param workflow_info Workflow information containing minimizing parameter
 #' @return Shiny UI tags
 #' @noRd
-create_solutions_table_ui <- function(solution_rows) {
+create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
   # Determine which columns to show based on whether they have content
   visible_columns <- determine_visible_columns(solution_rows)
   
   # Create dynamic table header based on visible columns
+  optimal_design_column_name <- get_optimal_design_column_name(workflow_info)
   header_cells <- list(
-    tags$th("Index", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th("Achieved Power", style = "width: 12%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th("Optimal Design", style = "width: 25%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    tags$th("Solution ID", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
+    tags$th("Power", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
+    tags$th(optimal_design_column_name, style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
   )
   
   # Add conditional parameter columns
   if (visible_columns$experimental_choices) {
     header_cells <- append(header_cells, list(
-      tags$th("Experimental Parameters", style = "width: 20%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("Experimental Parameters", style = "width: 35%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
   if (visible_columns$analysis_choices) {
     header_cells <- append(header_cells, list(
-      tags$th("TPM threshold", style = "width: 18%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("TPM threshold", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
@@ -850,7 +881,7 @@ create_solutions_table_ui <- function(solution_rows) {
       # Index column
       tags$td(
         style = "text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
-        tags$span(row_data$index, style = "font-size: 18px; font-weight: bold; color: #2E86AB;")
+        tags$span(row_data$index, style = "font-size: 18px; font-weight: bold;")
       ),
       
       # Achieved Power column
@@ -858,7 +889,7 @@ create_solutions_table_ui <- function(solution_rows) {
         style = "text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
         if (!is.null(row_data$achieved_power)) {
           tags$span(paste0(round(row_data$achieved_power * 100, 1), "%"), 
-                   style = "font-size: 16px; font-weight: bold; color: #28A745;")
+                   style = "font-size: 16px; font-weight: bold;")
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
@@ -872,11 +903,11 @@ create_solutions_table_ui <- function(solution_rows) {
             # Multi-line content - render as HTML
             tags$div(
               HTML(row_data$optimal_design$value), 
-              style = "font-size: 13px; font-weight: bold; color: #2E86AB; line-height: 1.4;"
+              style = "font-size: 13px; font-weight: bold; line-height: 1.4;"
             )
           } else {
             # Single line content
-            tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold; color: #2E86AB;")
+            tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold;")
           }
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
@@ -934,29 +965,31 @@ create_solutions_table_ui <- function(solution_rows) {
 #' (highlighted background with "Current" styling).
 #'
 #' @param solution_rows List of solution row data (with is_pinned property)
+#' @param workflow_info Workflow information containing minimizing parameter
 #' @return Shiny UI tags
 #' @noRd
-create_enhanced_solutions_table_ui <- function(solution_rows) {
+create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
   # Determine which columns to show based on whether they have content
   visible_columns <- determine_visible_columns(solution_rows)
   
   # Create dynamic table header based on visible columns
+  optimal_design_column_name <- get_optimal_design_column_name(workflow_info)
   header_cells <- list(
-    tags$th("Index", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th("Achieved Power", style = "width: 12%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
-    tags$th("Optimal Design", style = "width: 25%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+    tags$th("Solution ID", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
+    tags$th("Power", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa;"),
+    tags$th(optimal_design_column_name, style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
   )
   
   # Add conditional parameter columns
   if (visible_columns$experimental_choices) {
     header_cells <- append(header_cells, list(
-      tags$th("Experimental Parameters", style = "width: 20%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("Experimental Parameters", style = "width: 35%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
   if (visible_columns$analysis_choices) {
     header_cells <- append(header_cells, list(
-      tags$th("TPM threshold", style = "width: 18%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
+      tags$th("TPM threshold", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa;")
     ))
   }
   
@@ -982,9 +1015,9 @@ create_enhanced_solutions_table_ui <- function(solution_rows) {
       tags$td(
         style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
         if (!is.null(row_data$is_pinned) && !row_data$is_pinned) {
-          tags$span(row_data$index, style = "font-size: 18px; font-weight: bold; color: #856404;")  # Darker color for current
+          tags$span(row_data$index, style = "font-size: 18px; font-weight: bold;")  # Current solution
         } else {
-          tags$span(row_data$index, style = "font-size: 18px; font-weight: bold; color: #2E86AB;")  # Blue for pinned
+          tags$span(row_data$index, style = "font-size: 18px; font-weight: bold;")  # Pinned solution
         }
       ),
       
@@ -993,7 +1026,7 @@ create_enhanced_solutions_table_ui <- function(solution_rows) {
         style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
         if (!is.null(row_data$achieved_power)) {
           tags$span(paste0(round(row_data$achieved_power * 100, 1), "%"), 
-                   style = "font-size: 16px; font-weight: bold; color: #28A745;")
+                   style = "font-size: 16px; font-weight: bold;")
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
@@ -1007,11 +1040,11 @@ create_enhanced_solutions_table_ui <- function(solution_rows) {
             # Multi-line content - render as HTML
             tags$div(
               HTML(row_data$optimal_design$value), 
-              style = "font-size: 13px; font-weight: bold; color: #2E86AB; line-height: 1.4;"
+              style = "font-size: 13px; font-weight: bold; line-height: 1.4;"
             )
           } else {
             # Single line content
-            tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold; color: #2E86AB;")
+            tags$span(row_data$optimal_design$value, style = "font-size: 15px; font-weight: bold;")
           }
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
@@ -1111,6 +1144,22 @@ create_parameter_section_display <- function(params, section_type = "default") {
           )
         }
       })
+    )
+  } else if (section_type == "Experimental") {
+    # Special compact format for Experimental section - show all parameters in one row
+    param_strings <- lapply(names(params), function(param_name) {
+      if (!is.null(params[[param_name]])) {
+        paste0(param_name, ": ", params[[param_name]])
+      }
+    })
+    param_strings <- param_strings[!sapply(param_strings, is.null)]
+    
+    tags$div(
+      style = "line-height: 1.3;",
+      tags$span(
+        paste(param_strings, collapse = " • "), 
+        style = "color: #495057; font-weight: 500; font-size: 13px;"
+      )
     )
   } else {
     # Default format for other sections - show parameter name and value

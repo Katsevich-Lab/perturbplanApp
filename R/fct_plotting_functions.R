@@ -251,7 +251,11 @@ create_multi_solution_parameter_plots <- function(results) {
   
   # Add log scale for TPM_threshold parameter
   if (varying_param == "TPM_threshold") {
-    p <- p + scale_x_log10(labels = scales::comma_format())
+    p <- p + scale_x_log10(
+      breaks = c(3, 10, 30, 100),
+      labels = c("3", "10", "30", "100"),
+      minor_breaks = NULL
+    )
     param_label <- "TPM Threshold"
   }
   
@@ -384,7 +388,13 @@ create_multi_solution_parameter_plots <- function(results) {
   # Apply log scale to plotly if needed
   if (varying_param == "TPM_threshold") {
     p_interactive <- p_interactive %>%
-      layout(xaxis = list(type = "log", title = param_label))
+      layout(xaxis = list(
+        type = "log", 
+        title = param_label,
+        tickvals = c(3, 10, 30, 100),
+        ticktext = c("3", "10", "30", "100"),
+        minor = list(ticks = "", ticklen = 0, showgrid = FALSE)
+      ))
   } else {
     p_interactive <- p_interactive %>%
       layout(xaxis = list(title = param_label))
