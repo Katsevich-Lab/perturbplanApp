@@ -287,7 +287,7 @@ create_multi_solution_parameter_plots <- function(results) {
     # Create tooltip text for this solution
     formatted_values <- case_when(
       varying_param == "TPM_threshold" ~ scales::comma(round(solution_data$parameter_value)),
-      varying_param %in% c("cells_per_target", "sequenced_reads_per_cell") ~ scales::comma(solution_data$parameter_value),
+      varying_param %in% c("cells_per_target", "sequenced_reads_per_cell", "reads_per_cell") ~ scales::comma(solution_data$parameter_value),
       varying_param == "minimum_fold_change" ~ as.character(round(solution_data$parameter_value, 2)),
       TRUE ~ as.character(solution_data$parameter_value)
     )
@@ -334,7 +334,7 @@ create_multi_solution_parameter_plots <- function(results) {
         name = solution_label,
         line = list(width = plotly_width, dash = plotly_dash),
         text = ~tooltip_text,
-        hovertemplate = "%{text}<extra></extra>",
+        hoverinfo = "text",
         showlegend = TRUE
       )
     
@@ -355,7 +355,7 @@ create_multi_solution_parameter_plots <- function(results) {
           "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
         
-        # Add optimal point to ggplot
+        # Add optimal point to ggplot (red circle like cost minimization)
         p <- p + 
           geom_point(
             data = data.frame(
@@ -363,26 +363,26 @@ create_multi_solution_parameter_plots <- function(results) {
               y = optimal_design$achieved_power
             ),
             aes(x = x, y = y),
-            color = solution_color,
+            color = "red",
             size = 4,
-            shape = 18,  # Diamond shape for optimal points
+            shape = 19,  # Circle shape to match cost minimization
             stroke = 1.5
           )
         
-        # Add optimal point to plotly
+        # Add optimal point to plotly (red circle like cost minimization)
         p_interactive <- p_interactive %>%
           add_markers(
             x = optimal_design[[varying_param]],
             y = optimal_design$achieved_power,
-            color = I(solution_color),
-            name = paste(solution_label, "Optimal"),
+            color = I("red"),
+            name = paste("Optimal:", solution_label),
             marker = list(
               size = 12,
-              symbol = "diamond",
+              symbol = "circle",
               line = list(width = 2, color = "white")
             ),
             text = optimal_hover_text,
-            hovertemplate = "%{text}<extra></extra>",
+            hoverinfo = "text",
             showlegend = FALSE  # Don't show optimal points in legend to reduce clutter
           )
       }
