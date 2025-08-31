@@ -224,11 +224,19 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         generate_real_analysis(config, workflow_info)
       }, error = function(e) {
         # Return error object instead of crashing
+        # Provide more context for real-time analysis errors
+        error_prefix <- if (is_real_time_analysis) {
+          "Real-time Analysis Error:"
+        } else {
+          "Analysis Error:"
+        }
+        
         list(
-          error = paste("Analysis Error:", e$message),
+          error = paste(error_prefix, e$message),
           metadata = list(
             analysis_mode = get_analysis_mode(),
             workflow_type = workflow_info$workflow_id %||% "unknown",
+            is_real_time = is_real_time_analysis,
             timestamp = Sys.time(),
             error_details = as.character(e)
           )

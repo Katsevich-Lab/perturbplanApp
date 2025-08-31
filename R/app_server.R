@@ -235,8 +235,8 @@ app_server <- function(input, output, session) {
       # Notify user only if we had a previous valid design problem
       if (!is.null(old_signature)) {
         showNotification(
-          "Design problem changed. Click 'Plan' to start new optimization.", 
-          duration = 4, 
+          "New workflow detected. Click 'Plan' to enable real-time analysis.", 
+          duration = 3, 
           type = "message"
         )
       }

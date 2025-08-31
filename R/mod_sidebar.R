@@ -111,8 +111,8 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
             plan_state$current_design_signature <- current_signature
             
             showNotification(
-              "Optimization mode activated! Sliders enabled for real-time analysis.", 
-              duration = 4, 
+              "Real-time mode activated! Drag sliders to explore parameters instantly.", 
+              duration = 3, 
               type = "message"
             )
           } else {

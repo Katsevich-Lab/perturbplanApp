@@ -268,18 +268,18 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       
       if (workflow$workflow_id %in% single_param_workflows) {
         tags$div(
-          style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px;",
+          style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px; display: flex; gap: 10px; justify-content: center;",
           actionButton(
             ns("pin_solution"),
-            "Pin Current Solution",
+            "Pin Solution",
             class = "btn btn-success btn-sm",
-            style = "width: 80%; margin-right: 10px;"
+            style = "flex: 1; max-width: 140px;"
           ),
           actionButton(
             ns("clear_pins"),
             "Clear All",
             class = "btn btn-outline-secondary btn-sm",
-            style = "width: 15%; font-size: 11px;"
+            style = "flex: 1; max-width: 90px; font-size: 12px;"
           )
         )
       } else {
@@ -364,8 +364,8 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     # Trigger real-time analysis on debounced slider changes
     observeEvent(slider_changes(), {
       if (!is.null(plan_state) && plan_state$real_time_enabled && !is.null(param_manager$trigger_real_time_analysis)) {
-        # Show brief loading notification
-        showNotification("Updating analysis...", duration = 1, type = "message")
+        # Show subtle loading notification (shorter duration to reduce noise)
+        showNotification("Updating...", duration = 0.5, type = "message")
         
         # Trigger analysis through parameter manager
         param_manager$trigger_real_time_analysis()
