@@ -1451,10 +1451,15 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
     }
     
     # Determine line style based on solution status (solid for pinned, dashed for current)
-    base_line_alpha <- if (!is.null(solution$style) && solution$style == "dashed") 0.8 else 1.0
-    base_line_width <- if (!is.null(solution$style) && solution$style == "dashed") 1.0 else 1.2
+    is_current_solution <- !is.null(solution$style) && solution$style == "dashed"
+    base_line_alpha <- if (is_current_solution) 0.8 else 1.0
+    base_line_width <- if (is_current_solution) 1.0 else 1.2
     
-    # 1. EQUI-POWER CURVE (solid line, same color as solution)
+    # Set line types: Current solution uses dashed for BOTH curves
+    equi_power_linetype <- if (is_current_solution) "dashed" else "solid"
+    equi_cost_linetype <- "dashed"  # Always dashed for equi-cost curves
+    
+    # 1. EQUI-POWER CURVE (solid for pinned, dashed for current)
     if (nrow(equi_power_data) > 0) {
       tryCatch({
         p <- p + geom_smooth(
@@ -1463,12 +1468,13 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
           method = "loess",
           se = FALSE,
           color = solution_color,
-          linetype = "solid",
+          linetype = equi_power_linetype,
           size = base_line_width,
           alpha = base_line_alpha
         )
         
         # Add equi-power curve to plotly (show in legend)
+        plotly_equi_power_dash <- if (is_current_solution) "dash" else "solid"
         p_interactive <- p_interactive %>%
           add_lines(
             data = equi_power_data,
@@ -1476,7 +1482,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
             y = ~sequenced_reads_per_cell,
             color = I(solution_color),
             name = solution_label,
-            line = list(width = 3, dash = "solid"),
+            line = list(width = 3, dash = plotly_equi_power_dash),
             text = ~paste(solution_label, "Equi-power<br>",
                          "Cells/target:", scales::comma(cells_per_target), "<br>",
                          "Reads/cell:", scales::comma(sequenced_reads_per_cell), "<br>",
@@ -1491,7 +1497,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
       })
     }
     
-    # 2. EQUI-COST CURVE (dashed line, same color as solution)
+    # 2. EQUI-COST CURVE (dashed for pinned, dotdash for current)
     if (nrow(equi_cost_data) > 0) {
       tryCatch({
         p <- p + geom_smooth(
@@ -1500,7 +1506,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
           method = "loess",
           se = FALSE,
           color = solution_color,
-          linetype = "dashed",
+          linetype = equi_cost_linetype,
           size = base_line_width * 0.9,  # Slightly thinner for distinction
           alpha = base_line_alpha
         )
