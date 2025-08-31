@@ -715,14 +715,24 @@ create_multi_solution_cost_plots <- function(results) {
     if (!is.null(solution$optimal_point)) {
       optimal_design <- solution$optimal_point
       
-      if (!is.null(optimal_design$cells_per_target) && !is.na(optimal_design$cells_per_target) &&
-          !is.null(optimal_design$sequenced_reads_per_cell) && !is.na(optimal_design$sequenced_reads_per_cell)) {
+      # Get the minimizing parameter from workflow info
+      minimizing_param <- workflow_info$minimizing_parameter
+      
+      if (!is.null(optimal_design[[minimizing_param]]) && !is.na(optimal_design[[minimizing_param]]) &&
+          !is.null(optimal_design$achieved_power) && !is.na(optimal_design$achieved_power)) {
+        
+        # Format the parameter value for display
+        param_label <- format_parameter_name(minimizing_param)
+        param_value_formatted <- case_when(
+          minimizing_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[minimizing_param]])),
+          minimizing_param %in% c("cells_per_target", "sequenced_reads_per_cell") ~ scales::comma(optimal_design[[minimizing_param]]),
+          minimizing_param == "minimum_fold_change" ~ as.character(round(optimal_design[[minimizing_param]], 2)),
+          TRUE ~ as.character(optimal_design[[minimizing_param]])
+        )
         
         optimal_hover_text <- paste0(
           solution_label, " (Optimal)<br>",
-          "Cells: ", scales::comma(optimal_design$cells_per_target), "<br>",
-          "Reads: ", scales::comma(optimal_design$sequenced_reads_per_cell), "<br>",
-          "Cost: $", scales::comma(optimal_design$total_cost), "<br>",
+          param_label, ": ", param_value_formatted, "<br>",
           "Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
         
@@ -730,8 +740,8 @@ create_multi_solution_cost_plots <- function(results) {
         p <- p + 
           geom_point(
             data = data.frame(
-              x = optimal_design$cells_per_target, 
-              y = optimal_design$sequenced_reads_per_cell
+              x = optimal_design[[minimizing_param]], 
+              y = optimal_design$achieved_power
             ),
             aes(x = x, y = y),
             color = "red",
@@ -743,8 +753,8 @@ create_multi_solution_cost_plots <- function(results) {
         # Add optimal point to plotly (red circle like cost minimization)
         p_interactive <- p_interactive %>%
           add_markers(
-            x = optimal_design$cells_per_target,
-            y = optimal_design$sequenced_reads_per_cell,
+            x = optimal_design[[minimizing_param]],
+            y = optimal_design$achieved_power,
             color = I("red"),
             name = paste("Optimal:", solution_label),
             marker = list(
