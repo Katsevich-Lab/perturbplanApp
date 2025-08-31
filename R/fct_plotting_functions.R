@@ -829,18 +829,60 @@ create_multi_curve_minimization_plots <- function(results) {
   if (minimizing_variable == "TPM_threshold") {
     p <- p + scale_x_log10(
       labels = scales::comma_format(),
-      breaks = c(3, 10, 30, 100, 300),
+      breaks = c(3, 10, 30, 100),  # Match other TPM plots
       minor_breaks = NULL
     )
   }
   
   # Apply Y-axis log scaling for cost
   p <- p + scale_y_log10(
-    labels = scales::dollar_format()
+    labels = scales::dollar_format(),
+    minor_breaks = NULL  # Remove minor gridlines
   )
+  
+  # Extract cost budgets from solutions for budget constraint lines
+  cost_budgets <- unique(sapply(solutions_data, function(s) {
+    if (!is.null(s$cost_budget) && !is.na(s$cost_budget)) {
+      return(s$cost_budget)
+    }
+    return(NULL)
+  }))
+  cost_budgets <- cost_budgets[!sapply(cost_budgets, is.null)]
+  
+  # Add horizontal cost budget constraint lines
+  if (length(cost_budgets) > 0) {
+    for (budget in cost_budgets) {
+      p <- p + geom_hline(
+        yintercept = budget, 
+        linetype = "dashed", 
+        color = "orange", 
+        alpha = 0.7,
+        size = 1
+      )
+    }
+  }
   
   # Create plotly object for interactive features
   p_interactive <- plot_ly()
+  
+  # Add horizontal cost budget constraint lines to plotly
+  if (length(cost_budgets) > 0) {
+    # Get TPM range from all solutions for line span
+    all_tpm_values <- unlist(lapply(solutions_data, function(s) s$data[[minimizing_variable]]))
+    tpm_range <- range(all_tpm_values, na.rm = TRUE)
+    
+    for (budget in cost_budgets) {
+      p_interactive <- p_interactive %>%
+        add_lines(
+          x = tpm_range,
+          y = rep(budget, 2),
+          line = list(dash = "dash", color = "orange", width = 2),
+          name = paste("Budget: $", scales::comma(budget)),
+          showlegend = TRUE,
+          hovertemplate = paste("Cost Budget: $", scales::comma(budget), "<extra></extra>")
+        )
+    }
+  }
   
   # Add each solution as a separate curve
   for (i in seq_along(solutions_data)) {
@@ -978,11 +1020,23 @@ create_multi_curve_minimization_plots <- function(results) {
       ),
       xaxis = list(
         title = if (minimizing_variable == "TPM_threshold") "TPM Threshold" else "Fold Change",
-        type = if (minimizing_variable == "TPM_threshold") "log" else "linear"
+        type = if (minimizing_variable == "TPM_threshold") "log" else "linear",
+        showgrid = TRUE,
+        gridcolor = "rgba(200,200,200,0.3)",
+        showline = TRUE,
+        linecolor = "rgb(204, 204, 204)",
+        linewidth = 1,
+        tickvals = if (minimizing_variable == "TPM_threshold") c(3, 10, 30, 100) else NULL,
+        ticktext = if (minimizing_variable == "TPM_threshold") c("3", "10", "30", "100") else NULL
       ),
       yaxis = list(
         title = "Optimal Cost ($)",
-        type = "log"
+        type = "log",
+        showgrid = TRUE,
+        gridcolor = "rgba(200,200,200,0.3)",
+        showline = TRUE,
+        linecolor = "rgb(204, 204, 204)",
+        linewidth = 1
       ),
       legend = list(
         orientation = "v",
