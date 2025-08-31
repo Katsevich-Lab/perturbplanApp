@@ -1036,7 +1036,8 @@ create_multi_curve_minimization_plots <- function(results) {
         gridcolor = "rgba(200,200,200,0.3)",
         showline = TRUE,
         linecolor = "rgb(204, 204, 204)",
-        linewidth = 1
+        linewidth = 1,
+        minorgrid = list(count = 0)  # Remove minor gridlines
       ),
       legend = list(
         orientation = "h",
