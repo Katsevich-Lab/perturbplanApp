@@ -1552,13 +1552,37 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
         stroke = 1.5
       )
       
-      # Add optimal point to plotly
+      # Add optimal point to plotly with robust tooltip
+      cells_text <- if (!is.null(optimal_point$cells_per_target) && !is.na(optimal_point$cells_per_target)) {
+        scales::comma(round(optimal_point$cells_per_target))
+      } else {
+        "N/A"
+      }
+      
+      reads_text <- if (!is.null(optimal_point$sequenced_reads_per_cell) && !is.na(optimal_point$sequenced_reads_per_cell)) {
+        scales::comma(round(optimal_point$sequenced_reads_per_cell))
+      } else {
+        "N/A"
+      }
+      
+      cost_text <- if (!is.null(optimal_point$total_cost) && !is.na(optimal_point$total_cost)) {
+        paste0("$", scales::comma(round(optimal_point$total_cost)))
+      } else {
+        "N/A"
+      }
+      
+      power_text <- if (!is.null(optimal_point$achieved_power) && !is.na(optimal_point$achieved_power)) {
+        scales::percent(optimal_point$achieved_power, accuracy = 0.1)
+      } else {
+        "N/A"
+      }
+      
       optimal_tooltip <- paste0(
         "OPTIMAL: ", solution_label, "<br>",
-        "Cells/target: ", scales::comma(optimal_point$cells_per_target), "<br>",
-        "Reads/cell: ", scales::comma(optimal_point$sequenced_reads_per_cell), "<br>",
-        "Cost: $", scales::comma(optimal_point$total_cost), "<br>",
-        "Power: ", scales::percent(optimal_point$achieved_power, accuracy = 0.1)
+        "Cells/target: ", cells_text, "<br>",
+        "Reads/cell: ", reads_text, "<br>",
+        "Cost: ", cost_text, "<br>",
+        "Power: ", power_text
       )
       
       p_interactive <- p_interactive %>%
