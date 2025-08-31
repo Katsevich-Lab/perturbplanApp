@@ -832,6 +832,12 @@ create_multi_curve_minimization_plots <- function(results) {
       breaks = c(3, 10, 30, 100),  # Match other TPM plots
       minor_breaks = NULL
     )
+  } else if (minimizing_variable == "minimum_fold_change") {
+    p <- p + scale_x_continuous(
+      breaks = seq(0.5, 2.0, 0.1),
+      labels = sprintf("%.1f", seq(0.5, 2.0, 0.1)),
+      minor_breaks = NULL
+    )
   }
   
   # Apply Y-axis log scaling for cost
@@ -1026,8 +1032,8 @@ create_multi_curve_minimization_plots <- function(results) {
         showline = TRUE,
         linecolor = "rgb(204, 204, 204)",
         linewidth = 1,
-        tickvals = if (minimizing_variable == "TPM_threshold") c(3, 10, 30, 100) else NULL,
-        ticktext = if (minimizing_variable == "TPM_threshold") c("3", "10", "30", "100") else NULL
+        tickvals = if (minimizing_variable == "TPM_threshold") c(3, 10, 30, 100) else seq(0.5, 2.0, 0.1),
+        ticktext = if (minimizing_variable == "TPM_threshold") c("3", "10", "30", "100") else sprintf("%.1f", seq(0.5, 2.0, 0.1))
       ),
       yaxis = list(
         title = "Optimal Cost ($)",
