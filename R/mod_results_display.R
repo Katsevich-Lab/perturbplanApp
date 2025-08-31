@@ -431,6 +431,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         current_plots <- plot_objects()
         current_params <- slider_actions$current_parameters()
         
+        # Extract workflow_id from current results
+        workflow_id <- current_results$workflow_info$workflow_id
+        
         # Extract plot data from plot_objects
         current_plot_data <- NULL
         if (!is.null(current_plots$plots) && !is.null(current_plots$plots$plot_data)) {
