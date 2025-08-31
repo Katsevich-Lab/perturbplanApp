@@ -78,7 +78,8 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
           previous_config_object(NULL)   # Reset configuration object
-          last_plan_count(0)             # Reset plan tracking
+          # DON'T reset last_plan_count - this prevents old plan clicks from being detected as new triggers
+          # last_plan_count(0)           # This was causing the bug!
           # Note: We don't clear parameter controls here - that would cause UI issues
           # Note: We don't set in_mode_transition(FALSE) here - user must explicitly trigger analysis
         }
@@ -100,6 +101,18 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         param_manager$analysis_trigger()
       } else {
         0
+      }
+      
+      
+      # Check if this is a valid NEW trigger that should exit transition mode
+      has_new_plan_click <- (current_plan_count > last_plan_count())
+      has_new_real_time_trigger <- (current_trigger_count > last_trigger_count())
+      has_valid_trigger <- has_new_plan_click || has_new_real_time_trigger
+      
+      
+      # EARLY EXIT: If in transition mode AND no valid trigger, return NULL
+      if (in_mode_transition() && !has_valid_trigger) {
+        return(NULL)
       }
       
       # Track config hash to detect spurious invalidations
