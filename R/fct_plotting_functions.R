@@ -1043,8 +1043,8 @@ create_multi_curve_minimization_plots <- function(results) {
         showline = TRUE,
         linecolor = "rgb(204, 204, 204)",
         linewidth = 1,
-        tickvals = c(10000, 20000, 30000, 40000),
-        ticktext = c("10k", "20k", "30k", "40k"),
+        tickvals = c(5000, 10000, 20000, 40000, 80000),
+        ticktext = c("5k", "10k", "20k", "40k", "80k"),
         minorgrid = list(count = 0)  # Remove minor gridlines
       ),
       legend = list(
