@@ -715,11 +715,13 @@ create_multi_solution_cost_plots <- function(results) {
     if (!is.null(solution$optimal_point)) {
       optimal_design <- solution$optimal_point
       
-      if (!is.null(optimal_design$total_cost) && !is.na(optimal_design$total_cost) &&
-          !is.null(optimal_design$achieved_power) && !is.na(optimal_design$achieved_power)) {
+      if (!is.null(optimal_design$cells_per_target) && !is.na(optimal_design$cells_per_target) &&
+          !is.null(optimal_design$sequenced_reads_per_cell) && !is.na(optimal_design$sequenced_reads_per_cell)) {
         
         optimal_hover_text <- paste0(
           solution_label, " (Optimal)<br>",
+          "Cells: ", scales::comma(optimal_design$cells_per_target), "<br>",
+          "Reads: ", scales::comma(optimal_design$sequenced_reads_per_cell), "<br>",
           "Cost: $", scales::comma(optimal_design$total_cost), "<br>",
           "Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
@@ -728,8 +730,8 @@ create_multi_solution_cost_plots <- function(results) {
         p <- p + 
           geom_point(
             data = data.frame(
-              x = optimal_design$total_cost, 
-              y = optimal_design$achieved_power
+              x = optimal_design$cells_per_target, 
+              y = optimal_design$sequenced_reads_per_cell
             ),
             aes(x = x, y = y),
             color = "red",
@@ -741,8 +743,8 @@ create_multi_solution_cost_plots <- function(results) {
         # Add optimal point to plotly (red circle like cost minimization)
         p_interactive <- p_interactive %>%
           add_markers(
-            x = optimal_design$total_cost,
-            y = optimal_design$achieved_power,
+            x = optimal_design$cells_per_target,
+            y = optimal_design$sequenced_reads_per_cell,
             color = I("red"),
             name = paste("Optimal:", solution_label),
             marker = list(
