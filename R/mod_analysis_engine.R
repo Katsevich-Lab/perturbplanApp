@@ -195,7 +195,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           return(NULL)  # No plan clicked yet
         }
         
-        cat("================================\n")
         return(NULL)  # No cached results and no triggers
       }
 
@@ -382,10 +381,6 @@ generate_real_analysis <- function(config, workflow_info) {
 
   }, error = function(e) {
     # Return error object to display to user instead of falling back
-    cat("=== REAL ANALYSIS ERROR ===\n")
-    cat("Error:", e$message, "\n")
-    cat("Returning error to user\n")
-    cat("==========================\n")
 
     return(list(
       error = e$message,
