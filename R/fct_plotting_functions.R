@@ -724,7 +724,7 @@ create_multi_solution_cost_plots <- function(results) {
           "Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
         
-        # Add optimal point to ggplot
+        # Add optimal point to ggplot (red circle like cost minimization)
         p <- p + 
           geom_point(
             data = data.frame(
@@ -732,26 +732,26 @@ create_multi_solution_cost_plots <- function(results) {
               y = optimal_design$achieved_power
             ),
             aes(x = x, y = y),
-            color = solution_color,
-            size = 5,
-            shape = 18,  # Diamond shape for optimal points
-            stroke = 2
+            color = "red",
+            size = 4,
+            shape = 19,  # Circle shape to match cost minimization
+            stroke = 1.5
           )
         
-        # Add optimal point to plotly
+        # Add optimal point to plotly (red circle like cost minimization)
         p_interactive <- p_interactive %>%
           add_markers(
             x = optimal_design$total_cost,
             y = optimal_design$achieved_power,
-            color = I(solution_color),
-            name = paste(solution_label, "Optimal"),
+            color = I("red"),
+            name = paste("Optimal:", solution_label),
             marker = list(
-              size = 15,
-              symbol = "diamond",
-              line = list(width = 3, color = "white")
+              size = 12,
+              symbol = "circle",
+              line = list(width = 2, color = "white")
             ),
             text = optimal_hover_text,
-            hovertemplate = "%{text}<extra></extra>",
+            hoverinfo = "text",
             showlegend = FALSE  # Don't show optimal points in legend to reduce clutter
           )
       }
