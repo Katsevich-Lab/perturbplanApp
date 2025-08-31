@@ -263,9 +263,13 @@ create_multi_solution_parameter_plots <- function(results) {
   p_interactive <- plot_ly()
   
   # Add target power line to plotly (hidden from legend)
+  # Get pooled X-value range from all pinned solutions
+  all_x_values <- unlist(lapply(solutions_data, function(s) s$data$parameter_value))
+  x_range <- range(all_x_values, na.rm = TRUE)
+  
   p_interactive <- p_interactive %>%
     add_lines(
-      x = c(-1e20, 1e20),
+      x = x_range,
       y = rep(target_power, 2),
       line = list(dash = "dash", color = "grey", width = 1),
       name = paste("Target Power (", scales::percent(target_power, accuracy = 1), ")", sep = ""),
