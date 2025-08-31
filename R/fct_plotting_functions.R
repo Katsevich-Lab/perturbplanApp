@@ -592,6 +592,11 @@ create_multi_solution_cost_plots <- function(results) {
   workflow_info <- results$workflow_info
   solutions_data <- results$plot_data$solutions
   
+  # Special handling for cost minimization workflow (5)
+  if (workflow_info$workflow_id == "power_cost_minimization") {
+    return(create_multi_solution_equi_power_cost_plots(results))
+  }
+  
   # Special handling for constrained minimization workflows (10-11)
   if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
     return(create_multi_curve_minimization_plots(results))
@@ -1371,6 +1376,265 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
   }
   
   return(p)
+}
+
+#' Create multi-solution equi-power/equi-cost plots for cost minimization workflow
+#'
+#' @description Creates sophisticated multi-solution visualization for cost minimization (workflow 5)
+#' showing equi-power and equi-cost curves for each pinned solution. Each solution displays
+#' two curves using the same color: solid equi-power curve + dashed equi-cost curve.
+#'
+#' @param results Analysis results with multi-solution plot_data structure containing cost minimization solutions
+#' @return List containing ggplot and plotly objects with dual curves per solution
+#' @noRd
+create_multi_solution_equi_power_cost_plots <- function(results) {
+  
+  target_power <- results$user_config$design_options$target_power
+  workflow_info <- results$workflow_info
+  solutions_data <- results$plot_data$solutions
+  
+  # Validate input
+  if (is.null(solutions_data) || length(solutions_data) == 0) {
+    stop("No solution data available for multi-solution cost minimization plotting")
+  }
+  
+  # Create base ggplot with log scales (matching single-solution cost minimization plot)
+  p <- ggplot() +
+    scale_x_log10(labels = scales::comma_format()) +
+    scale_y_log10(labels = scales::comma_format()) +
+    labs(
+      title = paste("Cost Minimization Comparison -", length(solutions_data), "Solutions"),
+      x = "Cells per target",
+      y = "Reads per cell"
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+      axis.title.x = element_text(size = 14),
+      axis.text.x = element_text(size = 12),
+      axis.title.y = element_text(size = 14),
+      axis.text.y = element_text(size = 12),
+      legend.position = "right",
+      legend.title = element_blank(),
+      legend.text = element_text(size = 11)
+    )
+  
+  # Create plotly object for interactive features
+  p_interactive <- plot_ly()
+  
+  # Track solution colors for legend
+  legend_colors <- c()
+  legend_names <- c()
+  
+  # Add dual curves for each solution
+  for (solution in solutions_data) {
+    solution_color <- solution$color
+    solution_label <- solution$label
+    
+    # Get curve data
+    equi_power_data <- solution$equi_power_data
+    equi_cost_data <- solution$equi_cost_data
+    optimal_point <- solution$optimal_design
+    
+    # Validate that we have the required data
+    if (is.null(equi_power_data) || is.null(equi_cost_data)) {
+      warning("Missing curve data for ", solution_label, " - skipping")
+      next
+    }
+    
+    # Determine line style based on solution status (solid for pinned, dashed for current)
+    base_line_alpha <- if (!is.null(solution$style) && solution$style == "dashed") 0.8 else 1.0
+    base_line_width <- if (!is.null(solution$style) && solution$style == "dashed") 1.0 else 1.2
+    
+    # 1. EQUI-POWER CURVE (solid line, same color as solution)
+    if (nrow(equi_power_data) > 0) {
+      tryCatch({
+        p <- p + geom_smooth(
+          data = equi_power_data,
+          aes(x = cells_per_target, y = sequenced_reads_per_cell),
+          method = "loess",
+          se = FALSE,
+          color = solution_color,
+          linetype = "solid",
+          size = base_line_width,
+          alpha = base_line_alpha
+        )
+        
+        # Add equi-power curve to plotly
+        p_interactive <- p_interactive %>%
+          add_lines(
+            data = equi_power_data,
+            x = ~cells_per_target,
+            y = ~sequenced_reads_per_cell,
+            color = I(solution_color),
+            name = paste(solution_label, "Equi-power"),
+            line = list(width = 3, dash = "solid"),
+            text = ~paste(solution_label, "Equi-power<br>",
+                         "Cells/target:", scales::comma(cells_per_target), "<br>",
+                         "Reads/cell:", scales::comma(sequenced_reads_per_cell), "<br>",
+                         "Target Power:", scales::percent(target_power, accuracy = 0.1)),
+            hovertemplate = "%{text}<extra></extra>",
+            showlegend = TRUE,
+            legendgroup = solution_label
+          )
+        
+      }, error = function(e) {
+        warning("Failed to create equi-power curve for ", solution_label, ": ", e$message)
+      })
+    }
+    
+    # 2. EQUI-COST CURVE (dashed line, same color as solution)
+    if (nrow(equi_cost_data) > 0) {
+      tryCatch({
+        p <- p + geom_smooth(
+          data = equi_cost_data,
+          aes(x = cells_per_target, y = sequenced_reads_per_cell),
+          method = "loess",
+          se = FALSE,
+          color = solution_color,
+          linetype = "dashed",
+          size = base_line_width * 0.9,  # Slightly thinner for distinction
+          alpha = base_line_alpha
+        )
+        
+        # Add equi-cost curve to plotly
+        p_interactive <- p_interactive %>%
+          add_lines(
+            data = equi_cost_data,
+            x = ~cells_per_target,
+            y = ~sequenced_reads_per_cell,
+            color = I(solution_color),
+            name = paste(solution_label, "Equi-cost"),
+            line = list(width = 2.5, dash = "dash"),
+            text = ~paste(solution_label, "Equi-cost<br>",
+                         "Cells/target:", scales::comma(cells_per_target), "<br>",
+                         "Reads/cell:", scales::comma(sequenced_reads_per_cell), "<br>",
+                         "Cost: $", scales::comma(total_cost)),
+            hovertemplate = "%{text}<extra></extra>",
+            showlegend = TRUE,
+            legendgroup = solution_label
+          )
+        
+      }, error = function(e) {
+        warning("Failed to create equi-cost curve for ", solution_label, ": ", e$message)
+      })
+    }
+    
+    # 3. OPTIMAL POINT (red circle for each solution)
+    if (!is.null(optimal_point) && 
+        !is.null(optimal_point$cells_per_target) && 
+        !is.null(optimal_point$sequenced_reads_per_cell)) {
+      
+      # Add optimal point to ggplot (always red regardless of solution color)
+      p <- p + geom_point(
+        data = data.frame(
+          x = optimal_point$cells_per_target,
+          y = optimal_point$sequenced_reads_per_cell
+        ),
+        aes(x = x, y = y),
+        color = "red",
+        size = 4,
+        shape = 19,  # Circle
+        stroke = 1.5
+      )
+      
+      # Add optimal point to plotly
+      optimal_tooltip <- paste0(
+        "OPTIMAL: ", solution_label, "<br>",
+        "Cells/target: ", scales::comma(optimal_point$cells_per_target), "<br>",
+        "Reads/cell: ", scales::comma(optimal_point$sequenced_reads_per_cell), "<br>",
+        "Cost: $", scales::comma(optimal_point$total_cost), "<br>",
+        "Power: ", scales::percent(optimal_point$achieved_power, accuracy = 0.1)
+      )
+      
+      p_interactive <- p_interactive %>%
+        add_markers(
+          x = optimal_point$cells_per_target,
+          y = optimal_point$sequenced_reads_per_cell,
+          color = I("red"),
+          name = paste("Optimal:", solution_label),
+          marker = list(size = 12, symbol = "circle", line = list(width = 2, color = "white")),
+          text = optimal_tooltip,
+          hovertemplate = "%{text}<extra></extra>",
+          showlegend = FALSE  # Don't clutter legend with optimal points
+        )
+    }
+    
+    # Track colors for consistent legend
+    legend_colors <- c(legend_colors, solution_color)
+    legend_names <- c(legend_names, solution_label)
+  }
+  
+  # Configure plotly layout with proper legend
+  p_interactive <- p_interactive %>%
+    layout(
+      title = list(
+        text = paste0("<b>Cost Minimization Comparison</b><br>",
+                     "<sup>", length(solutions_data), " solutions - Solid: Equi-power, Dashed: Equi-cost</sup>"),
+        font = list(size = 16)
+      ),
+      xaxis = list(
+        title = "Cells per target",
+        type = "log",
+        showgrid = TRUE,
+        gridcolor = "rgba(200,200,200,0.3)"
+      ),
+      yaxis = list(
+        title = "Reads per cell", 
+        type = "log",
+        showgrid = TRUE,
+        gridcolor = "rgba(200,200,200,0.3)"
+      ),
+      legend = list(
+        orientation = "v",
+        x = 1.02, y = 1,
+        bgcolor = "rgba(255,255,255,0.9)",
+        bordercolor = "rgba(0,0,0,0.3)",
+        borderwidth = 1
+      ),
+      hovermode = "closest"
+    ) %>%
+    config(
+      displayModeBar = FALSE,
+      displaylogo = FALSE,
+      modeBarButtonsToRemove = list("all")
+    )
+  
+  # Create summary for the first solution (primary)
+  primary_solution_data <- solutions_data[[1]]
+  primary_optimal <- primary_solution_data$optimal_design
+  
+  # Create mock cost summary (cost minimization doesn't have traditional cost_data structure)
+  cost_summary <- list(
+    total_designs_evaluated = if (!is.null(primary_solution_data$equi_power_data)) nrow(primary_solution_data$equi_power_data) else 0,
+    solutions_compared = length(solutions_data),
+    optimal_recommendation = if (!is.null(primary_optimal)) {
+      list(
+        optimal_cells = primary_optimal$cells_per_target,
+        optimal_reads = primary_optimal$sequenced_reads_per_cell,
+        total_cost = primary_optimal$total_cost,
+        achieved_power = primary_optimal$achieved_power,
+        recommendation_text = paste(
+          "Primary solution:", scales::comma(primary_optimal$cells_per_target), "cells,", 
+          scales::comma(primary_optimal$sequenced_reads_per_cell), "reads",
+          "| Cost: $", scales::comma(primary_optimal$total_cost),
+          "| Power:", scales::percent(primary_optimal$achieved_power, accuracy = 0.1)
+        )
+      )
+    } else {
+      list(recommendation_text = "No valid optimal solution found")
+    }
+  )
+  
+  return(list(
+    main_plot = p,
+    interactive_plot = p_interactive,
+    cost_summary = cost_summary,
+    plot_data = solutions_data,
+    multi_solution = TRUE,
+    solution_count = length(solutions_data),
+    plot_type = "multi_solution_equi_power_cost"
+  ))
 }
 
 #' Create minimization plot for workflows 10-11

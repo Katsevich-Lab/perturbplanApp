@@ -253,12 +253,14 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         return(NULL)
       }
       
-      # Show Pin buttons for single parameter optimization workflows + constrained minimization workflows 10-11
+      # Show Pin buttons for single parameter optimization workflows + cost minimization + constrained minimization workflows
       pinning_enabled_workflows <- c(
         "power_single_cells_per_target",
         "power_single_reads_per_cell", 
         "power_single_TPM_threshold",
         "power_single_minimum_fold_change",
+        # Cost minimization workflow (5)
+        "power_cost_minimization",
         # Power+cost TPM/FC minimization workflows (6-9)
         "power_cost_TPM_cells",
         "power_cost_TPM_reads",

@@ -446,8 +446,15 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         is_duplicate <- FALSE
         if (length(pinned_solutions$solutions) > 0) {
           for (existing_solution in pinned_solutions$solutions) {
-            # For constrained minimization workflows, also check cost budget since that's the key constraint
-            if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+            if (workflow_id == "power_cost_minimization") {
+              # Cost minimization: check TPM threshold and fold change (fixed parameters) + target power
+              if (are_parameters_identical(current_params, existing_solution$parameters) &&
+                  abs(user_config()$design_options$target_power - existing_solution$results$user_config$design_options$target_power) < 0.001) {
+                is_duplicate <- TRUE
+                break
+              }
+            } else if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+              # Constrained minimization workflows: also check cost budget since that's the key constraint
               if (are_parameters_identical(current_params, existing_solution$parameters) &&
                   !is.null(existing_solution$cost_budget) &&
                   abs(user_config()$design_options$cost_budget - existing_solution$cost_budget) < 1) {
@@ -467,10 +474,32 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         if (is_duplicate) {
           showNotification("Solution already pinned! Please change parameters to pin a different solution.", duration = 3)
         } else {
-          # Create solution entry - handle both standard workflows and constrained minimization workflows (10-11)
+          # Create solution entry - handle cost minimization, constrained minimization, and standard workflows
           workflow_id <- current_results$workflow_info$workflow_id
           
-          if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+          if (workflow_id == "power_cost_minimization") {
+            # Cost minimization workflow (5): Store dual-curve data for equi-power/equi-cost plotting
+            optimal_design <- current_results$optimal_design
+            
+            new_solution <- list(
+              index = pinned_solutions$next_index,
+              timestamp = Sys.time(),
+              workflow_type = "cost_minimization",
+              workflow_id = workflow_id,
+              # Dual curve data for cost minimization
+              equi_power_data = current_results$power_data,  # Equi-power curve data
+              equi_cost_data = current_results$cost_data,    # Equi-cost curve data
+              optimal_design = optimal_design,               # Optimal point data
+              # Standard fields for solutions table
+              cells_per_target = optimal_design$cells_per_target,
+              reads_per_cell = optimal_design$sequenced_reads_per_cell,
+              total_cost = optimal_design$total_cost,
+              power = optimal_design$achieved_power,
+              parameters = current_params,
+              results = current_results,
+              plot_data = current_plot_data  # Keep for backward compatibility
+            )
+          } else if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
             # Constrained minimization workflows (10-11): Extract from optimal_design
             optimal_design <- current_results$optimal_design
             minimizing_param <- if (workflow_id == "power_cost_TPM_cells_reads") "TPM_threshold" else "minimum_fold_change"
@@ -562,24 +591,59 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         pinned <- pinned_solutions$solutions[[i]]
         color_index <- ((pinned$index - 1) %% length(multi_data$color_palette)) + 1
         
-        
-        multi_data$solutions[[i]] <- list(
-          id = pinned$index,
-          color = multi_data$color_palette[color_index],
-          data = pinned$plot_data,
-          label = paste("Solution", pinned$index),
-          style = "solid"
-        )
+        # Handle cost minimization workflow with dual-curve data structure
+        if (!is.null(pinned$workflow_type) && pinned$workflow_type == "cost_minimization") {
+          multi_data$solutions[[i]] <- list(
+            id = pinned$index,
+            color = multi_data$color_palette[color_index],
+            # Dual-curve data for cost minimization
+            equi_power_data = pinned$equi_power_data,
+            equi_cost_data = pinned$equi_cost_data,
+            optimal_design = pinned$optimal_design,
+            # Standard fields
+            data = pinned$plot_data,  # Keep for backward compatibility
+            label = paste("Solution", pinned$index),
+            style = "solid"
+          )
+        } else {
+          # Standard workflows: use existing single-curve structure
+          multi_data$solutions[[i]] <- list(
+            id = pinned$index,
+            color = multi_data$color_palette[color_index],
+            data = pinned$plot_data,
+            label = paste("Solution", pinned$index),
+            style = "solid"
+          )
+        }
       }
       
       # Add current pending solution with dashed styling
-      multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
-        id = "pending",
-        color = "#FF6B6B",  # Distinct pending color (red-ish)
-        data = current_plot_data,
-        label = "Current",
-        style = "dashed"
-      )
+      # Check if current solution is cost minimization workflow
+      current_workflow_id <- current_results$workflow_info$workflow_id
+      if (!is.null(current_workflow_id) && current_workflow_id == "power_cost_minimization") {
+        # Cost minimization: add dual-curve current solution
+        multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
+          id = "pending",
+          color = "#FF6B6B",  # Distinct pending color (red-ish)
+          # Dual-curve data for cost minimization
+          equi_power_data = current_results$power_data,
+          equi_cost_data = current_results$cost_data,
+          optimal_design = current_results$optimal_design,
+          # Standard fields
+          data = current_plot_data,  # Keep for backward compatibility
+          label = "Current",
+          style = "dashed"
+        )
+      } else {
+        # Standard workflows: use existing single-curve structure
+        multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
+          id = "pending",
+          color = "#FF6B6B",  # Distinct pending color (red-ish)
+          data = current_plot_data,
+          label = "Current",
+          style = "dashed"
+        )
+      }
       
       return(multi_data)
     })
@@ -631,6 +695,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             "power_single_reads_per_cell", 
             "power_single_TPM_threshold",
             "power_single_minimum_fold_change",
+            # Cost minimization workflow (5)
+            "power_cost_minimization",
             # Power+cost TPM/FC minimization workflows (6-9)
             "power_cost_TPM_cells",
             "power_cost_TPM_reads",
