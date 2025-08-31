@@ -1398,10 +1398,18 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
     stop("No solution data available for multi-solution cost minimization plotting")
   }
   
-  # Create base ggplot with log scales (matching single-solution cost minimization plot)
+  # Create base ggplot with log scales and custom axis breaks
   p <- ggplot() +
-    scale_x_log10(labels = scales::comma_format()) +
-    scale_y_log10(labels = scales::comma_format()) +
+    scale_x_log10(
+      breaks = c(300, 1000, 3000),
+      labels = c("300", "1k", "3k"),
+      minor_breaks = NULL
+    ) +
+    scale_y_log10(
+      breaks = c(3000, 10000, 30000, 100000),
+      labels = c("3k", "10k", "30k", "100k"),
+      minor_breaks = NULL
+    ) +
     labs(
       title = paste("Cost Minimization Comparison -", length(solutions_data), "Solutions"),
       x = "Cells per target",
@@ -1414,7 +1422,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
       axis.text.x = element_text(size = 12),
       axis.title.y = element_text(size = 14),
       axis.text.y = element_text(size = 12),
-      legend.position = "right",
+      legend.position = "bottom",
       legend.title = element_blank(),
       legend.text = element_text(size = 11)
     )
@@ -1577,17 +1585,24 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
         title = "Cells per target",
         type = "log",
         showgrid = TRUE,
-        gridcolor = "rgba(200,200,200,0.3)"
+        gridcolor = "rgba(200,200,200,0.3)",
+        tickvals = c(300, 1000, 3000),
+        ticktext = c("300", "1k", "3k"),
+        minor = list(ticks = "", ticklen = 0, showgrid = FALSE)
       ),
       yaxis = list(
         title = "Reads per cell", 
         type = "log",
         showgrid = TRUE,
-        gridcolor = "rgba(200,200,200,0.3)"
+        gridcolor = "rgba(200,200,200,0.3)",
+        tickvals = c(3000, 10000, 30000, 100000),
+        ticktext = c("3k", "10k", "30k", "100k"),
+        minor = list(ticks = "", ticklen = 0, showgrid = FALSE)
       ),
       legend = list(
-        orientation = "v",
-        x = 1.02, y = 1,
+        orientation = "h",
+        x = 0.5, y = -0.25,
+        xanchor = "center",
         bgcolor = "rgba(255,255,255,0.9)",
         bordercolor = "rgba(0,0,0,0.3)",
         borderwidth = 1
