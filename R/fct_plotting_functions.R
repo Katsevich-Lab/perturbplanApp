@@ -725,7 +725,7 @@ create_multi_solution_cost_plots <- function(results) {
         param_label <- format_parameter_name(minimizing_param)
         param_value_formatted <- case_when(
           minimizing_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[minimizing_param]])),
-          minimizing_param %in% c("cells_per_target", "sequenced_reads_per_cell") ~ scales::comma(optimal_design[[minimizing_param]]),
+          minimizing_param %in% c("cells_per_target", "sequenced_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[minimizing_param]]),
           minimizing_param == "minimum_fold_change" ~ as.character(round(optimal_design[[minimizing_param]], 2)),
           TRUE ~ as.character(optimal_design[[minimizing_param]])
         )
