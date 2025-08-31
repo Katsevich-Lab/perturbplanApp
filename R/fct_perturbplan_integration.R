@@ -266,8 +266,8 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
     cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
     
-    # Grid parameters
-    grid_size = 100,
+    # Grid parameters - smaller grid for single parameter optimization workflows (1-4) for faster computation
+    grid_size = if (workflow_info$workflow_id %in% c(1, 2, 3, 4)) 15 else 100,
     
     # Mapping efficiency - PERTURBPLAN API REQUIREMENT
     mapping_efficiency = advanced_opts$mapping_efficiency,
