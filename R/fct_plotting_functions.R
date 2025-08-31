@@ -8,7 +8,7 @@
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline geom_area
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate geom_smooth geom_text
-#' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_linetype_discrete scale_color_viridis_c
+#' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_x_continuous scale_linetype_discrete scale_color_viridis_c
 #' @importFrom plotly ggplotly layout config plot_ly add_lines add_markers
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma comma_format dollar_format
