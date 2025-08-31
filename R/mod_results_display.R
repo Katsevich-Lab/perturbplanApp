@@ -606,11 +606,12 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             style = "solid"
           )
         } else {
-          # Standard workflows: use existing single-curve structure
+          # Standard workflows: use existing single-curve structure + add optimal point
           multi_data$solutions[[i]] <- list(
             id = pinned$index,
             color = multi_data$color_palette[color_index],
             data = pinned$plot_data,
+            optimal_point = pinned$results$optimal_design,  # Add optimal point for red circle highlighting
             label = paste("Solution", pinned$index),
             style = "solid"
           )
@@ -635,11 +636,12 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           style = "dashed"
         )
       } else {
-        # Standard workflows: use existing single-curve structure
+        # Standard workflows: use existing single-curve structure + add optimal point
         multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
           id = "pending",
           color = "#FF6B6B",  # Distinct pending color (red-ish)
           data = current_plot_data,
+          optimal_point = current_results$optimal_design,  # Add optimal point for red circle highlighting
           label = "Current",
           style = "dashed"
         )
