@@ -707,7 +707,7 @@ create_multi_solution_cost_plots <- function(results) {
         name = solution_label,
         marker = list(size = marker_size, opacity = point_alpha),
         text = ~tooltip_text,
-        hovertemplate = "%{text}<extra></extra>",
+        hoverinfo = "text",
         showlegend = TRUE
       )
     
