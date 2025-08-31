@@ -1040,7 +1040,8 @@ create_multi_curve_minimization_plots <- function(results) {
       ),
       legend = list(
         orientation = "h",
-        x = 0, y = -0.1,
+        x = 0.5, y = -0.25,
+        xanchor = "center",
         bgcolor = "rgba(255,255,255,0.8)",
         bordercolor = "rgba(0,0,0,0.2)",
         borderwidth = 1
