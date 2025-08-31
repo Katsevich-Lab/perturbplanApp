@@ -622,8 +622,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         if (!is.null(current_results) && !is.null(current_results$workflow_info)) {
           workflow_id <- current_results$workflow_info$workflow_id
           
-          # Only handle Pin functionality for single parameter optimization workflows
-          single_param_workflows <- c(
+          # Handle Pin functionality for workflows with pinning support
+          pinning_enabled_workflows <- c(
             "power_single_cells_per_target",
             "power_single_reads_per_cell", 
             "power_single_TPM_threshold",
@@ -632,10 +632,13 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             "power_cost_TPM_cells",
             "power_cost_TPM_reads",
             "power_cost_fc_cells",
-            "power_cost_fc_reads"
+            "power_cost_fc_reads",
+            # Constrained minimization workflows (10-11)
+            "power_cost_TPM_cells_reads",
+            "power_cost_fc_cells_reads"
           )
           
-          if (workflow_id %in% single_param_workflows && length(pinned_solutions$solutions) > 0) {
+          if (workflow_id %in% pinning_enabled_workflows && length(pinned_solutions$solutions) > 0) {
             # We have pinned solutions - use multi-solution plotting
             unified_data <- unified_plot_data()
             
@@ -644,10 +647,21 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
               enhanced_results$plot_data <- unified_data
               
               tryCatch({
-                multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
+                # Route to appropriate multi-solution plotting function based on plot type
+                plot_type <- current_results$workflow_info$plot_type
+                
+                if (plot_type == "cost_tradeoff_curves") {
+                  # Workflows 10-11 and other cost-based workflows
+                  multi_plots <- create_multi_solution_cost_plots(enhanced_results)
+                } else {
+                  # Single parameter workflows (1-9)
+                  multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
+                }
                 
                 if (!is.null(multi_plots$interactive_plot)) {
                   return(multi_plots$interactive_plot)
+                } else if (!is.null(multi_plots$plotly_obj)) {
+                  return(multi_plots$plotly_obj)
                 }
               }, error = function(e) {
                 # Silent error handling - fall back to standard plot
