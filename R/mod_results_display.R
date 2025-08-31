@@ -964,6 +964,7 @@ extract_solution_data <- function(optimal, workflow_info, user_config = reactive
   list(
     index = index,
     achieved_power = extract_achieved_power(optimal),
+    total_cost = extract_total_cost(optimal, workflow_info),
     optimal_design = extract_optimal_design_value(optimal, workflow_info),
     experimental_choices = extract_experimental_choices(optimal, workflow_info, user_config, param_manager),
     analysis_choices = extract_analysis_choices(optimal, workflow_info, user_config, param_manager),
@@ -1180,8 +1181,26 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
-      ),
-      
+      )
+    )
+    
+    # Add cost column if visible (after power, before optimal design)
+    if (visible_columns$total_cost) {
+      row_cells <- append(row_cells, list(
+        tags$td(
+          style = "text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
+          if (!is.null(row_data$total_cost) && !is.na(row_data$total_cost)) {
+            tags$span(paste0("$", scales::comma(round(row_data$total_cost))), 
+                     style = "font-size: 16px; font-weight: bold;")
+          } else {
+            tags$span("N/A", style = "color: #6c757d; font-style: italic;")
+          }
+        )
+      ))
+    }
+    
+    # Add optimal design column
+    row_cells <- append(row_cells, list(
       # Optimal Design column
       tags$td(
         style = "text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
@@ -1200,7 +1219,7 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
       )
-    )
+    ))
     
     # Add experimental parameter subcolumns
     if (visible_columns$experimental_choices && exp_param_count > 0) {
@@ -1310,9 +1329,20 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
   # First header row (main column headers with colspan)
   header_row_1 <- list(
     tags$th("Solution ID", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
-    tags$th("Power", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
-    tags$th(optimal_design_column_name, rowspan = "2", style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
+    tags$th("Power", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
   )
+  
+  # Add cost column if visible (after power, before optimal design)
+  if (visible_columns$total_cost) {
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Cost", rowspan = "2", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
+    ))
+  }
+  
+  # Add optimal design column
+  header_row_1 <- append(header_row_1, list(
+    tags$th(optimal_design_column_name, rowspan = "2", style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
+  ))
   
   # Add experimental parameters main header if needed
   if (visible_columns$experimental_choices && exp_param_count > 0) {
@@ -1402,8 +1432,26 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
-      ),
-      
+      )
+    )
+    
+    # Add cost column if visible (after power, before optimal design)
+    if (visible_columns$total_cost) {
+      row_cells <- append(row_cells, list(
+        tags$td(
+          style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+          if (!is.null(row_data$total_cost) && !is.na(row_data$total_cost)) {
+            tags$span(paste0("$", scales::comma(round(row_data$total_cost))), 
+                     style = "font-size: 16px; font-weight: bold;")
+          } else {
+            tags$span("N/A", style = "color: #6c757d; font-style: italic;")
+          }
+        )
+      ))
+    }
+    
+    # Add optimal design column
+    row_cells <- append(row_cells, list(
       # Optimal Design column
       tags$td(
         style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
@@ -1422,7 +1470,7 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
       )
-    )
+    ))
     
     # Add experimental parameter subcolumns with background color
     if (visible_columns$experimental_choices && exp_param_count > 0) {
@@ -1519,10 +1567,15 @@ determine_visible_columns <- function(solution_rows) {
     !is.null(row$effect_sizes) && length(row$effect_sizes) > 0
   }))
   
+  has_cost <- any(sapply(solution_rows, function(row) {
+    !is.null(row$total_cost) && !is.na(row$total_cost)
+  }))
+  
   list(
     experimental_choices = has_experimental,
     analysis_choices = has_analysis,
-    effect_sizes = has_effect
+    effect_sizes = has_effect,
+    total_cost = has_cost
   )
 }
 
@@ -1592,6 +1645,31 @@ create_parameter_section_display <- function(params, section_type = "default") {
 extract_achieved_power <- function(optimal) {
   if (!is.null(optimal$achieved_power) && !is.na(optimal$achieved_power)) {
     return(optimal$achieved_power)
+  }
+  return(NULL)
+}
+
+#' Extract total cost for power+cost workflows
+#'
+#' @param optimal Optimal design results
+#' @param workflow_info Workflow information
+#' @return Total cost value or NULL
+#' @noRd
+extract_total_cost <- function(optimal, workflow_info) {
+  # Only show cost for power+cost workflows (6-11)
+  power_cost_workflows <- c(
+    "power_cost_TPM_cells",
+    "power_cost_TPM_reads", 
+    "power_cost_TPM_cells_reads",
+    "power_cost_fc_cells",
+    "power_cost_fc_reads",
+    "power_cost_fc_cells_reads"
+  )
+  
+  if (workflow_info$workflow_id %in% power_cost_workflows) {
+    if (!is.null(optimal$total_cost) && !is.na(optimal$total_cost)) {
+      return(optimal$total_cost)
+    }
   }
   return(NULL)
 }
