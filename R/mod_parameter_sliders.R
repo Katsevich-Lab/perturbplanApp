@@ -84,9 +84,10 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
 #' @param param_manager Parameter manager instance (central hub)
 #' @param workflow_info Reactive containing workflow information
 #' @param user_config Reactive containing full user configuration (optional, for power+cost filtering)
+#' @param plan_state ReactiveValues containing plan click state for real-time analysis
 #'
 #' @noRd 
-mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_config = reactive(NULL)){
+mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_config = reactive(NULL), plan_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -96,6 +97,11 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     
     # Generate left column sliders (3 parameters from Row 1)
     output$left_column_sliders <- renderUI({
+      # PHASE 2: Hide sliders until first plan click
+      if (!is.null(plan_state) && !plan_state$sliders_visible) {
+        return(NULL)
+      }
+      
       tagList(
         tags$div(
           style = "margin-bottom: 15px;",
@@ -116,7 +122,10 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     output$right_column_sliders <- renderUI({
       workflow <- workflow_info()
       
-      if (is.null(workflow)) return(NULL)
+      # PHASE 2: Hide sliders until first plan click
+      if (is.null(workflow) || (!is.null(plan_state) && !plan_state$sliders_visible)) {
+        return(NULL)
+      }
       
       # Get design configuration from user_config to check parameter control types
       config <- user_config()
@@ -237,7 +246,9 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     output$pin_buttons_section <- renderUI({
       workflow <- workflow_info()
       
-      if (is.null(workflow) || is.null(workflow$workflow_id)) {
+      # Hide pinning buttons until first plan click (same as sliders)
+      if (is.null(workflow) || is.null(workflow$workflow_id) || 
+          (!is.null(plan_state) && !plan_state$sliders_visible)) {
         return(NULL)
       }
       

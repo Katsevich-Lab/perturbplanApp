@@ -196,7 +196,7 @@ are_parameters_identical <- function(params1, params2) {
   return(TRUE)
 }
 
-mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), param_manager = NULL, slider_actions = NULL) {
+mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), param_manager = NULL, slider_actions = NULL, plan_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -318,7 +318,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Initialize slider module server with parameter manager and capture return values
     slider_actions <- NULL
     if (!is.null(param_manager)) {
-      slider_actions <- mod_parameter_sliders_server("sliders", param_manager, workflow_info, user_config)
+      slider_actions <- mod_parameter_sliders_server("sliders", param_manager, workflow_info, user_config, plan_state)
     }
     
     # ========================================================================

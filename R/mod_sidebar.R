@@ -113,7 +113,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
             showNotification(
               "Optimization mode activated! Sliders enabled for real-time analysis.", 
               duration = 4, 
-              type = "success"
+              type = "message"
             )
           } else {
             # Subsequent plan clicks - just show analysis starting
@@ -125,7 +125,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         }
       } else {
         # Fallback for backward compatibility
-        showNotification("Running analysis...", type = "message", duration = 2)
+        showNotification("Running analysis...", duration = 2, type = "message")
       }
     })
     
