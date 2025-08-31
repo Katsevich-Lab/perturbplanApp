@@ -821,7 +821,7 @@ create_multi_curve_minimization_plots <- function(results) {
     theme(
       plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
       plot.subtitle = element_text(hjust = 0.5, size = 12),
-      legend.position = "right",
+      legend.position = "bottom",
       legend.title = element_blank()
     )
   
@@ -1039,8 +1039,8 @@ create_multi_curve_minimization_plots <- function(results) {
         linewidth = 1
       ),
       legend = list(
-        orientation = "v",
-        x = 1.02, y = 1,
+        orientation = "h",
+        x = 0, y = -0.1,
         bgcolor = "rgba(255,255,255,0.8)",
         bordercolor = "rgba(0,0,0,0.2)",
         borderwidth = 1
