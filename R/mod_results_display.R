@@ -1498,7 +1498,7 @@ create_parameter_section_display <- function(params, section_type = "default") {
     tags$div(
       style = "line-height: 1.3;",
       tags$span(
-        paste(param_strings, collapse = " • "), 
+        paste(param_strings, collapse = " \u2022 "), 
         style = "color: #495057; font-weight: 500; font-size: 13px;"
       )
     )

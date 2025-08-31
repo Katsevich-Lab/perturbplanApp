@@ -772,7 +772,7 @@ create_multi_solution_cost_plots <- function(results) {
   # Create cost summary for the first solution (primary solution)
   primary_solution_data <- solutions_data[[1]]$data
   primary_optimal <- solutions_data[[1]]$optimal_point
-  cost_summary <- create_cost_summary(primary_solution_data, primary_optimal, target_power, cost_budget, workflow_info)
+  cost_summary <- create_cost_analysis_summary(primary_solution_data, primary_optimal, target_power, cost_budget)
   
   return(list(
     main_plot = p,
