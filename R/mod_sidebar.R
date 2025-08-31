@@ -111,7 +111,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
             plan_state$current_design_signature <- current_signature
             
             showNotification(
-              "Real-time mode activated! Drag sliders to explore parameters instantly.", 
+              "Analysis complete! Drag sliders to enable real-time updates.", 
               duration = 3, 
               type = "message"
             )
@@ -120,8 +120,8 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
             showNotification("Running analysis...", duration = 2, type = "message")
           }
           
-          # Enable real-time mode after first click
-          plan_state$real_time_enabled <- TRUE
+          # Don't enable real-time mode yet - wait for first slider interaction
+          # plan_state$real_time_enabled <- TRUE  # MOVED to slider module
         }
       } else {
         # Fallback for backward compatibility

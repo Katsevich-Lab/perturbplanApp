@@ -41,6 +41,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
     previous_config_hash <- reactiveVal(NULL)
     previous_config_object <- reactiveVal(NULL)
     last_plan_count <- reactiveVal(0)
+    
+    # PHASE 1 FIX: Track last real-time trigger to prevent duplicate analysis
+    last_trigger_count <- reactiveVal(0)
+    
+    # Track the last processed plan count AND timestamp to detect duplicates
+    last_processed_plan <- reactiveVal(list(count = 0, time = NULL))
 
     # Cache for expensive computation results
     cached_results <- reactiveVal(NULL)
@@ -84,12 +90,21 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
     analysis_results <- reactive({
       req(workflow_config())
       
-      # PHASE 4: Depend on real-time analysis trigger for responsive updates
-      if (!is.null(param_manager) && !is.null(param_manager$analysis_trigger)) {
-        param_manager$analysis_trigger()  # This makes the reactive depend on trigger changes
-      }
-
       config <- workflow_config()
+      
+      
+      # PHASE 1 FIX (ENHANCED): Establish dependencies on both triggers but process only one
+      # Create dependencies (these must be outside conditionals to work properly)
+      current_plan_count <- config$plan_clicked
+      current_trigger_count <- if (!is.null(param_manager) && !is.null(param_manager$analysis_trigger)) {
+        param_manager$analysis_trigger()
+      } else {
+        0
+      }
+      
+      # Track config hash to detect spurious invalidations
+      current_config_hash <- create_config_hash(config)
+      
 
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
@@ -112,61 +127,76 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
       }
       
-      # PHASE 4: Real-time analysis mode detection
-      is_real_time_analysis <- !is.null(param_manager) && 
-                               !is.null(param_manager$analysis_trigger) && 
-                               param_manager$analysis_trigger() > 0
-
-      # Skip analysis if plan not clicked (only after configuration is validated as compatible)
-      # BUT allow real-time analysis to proceed if real-time mode is active
-      if ((is.null(config$plan_clicked) || config$plan_clicked == 0) && !is_real_time_analysis) {
-        return(NULL)
-      }
-
-      # Protection mechanism: Clear results if sidebar inputs changed since last plan
-      current_config_hash <- create_config_hash(config)
-      previous_hash <- previous_config_hash()
-      current_plan_count <- config$plan_clicked
-
-      # If this is a new plan click, update tracking and clear cache
+      # PHASE 1 FIX (ENHANCED): Determine trigger source (only one can be active at a time)
+      is_plan_click <- FALSE
+      is_real_time_trigger <- FALSE
+      is_spurious_invalidation <- FALSE
+      
+      # Check for Plan button click (takes priority)
       if (current_plan_count > last_plan_count()) {
-        previous_config_hash(current_config_hash)
-        previous_config_object(config)
-        last_plan_count(current_plan_count)
-        cached_results(NULL)  # Clear cache for new plan
-        in_mode_transition(FALSE)  # Exit transition mode - user explicitly triggered analysis
-      } else if (is_real_time_analysis) {
-        # REAL-TIME MODE: Always clear cache for real-time analysis updates
-        cached_results(NULL)
-        previous_config_hash(current_config_hash)  # Update hash to reflect parameter changes
-        previous_config_object(config)             # Update stored config
-        in_mode_transition(FALSE)  # Ensure we're not in transition mode
-      } else {
-        # Check if sidebar inputs changed since last plan
-        if (!is.null(previous_hash) && current_config_hash != previous_hash) {
-          # Check if the change is only in "live" parameters that should trigger immediate re-analysis
-          live_params_changed <- detect_live_parameter_change(config, previous_config_object())
-          
-          if (live_params_changed) {
-            # Live parameter changed - clear cache and allow new analysis without Plan button click
-            cached_results(NULL)
-            previous_config_hash(current_config_hash)  # Update hash to prevent repeated computation
-            previous_config_object(config)             # Update stored config
-            in_mode_transition(FALSE)  # Exit transition mode - live parameters triggered analysis
-          } else {
-            # Non-live parameter changed but no new plan click - keep showing old results
-            if (!is.null(cached_results())) {
-              return(cached_results())  # Show old results instead of clearing
-            }
-            # If no cached results, continue to analysis (shouldn't happen normally)
-          }
-        }
-
-        # Same config as before - return cached results if available
-        # EXCEPT in real-time mode where we want fresh analysis
-        if (!is.null(cached_results()) && !is_real_time_analysis) {
+        
+        # Check if we just processed this plan click (within 1 second)
+        last_processed <- last_processed_plan()
+        if (last_processed$count == current_plan_count && 
+            !is.null(last_processed$time) &&
+            difftime(Sys.time(), last_processed$time, units = "secs") < 1) {
           return(cached_results())
         }
+        
+        is_plan_click <- TRUE
+        last_plan_count(current_plan_count)
+        # Reset trigger counter to prevent immediate real-time trigger
+        last_trigger_count(current_trigger_count)
+        # Update config hash for this plan click
+        previous_config_hash(current_config_hash)
+        # Mark this plan as being processed
+        last_processed_plan(list(count = current_plan_count, time = Sys.time()))
+      }
+      # Check for real-time trigger (only if NOT a plan click)
+      else if (current_trigger_count > last_trigger_count()) {
+        is_real_time_trigger <- TRUE
+        last_trigger_count(current_trigger_count)
+        # Update config hash for this real-time trigger
+        previous_config_hash(current_config_hash)
+      }
+      # Check if this is just a spurious config invalidation
+      else if (!is.null(previous_config_hash()) && 
+               current_config_hash == previous_config_hash()) {
+        # Config content hasn't actually changed - this is a spurious invalidation
+        is_spurious_invalidation <- TRUE
+      } else {
+      }
+      
+      # Skip analysis if neither trigger is active
+      if (!is_plan_click && !is_real_time_trigger) {
+        # Always return cached results if available when no explicit trigger
+        if (!is.null(cached_results())) {
+          if (is_spurious_invalidation) {
+          } else {
+          }
+          return(cached_results())
+        }
+        
+        # Check if we have initial plan but no triggers yet
+        if (current_plan_count == 0) {
+          return(NULL)  # No plan clicked yet
+        }
+        
+        cat("================================\n")
+        return(NULL)  # No cached results and no triggers
+      }
+
+      # Clear cache appropriately based on trigger type
+      if (is_plan_click) {
+        # Plan click: always clear cache and update tracking
+        previous_config_object(config)
+        cached_results(NULL)  # Clear cache for new plan
+        in_mode_transition(FALSE)  # Exit transition mode - user explicitly triggered analysis
+      } else if (is_real_time_trigger) {
+        # Real-time trigger: clear cache for fresh analysis
+        cached_results(NULL)
+        previous_config_object(config)             # Update stored config
+        in_mode_transition(FALSE)  # Ensure we're not in transition mode
       }
       
       # Check if we're still in transition mode after handling plan clicks and live params
@@ -213,19 +243,13 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       # PERTURBPLAN ANALYSIS: Call perturbplan package functions
       # Wrap in comprehensive error handling to prevent app crashes
       
-      # PHASE 4: Performance feedback for real-time analysis
-      if (is_real_time_analysis) {
-        # Brief user feedback for real-time updates
-        # Note: The "Updating analysis..." notification is shown from parameter sliders
-        # This is additional backend processing notification (optional)
-      }
-      
+      # PHASE 1 FIX: Use the determined trigger type for error messages
       results <- tryCatch({
         generate_real_analysis(config, workflow_info)
       }, error = function(e) {
         # Return error object instead of crashing
-        # Provide more context for real-time analysis errors
-        error_prefix <- if (is_real_time_analysis) {
+        # Provide more context based on trigger type
+        error_prefix <- if (is_real_time_trigger) {
           "Real-time Analysis Error:"
         } else {
           "Analysis Error:"
@@ -236,7 +260,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           metadata = list(
             analysis_mode = get_analysis_mode(),
             workflow_type = workflow_info$workflow_id %||% "unknown",
-            is_real_time = is_real_time_analysis,
+            is_real_time = is_real_time_trigger,
             timestamp = Sys.time(),
             error_details = as.character(e)
           )
@@ -245,6 +269,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
 
       # Cache the results to prevent duplicate computation
       cached_results(results)
+      
       return(results)
     })
 

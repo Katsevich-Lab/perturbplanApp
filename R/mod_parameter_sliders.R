@@ -291,54 +291,86 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     # INPUT COLLECTION - SAFE: Using isolate() to break reactive cycles
     # ========================================================================
     
+    # Helper function to enable real-time mode on first slider interaction
+    enable_real_time_if_needed <- function(source = "unknown") {
+      # Don't enable if Plan analysis hasn't completed yet
+      if (is.null(plan_state$last_analysis_completed)) {
+        return()
+      }
+      
+      # Don't enable if this is too soon after analysis completion (within 2 seconds)
+      time_since_analysis <- difftime(Sys.time(), plan_state$last_analysis_completed, units = "secs")
+      if (time_since_analysis < 2) {
+        return()
+      }
+      
+      if (!is.null(plan_state) && plan_state$sliders_visible && !plan_state$real_time_enabled) {
+        plan_state$real_time_enabled <- TRUE
+        showNotification(
+          "Real-time mode activated! Changes will update instantly.", 
+          duration = 2, 
+          type = "message"
+        )
+      }
+    }
+    
     # Use observeEvent + isolate to prevent circular reactive dependencies
+    # ignoreInit = TRUE prevents firing when slider is first rendered
     observeEvent(input$moi_slider, {
       isolate({
+        enable_real_time_if_needed("moi_slider")  # Enable real-time on first slider change
         param_manager$update_parameter("MOI", input$moi_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$targets_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("num_targets", input$targets_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$grnas_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("gRNAs_per_target", input$grnas_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$cells_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("cells_per_target", input$cells_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$reads_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("reads_per_cell", input$reads_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$TPM_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("TPM_threshold", input$TPM_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$fc_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("minimum_fold_change", input$fc_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$cost_budget_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("cost_budget", input$cost_budget_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     # ========================================================================
     # REAL-TIME ANALYSIS TRIGGERS - Phase 3
@@ -363,12 +395,18 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     
     # Trigger real-time analysis on debounced slider changes
     observeEvent(slider_changes(), {
+      cat("real_time_enabled:", if(!is.null(plan_state)) plan_state$real_time_enabled else "NULL", "\n")
+      cat("slider_changes value:", !is.null(slider_changes()), "\n")
+      
       if (!is.null(plan_state) && plan_state$real_time_enabled && !is.null(param_manager$trigger_real_time_analysis)) {
+        cat("TRIGGERING REAL-TIME ANALYSIS\n")
         # Show subtle loading notification (shorter duration to reduce noise)
         showNotification("Updating...", duration = 0.5, type = "message")
         
         # Trigger analysis through parameter manager
         param_manager$trigger_real_time_analysis()
+      } else {
+        cat("NOT triggering (real-time not enabled or other condition false)\n")
       }
     })
     

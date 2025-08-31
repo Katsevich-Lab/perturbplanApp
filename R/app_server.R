@@ -27,7 +27,8 @@ app_server <- function(input, output, session) {
     first_plan_clicked = FALSE,      # Has plan been clicked for current design problem
     real_time_enabled = FALSE,       # Is real-time analysis active
     sliders_visible = FALSE,         # Should sliders be visible in UI
-    current_design_signature = NULL  # Signature of current design problem structure
+    current_design_signature = NULL, # Signature of current design problem structure
+    last_analysis_completed = NULL   # Timestamp when last analysis completed
   )
   
   # Helper function: Create design problem signature from dropdown selections only
@@ -66,6 +67,19 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # Generate real analysis results using perturbplan package functions with real-time triggers
   analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config, param_manager)
+  
+  # Track when Plan analysis completes
+  observeEvent(analysis_results_raw(), {
+    results <- analysis_results_raw()
+    # Only mark completion for successful Plan-triggered analysis
+    if (!is.null(results) && is.null(results$error)) {
+      config <- user_workflow_config()
+      # Check if this was a Plan-triggered analysis (not real-time)
+      if (!is.null(config) && config$plan_clicked > 0 && !plan_state$real_time_enabled) {
+        plan_state$last_analysis_completed <- Sys.time()
+      }
+    }
+  })
   
   # ========================================================================
   # MODULE 3: PLOTTING ENGINE (Always Same)
