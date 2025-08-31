@@ -8,7 +8,8 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues
+#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues debounce showNotification
+#' @importFrom magrittr %>%
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
   
@@ -337,6 +338,38 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
       isolate({
         param_manager$update_parameter("cost_budget", input$cost_budget_slider, "slider")
       })
+    })
+    
+    # ========================================================================
+    # REAL-TIME ANALYSIS TRIGGERS - Phase 3
+    # ========================================================================
+    
+    # Debounced slider change detection for real-time analysis
+    slider_changes <- reactive({
+      if (is.null(plan_state) || !plan_state$real_time_enabled) return(NULL)
+      
+      # Collect all slider values
+      list(
+        MOI = input$moi_slider,
+        num_targets = input$targets_slider,
+        gRNAs_per_target = input$grnas_slider,
+        cells_per_target = input$cells_slider,
+        reads_per_cell = input$reads_slider,
+        TPM_threshold = input$TPM_slider,
+        minimum_fold_change = input$fc_slider,
+        cost_budget = input$cost_budget_slider
+      )
+    }) %>% debounce(500)  # 500ms delay to prevent excessive calls
+    
+    # Trigger real-time analysis on debounced slider changes
+    observeEvent(slider_changes(), {
+      if (!is.null(plan_state) && plan_state$real_time_enabled && !is.null(param_manager$trigger_real_time_analysis)) {
+        # Show brief loading notification
+        showNotification("Updating analysis...", duration = 1, type = "message")
+        
+        # Trigger analysis through parameter manager
+        param_manager$trigger_real_time_analysis()
+      }
     })
     
     # ========================================================================

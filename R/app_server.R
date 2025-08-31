@@ -64,8 +64,8 @@ app_server <- function(input, output, session) {
   # ========================================================================  
   # MODULE 2: ANALYSIS ENGINE (Perturbplan Integration)
   # ========================================================================
-  # Generate real analysis results using perturbplan package functions
-  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config)
+  # Generate real analysis results using perturbplan package functions with real-time triggers
+  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config, param_manager)
   
   # ========================================================================
   # MODULE 3: PLOTTING ENGINE (Always Same)

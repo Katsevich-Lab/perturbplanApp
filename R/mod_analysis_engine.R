@@ -22,13 +22,14 @@ mod_analysis_engine_ui <- function(id) {
 #'
 #' @param id Module namespace ID
 #' @param workflow_config Reactive containing complete user configuration
+#' @param param_manager Parameter manager instance for real-time analysis triggers
 #'
 #' @return Reactive list containing analysis results data
 #' @noRd
 #'
-#' @importFrom shiny moduleServer reactive req bindCache
+#' @importFrom shiny moduleServer reactive req bindCache showNotification
 #' @importFrom magrittr %>%
-mod_analysis_engine_server <- function(id, workflow_config) {
+mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -82,6 +83,11 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
     analysis_results <- reactive({
       req(workflow_config())
+      
+      # PHASE 4: Depend on real-time analysis trigger for responsive updates
+      if (!is.null(param_manager) && !is.null(param_manager$analysis_trigger)) {
+        param_manager$analysis_trigger()  # This makes the reactive depend on trigger changes
+      }
 
       config <- workflow_config()
 
@@ -105,9 +111,15 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
         return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
       }
+      
+      # PHASE 4: Real-time analysis mode detection
+      is_real_time_analysis <- !is.null(param_manager) && 
+                               !is.null(param_manager$analysis_trigger) && 
+                               param_manager$analysis_trigger() > 0
 
       # Skip analysis if plan not clicked (only after configuration is validated as compatible)
-      if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
+      # BUT allow real-time analysis to proceed if real-time mode is active
+      if ((is.null(config$plan_clicked) || config$plan_clicked == 0) && !is_real_time_analysis) {
         return(NULL)
       }
 
@@ -123,6 +135,12 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         last_plan_count(current_plan_count)
         cached_results(NULL)  # Clear cache for new plan
         in_mode_transition(FALSE)  # Exit transition mode - user explicitly triggered analysis
+      } else if (is_real_time_analysis) {
+        # REAL-TIME MODE: Always clear cache for real-time analysis updates
+        cached_results(NULL)
+        previous_config_hash(current_config_hash)  # Update hash to reflect parameter changes
+        previous_config_object(config)             # Update stored config
+        in_mode_transition(FALSE)  # Ensure we're not in transition mode
       } else {
         # Check if sidebar inputs changed since last plan
         if (!is.null(previous_hash) && current_config_hash != previous_hash) {
@@ -145,7 +163,8 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         }
 
         # Same config as before - return cached results if available
-        if (!is.null(cached_results())) {
+        # EXCEPT in real-time mode where we want fresh analysis
+        if (!is.null(cached_results()) && !is_real_time_analysis) {
           return(cached_results())
         }
       }
@@ -193,6 +212,14 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       # PERTURBPLAN ANALYSIS: Call perturbplan package functions
       # Wrap in comprehensive error handling to prevent app crashes
+      
+      # PHASE 4: Performance feedback for real-time analysis
+      if (is_real_time_analysis) {
+        # Brief user feedback for real-time updates
+        # Note: The "Updating analysis..." notification is shown from parameter sliders
+        # This is additional backend processing notification (optional)
+      }
+      
       results <- tryCatch({
         generate_real_analysis(config, workflow_info)
       }, error = function(e) {

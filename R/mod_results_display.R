@@ -207,12 +207,17 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Determine if results should be shown
     output$show_results <- reactive({
       # Don't show results if design changed more recently than the last Plan click
+      # EXCEPT in real-time mode where parameter changes should not hide results
       design_change_time <- last_design_change_time()
       plan_click_time <- last_plan_click_time()
       
+      # Check if we're in real-time mode
+      is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
+      
       if (!is.null(design_change_time) && 
-          (is.null(plan_click_time) || design_change_time > plan_click_time)) {
-        return(FALSE)  # Design changed after last Plan click - don't show results
+          (is.null(plan_click_time) || design_change_time > plan_click_time) &&
+          !is_real_time_mode) {
+        return(FALSE)  # Design changed after last Plan click - don't show results (unless real-time)
       }
       
       # Use tryCatch to handle any errors in plot_objects() or analysis_results()
@@ -232,12 +237,17 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Determine if errors should be shown
     output$show_error <- reactive({
       # Don't show errors if design changed more recently than the last Plan click
+      # EXCEPT in real-time mode where parameter changes should not hide errors
       design_change_time <- last_design_change_time()
       plan_click_time <- last_plan_click_time()
       
+      # Check if we're in real-time mode
+      is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
+      
       if (!is.null(design_change_time) && 
-          (is.null(plan_click_time) || design_change_time > plan_click_time)) {
-        return(FALSE)  # Design changed after last Plan click - don't show errors
+          (is.null(plan_click_time) || design_change_time > plan_click_time) &&
+          !is_real_time_mode) {
+        return(FALSE)  # Design changed after last Plan click - don't show errors (unless real-time)
       }
       
       tryCatch({
