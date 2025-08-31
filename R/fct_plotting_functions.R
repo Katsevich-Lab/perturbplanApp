@@ -265,7 +265,7 @@ create_multi_solution_parameter_plots <- function(results) {
   # Add target power line to plotly (hidden from legend)
   p_interactive <- p_interactive %>%
     add_lines(
-      x = c(-1e20, 1e20),
+      x = range(solutions_data[[1]]$data$parameter_value, na.rm = TRUE),
       y = rep(target_power, 2),
       line = list(dash = "dash", color = "grey", width = 1),
       name = paste("Target Power (", scales::percent(target_power, accuracy = 1), ")", sep = ""),
@@ -634,7 +634,7 @@ create_multi_solution_cost_plots <- function(results) {
     
     p_interactive <- p_interactive %>%
       add_lines(
-        x = c(-1e20, 1e20),
+        x = cost_range,
         y = rep(target_power, 2),
         line = list(dash = "dash", color = "grey", width = 1),
         name = paste("Target Power (", scales::percent(target_power, accuracy = 1), ")", sep = ""),
@@ -645,11 +645,14 @@ create_multi_solution_cost_plots <- function(results) {
   
   # Add cost budget line to plotly
   if (!is.null(cost_budget) && !is.na(cost_budget)) {
-    # Draw vertical line from negative to positive infinity using extreme values
+    # Get power range from all solutions
+    all_powers <- unlist(lapply(solutions_data, function(s) s$data$power))
+    power_range <- range(all_powers, na.rm = TRUE)
+    
     p_interactive <- p_interactive %>%
       add_lines(
         x = rep(cost_budget, 2),
-        y = c(-1e20, 1e20),
+        y = power_range,
         line = list(dash = "dot", color = "red", width = 1),
         name = paste("Budget ($", scales::comma(cost_budget), ")", sep = ""),
         showlegend = TRUE,
