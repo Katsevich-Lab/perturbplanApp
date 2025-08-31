@@ -265,7 +265,7 @@ create_multi_solution_parameter_plots <- function(results) {
   # Add target power line to plotly (hidden from legend)
   p_interactive <- p_interactive %>%
     add_lines(
-      x = range(solutions_data[[1]]$data$parameter_value, na.rm = TRUE),
+      x = c(-1e20, 1e20),
       y = rep(target_power, 2),
       line = list(dash = "dash", color = "grey", width = 1),
       name = paste("Target Power (", scales::percent(target_power, accuracy = 1), ")", sep = ""),
