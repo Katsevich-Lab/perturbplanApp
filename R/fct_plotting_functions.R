@@ -873,13 +873,8 @@ create_multi_curve_minimization_plots <- function(results) {
   
   # Add horizontal cost budget constraint lines to plotly
   if (length(cost_budgets) > 0) {
-    # Get full X-axis range to extend lines across entire plot
-    all_x_values <- unlist(lapply(solutions_data, function(s) s$data[[minimizing_variable]]))
-    x_range <- range(all_x_values, na.rm = TRUE)
-    
-    # Extend range to ensure lines span entire plot area (extrapolate to +/- infinity effect)
-    x_buffer <- diff(x_range) * 0.15  # 15% buffer on each side for full span
-    extended_x_range <- c(x_range[1] - x_buffer, x_range[2] + x_buffer)
+    # Draw lines from negative to positive infinity using extreme values
+    extended_x_range <- c(-1e20, 1e20)
     
     for (budget in cost_budgets) {
       p_interactive <- p_interactive %>%
