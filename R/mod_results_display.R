@@ -443,9 +443,20 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         is_duplicate <- FALSE
         if (length(pinned_solutions$solutions) > 0) {
           for (existing_solution in pinned_solutions$solutions) {
-            if (are_parameters_identical(current_params, existing_solution$parameters)) {
-              is_duplicate <- TRUE
-              break
+            # For constrained minimization workflows, also check cost budget since that's the key constraint
+            if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+              if (are_parameters_identical(current_params, existing_solution$parameters) &&
+                  !is.null(existing_solution$cost_budget) &&
+                  abs(user_config()$design_options$cost_budget - existing_solution$cost_budget) < 1) {
+                is_duplicate <- TRUE
+                break
+              }
+            } else {
+              # Standard workflows: use existing logic
+              if (are_parameters_identical(current_params, existing_solution$parameters)) {
+                is_duplicate <- TRUE
+                break
+              }
             }
           }
         }
@@ -453,14 +464,40 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         if (is_duplicate) {
           showNotification("Solution already pinned! Please change parameters to pin a different solution.", duration = 3)
         } else {
-          # Create solution entry
-          new_solution <- list(
-            index = pinned_solutions$next_index,
-            timestamp = Sys.time(),
-            parameters = current_params,
-            results = current_results,
-            plot_data = current_plot_data
-          )
+          # Create solution entry - handle both standard workflows and constrained minimization workflows (10-11)
+          workflow_id <- current_results$workflow_info$workflow_id
+          
+          if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+            # Constrained minimization workflows (10-11): Extract from optimal_design
+            optimal_design <- current_results$optimal_design
+            minimizing_param <- if (workflow_id == "power_cost_TPM_cells_reads") "TPM_threshold" else "minimum_fold_change"
+            
+            new_solution <- list(
+              index = pinned_solutions$next_index,
+              timestamp = Sys.time(),
+              workflow_type = "constrained_minimization",
+              workflow_id = workflow_id,
+              cost_budget = user_config()$design_options$cost_budget,
+              optimal_threshold = optimal_design[[minimizing_param]],
+              total_cost = optimal_design$total_cost,
+              cells_per_target = optimal_design$cells_per_target,
+              reads_per_cell = optimal_design$sequenced_reads_per_cell,
+              power = optimal_design$achieved_power,
+              parameters = current_params,
+              results = current_results,
+              plot_data = current_plot_data
+            )
+          } else {
+            # Standard workflows: Use existing structure
+            new_solution <- list(
+              index = pinned_solutions$next_index,
+              timestamp = Sys.time(),
+              workflow_type = "standard",
+              parameters = current_params,
+              results = current_results,
+              plot_data = current_plot_data
+            )
+          }
           
           # Add to pinned solutions
           pinned_solutions$solutions <- append(pinned_solutions$solutions, list(new_solution))

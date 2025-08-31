@@ -253,8 +253,8 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         return(NULL)
       }
       
-      # Only show Pin buttons for single parameter optimization workflows
-      single_param_workflows <- c(
+      # Show Pin buttons for single parameter optimization workflows + constrained minimization workflows 10-11
+      pinning_enabled_workflows <- c(
         "power_single_cells_per_target",
         "power_single_reads_per_cell", 
         "power_single_TPM_threshold",
@@ -263,10 +263,13 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
         "power_cost_TPM_cells",
         "power_cost_TPM_reads",
         "power_cost_fc_cells",
-        "power_cost_fc_reads"
+        "power_cost_fc_reads",
+        # Constrained minimization workflows (10-11)
+        "power_cost_TPM_cells_reads",
+        "power_cost_fc_cells_reads"
       )
       
-      if (workflow$workflow_id %in% single_param_workflows) {
+      if (workflow$workflow_id %in% pinning_enabled_workflows) {
         tags$div(
           style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px; display: flex; gap: 10px; justify-content: center;",
           actionButton(
