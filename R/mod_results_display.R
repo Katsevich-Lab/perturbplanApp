@@ -1658,9 +1658,9 @@ extract_achieved_power <- function(optimal) {
 #' @return Total cost value or NULL
 #' @noRd
 extract_total_cost <- function(optimal, workflow_info) {
-  # Show cost for power+cost workflows (6-11) AND cost minimization workflow (5)
+  # Show cost for power+cost workflows (6-11) only
+  # Exclude workflow 5 (power_cost_minimization) since it shows cost in optimal design column
   power_cost_workflows <- c(
-    "power_cost_minimization",          # Workflow 5: Cost minimization
     "power_cost_TPM_cells",
     "power_cost_TPM_reads", 
     "power_cost_TPM_cells_reads",
