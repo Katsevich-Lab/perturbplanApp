@@ -1593,7 +1593,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
           name = paste("Optimal:", solution_label),
           marker = list(size = 12, symbol = "circle", line = list(width = 2, color = "white")),
           text = optimal_tooltip,
-          hovertemplate = "%{text}<extra></extra>",
+          hoverinfo = "text",
           showlegend = FALSE  # Don't clutter legend with optimal points
         )
     }
