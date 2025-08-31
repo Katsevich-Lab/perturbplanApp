@@ -1468,14 +1468,14 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
           alpha = base_line_alpha
         )
         
-        # Add equi-power curve to plotly
+        # Add equi-power curve to plotly (show in legend)
         p_interactive <- p_interactive %>%
           add_lines(
             data = equi_power_data,
             x = ~cells_per_target,
             y = ~sequenced_reads_per_cell,
             color = I(solution_color),
-            name = paste(solution_label, "Equi-power"),
+            name = solution_label,
             line = list(width = 3, dash = "solid"),
             text = ~paste(solution_label, "Equi-power<br>",
                          "Cells/target:", scales::comma(cells_per_target), "<br>",
@@ -1505,7 +1505,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
           alpha = base_line_alpha
         )
         
-        # Add equi-cost curve to plotly
+        # Add equi-cost curve to plotly (hide from legend)
         p_interactive <- p_interactive %>%
           add_lines(
             data = equi_cost_data,
@@ -1519,7 +1519,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
                          "Reads/cell:", scales::comma(sequenced_reads_per_cell), "<br>",
                          "Cost: $", scales::comma(total_cost)),
             hovertemplate = "%{text}<extra></extra>",
-            showlegend = TRUE,
+            showlegend = FALSE,
             legendgroup = solution_label
           )
         
