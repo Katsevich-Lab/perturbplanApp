@@ -1,0 +1,27 @@
+
+R version 4.4.1 Patched (2024-06-25 r86831) -- "Race for Your Life"
+Copyright (C) 2024 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+- Project '~/Documents/Projects/CRISPR-power-analysis/perturbplanApp' loaded. [renv 1.0.10]
+- The project is out-of-sync -- use `renv::status()` for details.
+> golem::run_dev()
+ℹ Loading perturbplanApp
+ℹ Loading perturbplanApp
+Loading required package: shiny
+
+Listening on http://127.0.0.1:44359
