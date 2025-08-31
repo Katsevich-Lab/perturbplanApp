@@ -1024,7 +1024,9 @@ determine_experimental_subcolumns <- function(solution_rows) {
     "Number of targets" = list(header = "# Targets", width = "6%"),
     "gRNAs per target" = list(header = "gRNAs/Target", width = "6%"),
     "Cells per target" = list(header = "Cells/Target", width = "6%"),
-    "Reads per cell" = list(header = "Reads/Cell", width = "6%")
+    "Reads per cell" = list(header = "Reads/Cell", width = "6%"),
+    "Cells/target" = list(header = "Cells/Target", width = "6%"),
+    "Reads/cell" = list(header = "Reads/Cell", width = "6%")
   )
   
   # Return only the parameters that actually appear
@@ -1879,13 +1881,13 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
   # Special case for cost minimization workflow (5): Add optimal cells and reads as experimental parameters
   if (!is.null(workflow_info) && workflow_info$workflow_id == "power_cost_minimization") {
     # Debug: Always add these parameters for cost minimization to ensure they appear
-    params[["Cells per target"]] <- if (!is.null(optimal$cells_per_target)) {
+    params[["Cells/target"]] <- if (!is.null(optimal$cells_per_target)) {
       scales::comma(round(optimal$cells_per_target))
     } else {
       "N/A"
     }
     
-    params[["Reads per cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
+    params[["Reads/cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
       scales::comma(round(optimal$sequenced_reads_per_cell))
     } else {
       "N/A"
