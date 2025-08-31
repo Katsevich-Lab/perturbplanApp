@@ -1656,8 +1656,9 @@ extract_achieved_power <- function(optimal) {
 #' @return Total cost value or NULL
 #' @noRd
 extract_total_cost <- function(optimal, workflow_info) {
-  # Only show cost for power+cost workflows (6-11)
+  # Show cost for power+cost workflows (6-11) AND cost minimization workflow (5)
   power_cost_workflows <- c(
+    "power_cost_minimization",          # Workflow 5: Cost minimization
     "power_cost_TPM_cells",
     "power_cost_TPM_reads", 
     "power_cost_TPM_cells_reads",
@@ -1786,14 +1787,10 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
       value = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
     ))
   } else if (minimizing_param == "cost") {
-    # Cost minimization: Show total cost + optimal cells and reads
+    # Cost minimization: Show only total cost (cells and reads moved to experimental parameters)
     return(list(
-      label = "Optimal Design",
-      value = create_multi_param_display(list(
-        "Total Cost" = if (!is.null(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A",
-        "Cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A",
-        "Reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
-      ))
+      label = "Total Cost",
+      value = if (!is.null(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A"
     ))
   }
   
@@ -1876,6 +1873,22 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     
     if (!reads_should_exclude && !is.null(param_manager$parameters$reads_per_cell)) {
       params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
+    }
+  }
+  
+  # Special case for cost minimization workflow (5): Add optimal cells and reads as experimental parameters
+  if (!is.null(workflow_info) && workflow_info$workflow_id == "power_cost_minimization") {
+    # Debug: Always add these parameters for cost minimization to ensure they appear
+    params[["Cells per target"]] <- if (!is.null(optimal$cells_per_target)) {
+      scales::comma(round(optimal$cells_per_target))
+    } else {
+      "N/A"
+    }
+    
+    params[["Reads per cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
+      scales::comma(round(optimal$sequenced_reads_per_cell))
+    } else {
+      "N/A"
     }
   }
   
