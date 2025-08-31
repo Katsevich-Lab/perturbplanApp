@@ -588,6 +588,11 @@ create_multi_solution_cost_plots <- function(results) {
   workflow_info <- results$workflow_info
   solutions_data <- results$plot_data$solutions
   
+  # Special handling for constrained minimization workflows (10-11)
+  if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    return(create_multi_curve_minimization_plots(results))
+  }
+  
   # Extract cost budget from different locations based on workflow type
   cost_budget <- results$user_config$design_options$cost_budget %||%
                  results$metadata$TPM_minimization_data$cost_constraint %||%
@@ -781,6 +786,225 @@ create_multi_solution_cost_plots <- function(results) {
     plot_data = solutions_data,
     multi_solution = TRUE,
     solution_count = length(solutions_data)
+  ))
+}
+
+#' Create multi-curve minimization plots for workflows 10-11
+#'
+#' @description Specialized plotting for constrained minimization workflows that
+#' show multiple cost budget curves on the same plot. Each curve shows how the
+#' minimizing variable (TPM threshold or fold change) varies with cost constraints.
+#'
+#' @param results Analysis results with multi-solution plot_data structure
+#' @return List containing ggplot and plotly objects with multiple curves
+#' @noRd
+create_multi_curve_minimization_plots <- function(results) {
+  
+  workflow_info <- results$workflow_info
+  solutions_data <- results$plot_data$solutions
+  minimizing_variable <- workflow_info$minimizing_parameter
+  
+  # Validate input
+  if (is.null(solutions_data) || length(solutions_data) == 0) {
+    stop("No solution data available for multi-curve plotting")
+  }
+  
+  # Create base ggplot with appropriate scales
+  p <- ggplot() +
+    labs(
+      title = paste(workflow_info$title, "Budget Comparison"),
+      subtitle = paste(length(solutions_data), "cost budget scenarios"),
+      x = if (minimizing_variable == "TPM_threshold") "TPM Threshold" else "Fold Change",
+      y = "Optimal Cost ($)"
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      plot.subtitle = element_text(hjust = 0.5, size = 12),
+      legend.position = "right",
+      legend.title = element_blank()
+    )
+  
+  # Apply appropriate X-axis scaling based on minimizing variable
+  if (minimizing_variable == "TPM_threshold") {
+    p <- p + scale_x_log10(
+      labels = scales::comma_format(),
+      breaks = c(3, 10, 30, 100, 300),
+      minor_breaks = NULL
+    )
+  }
+  
+  # Apply Y-axis log scaling for cost
+  p <- p + scale_y_log10(
+    labels = scales::dollar_format()
+  )
+  
+  # Create plotly object for interactive features
+  p_interactive <- plot_ly()
+  
+  # Add each solution as a separate curve
+  for (i in seq_along(solutions_data)) {
+    solution <- solutions_data[[i]]
+    solution_data <- solution$data
+    solution_color <- solution$color
+    solution_label <- solution$label
+    
+    # Extract the curve data (TPM/FC vs Cost relationship)
+    # For constrained minimization, the data should contain the grouped minimization curve
+    curve_data <- solution_data
+    
+    # Validate that we have the expected structure
+    if (!all(c(minimizing_variable, "total_cost") %in% names(curve_data))) {
+      warning("Missing expected columns in solution data for ", solution_label)
+      next
+    }
+    
+    # Sort by minimizing variable for smooth curves
+    curve_data <- curve_data[order(curve_data[[minimizing_variable]]), ]
+    
+    # Determine line style (solid for pinned, dashed for pending)
+    line_type <- if (!is.null(solution$style) && solution$style == "dashed") "dashed" else "solid"
+    line_width <- if (!is.null(solution$style) && solution$style == "dashed") 1.5 else 1.2
+    line_alpha <- if (!is.null(solution$style) && solution$style == "dashed") 0.8 else 1.0
+    
+    # Add line to ggplot
+    p <- p + 
+      geom_line(
+        data = curve_data, 
+        aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]]),
+        color = solution_color,
+        linetype = line_type,
+        size = line_width,
+        alpha = line_alpha
+      ) +
+      geom_point(
+        data = curve_data,
+        aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]]),
+        color = solution_color,
+        size = 0.8,
+        alpha = 0.6
+      )
+    
+    # Create interactive curve for plotly
+    plotly_dash <- if (line_type == "dashed") "dash" else "solid"
+    plotly_width <- if (line_type == "dashed") 4 else 3
+    
+    # Prepare tooltip data
+    if (minimizing_variable == "TPM_threshold") {
+      x_values <- round(curve_data[[minimizing_variable]])  # TPM values (integers)
+    } else {
+      x_values <- round(curve_data[[minimizing_variable]], 3)  # FC values (3 decimals)
+    }
+    y_values <- round(curve_data$total_cost)  # Cost values
+    
+    curve_data$tooltip_text <- paste0(
+      solution_label, "<br>",
+      if (minimizing_variable == "TPM_threshold") "TPM Threshold" else "Fold Change", ": ", x_values, "<br>",
+      "Optimal Cost: $", scales::comma(y_values)
+    )
+    
+    # Add line to plotly
+    p_interactive <- p_interactive %>%
+      add_lines(
+        data = curve_data,
+        x = ~get(minimizing_variable), 
+        y = ~total_cost,
+        color = I(solution_color),
+        name = solution_label,
+        line = list(width = plotly_width, dash = plotly_dash),
+        text = ~tooltip_text,
+        hovertemplate = "%{text}<extra></extra>",
+        showlegend = TRUE
+      )
+    
+    # Add optimal point if available
+    if (!is.null(solution$optimal_point)) {
+      optimal_design <- solution$optimal_point
+      
+      # Extract optimal values
+      optimal_threshold <- optimal_design[[minimizing_variable]]
+      optimal_cost <- optimal_design$total_cost
+      
+      if (!is.null(optimal_threshold) && !is.null(optimal_cost) && 
+          !is.na(optimal_threshold) && !is.na(optimal_cost)) {
+        
+        # Add optimal point to ggplot (red dot)
+        optimal_df <- data.frame(
+          x = optimal_threshold,
+          y = optimal_cost,
+          stringsAsFactors = FALSE
+        )
+        names(optimal_df) <- c(minimizing_variable, "total_cost")
+        
+        p <- p + geom_point(
+          data = optimal_df,
+          aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]]),
+          color = "red", 
+          size = 4, 
+          shape = 19
+        )
+        
+        # Add optimal point to plotly
+        optimal_tooltip <- paste0(
+          "OPTIMAL: ", solution_label, "<br>",
+          if (minimizing_variable == "TPM_threshold") "TPM Threshold" else "Fold Change", ": ", 
+          if (minimizing_variable == "TPM_threshold") round(optimal_threshold) else round(optimal_threshold, 3), "<br>",
+          "Optimal Cost: $", scales::comma(optimal_cost), "<br>",
+          "Achieved Power: ", scales::percent(optimal_design$achieved_power %||% 0, accuracy = 0.1)
+        )
+        
+        p_interactive <- p_interactive %>%
+          add_markers(
+            x = optimal_threshold,
+            y = optimal_cost,
+            color = I("red"),
+            name = paste("Optimal:", solution_label),
+            marker = list(size = 12, symbol = "circle"),
+            text = optimal_tooltip,
+            hovertemplate = "%{text}<extra></extra>",
+            showlegend = TRUE
+          )
+      }
+    }
+  }
+  
+  # Configure plotly layout
+  p_interactive <- p_interactive %>%
+    layout(
+      title = list(
+        text = paste0("<b>", workflow_info$title, " Budget Comparison</b><br>",
+                     "<sup>", length(solutions_data), " cost budget scenarios</sup>"),
+        font = list(size = 14)
+      ),
+      xaxis = list(
+        title = if (minimizing_variable == "TPM_threshold") "TPM Threshold" else "Fold Change",
+        type = if (minimizing_variable == "TPM_threshold") "log" else "linear"
+      ),
+      yaxis = list(
+        title = "Optimal Cost ($)",
+        type = "log"
+      ),
+      legend = list(
+        orientation = "v",
+        x = 1.02, y = 1,
+        bgcolor = "rgba(255,255,255,0.8)",
+        bordercolor = "rgba(0,0,0,0.2)",
+        borderwidth = 1
+      ),
+      hovermode = "closest"
+    ) %>%
+    config(
+      displayModeBar = FALSE,
+      displaylogo = FALSE,
+      modeBarButtonsToRemove = list("all")
+    )
+  
+  # Return plot objects
+  return(list(
+    ggplot_obj = p,
+    plotly_obj = p_interactive,
+    plot_type = "multi_curve_minimization",
+    workflow_info = workflow_info
   ))
 }
 
