@@ -91,6 +91,10 @@ mod_analysis_choices_server <- function(id, design_config, param_manager){
     observeEvent(input$TPM_threshold_fixed, {
       isolate({
         param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
+        # Trigger real-time analysis like sliders do
+        if (!is.null(param_manager$trigger_real_time_analysis)) {
+          param_manager$trigger_real_time_analysis()
+        }
       })
     })
     

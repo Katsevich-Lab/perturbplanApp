@@ -23,13 +23,14 @@ mod_analysis_engine_ui <- function(id) {
 #' @param id Module namespace ID
 #' @param workflow_config Reactive containing complete user configuration
 #' @param param_manager Parameter manager instance for real-time analysis triggers
+#' @param plan_state ReactiveValues containing plan state for complete clearing
 #'
 #' @return Reactive list containing analysis results data
 #' @noRd
 #'
 #' @importFrom shiny moduleServer reactive req bindCache showNotification
 #' @importFrom magrittr %>%
-mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL) {
+mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL, plan_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -85,6 +86,53 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         }
         
         previous_design_options(current_design)
+      }
+    })
+    
+    # Track non-shared sidebar parameters for comprehensive clearing (like design options)
+    previous_non_shared <- reactiveVal(NULL)
+    
+    observe({
+      config <- workflow_config()
+      if (!is.null(config)) {
+        # Track sidebar-only parameters that should trigger comprehensive clearing
+        current_non_shared <- list(
+          # Experimental setup - non-shared parameters only
+          biological_system = config$experimental_setup$biological_system,
+          pilot_data_choice = config$experimental_setup$pilot_data_choice,
+          non_targeting_gRNAs = config$experimental_setup$non_targeting_gRNAs,
+          
+          # Analysis choices - non-shared parameters only  
+          side = config$analysis_choices$side,
+          gene_list_mode = config$analysis_choices$gene_list_mode,
+          
+          # Effect sizes - non-shared parameters only
+          prop_non_null = config$effect_sizes$prop_non_null,
+          
+          # Advanced choices - all parameters (none are shared with sliders)
+          gRNA_variability = config$advanced_choices$gRNA_variability,
+          mapping_efficiency = config$advanced_choices$mapping_efficiency,
+          control_group = config$advanced_choices$control_group,
+          fdr_target = config$advanced_choices$fdr_target
+        )
+        
+        # If any non-shared sidebar parameter changed, apply IDENTICAL clearing as design options
+        if (!is.null(previous_non_shared()) && !identical(previous_non_shared(), current_non_shared)) {
+          # Analysis engine clearing
+          in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
+          cached_results(NULL)           # Clear cached results
+          previous_config_hash(NULL)     # Reset configuration tracking
+          previous_config_object(NULL)   # Reset configuration object
+          
+          # Plan state clearing (IDENTICAL to design options in app_server.R)
+          if (!is.null(plan_state)) {
+            plan_state$first_plan_clicked <- FALSE
+            plan_state$real_time_enabled <- FALSE
+            plan_state$sliders_visible <- FALSE
+          }
+        }
+        
+        previous_non_shared(current_non_shared)
       }
     })
 
@@ -167,16 +215,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       }
       # Check for real-time trigger (only if NOT a plan click)
       else if (current_trigger_count > last_trigger_count()) {
-        # SIDEBAR SOURCE CHECK: Block real-time analysis if last parameter change was from sidebar
-        if (!is.null(param_manager) && !is.null(param_manager$parameters$last_updated_by)) {
-          if (param_manager$parameters$last_updated_by == "sidebar") {
-            # Sidebar change detected - clear cache but don't run analysis
-            cached_results(NULL)
-            last_trigger_count(current_trigger_count)  # Acknowledge trigger to prevent loops
-            return(NULL)
-          }
-        }
-        
         is_real_time_trigger <- TRUE
         last_trigger_count(current_trigger_count)
         # Update config hash for this real-time trigger

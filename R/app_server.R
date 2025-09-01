@@ -66,7 +66,7 @@ app_server <- function(input, output, session) {
   # MODULE 2: ANALYSIS ENGINE (Perturbplan Integration)
   # ========================================================================
   # Generate real analysis results using perturbplan package functions with real-time triggers
-  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config, param_manager)
+  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config, param_manager, plan_state)
   
   # Track when Plan analysis completes
   observeEvent(analysis_results_raw(), {

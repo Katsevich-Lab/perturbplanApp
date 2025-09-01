@@ -153,30 +153,50 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     observeEvent(input$MOI, {
       isolate({
         param_manager$update_parameter("MOI", input$MOI, "sidebar")
+        # Trigger real-time analysis like sliders do
+        if (!is.null(param_manager$trigger_real_time_analysis)) {
+          param_manager$trigger_real_time_analysis()
+        }
       })
     })
     
     observeEvent(input$num_targets, {
       isolate({
         param_manager$update_parameter("num_targets", input$num_targets, "sidebar")
+        # Trigger real-time analysis like sliders do
+        if (!is.null(param_manager$trigger_real_time_analysis)) {
+          param_manager$trigger_real_time_analysis()
+        }
       })
     })
     
     observeEvent(input$gRNAs_per_target, {
       isolate({
         param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "sidebar")
+        # Trigger real-time analysis like sliders do
+        if (!is.null(param_manager$trigger_real_time_analysis)) {
+          param_manager$trigger_real_time_analysis()
+        }
       })
     })
     
     observeEvent(input$cells_fixed, {
       isolate({
         param_manager$update_parameter("cells_per_target", input$cells_fixed, "sidebar")
+        # Trigger real-time analysis like sliders do
+        if (!is.null(param_manager$trigger_real_time_analysis)) {
+          param_manager$trigger_real_time_analysis()
+        }
       })
     })
     
     observeEvent(input$sequenced_reads_fixed, {
       isolate({
         param_manager$update_parameter("reads_per_cell", input$sequenced_reads_fixed, "sidebar")
+        # Trigger real-time analysis like sliders do
+        if (!is.null(param_manager$trigger_real_time_analysis)) {
+          param_manager$trigger_real_time_analysis()
+        }
       })
     })
     
