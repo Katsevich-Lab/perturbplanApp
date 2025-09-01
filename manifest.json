@@ -1969,18 +1969,18 @@
         "LinkingTo": "PoissonBinomial,\nRcpp,\nRcppEigen,\nBH",
         "Depends": "R (>= 3.5)",
         "LazyData": "true",
-        "Built": "R 4.4.0; x86_64-apple-darwin20; 2025-09-01 20:15:13 UTC; unix",
+        "Built": "R 4.4.0; x86_64-apple-darwin20; 2025-09-01 22:30:46 UTC; unix",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
-        "RemoteUsername": "katsevich-lab",
+        "RemoteUsername": "Katsevich-Lab",
         "RemoteRepo": "perturbplan",
-        "RemoteRef": "cleanup",
-        "RemoteSha": "c03105fddb11b45e4c97c45fa3f197ba1edf21b5",
+        "RemoteRef": "v0.0.1",
+        "RemoteSha": "b4bbbe1de6228c2b6bd7425e830aa0b792c24fbd",
         "GithubHost": "api.github.com",
         "GithubRepo": "perturbplan",
-        "GithubUsername": "katsevich-lab",
-        "GithubRef": "cleanup",
-        "GithubSHA1": "c03105fddb11b45e4c97c45fa3f197ba1edf21b5"
+        "GithubUsername": "Katsevich-Lab",
+        "GithubRef": "v0.0.1",
+        "GithubSHA1": "b4bbbe1de6228c2b6bd7425e830aa0b792c24fbd"
       }
     },
     "pillar": {
@@ -3225,16 +3225,16 @@
       "checksum": "bfaf8ad719b6adac76e708144a5cec8e"
     },
     ".Rprofile": {
-      "checksum": "65d66d9a499b73d23297f12c1e17da5b"
+      "checksum": "1a2dcd6ce7423c9176de19b299a3a9c3"
     },
     "app.R": {
       "checksum": "0d465e15d5de2dc310d7b7f1c052333e"
     },
     "CLAUDE.md": {
-      "checksum": "091c19f51ffdeba8c0fe025be0937aac"
+      "checksum": "6ba044d76f4d39d98d93194262da724f"
     },
     "DESCRIPTION": {
-      "checksum": "eefedacd33c419b2eb99f9e41ccdb2cb"
+      "checksum": "0f924e3490ee428e3bfe2b8a74af76be"
     },
     "dev/01_start.R": {
       "checksum": "9d971680fcd4c017879725fee2336ae5"
@@ -3378,7 +3378,7 @@
       "checksum": "1e17bd38f517af7036ff64d3e7d3e79b"
     },
     "R/app_ui.R": {
-      "checksum": "88fd21473a65a75d842a889a189fbe55"
+      "checksum": "ee63d4b5cd41c3a2e699f136bdac86f8"
     },
     "R/fct_analysis_config.R": {
       "checksum": "b4e4a12e8b0a40656b46bf564f687296"
@@ -3458,6 +3458,9 @@
     "R/run_app.R": {
       "checksum": "476011bbc4ffefa824e5bfb8386d849b"
     },
+    "R/utils_analytics.R": {
+      "checksum": "e8802151495fba39755d6b7abe51089e"
+    },
     "R/utils_ui_components.R": {
       "checksum": "0017bd22e9063dc35f5d1d63a45df26c"
     },
@@ -3471,7 +3474,7 @@
       "checksum": "f5d8f702f3536e7b81f822414599556f"
     },
     "renv.lock": {
-      "checksum": "3f7af923d7c80944e7b426eed9f5da05"
+      "checksum": "d2e9c6d017106ad984277113a551659a"
     },
     "test_real_time_analysis.R": {
       "checksum": "c229391d5438d5d75819f57cd6407ad5"
