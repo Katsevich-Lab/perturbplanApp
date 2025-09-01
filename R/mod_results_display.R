@@ -1763,12 +1763,9 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
   )
   
   # Check if this is a workflow where one of cells/reads is cost-constrained
-  cells_or_reads_constrained <- workflow_info$workflow_id %in% c(
-    "power_cost_TPM_cells",             # TPM min with cells fixed, reads cost-constrained
-    "power_cost_TPM_reads",             # TPM min with reads fixed, cells cost-constrained
-    "power_cost_fc_cells",              # FC min with cells fixed, reads cost-constrained
-    "power_cost_fc_reads"               # FC min with reads fixed, cells cost-constrained
-  )
+  # Note: Workflows 6-9 removed so cost-constrained parameters appear in Experimental Parameters
+  # instead of being bundled with TPM/FC optimal values
+  cells_or_reads_constrained <- FALSE  # Disabled to match workflows 10-11 behavior
   
   if (minimizing_param == "TPM_threshold") {
     if (cells_and_reads_varying) {
@@ -1975,6 +1972,26 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
       scales::comma(round(optimal$sequenced_reads_per_cell))
     } else {
       "N/A"
+    }
+  }
+  
+  # Special case for single-parameter constrained workflows (6-9): Add cost-constrained parameter as experimental parameter
+  if (!is.null(workflow_info) && workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_TPM_reads", "power_cost_fc_cells", "power_cost_fc_reads")) {
+    # Add cost-constrained parameter to Experimental Parameters (cells OR reads, not both)
+    if (workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_fc_cells")) {
+      # Cells varying (cost-constrained), reads fixed
+      params[["Cells/target"]] <- if (!is.null(optimal$cells_per_target)) {
+        scales::comma(round(optimal$cells_per_target))
+      } else {
+        "N/A"
+      }
+    } else if (workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads")) {
+      # Reads varying (cost-constrained), cells fixed  
+      params[["Reads/cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
+        scales::comma(round(optimal$sequenced_reads_per_cell))
+      } else {
+        "N/A"
+      }
     }
   }
   
