@@ -1755,11 +1755,11 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
   minimizing_param <- workflow_info$minimizing_parameter
   
   # Check if this is a workflow where cells and reads are varying
-  # (cost minimization or TPM/FC minimization with cells+reads varying)
+  # (cost minimization only - TPM/FC minimization should show cells+reads separately)
   cells_and_reads_varying <- workflow_info$workflow_id %in% c(
-    "power_cost_minimization",           # Cost minimization (cells+reads vary)
-    "power_cost_TPM_cells_reads",       # TPM minimization with cells+reads varying
-    "power_cost_fc_cells_reads"         # FC minimization with cells+reads varying
+    "power_cost_minimization"           # Cost minimization (cells+reads vary)
+    # Note: power_cost_TPM_cells_reads and power_cost_fc_cells_reads removed
+    # so cells/reads appear in Experimental Parameters columns, not bundled with TPM/FC
   )
   
   # Check if this is a workflow where one of cells/reads is cost-constrained
