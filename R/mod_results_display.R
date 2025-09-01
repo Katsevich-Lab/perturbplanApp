@@ -1962,6 +1962,22 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     }
   }
   
+  # Special case for constrained minimization workflows (10-11): Add optimal cells and reads as experimental parameters
+  if (!is.null(workflow_info) && workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    # Always add these parameters for constrained minimization to ensure they appear in Experimental Parameters
+    params[["Cells/target"]] <- if (!is.null(optimal$cells_per_target)) {
+      scales::comma(round(optimal$cells_per_target))
+    } else {
+      "N/A"
+    }
+    
+    params[["Reads/cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
+      scales::comma(round(optimal$sequenced_reads_per_cell))
+    } else {
+      "N/A"
+    }
+  }
+  
   return(params)
 }
 
