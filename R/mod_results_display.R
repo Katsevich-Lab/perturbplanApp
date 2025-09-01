@@ -2143,7 +2143,11 @@ get_minimized_parameter_for_display <- function(workflow_id) {
     "power_cost_TPM_cells" = "TPM_threshold",
     "power_cost_TPM_reads" = "TPM_threshold",
     "power_cost_fc_cells" = "minimum_fold_change",
-    "power_cost_fc_reads" = "minimum_fold_change"
+    "power_cost_fc_reads" = "minimum_fold_change",
+    
+    # Constrained minimization workflows (10-11)
+    "power_cost_TPM_cells_reads" = "TPM_threshold",
+    "power_cost_fc_cells_reads" = "minimum_fold_change"
   )
   
   return(minimized_map[[workflow_id]] %||% character(0))
