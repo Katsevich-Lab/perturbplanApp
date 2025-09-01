@@ -981,7 +981,7 @@ create_multi_curve_minimization_plots <- function(results) {
         name = solution_label,
         line = list(width = plotly_width, dash = plotly_dash),
         text = ~tooltip_text,
-        hovertemplate = "%{text}<extra></extra>",
+        hoverinfo = "text",
         showlegend = TRUE
       )
     
@@ -1029,8 +1029,8 @@ create_multi_curve_minimization_plots <- function(results) {
             name = paste("Optimal:", solution_label),
             marker = list(size = 12, symbol = "circle"),
             text = optimal_tooltip,
-            hovertemplate = "%{text}<extra></extra>",
-            showlegend = TRUE
+            hoverinfo = "text",
+            showlegend = FALSE  # Hide optimal points from legend to reduce clutter
           )
       }
     }
