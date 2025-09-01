@@ -400,18 +400,12 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     
     # Trigger real-time analysis on debounced slider changes
     observeEvent(slider_changes(), {
-      cat("real_time_enabled:", if(!is.null(plan_state)) plan_state$real_time_enabled else "NULL", "\n")
-      cat("slider_changes value:", !is.null(slider_changes()), "\n")
-      
       if (!is.null(plan_state) && plan_state$real_time_enabled && !is.null(param_manager$trigger_real_time_analysis)) {
-        cat("TRIGGERING REAL-TIME ANALYSIS\n")
         # Show subtle loading notification (shorter duration to reduce noise)
         showNotification("Updating...", duration = 0.5, type = "message")
         
         # Trigger analysis through parameter manager
         param_manager$trigger_real_time_analysis()
-      } else {
-        cat("NOT triggering (real-time not enabled or other condition false)\n")
       }
     })
     
