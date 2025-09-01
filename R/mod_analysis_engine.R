@@ -167,6 +167,16 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       }
       # Check for real-time trigger (only if NOT a plan click)
       else if (current_trigger_count > last_trigger_count()) {
+        # SIDEBAR SOURCE CHECK: Block real-time analysis if last parameter change was from sidebar
+        if (!is.null(param_manager) && !is.null(param_manager$parameters$last_updated_by)) {
+          if (param_manager$parameters$last_updated_by == "sidebar") {
+            # Sidebar change detected - clear cache but don't run analysis
+            cached_results(NULL)
+            last_trigger_count(current_trigger_count)  # Acknowledge trigger to prevent loops
+            return(NULL)
+          }
+        }
+        
         is_real_time_trigger <- TRUE
         last_trigger_count(current_trigger_count)
         # Update config hash for this real-time trigger
