@@ -179,22 +179,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
       
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
       tryCatch({
-        # DEBUG: Log all parameters being passed to perturbplan
         mapping_eff_value <- advanced_opts$mapping_efficiency
-        cat("=== DEBUG: ALL COST CONSTRAINT PARAMETERS ===\n")
-        cat("cost_per_captured_cell:", cost_per_cell, "\n")
-        cat("cost_per_million_reads:", cost_per_million_reads, "\n")
-        cat("cost_constraint:", cost_constraint, "\n")
-        cat("MOI:", experimental_opts$MOI, "\n")
-        cat("num_targets:", experimental_opts$num_targets, "\n")
-        cat("non_targeting_gRNAs:", experimental_opts$non_targeting_gRNAs, "\n")
-        cat("gRNAs_per_target:", experimental_opts$gRNAs_per_target, "\n")
-        cat("reads_per_cell:", if(has_reads_fixed) fixed_variable$reads_per_cell else NULL, "\n")
-        cat("cells_per_target:", if(has_cells_fixed) fixed_variable$cells_per_target else NULL, "\n")
-        cat("mapping_efficiency:", mapping_eff_value, "\n")
-        cat("has_cells_fixed:", has_cells_fixed, "\n")
-        cat("has_reads_fixed:", has_reads_fixed, "\n")
-        cat("=============================================\n")
         
         cost_result <- perturbplan::obtain_fixed_variable_constraining_cost(
           cost_per_captured_cell = cost_per_cell,
@@ -266,8 +251,13 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
     cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
     
-    # Grid parameters
-    grid_size = 100,
+    # Grid parameters - smaller grid for single parameter optimization workflows (1-4) for faster computation
+    grid_size = if (workflow_info$workflow_id %in% c(
+      "power_single_cells_per_target",
+      "power_single_reads_per_cell", 
+      "power_single_TPM_threshold",
+      "power_single_minimum_fold_change"
+    )) 15 else 100,
     
     # Mapping efficiency - PERTURBPLAN API REQUIREMENT
     mapping_efficiency = advanced_opts$mapping_efficiency,

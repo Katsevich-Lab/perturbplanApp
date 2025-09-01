@@ -10,6 +10,7 @@
 #' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification uiOutput renderUI
 #' @importFrom shinydashboard dashboardSidebar
 #' @importFrom shinyjs show hide
+#' @importFrom digest digest
 mod_sidebar_ui <- function(id) {
   ns <- NS(id)
   
@@ -52,10 +53,10 @@ mod_sidebar_ui <- function(id) {
 #'
 #' @param id Module namespace ID
 #' @param param_manager Parameter manager instance (central hub)
-#' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
+#' @param plan_state ReactiveValues containing plan click state for real-time analysis
 #'
 #' @noRd 
-mod_sidebar_server <- function(id, param_manager){
+mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -85,9 +86,47 @@ mod_sidebar_server <- function(id, param_manager){
     })
     
     # Plan button logic
+    # Plan button click handler with real-time analysis state management
     observeEvent(input$plan_btn, {
-      # TODO: Trigger analysis with combined configuration
-      showNotification("Plan button clicked - analysis will be implemented", type = "message")
+      if (!is.null(plan_state)) {
+        current_config <- combined_config()
+        
+        # Create signature for current design problem
+        if (!is.null(current_config) && !is.null(current_config$design_options)) {
+          current_signature <- digest::digest(list(
+            optimization_type = current_config$design_options$optimization_type,
+            minimization_target = current_config$design_options$minimization_target,
+            parameter_controls = if (!is.null(current_config$design_options$parameter_controls)) {
+              lapply(current_config$design_options$parameter_controls, function(param) param$type)
+            } else NULL
+          ), algo = "md5")
+          
+          # Check if this is first plan click for current design problem
+          if (!plan_state$first_plan_clicked || 
+              !identical(plan_state$current_design_signature, current_signature)) {
+            
+            # First plan click for this design problem structure
+            plan_state$first_plan_clicked <- TRUE
+            plan_state$sliders_visible <- TRUE
+            plan_state$current_design_signature <- current_signature
+            
+            showNotification(
+              "Analysis complete! Drag sliders to enable real-time updates.", 
+              duration = 3, 
+              type = "message"
+            )
+          } else {
+            # Subsequent plan clicks - just show analysis starting
+            showNotification("Running analysis...", duration = 2, type = "message")
+          }
+          
+          # Don't enable real-time mode yet - wait for first slider interaction
+          # plan_state$real_time_enabled <- TRUE  # MOVED to slider module
+        }
+      } else {
+        # Fallback for backward compatibility
+        showNotification("Running analysis...", duration = 2, type = "message")
+      }
     })
     
     # Return configuration from parameter manager (now safe with isolate() patterns)

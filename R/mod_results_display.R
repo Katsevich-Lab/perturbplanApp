@@ -196,7 +196,7 @@ are_parameters_identical <- function(params1, params2) {
   return(TRUE)
 }
 
-mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), param_manager = NULL, slider_actions = NULL) {
+mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), param_manager = NULL, slider_actions = NULL, plan_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -207,12 +207,17 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Determine if results should be shown
     output$show_results <- reactive({
       # Don't show results if design changed more recently than the last Plan click
+      # EXCEPT in real-time mode where parameter changes should not hide results
       design_change_time <- last_design_change_time()
       plan_click_time <- last_plan_click_time()
       
+      # Check if we're in real-time mode
+      is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
+      
       if (!is.null(design_change_time) && 
-          (is.null(plan_click_time) || design_change_time > plan_click_time)) {
-        return(FALSE)  # Design changed after last Plan click - don't show results
+          (is.null(plan_click_time) || design_change_time > plan_click_time) &&
+          !is_real_time_mode) {
+        return(FALSE)  # Design changed after last Plan click - don't show results (unless real-time)
       }
       
       # Use tryCatch to handle any errors in plot_objects() or analysis_results()
@@ -232,12 +237,17 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Determine if errors should be shown
     output$show_error <- reactive({
       # Don't show errors if design changed more recently than the last Plan click
+      # EXCEPT in real-time mode where parameter changes should not hide errors
       design_change_time <- last_design_change_time()
       plan_click_time <- last_plan_click_time()
       
+      # Check if we're in real-time mode
+      is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
+      
       if (!is.null(design_change_time) && 
-          (is.null(plan_click_time) || design_change_time > plan_click_time)) {
-        return(FALSE)  # Design changed after last Plan click - don't show errors
+          (is.null(plan_click_time) || design_change_time > plan_click_time) &&
+          !is_real_time_mode) {
+        return(FALSE)  # Design changed after last Plan click - don't show errors (unless real-time)
       }
       
       tryCatch({
@@ -318,7 +328,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Initialize slider module server with parameter manager and capture return values
     slider_actions <- NULL
     if (!is.null(param_manager)) {
-      slider_actions <- mod_parameter_sliders_server("sliders", param_manager, workflow_info, user_config)
+      slider_actions <- mod_parameter_sliders_server("sliders", param_manager, workflow_info, user_config, plan_state)
     }
     
     # ========================================================================
@@ -421,6 +431,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         current_plots <- plot_objects()
         current_params <- slider_actions$current_parameters()
         
+        # Extract workflow_id from current results
+        workflow_id <- current_results$workflow_info$workflow_id
+        
         # Extract plot data from plot_objects
         current_plot_data <- NULL
         if (!is.null(current_plots$plots) && !is.null(current_plots$plots$plot_data)) {
@@ -433,9 +446,27 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         is_duplicate <- FALSE
         if (length(pinned_solutions$solutions) > 0) {
           for (existing_solution in pinned_solutions$solutions) {
-            if (are_parameters_identical(current_params, existing_solution$parameters)) {
-              is_duplicate <- TRUE
-              break
+            if (workflow_id == "power_cost_minimization") {
+              # Cost minimization: check TPM threshold and fold change (fixed parameters) + target power
+              if (are_parameters_identical(current_params, existing_solution$parameters) &&
+                  abs(user_config()$design_options$target_power - existing_solution$results$user_config$design_options$target_power) < 0.001) {
+                is_duplicate <- TRUE
+                break
+              }
+            } else if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+              # Constrained minimization workflows: also check cost budget since that's the key constraint
+              if (are_parameters_identical(current_params, existing_solution$parameters) &&
+                  !is.null(existing_solution$cost_budget) &&
+                  abs(user_config()$design_options$cost_budget - existing_solution$cost_budget) < 1) {
+                is_duplicate <- TRUE
+                break
+              }
+            } else {
+              # Standard workflows: use existing logic
+              if (are_parameters_identical(current_params, existing_solution$parameters)) {
+                is_duplicate <- TRUE
+                break
+              }
             }
           }
         }
@@ -443,14 +474,62 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         if (is_duplicate) {
           showNotification("Solution already pinned! Please change parameters to pin a different solution.", duration = 3)
         } else {
-          # Create solution entry
-          new_solution <- list(
-            index = pinned_solutions$next_index,
-            timestamp = Sys.time(),
-            parameters = current_params,
-            results = current_results,
-            plot_data = current_plot_data
-          )
+          # Create solution entry - handle cost minimization, constrained minimization, and standard workflows
+          workflow_id <- current_results$workflow_info$workflow_id
+          
+          if (workflow_id == "power_cost_minimization") {
+            # Cost minimization workflow (5): Store dual-curve data for equi-power/equi-cost plotting
+            optimal_design <- current_results$optimal_design
+            
+            new_solution <- list(
+              index = pinned_solutions$next_index,
+              timestamp = Sys.time(),
+              workflow_type = "cost_minimization",
+              workflow_id = workflow_id,
+              # Dual curve data for cost minimization
+              equi_power_data = current_results$power_data,  # Equi-power curve data
+              equi_cost_data = current_results$cost_data,    # Equi-cost curve data
+              optimal_design = optimal_design,               # Optimal point data
+              # Standard fields for solutions table
+              cells_per_target = optimal_design$cells_per_target,
+              reads_per_cell = optimal_design$sequenced_reads_per_cell,
+              total_cost = optimal_design$total_cost,
+              power = optimal_design$achieved_power,
+              parameters = current_params,
+              results = current_results,
+              plot_data = current_plot_data  # Keep for backward compatibility
+            )
+          } else if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+            # Constrained minimization workflows (10-11): Extract from optimal_design
+            optimal_design <- current_results$optimal_design
+            minimizing_param <- if (workflow_id == "power_cost_TPM_cells_reads") "TPM_threshold" else "minimum_fold_change"
+            
+            new_solution <- list(
+              index = pinned_solutions$next_index,
+              timestamp = Sys.time(),
+              workflow_type = "constrained_minimization",
+              workflow_id = workflow_id,
+              cost_budget = user_config()$design_options$cost_budget,
+              optimal_threshold = optimal_design[[minimizing_param]],
+              total_cost = optimal_design$total_cost,
+              cells_per_target = optimal_design$cells_per_target,
+              reads_per_cell = optimal_design$sequenced_reads_per_cell,
+              power = optimal_design$achieved_power,
+              parameters = current_params,
+              results = current_results,
+              plot_data = current_plot_data
+            )
+          } else {
+            # Standard workflows: Use existing structure
+            new_solution <- list(
+              index = pinned_solutions$next_index,
+              timestamp = Sys.time(),
+              workflow_type = "standard",
+              parameters = current_params,
+              results = current_results,
+              plot_data = current_plot_data
+            )
+          }
           
           # Add to pinned solutions
           pinned_solutions$solutions <- append(pinned_solutions$solutions, list(new_solution))
@@ -512,24 +591,61 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         pinned <- pinned_solutions$solutions[[i]]
         color_index <- ((pinned$index - 1) %% length(multi_data$color_palette)) + 1
         
-        
-        multi_data$solutions[[i]] <- list(
-          id = pinned$index,
-          color = multi_data$color_palette[color_index],
-          data = pinned$plot_data,
-          label = paste("Solution", pinned$index),
-          style = "solid"
-        )
+        # Handle cost minimization workflow with dual-curve data structure
+        if (!is.null(pinned$workflow_type) && pinned$workflow_type == "cost_minimization") {
+          multi_data$solutions[[i]] <- list(
+            id = pinned$index,
+            color = multi_data$color_palette[color_index],
+            # Dual-curve data for cost minimization
+            equi_power_data = pinned$equi_power_data,
+            equi_cost_data = pinned$equi_cost_data,
+            optimal_design = pinned$optimal_design,
+            # Standard fields
+            data = pinned$plot_data,  # Keep for backward compatibility
+            label = paste("Solution", pinned$index),
+            style = "solid"
+          )
+        } else {
+          # Standard workflows: use existing single-curve structure + add optimal point
+          multi_data$solutions[[i]] <- list(
+            id = pinned$index,
+            color = multi_data$color_palette[color_index],
+            data = pinned$plot_data,
+            optimal_point = pinned$results$optimal_design,  # Add optimal point for red circle highlighting
+            label = paste("Solution", pinned$index),
+            style = "solid"
+          )
+        }
       }
       
       # Add current pending solution with dashed styling
-      multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
-        id = "pending",
-        color = "#FF6B6B",  # Distinct pending color (red-ish)
-        data = current_plot_data,
-        label = "Current",
-        style = "dashed"
-      )
+      # Check if current solution is cost minimization workflow
+      current_workflow_id <- current_results$workflow_info$workflow_id
+      if (!is.null(current_workflow_id) && current_workflow_id == "power_cost_minimization") {
+        # Cost minimization: add dual-curve current solution
+        multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
+          id = "pending",
+          color = "#FF6B6B",  # Distinct pending color (red-ish)
+          # Dual-curve data for cost minimization
+          equi_power_data = current_results$power_data,
+          equi_cost_data = current_results$cost_data,
+          optimal_design = current_results$optimal_design,
+          # Standard fields
+          data = current_plot_data,  # Keep for backward compatibility
+          label = "Current",
+          style = "dashed"
+        )
+      } else {
+        # Standard workflows: use existing single-curve structure + add optimal point
+        multi_data$solutions[[length(multi_data$solutions) + 1]] <- list(
+          id = "pending",
+          color = "#FF6B6B",  # Distinct pending color (red-ish)
+          data = current_plot_data,
+          optimal_point = current_results$optimal_design,  # Add optimal point for red circle highlighting
+          label = "Current",
+          style = "dashed"
+        )
+      }
       
       return(multi_data)
     })
@@ -575,15 +691,25 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         if (!is.null(current_results) && !is.null(current_results$workflow_info)) {
           workflow_id <- current_results$workflow_info$workflow_id
           
-          # Only handle Pin functionality for single parameter optimization workflows
-          single_param_workflows <- c(
+          # Handle Pin functionality for workflows with pinning support
+          pinning_enabled_workflows <- c(
             "power_single_cells_per_target",
             "power_single_reads_per_cell", 
             "power_single_TPM_threshold",
-            "power_single_minimum_fold_change"
+            "power_single_minimum_fold_change",
+            # Cost minimization workflow (5)
+            "power_cost_minimization",
+            # Power+cost TPM/FC minimization workflows (6-9)
+            "power_cost_TPM_cells",
+            "power_cost_TPM_reads",
+            "power_cost_fc_cells",
+            "power_cost_fc_reads",
+            # Constrained minimization workflows (10-11)
+            "power_cost_TPM_cells_reads",
+            "power_cost_fc_cells_reads"
           )
           
-          if (workflow_id %in% single_param_workflows && length(pinned_solutions$solutions) > 0) {
+          if (workflow_id %in% pinning_enabled_workflows && length(pinned_solutions$solutions) > 0) {
             # We have pinned solutions - use multi-solution plotting
             unified_data <- unified_plot_data()
             
@@ -592,10 +718,21 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
               enhanced_results$plot_data <- unified_data
               
               tryCatch({
-                multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
+                # Route to appropriate multi-solution plotting function based on plot type
+                plot_type <- current_results$workflow_info$plot_type
+                
+                if (plot_type == "cost_tradeoff_curves") {
+                  # Workflows 10-11 and other cost-based workflows
+                  multi_plots <- create_multi_solution_cost_plots(enhanced_results)
+                } else {
+                  # Single parameter workflows (1-9)
+                  multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
+                }
                 
                 if (!is.null(multi_plots$interactive_plot)) {
                   return(multi_plots$interactive_plot)
+                } else if (!is.null(multi_plots$plotly_obj)) {
+                  return(multi_plots$plotly_obj)
                 }
               }, error = function(e) {
                 # Silent error handling - fall back to standard plot
@@ -895,6 +1032,7 @@ extract_solution_data <- function(optimal, workflow_info, user_config = reactive
   list(
     index = index,
     achieved_power = extract_achieved_power(optimal),
+    total_cost = extract_total_cost(optimal, workflow_info),
     optimal_design = extract_optimal_design_value(optimal, workflow_info),
     experimental_choices = extract_experimental_choices(optimal, workflow_info, user_config, param_manager),
     analysis_choices = extract_analysis_choices(optimal, workflow_info, user_config, param_manager),
@@ -954,7 +1092,9 @@ determine_experimental_subcolumns <- function(solution_rows) {
     "Number of targets" = list(header = "# Targets", width = "6%"),
     "gRNAs per target" = list(header = "gRNAs/Target", width = "6%"),
     "Cells per target" = list(header = "Cells/Target", width = "6%"),
-    "Reads per cell" = list(header = "Reads/Cell", width = "6%")
+    "Reads per cell" = list(header = "Reads/Cell", width = "6%"),
+    "Cells/target" = list(header = "Cells/Target", width = "6%"),
+    "Reads/cell" = list(header = "Reads/Cell", width = "6%")
   )
   
   # Return only the parameters that actually appear
@@ -1111,8 +1251,26 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
-      ),
-      
+      )
+    )
+    
+    # Add cost column if visible (after power, before optimal design)
+    if (visible_columns$total_cost) {
+      row_cells <- append(row_cells, list(
+        tags$td(
+          style = "text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
+          if (!is.null(row_data$total_cost) && !is.na(row_data$total_cost)) {
+            tags$span(paste0("$", scales::comma(round(row_data$total_cost))), 
+                     style = "font-size: 16px; font-weight: bold;")
+          } else {
+            tags$span("N/A", style = "color: #6c757d; font-style: italic;")
+          }
+        )
+      ))
+    }
+    
+    # Add optimal design column
+    row_cells <- append(row_cells, list(
       # Optimal Design column
       tags$td(
         style = "text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6;",
@@ -1131,7 +1289,7 @@ create_solutions_table_ui <- function(solution_rows, workflow_info = NULL) {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
       )
-    )
+    ))
     
     # Add experimental parameter subcolumns
     if (visible_columns$experimental_choices && exp_param_count > 0) {
@@ -1241,9 +1399,20 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
   # First header row (main column headers with colspan)
   header_row_1 <- list(
     tags$th("Solution ID", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
-    tags$th("Power", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;"),
-    tags$th(optimal_design_column_name, rowspan = "2", style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
+    tags$th("Power", rowspan = "2", style = "width: 8%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
   )
+  
+  # Add cost column if visible (after power, before optimal design)
+  if (visible_columns$total_cost) {
+    header_row_1 <- append(header_row_1, list(
+      tags$th("Cost", rowspan = "2", style = "width: 10%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
+    ))
+  }
+  
+  # Add optimal design column
+  header_row_1 <- append(header_row_1, list(
+    tags$th(optimal_design_column_name, rowspan = "2", style = "width: 15%; text-align: center; font-weight: bold; background-color: #f8f9fa; vertical-align: middle;")
+  ))
   
   # Add experimental parameters main header if needed
   if (visible_columns$experimental_choices && exp_param_count > 0) {
@@ -1333,8 +1502,26 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
         } else {
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
-      ),
-      
+      )
+    )
+    
+    # Add cost column if visible (after power, before optimal design)
+    if (visible_columns$total_cost) {
+      row_cells <- append(row_cells, list(
+        tags$td(
+          style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
+          if (!is.null(row_data$total_cost) && !is.na(row_data$total_cost)) {
+            tags$span(paste0("$", scales::comma(round(row_data$total_cost))), 
+                     style = "font-size: 16px; font-weight: bold;")
+          } else {
+            tags$span("N/A", style = "color: #6c757d; font-style: italic;")
+          }
+        )
+      ))
+    }
+    
+    # Add optimal design column
+    row_cells <- append(row_cells, list(
       # Optimal Design column
       tags$td(
         style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
@@ -1353,7 +1540,7 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
           tags$span("N/A", style = "color: #6c757d; font-style: italic;")
         }
       )
-    )
+    ))
     
     # Add experimental parameter subcolumns with background color
     if (visible_columns$experimental_choices && exp_param_count > 0) {
@@ -1450,10 +1637,15 @@ determine_visible_columns <- function(solution_rows) {
     !is.null(row$effect_sizes) && length(row$effect_sizes) > 0
   }))
   
+  has_cost <- any(sapply(solution_rows, function(row) {
+    !is.null(row$total_cost) && !is.na(row$total_cost)
+  }))
+  
   list(
     experimental_choices = has_experimental,
     analysis_choices = has_analysis,
-    effect_sizes = has_effect
+    effect_sizes = has_effect,
+    total_cost = has_cost
   )
 }
 
@@ -1493,7 +1685,7 @@ create_parameter_section_display <- function(params, section_type = "default") {
     tags$div(
       style = "line-height: 1.3;",
       tags$span(
-        paste(param_strings, collapse = " • "), 
+        paste(param_strings, collapse = " \u2022 "), 
         style = "color: #495057; font-weight: 500; font-size: 13px;"
       )
     )
@@ -1527,6 +1719,32 @@ extract_achieved_power <- function(optimal) {
   return(NULL)
 }
 
+#' Extract total cost for power+cost workflows
+#'
+#' @param optimal Optimal design results
+#' @param workflow_info Workflow information
+#' @return Total cost value or NULL
+#' @noRd
+extract_total_cost <- function(optimal, workflow_info) {
+  # Show cost for power+cost workflows (6-11) only
+  # Exclude workflow 5 (power_cost_minimization) since it shows cost in optimal design column
+  power_cost_workflows <- c(
+    "power_cost_TPM_cells",
+    "power_cost_TPM_reads", 
+    "power_cost_TPM_cells_reads",
+    "power_cost_fc_cells",
+    "power_cost_fc_reads",
+    "power_cost_fc_cells_reads"
+  )
+  
+  if (workflow_info$workflow_id %in% power_cost_workflows) {
+    if (!is.null(optimal$total_cost) && !is.na(optimal$total_cost)) {
+      return(optimal$total_cost)
+    }
+  }
+  return(NULL)
+}
+
 #' Extract optimal design value based on workflow
 #'
 #' @param optimal Optimal design results
@@ -1537,20 +1755,17 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
   minimizing_param <- workflow_info$minimizing_parameter
   
   # Check if this is a workflow where cells and reads are varying
-  # (cost minimization or TPM/FC minimization with cells+reads varying)
+  # (cost minimization only - TPM/FC minimization should show cells+reads separately)
   cells_and_reads_varying <- workflow_info$workflow_id %in% c(
-    "power_cost_minimization",           # Cost minimization (cells+reads vary)
-    "power_cost_TPM_cells_reads",       # TPM minimization with cells+reads varying
-    "power_cost_fc_cells_reads"         # FC minimization with cells+reads varying
+    "power_cost_minimization"           # Cost minimization (cells+reads vary)
+    # Note: power_cost_TPM_cells_reads and power_cost_fc_cells_reads removed
+    # so cells/reads appear in Experimental Parameters columns, not bundled with TPM/FC
   )
   
   # Check if this is a workflow where one of cells/reads is cost-constrained
-  cells_or_reads_constrained <- workflow_info$workflow_id %in% c(
-    "power_cost_TPM_cells",             # TPM min with cells fixed, reads cost-constrained
-    "power_cost_TPM_reads",             # TPM min with reads fixed, cells cost-constrained
-    "power_cost_fc_cells",              # FC min with cells fixed, reads cost-constrained
-    "power_cost_fc_reads"               # FC min with reads fixed, cells cost-constrained
-  )
+  # Note: Workflows 6-9 removed so cost-constrained parameters appear in Experimental Parameters
+  # instead of being bundled with TPM/FC optimal values
+  cells_or_reads_constrained <- FALSE  # Disabled to match workflows 10-11 behavior
   
   if (minimizing_param == "TPM_threshold") {
     if (cells_and_reads_varying) {
@@ -1639,14 +1854,10 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
       value = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
     ))
   } else if (minimizing_param == "cost") {
-    # Cost minimization: Show total cost + optimal cells and reads
+    # Cost minimization: Show only total cost (cells and reads moved to experimental parameters)
     return(list(
-      label = "Optimal Design",
-      value = create_multi_param_display(list(
-        "Total Cost" = if (!is.null(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A",
-        "Cells per target" = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A",
-        "Reads per cell" = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
-      ))
+      label = "Total Cost",
+      value = if (!is.null(optimal$total_cost)) paste0("$", scales::comma(round(optimal$total_cost))) else "N/A"
     ))
   }
   
@@ -1729,6 +1940,58 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     
     if (!reads_should_exclude && !is.null(param_manager$parameters$reads_per_cell)) {
       params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
+    }
+  }
+  
+  # Special case for cost minimization workflow (5): Add optimal cells and reads as experimental parameters
+  if (!is.null(workflow_info) && workflow_info$workflow_id == "power_cost_minimization") {
+    # Debug: Always add these parameters for cost minimization to ensure they appear
+    params[["Cells/target"]] <- if (!is.null(optimal$cells_per_target)) {
+      scales::comma(round(optimal$cells_per_target))
+    } else {
+      "N/A"
+    }
+    
+    params[["Reads/cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
+      scales::comma(round(optimal$sequenced_reads_per_cell))
+    } else {
+      "N/A"
+    }
+  }
+  
+  # Special case for constrained minimization workflows (10-11): Add optimal cells and reads as experimental parameters
+  if (!is.null(workflow_info) && workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    # Always add these parameters for constrained minimization to ensure they appear in Experimental Parameters
+    params[["Cells/target"]] <- if (!is.null(optimal$cells_per_target)) {
+      scales::comma(round(optimal$cells_per_target))
+    } else {
+      "N/A"
+    }
+    
+    params[["Reads/cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
+      scales::comma(round(optimal$sequenced_reads_per_cell))
+    } else {
+      "N/A"
+    }
+  }
+  
+  # Special case for single-parameter constrained workflows (6-9): Add cost-constrained parameter as experimental parameter
+  if (!is.null(workflow_info) && workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_TPM_reads", "power_cost_fc_cells", "power_cost_fc_reads")) {
+    # Add cost-constrained parameter to Experimental Parameters (cells OR reads, not both)
+    if (workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_fc_cells")) {
+      # Cells varying (cost-constrained), reads fixed
+      params[["Cells/target"]] <- if (!is.null(optimal$cells_per_target)) {
+        scales::comma(round(optimal$cells_per_target))
+      } else {
+        "N/A"
+      }
+    } else if (workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads")) {
+      # Reads varying (cost-constrained), cells fixed  
+      params[["Reads/cell"]] <- if (!is.null(optimal$sequenced_reads_per_cell)) {
+        scales::comma(round(optimal$sequenced_reads_per_cell))
+      } else {
+        "N/A"
+      }
     }
   }
   
@@ -1913,7 +2176,11 @@ get_minimized_parameter_for_display <- function(workflow_id) {
     "power_cost_TPM_cells" = "TPM_threshold",
     "power_cost_TPM_reads" = "TPM_threshold",
     "power_cost_fc_cells" = "minimum_fold_change",
-    "power_cost_fc_reads" = "minimum_fold_change"
+    "power_cost_fc_reads" = "minimum_fold_change",
+    
+    # Constrained minimization workflows (10-11)
+    "power_cost_TPM_cells_reads" = "TPM_threshold",
+    "power_cost_fc_cells_reads" = "minimum_fold_change"
   )
   
   return(minimized_map[[workflow_id]] %||% character(0))

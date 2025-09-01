@@ -9,6 +9,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
+#' @importFrom digest digest
 #' @noRd
 app_server <- function(input, output, session) {
   
@@ -19,17 +20,66 @@ app_server <- function(input, output, session) {
   param_manager <- mod_parameter_manager_server("param_manager")
   
   # ========================================================================
+  # PLAN STATE MANAGEMENT - Real-time Analysis Control
+  # ========================================================================
+  # Track design problem structure and plan button clicks for slider visibility
+  plan_state <- reactiveValues(
+    first_plan_clicked = FALSE,      # Has plan been clicked for current design problem
+    real_time_enabled = FALSE,       # Is real-time analysis active
+    sliders_visible = FALSE,         # Should sliders be visible in UI
+    current_design_signature = NULL, # Signature of current design problem structure
+    last_analysis_completed = NULL   # Timestamp when last analysis completed
+  )
+  
+  # Helper function: Create design problem signature from dropdown selections only
+  create_design_problem_signature <- function(user_config) {
+    if (is.null(user_config) || is.null(user_config$design_options)) return(NULL)
+    
+    design <- user_config$design_options
+    
+    # Include ONLY structural dropdown elements, not numeric values
+    structural_elements <- list(
+      # Step 1: Optimization type dropdown
+      optimization_type = design$optimization_type,
+      
+      # Step 2: Minimization target dropdown
+      minimization_target = design$minimization_target,
+      
+      # Step 3: Parameter control dropdown selections (varying/fixed/minimizing)
+      parameter_controls = if (!is.null(design$parameter_controls)) {
+        # Extract only the 'type' field from each parameter control
+        lapply(design$parameter_controls, function(param) param$type)
+      } else NULL
+    )
+    
+    # Create signature hash of structural elements only
+    return(digest::digest(structural_elements, algo = "md5"))
+  }
+  
+  # ========================================================================
   # MODULE 1: INPUT COLLECTION 
   # ========================================================================
-  # Collect all user inputs through sidebar with parameter manager integration
-  # No more slider_updates needed - parameter manager handles all coordination
-  user_workflow_config <- mod_sidebar_server("sidebar", param_manager)
+  # Collect all user inputs through sidebar with parameter manager and plan state integration
+  user_workflow_config <- mod_sidebar_server("sidebar", param_manager, plan_state)
   
   # ========================================================================  
   # MODULE 2: ANALYSIS ENGINE (Perturbplan Integration)
   # ========================================================================
-  # Generate real analysis results using perturbplan package functions
-  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config)
+  # Generate real analysis results using perturbplan package functions with real-time triggers
+  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config, param_manager)
+  
+  # Track when Plan analysis completes
+  observeEvent(analysis_results_raw(), {
+    results <- analysis_results_raw()
+    # Only mark completion for successful Plan-triggered analysis
+    if (!is.null(results) && is.null(results$error)) {
+      config <- user_workflow_config()
+      # Check if this was a Plan-triggered analysis (not real-time)
+      if (!is.null(config) && config$plan_clicked > 0 && !plan_state$real_time_enabled) {
+        plan_state$last_analysis_completed <- Sys.time()
+      }
+    }
+  })
   
   # ========================================================================
   # MODULE 3: PLOTTING ENGINE (Always Same)
@@ -40,8 +90,8 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # MODULE 4: RESULTS DISPLAY (Always Same)  
   # ========================================================================
-  # Handle UI presentation of plots and tables with parameter manager integration
-  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config, param_manager)
+  # Handle UI presentation of plots and tables with parameter manager and plan state integration
+  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config, param_manager, NULL, plan_state)
   
   # ========================================================================
   # HEADER EXPORT FUNCTIONALITY
@@ -176,6 +226,36 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # APP STATE MANAGEMENT
   # ========================================================================
+  
+  # Monitor for design problem changes (dropdown changes only)
+  observe({
+    current_config <- user_workflow_config()
+    new_signature <- create_design_problem_signature(current_config)
+    
+    # Check if core design structure changed
+    if (!is.null(new_signature) && 
+        !identical(plan_state$current_design_signature, new_signature)) {
+      
+      # Design problem structure changed - reset state
+      old_signature <- plan_state$current_design_signature
+      plan_state$current_design_signature <- new_signature
+      plan_state$first_plan_clicked <- FALSE
+      plan_state$real_time_enabled <- FALSE
+      plan_state$sliders_visible <- FALSE
+      
+      # Clear pinned solutions from previous design problem
+      # Note: pinned_solutions will be handled by results_display module
+      
+      # Notify user only if we had a previous valid design problem
+      if (!is.null(old_signature)) {
+        showNotification(
+          "New workflow detected. Click 'Plan' to enable real-time analysis.", 
+          duration = 3, 
+          type = "message"
+        )
+      }
+    }
+  })
   
   # Combined observer for loading states and error handling
   observe({

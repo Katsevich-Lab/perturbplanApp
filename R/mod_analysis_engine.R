@@ -22,13 +22,14 @@ mod_analysis_engine_ui <- function(id) {
 #'
 #' @param id Module namespace ID
 #' @param workflow_config Reactive containing complete user configuration
+#' @param param_manager Parameter manager instance for real-time analysis triggers
 #'
 #' @return Reactive list containing analysis results data
 #' @noRd
 #'
-#' @importFrom shiny moduleServer reactive req bindCache
+#' @importFrom shiny moduleServer reactive req bindCache showNotification
 #' @importFrom magrittr %>%
-mod_analysis_engine_server <- function(id, workflow_config) {
+mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -40,6 +41,12 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     previous_config_hash <- reactiveVal(NULL)
     previous_config_object <- reactiveVal(NULL)
     last_plan_count <- reactiveVal(0)
+    
+    # PHASE 1 FIX: Track last real-time trigger to prevent duplicate analysis
+    last_trigger_count <- reactiveVal(0)
+    
+    # Track the last processed plan count AND timestamp to detect duplicates
+    last_processed_plan <- reactiveVal(list(count = 0, time = NULL))
 
     # Cache for expensive computation results
     cached_results <- reactiveVal(NULL)
@@ -71,7 +78,8 @@ mod_analysis_engine_server <- function(id, workflow_config) {
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
           previous_config_object(NULL)   # Reset configuration object
-          last_plan_count(0)             # Reset plan tracking
+          # DON'T reset last_plan_count - this prevents old plan clicks from being detected as new triggers
+          # last_plan_count(0)           # This was causing the bug!
           # Note: We don't clear parameter controls here - that would cause UI issues
           # Note: We don't set in_mode_transition(FALSE) here - user must explicitly trigger analysis
         }
@@ -82,8 +90,34 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
     analysis_results <- reactive({
       req(workflow_config())
-
+      
       config <- workflow_config()
+      
+      
+      # PHASE 1 FIX (ENHANCED): Establish dependencies on both triggers but process only one
+      # Create dependencies (these must be outside conditionals to work properly)
+      current_plan_count <- config$plan_clicked
+      current_trigger_count <- if (!is.null(param_manager) && !is.null(param_manager$analysis_trigger)) {
+        param_manager$analysis_trigger()
+      } else {
+        0
+      }
+      
+      
+      # Check if this is a valid NEW trigger that should exit transition mode
+      has_new_plan_click <- (current_plan_count > last_plan_count())
+      has_new_real_time_trigger <- (current_trigger_count > last_trigger_count())
+      has_valid_trigger <- has_new_plan_click || has_new_real_time_trigger
+      
+      
+      # EARLY EXIT: If in transition mode AND no valid trigger, return NULL
+      if (in_mode_transition() && !has_valid_trigger) {
+        return(NULL)
+      }
+      
+      # Track config hash to detect spurious invalidations
+      current_config_hash <- create_config_hash(config)
+      
 
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
@@ -105,49 +139,76 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
         return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
       }
-
-      # Skip analysis if plan not clicked (only after configuration is validated as compatible)
-      if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
-        return(NULL)
-      }
-
-      # Protection mechanism: Clear results if sidebar inputs changed since last plan
-      current_config_hash <- create_config_hash(config)
-      previous_hash <- previous_config_hash()
-      current_plan_count <- config$plan_clicked
-
-      # If this is a new plan click, update tracking and clear cache
+      
+      # PHASE 1 FIX (ENHANCED): Determine trigger source (only one can be active at a time)
+      is_plan_click <- FALSE
+      is_real_time_trigger <- FALSE
+      is_spurious_invalidation <- FALSE
+      
+      # Check for Plan button click (takes priority)
       if (current_plan_count > last_plan_count()) {
-        previous_config_hash(current_config_hash)
-        previous_config_object(config)
-        last_plan_count(current_plan_count)
-        cached_results(NULL)  # Clear cache for new plan
-        in_mode_transition(FALSE)  # Exit transition mode - user explicitly triggered analysis
-      } else {
-        # Check if sidebar inputs changed since last plan
-        if (!is.null(previous_hash) && current_config_hash != previous_hash) {
-          # Check if the change is only in "live" parameters that should trigger immediate re-analysis
-          live_params_changed <- detect_live_parameter_change(config, previous_config_object())
-          
-          if (live_params_changed) {
-            # Live parameter changed - clear cache and allow new analysis without Plan button click
-            cached_results(NULL)
-            previous_config_hash(current_config_hash)  # Update hash to prevent repeated computation
-            previous_config_object(config)             # Update stored config
-            in_mode_transition(FALSE)  # Exit transition mode - live parameters triggered analysis
-          } else {
-            # Non-live parameter changed but no new plan click - keep showing old results
-            if (!is.null(cached_results())) {
-              return(cached_results())  # Show old results instead of clearing
-            }
-            # If no cached results, continue to analysis (shouldn't happen normally)
-          }
-        }
-
-        # Same config as before - return cached results if available
-        if (!is.null(cached_results())) {
+        
+        # Check if we just processed this plan click (within 1 second)
+        last_processed <- last_processed_plan()
+        if (last_processed$count == current_plan_count && 
+            !is.null(last_processed$time) &&
+            difftime(Sys.time(), last_processed$time, units = "secs") < 1) {
           return(cached_results())
         }
+        
+        is_plan_click <- TRUE
+        last_plan_count(current_plan_count)
+        # Reset trigger counter to prevent immediate real-time trigger
+        last_trigger_count(current_trigger_count)
+        # Update config hash for this plan click
+        previous_config_hash(current_config_hash)
+        # Mark this plan as being processed
+        last_processed_plan(list(count = current_plan_count, time = Sys.time()))
+      }
+      # Check for real-time trigger (only if NOT a plan click)
+      else if (current_trigger_count > last_trigger_count()) {
+        is_real_time_trigger <- TRUE
+        last_trigger_count(current_trigger_count)
+        # Update config hash for this real-time trigger
+        previous_config_hash(current_config_hash)
+      }
+      # Check if this is just a spurious config invalidation
+      else if (!is.null(previous_config_hash()) && 
+               current_config_hash == previous_config_hash()) {
+        # Config content hasn't actually changed - this is a spurious invalidation
+        is_spurious_invalidation <- TRUE
+      } else {
+      }
+      
+      # Skip analysis if neither trigger is active
+      if (!is_plan_click && !is_real_time_trigger) {
+        # Always return cached results if available when no explicit trigger
+        if (!is.null(cached_results())) {
+          if (is_spurious_invalidation) {
+          } else {
+          }
+          return(cached_results())
+        }
+        
+        # Check if we have initial plan but no triggers yet
+        if (current_plan_count == 0) {
+          return(NULL)  # No plan clicked yet
+        }
+        
+        return(NULL)  # No cached results and no triggers
+      }
+
+      # Clear cache appropriately based on trigger type
+      if (is_plan_click) {
+        # Plan click: always clear cache and update tracking
+        previous_config_object(config)
+        cached_results(NULL)  # Clear cache for new plan
+        in_mode_transition(FALSE)  # Exit transition mode - user explicitly triggered analysis
+      } else if (is_real_time_trigger) {
+        # Real-time trigger: clear cache for fresh analysis
+        cached_results(NULL)
+        previous_config_object(config)             # Update stored config
+        in_mode_transition(FALSE)  # Ensure we're not in transition mode
       }
       
       # Check if we're still in transition mode after handling plan clicks and live params
@@ -193,15 +254,25 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       # PERTURBPLAN ANALYSIS: Call perturbplan package functions
       # Wrap in comprehensive error handling to prevent app crashes
+      
+      # PHASE 1 FIX: Use the determined trigger type for error messages
       results <- tryCatch({
         generate_real_analysis(config, workflow_info)
       }, error = function(e) {
         # Return error object instead of crashing
+        # Provide more context based on trigger type
+        error_prefix <- if (is_real_time_trigger) {
+          "Real-time Analysis Error:"
+        } else {
+          "Analysis Error:"
+        }
+        
         list(
-          error = paste("Analysis Error:", e$message),
+          error = paste(error_prefix, e$message),
           metadata = list(
             analysis_mode = get_analysis_mode(),
             workflow_type = workflow_info$workflow_id %||% "unknown",
+            is_real_time = is_real_time_trigger,
             timestamp = Sys.time(),
             error_details = as.character(e)
           )
@@ -210,6 +281,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
       # Cache the results to prevent duplicate computation
       cached_results(results)
+      
       return(results)
     })
 

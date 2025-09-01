@@ -8,7 +8,8 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues
+#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues debounce showNotification
+#' @importFrom magrittr %>%
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
   
@@ -84,9 +85,10 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
 #' @param param_manager Parameter manager instance (central hub)
 #' @param workflow_info Reactive containing workflow information
 #' @param user_config Reactive containing full user configuration (optional, for power+cost filtering)
+#' @param plan_state ReactiveValues containing plan click state for real-time analysis
 #'
 #' @noRd 
-mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_config = reactive(NULL)){
+mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_config = reactive(NULL), plan_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -96,6 +98,11 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     
     # Generate left column sliders (3 parameters from Row 1)
     output$left_column_sliders <- renderUI({
+      # PHASE 2: Hide sliders until first plan click
+      if (!is.null(plan_state) && !plan_state$sliders_visible) {
+        return(NULL)
+      }
+      
       tagList(
         tags$div(
           style = "margin-bottom: 15px;",
@@ -116,7 +123,10 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     output$right_column_sliders <- renderUI({
       workflow <- workflow_info()
       
-      if (is.null(workflow)) return(NULL)
+      # PHASE 2: Hide sliders until first plan click
+      if (is.null(workflow) || (!is.null(plan_state) && !plan_state$sliders_visible)) {
+        return(NULL)
+      }
       
       # Get design configuration from user_config to check parameter control types
       config <- user_config()
@@ -237,32 +247,44 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     output$pin_buttons_section <- renderUI({
       workflow <- workflow_info()
       
-      if (is.null(workflow) || is.null(workflow$workflow_id)) {
+      # Hide pinning buttons until first plan click (same as sliders)
+      if (is.null(workflow) || is.null(workflow$workflow_id) || 
+          (!is.null(plan_state) && !plan_state$sliders_visible)) {
         return(NULL)
       }
       
-      # Only show Pin buttons for single parameter optimization workflows
-      single_param_workflows <- c(
+      # Show Pin buttons for single parameter optimization workflows + cost minimization + constrained minimization workflows
+      pinning_enabled_workflows <- c(
         "power_single_cells_per_target",
         "power_single_reads_per_cell", 
         "power_single_TPM_threshold",
-        "power_single_minimum_fold_change"
+        "power_single_minimum_fold_change",
+        # Cost minimization workflow (5)
+        "power_cost_minimization",
+        # Power+cost TPM/FC minimization workflows (6-9)
+        "power_cost_TPM_cells",
+        "power_cost_TPM_reads",
+        "power_cost_fc_cells",
+        "power_cost_fc_reads",
+        # Constrained minimization workflows (10-11)
+        "power_cost_TPM_cells_reads",
+        "power_cost_fc_cells_reads"
       )
       
-      if (workflow$workflow_id %in% single_param_workflows) {
+      if (workflow$workflow_id %in% pinning_enabled_workflows) {
         tags$div(
-          style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px;",
+          style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px; display: flex; gap: 10px; justify-content: center;",
           actionButton(
             ns("pin_solution"),
-            "Pin Current Solution",
+            "Pin Solution",
             class = "btn btn-success btn-sm",
-            style = "width: 80%; margin-right: 10px;"
+            style = "flex: 1; max-width: 140px; font-size: 16px; font-weight: 500;"
           ),
           actionButton(
             ns("clear_pins"),
             "Clear All",
             class = "btn btn-outline-secondary btn-sm",
-            style = "width: 15%; font-size: 11px;"
+            style = "flex: 1; max-width: 90px; font-size: 16px; font-weight: 500;"
           )
         )
       } else {
@@ -274,53 +296,117 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     # INPUT COLLECTION - SAFE: Using isolate() to break reactive cycles
     # ========================================================================
     
+    # Helper function to enable real-time mode on first slider interaction
+    enable_real_time_if_needed <- function(source = "unknown") {
+      # Don't enable if Plan analysis hasn't completed yet
+      if (is.null(plan_state$last_analysis_completed)) {
+        return()
+      }
+      
+      # Don't enable if this is too soon after analysis completion (within 2 seconds)
+      time_since_analysis <- difftime(Sys.time(), plan_state$last_analysis_completed, units = "secs")
+      if (time_since_analysis < 2) {
+        return()
+      }
+      
+      if (!is.null(plan_state) && plan_state$sliders_visible && !plan_state$real_time_enabled) {
+        plan_state$real_time_enabled <- TRUE
+        showNotification(
+          "Real-time mode activated! Changes will update instantly.", 
+          duration = 2, 
+          type = "message"
+        )
+      }
+    }
+    
     # Use observeEvent + isolate to prevent circular reactive dependencies
+    # ignoreInit = TRUE prevents firing when slider is first rendered
     observeEvent(input$moi_slider, {
       isolate({
+        enable_real_time_if_needed("moi_slider")  # Enable real-time on first slider change
         param_manager$update_parameter("MOI", input$moi_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$targets_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("num_targets", input$targets_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$grnas_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("gRNAs_per_target", input$grnas_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$cells_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("cells_per_target", input$cells_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$reads_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("reads_per_cell", input$reads_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$TPM_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("TPM_threshold", input$TPM_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$fc_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("minimum_fold_change", input$fc_slider, "slider")
       })
-    })
+    }, ignoreInit = TRUE)
     
     observeEvent(input$cost_budget_slider, {
       isolate({
+        enable_real_time_if_needed()
         param_manager$update_parameter("cost_budget", input$cost_budget_slider, "slider")
       })
+    }, ignoreInit = TRUE)
+    
+    # ========================================================================
+    # REAL-TIME ANALYSIS TRIGGERS - Phase 3
+    # ========================================================================
+    
+    # Debounced slider change detection for real-time analysis
+    slider_changes <- reactive({
+      if (is.null(plan_state) || !plan_state$real_time_enabled) return(NULL)
+      
+      # Collect all slider values
+      list(
+        MOI = input$moi_slider,
+        num_targets = input$targets_slider,
+        gRNAs_per_target = input$grnas_slider,
+        cells_per_target = input$cells_slider,
+        reads_per_cell = input$reads_slider,
+        TPM_threshold = input$TPM_slider,
+        minimum_fold_change = input$fc_slider,
+        cost_budget = input$cost_budget_slider
+      )
+    }) %>% debounce(500)  # 500ms delay to prevent excessive calls
+    
+    # Trigger real-time analysis on debounced slider changes
+    observeEvent(slider_changes(), {
+      if (!is.null(plan_state) && plan_state$real_time_enabled && !is.null(param_manager$trigger_real_time_analysis)) {
+        # Show subtle loading notification (shorter duration to reduce noise)
+        showNotification("Updating...", duration = 0.5, type = "message")
+        
+        # Trigger analysis through parameter manager
+        param_manager$trigger_real_time_analysis()
+      }
     })
     
     # ========================================================================

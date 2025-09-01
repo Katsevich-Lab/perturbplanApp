@@ -49,6 +49,9 @@ mod_parameter_manager_server <- function(id) {
       last_updated_at = Sys.time()
     )
     
+    # Real-time analysis trigger (incremental counter)
+    analysis_trigger <- reactiveVal(0)
+    
     # ========================================================================
     # INPUT COLLECTION - Multiple Sources → One Destination
     # ========================================================================
@@ -129,10 +132,23 @@ mod_parameter_manager_server <- function(id) {
     # PUBLIC API
     # ========================================================================
     
+    # ========================================================================
+    # REAL-TIME ANALYSIS TRIGGER - Phase 3
+    # ========================================================================
+    
+    trigger_real_time_analysis <- function() {
+      # Increment trigger counter to signal analysis engine
+      analysis_trigger(analysis_trigger() + 1)
+    }
+    
     return(list(
       # Core functions
       update_parameter = update_parameter,
       register_ui_updater = register_ui_updater,
+      
+      # Real-time analysis functions
+      trigger_real_time_analysis = trigger_real_time_analysis,
+      analysis_trigger = analysis_trigger,
       
       # Data access
       parameters = parameters,
