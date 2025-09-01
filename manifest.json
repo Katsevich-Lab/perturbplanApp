@@ -912,42 +912,6 @@
         "RemoteSha": "1.1.4"
       }
     },
-    "dtplyr": {
-      "Source": "CRAN",
-      "Repository": "https://packagemanager.posit.co/cran/latest",
-      "description": {
-        "Package": "dtplyr",
-        "Title": "Data Table Back-End for 'dplyr'",
-        "Version": "1.3.1",
-        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"cre\", \"aut\")),\n    person(\"Maximilian\", \"Girlich\", role = \"aut\"),\n    person(\"Mark\", \"Fairbanks\", role = \"aut\"),\n    person(\"Ryan\", \"Dickerson\", role = \"aut\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n  )",
-        "Description": "Provides a data.table backend for 'dplyr'. The goal of\n    'dtplyr' is to allow you to write 'dplyr' code that is automatically\n    translated to the equivalent, but usually much faster, data.table\n    code.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://dtplyr.tidyverse.org, https://github.com/tidyverse/dtplyr",
-        "BugReports": "https://github.com/tidyverse/dtplyr/issues",
-        "Depends": "R (>= 3.3)",
-        "Imports": "cli (>= 3.4.0), data.table (>= 1.13.0), dplyr (>= 1.1.0),\nglue, lifecycle, rlang (>= 1.0.4), tibble, tidyselect (>=\n1.2.0), vctrs (>= 0.4.1)",
-        "Suggests": "bench, covr, knitr, rmarkdown, testthat (>= 3.1.2), tidyr (>=\n1.1.0), waldo (>= 0.3.1)",
-        "VignetteBuilder": "knitr",
-        "Config/Needs/website": "tidyverse/tidytemplate",
-        "Config/testthat/edition": "3",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "7.2.3",
-        "NeedsCompilation": "no",
-        "Packaged": "2023-03-21 14:31:40 UTC; hadleywickham",
-        "Author": "Hadley Wickham [cre, aut],\n  Maximilian Girlich [aut],\n  Mark Fairbanks [aut],\n  Ryan Dickerson [aut],\n  Posit Software, PBC [cph, fnd]",
-        "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "RSPM",
-        "Date/Publication": "2023-03-22 13:10:05 UTC",
-        "Built": "R 4.4.0; ; 2024-04-25 02:05:23 UTC; unix",
-        "RemoteType": "standard",
-        "RemoteRef": "dtplyr",
-        "RemotePkgRef": "dtplyr",
-        "RemoteRepos": "https://packagemanager.posit.co/cran/latest",
-        "RemoteReposName": "CRAN",
-        "RemotePkgPlatform": "x86_64-apple-darwin20",
-        "RemoteSha": "1.3.1"
-      }
-    },
     "evaluate": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -1999,24 +1963,24 @@
         "Encoding": "UTF-8",
         "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.2",
-        "Imports": "dplyr,\nstats,\nrhdf5,\nminpack.lm,\nRcpp,\ntibble,\ndtplyr,\ndata.table,\nmethods,\nutils,\nMatrix,\nshiny",
+        "Imports": "dplyr,\nstats,\nrhdf5,\nminpack.lm,\nRcpp,\ndata.table,\nmethods,\nutils,\nMatrix,\ntidyr",
         "Suggests": "knitr,\nrmarkdown,\ntestthat (>= 3.0.0),\nopenxlsx,\nggplot2,\nggside",
         "Config/testthat/edition": "3",
         "LinkingTo": "PoissonBinomial,\nRcpp,\nRcppEigen,\nBH",
         "Depends": "R (>= 3.5)",
         "LazyData": "true",
-        "Built": "R 4.4.0; x86_64-apple-darwin20; 2025-09-01 18:13:26 UTC; unix",
+        "Built": "R 4.4.0; x86_64-apple-darwin20; 2025-09-01 20:15:13 UTC; unix",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
-        "RemoteUsername": "Katsevich-Lab",
+        "RemoteUsername": "katsevich-lab",
         "RemoteRepo": "perturbplan",
-        "RemoteRef": "main",
-        "RemoteSha": "a930cfe25913a0a45a5e0c7f2aa2369bf10fa230",
+        "RemoteRef": "cleanup",
+        "RemoteSha": "c03105fddb11b45e4c97c45fa3f197ba1edf21b5",
         "GithubHost": "api.github.com",
         "GithubRepo": "perturbplan",
-        "GithubUsername": "Katsevich-Lab",
-        "GithubRef": "main",
-        "GithubSHA1": "a930cfe25913a0a45a5e0c7f2aa2369bf10fa230"
+        "GithubUsername": "katsevich-lab",
+        "GithubRef": "cleanup",
+        "GithubSHA1": "c03105fddb11b45e4c97c45fa3f197ba1edf21b5"
       }
     },
     "pillar": {
@@ -3261,7 +3225,7 @@
       "checksum": "bfaf8ad719b6adac76e708144a5cec8e"
     },
     ".Rprofile": {
-      "checksum": "676e48c93d985de1901a16a9ceff544b"
+      "checksum": "65d66d9a499b73d23297f12c1e17da5b"
     },
     "app.R": {
       "checksum": "0d465e15d5de2dc310d7b7f1c052333e"
@@ -3383,8 +3347,14 @@
     "man/validate_parameter_name.Rd": {
       "checksum": "60981923b548e78c90c29b4951753fcb"
     },
+    "MANUAL_TESTING_CHECKLIST.md": {
+      "checksum": "04431b4ac6d2728792e42f45ec60b41e"
+    },
     "NAMESPACE": {
-      "checksum": "be6ebc86ff94e8259750c99581058ae1"
+      "checksum": "9710577832d5d057ff0fe1f6e4bbbf59"
+    },
+    "PHASE_5_SUMMARY.md": {
+      "checksum": "5b9bfabeda60bdc2f66be51978f31544"
     },
     "R/_disable_autoload.R": {
       "checksum": "1178c335d6c11555fd1c4ec6098dfee6"
@@ -3405,7 +3375,7 @@
       "checksum": "520175aef95c0f42180b271556e86c89"
     },
     "R/app_server.R": {
-      "checksum": "4d8902e40f4ada999b14767e161c08dd"
+      "checksum": "1e17bd38f517af7036ff64d3e7d3e79b"
     },
     "R/app_ui.R": {
       "checksum": "88fd21473a65a75d842a889a189fbe55"
@@ -3420,13 +3390,13 @@
       "checksum": "cadf2d66473b962b5c8a8870f2cb87bd"
     },
     "R/fct_perturbplan_integration.R": {
-      "checksum": "4b6a19ee46c823abef0a4683f04ac23e"
+      "checksum": "833ac66f4d4c7c301764b1d5d002e45c"
     },
     "R/fct_pilot_data_validation.R": {
       "checksum": "d74018539eb197962bf48b382beb8d49"
     },
     "R/fct_plotting_functions.R": {
-      "checksum": "b15d14222179354ebde6b7b3aaee12cb"
+      "checksum": "4df53c48d87770e45dacbb902203e537"
     },
     "R/fct_slider_detection.R": {
       "checksum": "57f2208c7942cd05a63824e30b965871"
@@ -3447,7 +3417,7 @@
       "checksum": "995fa71c5279e56afc8d1dd4f7b4fc83"
     },
     "R/mod_analysis_engine.R": {
-      "checksum": "b5d4c5d0380f6de5da3ba69a393d8a3f"
+      "checksum": "45651e54f403bf9d22e68f06a9528e6a"
     },
     "R/mod_cost_info.R": {
       "checksum": "5f7bc1a48af74bb170d9989998339ecc"
@@ -3462,10 +3432,10 @@
       "checksum": "8c46aeb86a85ab5fd4bdf90a01e26204"
     },
     "R/mod_parameter_manager.R": {
-      "checksum": "69971c277e1abd83c302e628d85d3779"
+      "checksum": "fec77e3186e2dd4f91b338d4d8667a88"
     },
     "R/mod_parameter_sliders.R": {
-      "checksum": "89d84863f50c3288a2e0fb05a140a777"
+      "checksum": "dc2ea63973fa6ab83d2e5ce848c09e5b"
     },
     "R/mod_perturbation_choices.R": {
       "checksum": "1d090c956d7dfe2bd35743b27c6633ba"
@@ -3474,10 +3444,10 @@
       "checksum": "149a4b379915c2c95f7ac025f435b6f9"
     },
     "R/mod_results_display.R": {
-      "checksum": "7f7cac641761736dc7b0a079dbbedd87"
+      "checksum": "c263ab1e6c1fa87fa9cf8e6cb0ea4798"
     },
     "R/mod_sidebar.R": {
-      "checksum": "b75012a041c924c99311b72bd2fd3674"
+      "checksum": "d5ad06295c2db40b37a365985029b559"
     },
     "R/mod_styles.R": {
       "checksum": "de83e386a0e2b2f277291e0678dd0b7f"
@@ -3501,7 +3471,10 @@
       "checksum": "f5d8f702f3536e7b81f822414599556f"
     },
     "renv.lock": {
-      "checksum": "344951c4af49d1555a553e3f8559072d"
+      "checksum": "3f7af923d7c80944e7b426eed9f5da05"
+    },
+    "test_real_time_analysis.R": {
+      "checksum": "c229391d5438d5d75819f57cd6407ad5"
     },
     "tests/testthat.R": {
       "checksum": "a6fcc63fa5388416897b5a3f2a12bcf3"
