@@ -2207,10 +2207,10 @@
       "LazyData": "true",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "katsevich-lab",
+      "RemoteUsername": "Katsevich-Lab",
       "RemoteRepo": "perturbplan",
-      "RemoteRef": "cleanup",
-      "RemoteSha": "c03105fddb11b45e4c97c45fa3f197ba1edf21b5"
+      "RemoteRef": "v0.0.1",
+      "RemoteSha": "b4bbbe1de6228c2b6bd7425e830aa0b792c24fbd"
     },
     "pillar": {
       "Package": "pillar",

@@ -510,7 +510,106 @@ tryCatch({
 })
 ```
 
-## Git Workflow
+## Git Workflow & Dependency Management
+
+### Branch Strategy
+
+perturbplanApp uses a simple two-branch model:
+- **main**: Production deployments (tagged perturbplan releases only)
+- **dev**: Staging deployments and active development
+
+### Development Workflow
+
+```bash
+# All development happens on dev
+git checkout dev
+golem::run_dev()      # Test locally
+devtools::test()      # Ensure tests pass
+git commit -am "Add feature"
+git push origin dev   # Auto-deploys to staging
+```
+
+### perturbplan Library Coordination
+
+#### Dev Branch - Flexible Development
+
+```r
+# Can pin to any SHA, branch, or tag for testing
+Remotes: Katsevich-Lab/perturbplan@feature-branch
+Remotes: Katsevich-Lab/perturbplan@abc123def  # Specific SHA
+Remotes: Katsevich-Lab/perturbplan@v0.1.0-rc1 # Release candidate
+
+# Update dependencies
+renv::install()
+renv::snapshot()
+git commit -am "Test with perturbplan feature branch"
+```
+
+#### Main Branch - Production Stability
+
+**Rule: Main branch MUST reference tagged releases only**
+
+```r
+# Before merging to main, update to stable release
+git checkout dev
+# Edit DESCRIPTION
+Remotes: Katsevich-Lab/perturbplan@v0.0.1  # Tagged release only!
+
+renv::install()
+renv::snapshot()
+devtools::test()
+git commit -am "Pin to perturbplan v0.0.1 for production"
+
+# Now safe to promote
+git checkout main
+git merge dev
+git push origin main
+```
+
+#### Coordinated Release Process
+
+When testing unreleased perturbplan changes that need to reach production:
+
+1. **Test on dev branch**
+```bash
+# DESCRIPTION: Remotes: Katsevich-Lab/perturbplan@feature-sha
+renv::install() && renv::snapshot()
+git push origin dev  # Test on staging
+```
+
+2. **Release perturbplan first**
+```bash
+# In perturbplan repo
+git checkout main
+git merge feature-branch
+git tag v0.0.2
+git push origin main --tags
+```
+
+3. **Update app to tagged release**
+```bash
+# In perturbplanApp repo, on dev branch
+# DESCRIPTION: Remotes: Katsevich-Lab/perturbplan@v0.0.2
+renv::install() && renv::snapshot()
+git commit -am "Update to perturbplan v0.0.2 release"
+```
+
+4. **Promote to production**
+```bash
+git checkout main
+git merge dev
+git push origin main
+```
+
+### When to Update perturbplan
+
+Only update the library dependency when there's clear value:
+- Bug fixes affecting the app
+- Features the app needs  
+- Security patches
+- Planned release coordination
+
+Don't update for unrelated library changes. The app's stability is independent of the library's release cycle.
 
 ### Commit Strategy
 
@@ -518,12 +617,12 @@ When committing changes:
 - **Complete commits**: Ensure app is in working state
 - **Clear messages**: Describe what module/feature was added
 - **Test before commit**: Verify app loads and basic functionality works
+- **Include dependency changes**: Document library version updates in commit messages
 
-### Branch Management
+### Deployment Environments
 
-- **main**: Stable releases
-- **dev**: Development work
-- **feature/***: Specific feature development
+- **Staging (dev branch)**: Tests any perturbplan version for integration
+- **Production (main branch)**: Only deploys with tagged perturbplan releases
 
 ## File Naming Conventions
 
