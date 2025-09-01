@@ -278,13 +278,13 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
             ns("pin_solution"),
             "Pin Solution",
             class = "btn btn-success btn-sm",
-            style = "flex: 1; max-width: 140px;"
+            style = "flex: 1; max-width: 140px; font-size: 16px; font-weight: 500;"
           ),
           actionButton(
             ns("clear_pins"),
             "Clear All",
             class = "btn btn-outline-secondary btn-sm",
-            style = "flex: 1; max-width: 90px; font-size: 12px;"
+            style = "flex: 1; max-width: 90px; font-size: 16px; font-weight: 500;"
           )
         )
       } else {
