@@ -59,7 +59,9 @@ golem_add_external_resources <- function() {
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "perturbplanApp"
-    )
+    ),
+    # Add Google Analytics
+    use_google_analytics("G-W43V869MN9")
     # CSS and JS assets are automatically included by bundle_resources()
     # Files: variables.css, layout.css, components.css, perturbplan_styles.css, perturbplan_interactions.js  
     # Managed by golem::add_css_file() and golem::add_js_file()
