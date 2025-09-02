@@ -28,7 +28,7 @@ mod_analysis_engine_ui <- function(id) {
 #' @return Reactive list containing analysis results data
 #' @noRd
 #'
-#' @importFrom shiny moduleServer reactive req bindCache showNotification
+#' @importFrom shiny moduleServer reactive req bindCache
 #' @importFrom magrittr %>%
 mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL, plan_state = NULL) {
   moduleServer(id, function(input, output, session) {

@@ -271,11 +271,6 @@ app_server <- function(input, output, session) {
         openxlsx::write.xlsx(excel_data, file = file)
         
       }, error = function(e) {
-        showNotification(
-          paste("Export failed:", e$message),
-          type = "error",
-          duration = 5
-        )
         stop(e$message)
       })
     },
@@ -307,11 +302,6 @@ app_server <- function(input, output, session) {
         }
         
       }, error = function(e) {
-        showNotification(
-          paste("Plot download failed:", e$message),
-          type = "error",
-          duration = 5
-        )
         # Create error plot fallback
         error_plot <- ggplot2::ggplot() + 
           ggplot2::annotate("text", x = 0.5, y = 0.5, 
@@ -378,11 +368,6 @@ app_server <- function(input, output, session) {
       
       # Notify user only if we had a previous valid design problem
       if (!is.null(old_signature)) {
-        showNotification(
-          "New workflow detected. Click 'Plan' to enable real-time analysis.", 
-          duration = 3, 
-          type = "message"
-        )
       }
     }
   })
@@ -428,20 +413,10 @@ app_server <- function(input, output, session) {
     # Handle loading states
     if (!is.null(config) && config$plan_clicked > 0 && is.null(analysis)) {
       # Show loading notification when Plan clicked but analysis not ready
-      showNotification(
-        "Analyzing your experimental design...", 
-        type = "message", 
-        duration = 2
-      )
     }
     
     # Handle analysis errors  
     if (!is.null(analysis) && !is.null(analysis$error)) {
-      showNotification(
-        paste("Analysis Error:", analysis$error), 
-        type = "error",
-        duration = 5
-      )
     }
   })
   

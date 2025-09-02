@@ -7,7 +7,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification uiOutput renderUI
+#' @importFrom shiny NS tagList tags div actionButton observeEvent uiOutput renderUI
 #' @importFrom shinydashboard dashboardSidebar
 #' @importFrom shinyjs show hide
 #' @importFrom digest digest
@@ -170,7 +170,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         # Immediate loading trigger - set flag that loading should show
         plan_state$show_loading <- TRUE
         plan_state$loading_start_time <- Sys.time()  # Track when loading started
-        cat("DEBUG [Plan Click]: show_loading flag set to TRUE at", as.character(Sys.time()), "\n")
+        plan_state$analysis_invalidated <- TRUE  # Mark that new analysis is needed
         
         current_config <- combined_config()
         
@@ -188,14 +188,8 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
             plan_state$sliders_visible <- TRUE
             plan_state$current_design_signature <- current_signature
             
-            showNotification(
-              "Analysis complete! Drag sliders to enable real-time updates.", 
-              duration = 3, 
-              type = "message"
-            )
           } else {
             # Subsequent plan clicks - just show analysis starting
-            showNotification("Running analysis...", duration = 2, type = "message")
           }
           
           # Don't enable real-time mode yet - wait for first slider interaction
@@ -203,7 +197,6 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         }
       } else {
         # Fallback for backward compatibility
-        showNotification("Running analysis...", duration = 2, type = "message")
       }
     })
     
@@ -239,10 +232,6 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         last_parameter_timestamp = param_manager_state$timestamp
       )
       
-      # DEBUG: Track source propagation in sidebar config
-      if (!is.null(param_manager_state$last_updated_by)) {
-        cat("DEBUG [Sidebar Config]: Propagating SOURCE: ", param_manager_state$last_updated_by, " at ", as.character(param_manager_state$timestamp), "\n")
-      }
       
       # Update parameter controls with current parameter manager values
       if (!is.null(config$design_options) && !is.null(config$design_options$parameter_controls)) {

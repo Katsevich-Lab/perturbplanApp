@@ -187,7 +187,7 @@ mod_results_display_ui <- function(id) {
 #' @noRd 
 #' 
 #' @importFrom shiny moduleServer reactive observe req renderUI invalidateLater
-#' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
+#' @importFrom shiny downloadHandler renderPlot observeEvent
 #' @importFrom plotly renderPlotly
 # DT import removed - detailed results table no longer used
 #' @importFrom openxlsx write.xlsx
@@ -263,7 +263,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       
       if (!is.null(design_change_time) && 
           (is.null(plan_click_time) || design_change_time > plan_click_time)) {
-        cat("DEBUG [show_results]: FALSE - design changed after Plan click (non-real-time)\n")
         return(FALSE)  # Design changed after last Plan click - don't show results (non-real-time only)
       }
       
@@ -276,11 +275,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         results_available <- !is.null(results) && is.null(results$error)
         should_show <- plots_available && results_available
         
-        cat("DEBUG [show_results]: plots_available=", plots_available, " results_available=", results_available, " should_show=", should_show, "\n")
         
         return(should_show)
       }, error = function(e) {
-        cat("DEBUG [show_results]: FALSE - error occurred:", e$message, "\n")
         return(FALSE)
       })
     })
@@ -296,13 +293,18 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         results_available <- !is.null(results) && is.null(results$error)
         analysis_ready <- plots_available && results_available
         
+        # Check if analysis has been invalidated by a new Plan click
+        analysis_invalidated <- !is.null(plan_state) && 
+                               !is.null(plan_state$analysis_invalidated) && 
+                               plan_state$analysis_invalidated
+        
         # Check if loading should be shown based on plan_state flag
         show_loading_flag <- !is.null(plan_state) && 
                             !is.null(plan_state$show_loading) && 
                             plan_state$show_loading
         
         # Turn off loading flag when results are ready AND minimum display time has passed
-        if (show_loading_flag && analysis_ready && !is.null(plan_state)) {
+        if ((show_loading_flag || analysis_invalidated) && analysis_ready && !is.null(plan_state)) {
           # Enforce minimum loading display time of 800ms
           min_display_time <- 0.8  # seconds
           time_elapsed <- 0
@@ -312,15 +314,14 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           }
           
           if (time_elapsed >= min_display_time) {
-            cat("DEBUG [loading_overlay]: Turning off show_loading flag - results ready and min time elapsed (", round(time_elapsed, 2), "s)\n")
             plan_state$show_loading <- FALSE
             plan_state$loading_start_time <- NULL  # Clean up
+            plan_state$analysis_invalidated <- FALSE  # Clear invalidation flag
             show_loading_flag <- FALSE
+            analysis_invalidated <- FALSE
           } else {
-            cat("DEBUG [loading_overlay]: Keeping loading visible - min time not elapsed (", round(time_elapsed, 2), "/", min_display_time, "s)\n")
             # Schedule a delayed check to turn off loading after minimum time
             remaining_time <- max(100, (min_display_time - time_elapsed) * 1000)  # Convert to ms, min 100ms
-            
             invalidateLater(remaining_time, session)
           }
         }
@@ -329,27 +330,15 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
         real_time_loading <- is_real_time_mode && !analysis_ready
         
-        show_overlay <- show_loading_flag || real_time_loading
+        show_overlay <- show_loading_flag || analysis_invalidated || real_time_loading
         
-        # Debug: check if this is cost minimization workflow
-        config <- user_config()
-        workflow_debug <- "unknown"
-        if (!is.null(config) && !is.null(config$design_options) && !is.null(config$design_options$minimization_target)) {
-          if (config$design_options$minimization_target == "cost") {
-            workflow_debug <- "cost_minimization"
-          }
-        }
-        
-        cat("DEBUG [loading_overlay]: workflow=", workflow_debug, " flag=", show_loading_flag, " real_time=", real_time_loading, " ready=", analysis_ready, " overlay=", show_overlay, "\n")
-        
-        # Additional debug: Check plan_state details
-        if (!is.null(plan_state)) {
-          cat("DEBUG [loading_overlay]: plan_state details - show_loading=", plan_state$show_loading, " loading_start_time=", !is.null(plan_state$loading_start_time), "\n")
+        # Temporary debug to diagnose loading issues
+        if (show_loading_flag || analysis_invalidated) {
+          cat("DEBUG [loading]: show_loading=", show_loading_flag, " invalidated=", analysis_invalidated, " ready=", analysis_ready, " overlay=", show_overlay, "\n")
         }
         
         return(show_overlay)
       }, error = function(e) {
-        cat("DEBUG [loading_overlay]: TRUE - analysis error occurred\n")
         return(TRUE)  # Show overlay during errors
       })
     })
@@ -563,25 +552,13 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           }
           
           # DEBUG: Track clearing decision
-          cat("DEBUG [Results Display]: Design change detected\n")
-          cat("  - parameter_source: ", parameter_source, "\n")
-          cat("  - recent_change: ", recent_change, "\n")
-          cat("  - timestamp: ", as.character(config$last_parameter_timestamp), "\n")
-          cat("  - will_clear: ", (parameter_source != "slider" || !recent_change), "\n")
           
           # Only clear for sidebar changes or non-recent changes
           if (parameter_source != "slider" || !recent_change) {
-            cat("DEBUG [CLEARING]: Clearing pinned solutions - parameter_source:", parameter_source, "recent_change:", recent_change, "\n")
             pinned_solutions$solutions <- list()
             pinned_solutions$next_index <- 1
             
-            showNotification(
-              "Design options changed - cleared all results. Click 'Plan' to generate new analysis.",
-              type = "message",
-              duration = 4
-            )
           } else {
-            cat("DEBUG [PRESERVING]: Preserving pinned solutions - parameter_source:", parameter_source, "recent_change:", recent_change, "\n")
           }
           # For recent slider changes, preserve pinned solutions
         }
@@ -696,7 +673,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         }
         
         if (is_duplicate) {
-          showNotification("Solution already pinned! Please change parameters to pin a different solution.", duration = 3)
         } else {
           # Create solution entry - handle cost minimization, constrained minimization, and standard workflows
           workflow_id <- current_results$workflow_info$workflow_id
@@ -759,7 +735,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           pinned_solutions$solutions <- append(pinned_solutions$solutions, list(new_solution))
           pinned_solutions$next_index <- pinned_solutions$next_index + 1
           
-          showNotification("Solution pinned successfully!", duration = 2)
         }
       })
       
@@ -767,7 +742,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       observeEvent(slider_actions$clear_requested(), {
         pinned_solutions$solutions <- list()
         pinned_solutions$next_index <- 1
-        showNotification("All pins cleared.", duration = 2)
       })
     }
     
@@ -1089,11 +1063,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           write.xlsx(excel_data, file = file)
           
         }, error = function(e) {
-          showNotification(
-            paste("Export failed:", e$message),
-            type = "error",
-            duration = 5
-          )
           stop(e$message)
         })
       },
@@ -1128,11 +1097,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           }
           
         }, error = function(e) {
-          showNotification(
-            paste("Plot download failed:", e$message),
-            type = "error",
-            duration = 5
-          )
           # Create a minimal error plot if main plot fails
           error_plot <- ggplot2::ggplot() + 
             ggplot2::annotate("text", x = 0.5, y = 0.5, 

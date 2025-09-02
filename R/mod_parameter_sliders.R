@@ -402,7 +402,6 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     observeEvent(slider_changes(), {
       if (!is.null(plan_state) && plan_state$real_time_enabled && !is.null(param_manager$trigger_real_time_analysis)) {
         # Show subtle loading notification (shorter duration to reduce noise)
-        showNotification("Updating...", duration = 0.5, type = "message")
         
         # Trigger analysis through parameter manager
         param_manager$trigger_real_time_analysis()

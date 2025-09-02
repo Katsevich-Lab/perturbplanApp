@@ -65,8 +65,6 @@ mod_parameter_manager_server <- function(id) {
         parameters$last_updated_by <- source
         parameters$last_updated_at <- Sys.time()
         
-        # DEBUG: Track parameter updates
-        cat("DEBUG [Parameter Manager]: ", param_name, " = ", value, " from SOURCE: ", source, " at ", as.character(Sys.time()), "\n")
       }
     }
     

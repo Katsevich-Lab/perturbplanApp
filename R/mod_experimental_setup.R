@@ -405,7 +405,6 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
           }
           
         } else {
-          showNotification("Please upload an RDS file with the required pilot data structure", type = "error")
           custom_pilot_data(NULL)
           output$pilot_data_uploaded <- reactive(FALSE)
           outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
