@@ -88,6 +88,16 @@ $(document).ready(function() {
           self.expand();
         }
       });
+      
+      // Listen for Shiny DOM changes that might affect sidebar functionality
+      $(document).on('shiny:inputchanged', function(event) {
+        // Reinitialize sidebar after mode changes that affect DOM
+        if (event.name === 'sidebar-design_options-optimization_type') {
+          setTimeout(() => {
+            self.reinitialize();
+          }, 200); // Wait for DOM changes to complete
+        }
+      });
     },
     
     // Setup initial state based on screen size and preferences
@@ -97,6 +107,36 @@ $(document).ready(function() {
         this.setCollapsed(true, false); // Collapse on mobile, no animation
       } else {
         this.setCollapsed(false, false); // Expand on desktop, no animation
+      }
+    },
+    
+    // Reinitialize sidebar system after DOM changes
+    reinitialize: function() {
+      try {
+        console.log('Reinitializing sidebar collapse system after DOM changes');
+        
+        // Recache DOM elements in case they've changed
+        this.cacheDOMElements();
+        
+        // Validate DOM elements still exist
+        if (!this.validateDOM()) {
+          console.warn('DOM validation failed during reinitialize');
+          return;
+        }
+        
+        // Preserve current state but refresh DOM references
+        var currentlyCollapsed = this.isCollapsed;
+        
+        // Re-apply current state to refresh DOM classes
+        if (currentlyCollapsed) {
+          this.performCollapse();
+        } else {
+          this.performExpand();
+        }
+        
+        console.log('Sidebar collapse system reinitialized successfully');
+      } catch (error) {
+        this.handleError(error, 'reinitialize');
       }
     },
     

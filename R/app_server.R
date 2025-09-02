@@ -34,7 +34,11 @@ app_server <- function(input, output, session) {
     # Sidebar collapse state management
     sidebar_collapsed = FALSE,       # Current sidebar visibility state (TRUE = collapsed/hidden)
     auto_collapse_enabled = TRUE,    # Enable automatic sidebar collapse after Plan execution
-    collapse_toggle_available = TRUE # Allow manual sidebar toggle via UI controls
+    collapse_toggle_available = TRUE, # Allow manual sidebar toggle via UI controls
+    
+    # Track actual user Plan button clicks for auto-collapse
+    user_plan_click_timestamp = NULL, # When user last clicked Plan button
+    waiting_for_plan_result = FALSE   # Whether we're waiting for Plan-triggered analysis
   )
   
   # Helper functions: Sidebar collapse state management
@@ -54,7 +58,17 @@ app_server <- function(input, output, session) {
   # Only collapses if auto_collapse_enabled is TRUE
   handle_auto_collapse <- function() {
     if (plan_state$auto_collapse_enabled) {
+      # Update internal state
       toggle_sidebar_collapse(TRUE)
+      
+      # Send collapse command to client with delay for smooth UX
+      session$sendCustomMessage(
+        type = "plan_success_collapse",
+        message = list(
+          delay = 500,
+          showProgress = TRUE
+        )
+      )
     }
   }
   
@@ -150,9 +164,22 @@ app_server <- function(input, output, session) {
     # Only mark completion for successful Plan-triggered analysis
     if (!is.null(results) && is.null(results$error)) {
       config <- user_workflow_config()
-      # Check if this was a Plan-triggered analysis (not real-time)
-      if (!is.null(config) && config$plan_clicked > 0 && !plan_state$real_time_enabled) {
-        plan_state$last_analysis_completed <- Sys.time()
+      
+      # Check if this was a user-initiated Plan button click (not configuration change)
+      if (!is.null(config) && config$plan_clicked > 0 && 
+          plan_state$waiting_for_plan_result && 
+          !is.null(plan_state$user_plan_click_timestamp)) {
+        
+        # Verify the analysis result is recent (within 30 seconds of Plan click)
+        time_since_click <- difftime(Sys.time(), plan_state$user_plan_click_timestamp, units = "secs")
+        
+        if (time_since_click <= 30) {
+          plan_state$last_analysis_completed <- Sys.time()
+          plan_state$waiting_for_plan_result <- FALSE  # Reset flag
+          
+          # Trigger auto-collapse after successful Plan analysis ONLY
+          handle_auto_collapse()
+        }
       }
     }
   })
@@ -332,6 +359,10 @@ app_server <- function(input, output, session) {
       
       # Reset sidebar collapse state when configuration changes
       plan_state$sidebar_collapsed <- FALSE
+      
+      # Reset Plan button tracking to prevent inappropriate auto-collapse
+      plan_state$waiting_for_plan_result <- FALSE
+      plan_state$user_plan_click_timestamp <- NULL
       
       # Send sidebar state update to client
       session$sendCustomMessage(

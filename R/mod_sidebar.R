@@ -163,6 +163,10 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
     # Plan button click handler with real-time analysis state management
     observeEvent(input$plan_btn, {
       if (!is.null(plan_state)) {
+        # Track user Plan button click for auto-collapse detection
+        plan_state$user_plan_click_timestamp <- Sys.time()
+        plan_state$waiting_for_plan_result <- TRUE
+        
         current_config <- combined_config()
         
         # Create signature for current design problem

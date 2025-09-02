@@ -207,18 +207,23 @@ mod_design_options_server <- function(id, param_manager = NULL){
     observe({
       # Power/cost inputs appear when optimization type is selected
       if (!is.null(input$optimization_type) && input$optimization_type != "") {
-        shinyjs::show("power_cost_inputs")
-        
-        # Show cost budget input only for power + cost constraints
-        if (input$optimization_type == "power_cost") {
-          shinyjs::show("cost_budget_div")
-        } else {
-          shinyjs::hide("cost_budget_div")
-        }
+        # Use deferred DOM manipulation to prevent sidebar collapse interference
+        shinyjs::delay(50, {
+          shinyjs::show("power_cost_inputs")
+          
+          # Show cost budget input only for power + cost constraints
+          if (input$optimization_type == "power_cost") {
+            shinyjs::show("cost_budget_div")
+          } else {
+            shinyjs::hide("cost_budget_div")
+          }
+        })
       } else {
-        shinyjs::hide("power_cost_inputs")
-        shinyjs::hide("step2")
-        shinyjs::hide("step3")
+        shinyjs::delay(50, {
+          shinyjs::hide("power_cost_inputs")
+          shinyjs::hide("step2")
+          shinyjs::hide("step3")
+        })
       }
     })
     
@@ -236,11 +241,16 @@ mod_design_options_server <- function(id, param_manager = NULL){
       # Don't hide/show Step 2 based on power/cost input changes - only on mode selection
       step1_complete <- !is.null(input$optimization_type) && input$optimization_type != ""
       
+      # Use deferred DOM manipulation to prevent sidebar collapse interference
       if (step1_complete) {
-        shinyjs::show("step2")
+        shinyjs::delay(75, {
+          shinyjs::show("step2")
+        })
       } else {
-        shinyjs::hide("step2")
-        shinyjs::hide("step3")
+        shinyjs::delay(75, {
+          shinyjs::hide("step2")
+          shinyjs::hide("step3")
+        })
       }
     })
     
@@ -262,24 +272,37 @@ mod_design_options_server <- function(id, param_manager = NULL){
             (param_configs$TPM_threshold$type == "varying") ||
             (param_configs$minimum_fold_change$type == "varying")
           
+          # Use deferred DOM manipulation to prevent sidebar collapse interference  
           if (has_controls) {
-            shinyjs::show("step3")
+            shinyjs::delay(100, {
+              shinyjs::show("step3")
+            })
           } else {
-            shinyjs::hide("step3")
+            shinyjs::delay(100, {
+              shinyjs::hide("step3")
+            })
           }
         } else {
-          shinyjs::hide("step3")
+          shinyjs::delay(100, {
+            shinyjs::hide("step3")
+          })
         }
         
         # Show cost parameters if minimizing total cost
         if (input$minimization_target == "cost") {
-          shinyjs::show("cost_minimization_params")
+          shinyjs::delay(125, {
+            shinyjs::show("cost_minimization_params")
+          })
         } else {
-          shinyjs::hide("cost_minimization_params")
+          shinyjs::delay(125, {
+            shinyjs::hide("cost_minimization_params")
+          })
         }
       } else {
-        shinyjs::hide("step3")
-        shinyjs::hide("cost_minimization_params")
+        shinyjs::delay(100, {
+          shinyjs::hide("step3")
+          shinyjs::hide("cost_minimization_params")
+        })
       }
     })
     
@@ -317,14 +340,20 @@ mod_design_options_server <- function(id, param_manager = NULL){
             fc_control = input$fc_control
           )
         
-          # Update summary text and show the section
-          shinyjs::html("summary_text", summary_text)
-          shinyjs::show("design_summary")
+          # Update summary text and show the section with deferred DOM manipulation
+          shinyjs::delay(150, {
+            shinyjs::html("summary_text", summary_text)
+            shinyjs::show("design_summary")
+          })
         } else {
-          shinyjs::hide("design_summary")
+          shinyjs::delay(150, {
+            shinyjs::hide("design_summary")
+          })
         }
       } else {
-        shinyjs::hide("design_summary")
+        shinyjs::delay(150, {
+          shinyjs::hide("design_summary")
+        })
       }
     })
     
