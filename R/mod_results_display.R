@@ -336,10 +336,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         # Do NOT show overlay for Plan button analysis_invalidated (no loading for Plan button)
         show_overlay <- show_loading_flag || real_time_loading
         
-        # Temporary debug to diagnose loading issues
-        if (show_loading_flag || analysis_invalidated) {
-          cat("DEBUG [loading]: show_loading=", show_loading_flag, " invalidated=", analysis_invalidated, " ready=", analysis_ready, " overlay=", show_overlay, "\n")
-        }
         
         return(show_overlay)
       }, error = function(e) {
