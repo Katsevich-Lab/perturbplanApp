@@ -159,6 +159,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         # Mode changed - reset plan state to force new analysis
         if (!is.null(plan_state)) {
           plan_state$effective_plan_count <- 0  # Reset to force fresh analysis
+          plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
         }
         plan_count_adjustment(0)  # Reset adjustment for backward compatibility
       }

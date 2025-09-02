@@ -156,6 +156,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         0
       }
       
+      # Check for plan count reset signal (from mode changes)
+      if (!is.null(plan_state) && !is.null(plan_state$plan_count_reset) && plan_state$plan_count_reset) {
+        cat("DEBUG: Plan count reset signal detected, resetting last_plan_count to", current_plan_count - 1, "\n")
+        last_plan_count(current_plan_count - 1)  # Set to one less so next increment triggers
+        plan_state$plan_count_reset <- FALSE     # Clear the signal
+      }
       
       # Check if this is a valid NEW trigger that should exit transition mode
       has_new_plan_click <- (current_plan_count > last_plan_count())
