@@ -160,6 +160,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         if (!is.null(plan_state)) {
           plan_state$effective_plan_count <- 0  # Reset to force fresh analysis
           plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
+          plan_state$mode_change_triggered <- TRUE  # Mark this as mode change, not user Plan click
         }
         plan_count_adjustment(0)  # Reset adjustment for backward compatibility
       }
@@ -184,6 +185,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         # This ensures analysis always triggers on Plan clicks regardless of mode change timing
         old_count <- plan_state$effective_plan_count %||% 0
         plan_state$effective_plan_count <- old_count + 1
+        plan_state$mode_change_triggered <- FALSE  # Clear mode change flag - this is a real user click
         cat("DEBUG: Plan count updated from", old_count, "to", plan_state$effective_plan_count, "\n")
         
         current_config <- combined_config()

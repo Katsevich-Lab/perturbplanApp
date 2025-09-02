@@ -170,10 +170,11 @@ app_server <- function(input, output, session) {
     if (!is.null(results) && is.null(results$error)) {
       config <- user_workflow_config()
       
-      # Check if this was a user-initiated Plan button click (not configuration change)
+      # Check if this was a user-initiated Plan button click (not configuration change or mode switch)
       if (!is.null(config) && config$plan_clicked > 0 && 
           plan_state$waiting_for_plan_result && 
-          !is.null(plan_state$user_plan_click_timestamp)) {
+          !is.null(plan_state$user_plan_click_timestamp) &&
+          !isTRUE(plan_state$mode_change_triggered)) {  # Don't auto-collapse for mode changes
         
         # Verify the analysis result is recent (within 30 seconds of Plan click)
         time_since_click <- difftime(Sys.time(), plan_state$user_plan_click_timestamp, units = "secs")
@@ -185,6 +186,9 @@ app_server <- function(input, output, session) {
           # Trigger auto-collapse after successful Plan analysis ONLY
           handle_auto_collapse()
         }
+      } else if (isTRUE(plan_state$mode_change_triggered)) {
+        # Clear mode change flag after analysis completes (regardless of success)
+        plan_state$mode_change_triggered <- FALSE
       }
     }
   })
