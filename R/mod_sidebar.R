@@ -156,8 +156,11 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       current_mode <- design_config()$optimization_type
       if (!is.null(current_mode) && current_mode != "" && 
           !is.null(previous_mode()) && previous_mode() != current_mode) {
-        # Mode changed - reset plan by adjusting the count
-        plan_count_adjustment(input$plan_btn)  # Store current count to subtract
+        # Mode changed - reset plan state to force new analysis
+        if (!is.null(plan_state)) {
+          plan_state$effective_plan_count <- 0  # Reset to force fresh analysis
+        }
+        plan_count_adjustment(0)  # Reset adjustment for backward compatibility
       }
       if (!is.null(current_mode)) {
         previous_mode(current_mode)
@@ -174,6 +177,10 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         
         # Note: Loading indicators removed for Plan button - only sliders show loading now
         plan_state$analysis_invalidated <- TRUE  # Mark that new analysis is needed
+        
+        # CRITICAL FIX: Force plan count to increment reliably by bypassing adjustment
+        # This ensures analysis always triggers on Plan clicks regardless of mode change timing
+        plan_state$effective_plan_count <- (plan_state$effective_plan_count %||% 0) + 1
         
         current_config <- combined_config()
         
@@ -227,7 +234,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
-        plan_clicked = input$plan_btn - plan_count_adjustment(),  # Reset plan count on mode change
+        plan_clicked = plan_state$effective_plan_count %||% 0,  # Use reliable plan count from observeEvent
         timestamp = Sys.time(),
         
         # CRITICAL: Pass through source information from parameter manager
