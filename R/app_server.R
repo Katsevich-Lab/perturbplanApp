@@ -197,7 +197,6 @@ app_server <- function(input, output, session) {
             "waiting:", plan_state$waiting_for_plan_result %||% "NULL", 
             "timestamp:", !is.null(plan_state$user_plan_click_timestamp), "\n")
       }
-      }
     }
   })
   
