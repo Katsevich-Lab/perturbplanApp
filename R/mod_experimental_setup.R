@@ -152,51 +152,36 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     # Use observeEvent + isolate to prevent circular reactive dependencies
     observeEvent(input$MOI, {
       isolate({
-        param_manager$update_parameter("MOI", input$MOI, "sidebar")
-        # Trigger real-time analysis like sliders do
-        if (!is.null(param_manager$trigger_real_time_analysis)) {
-          param_manager$trigger_real_time_analysis()
-        }
+        # Update parameter manager with "slider" source to behave like sliders
+        param_manager$update_parameter("MOI", input$MOI, "slider")
       })
     })
     
     observeEvent(input$num_targets, {
       isolate({
-        param_manager$update_parameter("num_targets", input$num_targets, "sidebar")
-        # Trigger real-time analysis like sliders do
-        if (!is.null(param_manager$trigger_real_time_analysis)) {
-          param_manager$trigger_real_time_analysis()
-        }
+        # Update parameter manager with "slider" source to behave like sliders
+        param_manager$update_parameter("num_targets", input$num_targets, "slider")
       })
     })
     
     observeEvent(input$gRNAs_per_target, {
       isolate({
-        param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "sidebar")
-        # Trigger real-time analysis like sliders do
-        if (!is.null(param_manager$trigger_real_time_analysis)) {
-          param_manager$trigger_real_time_analysis()
-        }
+        # Update parameter manager with "slider" source to behave like sliders
+        param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "slider")
       })
     })
     
     observeEvent(input$cells_fixed, {
       isolate({
-        param_manager$update_parameter("cells_per_target", input$cells_fixed, "sidebar")
-        # Trigger real-time analysis like sliders do
-        if (!is.null(param_manager$trigger_real_time_analysis)) {
-          param_manager$trigger_real_time_analysis()
-        }
+        # Update parameter manager with "slider" source to behave like sliders
+        param_manager$update_parameter("cells_per_target", input$cells_fixed, "slider")
       })
     })
     
     observeEvent(input$sequenced_reads_fixed, {
       isolate({
-        param_manager$update_parameter("reads_per_cell", input$sequenced_reads_fixed, "sidebar")
-        # Trigger real-time analysis like sliders do
-        if (!is.null(param_manager$trigger_real_time_analysis)) {
-          param_manager$trigger_real_time_analysis()
-        }
+        # Update parameter manager with "slider" source to behave like sliders
+        param_manager$update_parameter("reads_per_cell", input$sequenced_reads_fixed, "slider")
       })
     })
     

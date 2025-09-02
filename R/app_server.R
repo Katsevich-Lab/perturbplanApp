@@ -31,29 +31,47 @@ app_server <- function(input, output, session) {
     last_analysis_completed = NULL   # Timestamp when last analysis completed
   )
   
-  # Helper function: Create design problem signature from dropdown selections only
+  # Helper function: Create design problem signature from NON-SHARED sidebar parameters only
   create_design_problem_signature <- function(user_config) {
-    if (is.null(user_config) || is.null(user_config$design_options)) return(NULL)
+    if (is.null(user_config)) return(NULL)
     
-    design <- user_config$design_options
-    
-    # Include ONLY structural dropdown elements, not numeric values
-    structural_elements <- list(
-      # Step 1: Optimization type dropdown
-      optimization_type = design$optimization_type,
+    # Include ONLY non-shared sidebar parameters that should trigger complete clearing
+    non_shared_elements <- list(
+      # Design options (Steps 1/2/3) - ALWAYS included as these are structural
+      design_options = if (!is.null(user_config$design_options)) {
+        list(
+          optimization_type = user_config$design_options$optimization_type,
+          minimization_target = user_config$design_options$minimization_target,
+          parameter_controls = if (!is.null(user_config$design_options$parameter_controls)) {
+            lapply(user_config$design_options$parameter_controls, function(param) param$type)
+          } else NULL
+        )
+      } else NULL,
       
-      # Step 2: Minimization target dropdown
-      minimization_target = design$minimization_target,
-      
-      # Step 3: Parameter control dropdown selections (varying/fixed/minimizing)
-      parameter_controls = if (!is.null(design$parameter_controls)) {
-        # Extract only the 'type' field from each parameter control
-        lapply(design$parameter_controls, function(param) param$type)
-      } else NULL
+      # ONLY non-shared parameters from other sidebar sections
+      non_shared_params = list(
+        # Experimental setup - non-shared only
+        biological_system = user_config$experimental_setup$biological_system,
+        pilot_data_choice = user_config$experimental_setup$pilot_data_choice,
+        non_targeting_gRNAs = user_config$experimental_setup$non_targeting_gRNAs,
+        
+        # Analysis choices - non-shared only  
+        side = user_config$analysis_choices$side,
+        gene_list_mode = user_config$analysis_choices$gene_list_mode,
+        
+        # Effect sizes - non-shared only
+        prop_non_null = user_config$effect_sizes$prop_non_null,
+        
+        # Advanced choices - ALL (none are shared)
+        gRNA_variability = user_config$advanced_choices$gRNA_variability,
+        mapping_efficiency = user_config$advanced_choices$mapping_efficiency,
+        control_group = user_config$advanced_choices$control_group,
+        fdr_target = user_config$advanced_choices$fdr_target
+      )
     )
     
-    # Create signature hash of structural elements only
-    return(digest::digest(structural_elements, algo = "md5"))
+    # Create signature hash of non-shared elements only
+    return(digest::digest(non_shared_elements, algo = "md5"))
   }
   
   # ========================================================================
@@ -227,7 +245,7 @@ app_server <- function(input, output, session) {
   # APP STATE MANAGEMENT
   # ========================================================================
   
-  # Monitor for design problem changes (dropdown changes only)
+  # Monitor for ANY sidebar configuration changes (complete clearing trigger)
   observe({
     current_config <- user_workflow_config()
     new_signature <- create_design_problem_signature(current_config)
@@ -236,7 +254,7 @@ app_server <- function(input, output, session) {
     if (!is.null(new_signature) && 
         !identical(plan_state$current_design_signature, new_signature)) {
       
-      # Design problem structure changed - reset state
+      # Sidebar configuration changed - reset state completely
       old_signature <- plan_state$current_design_signature
       plan_state$current_design_signature <- new_signature
       plan_state$first_plan_clicked <- FALSE

@@ -11,6 +11,49 @@
 #' @importFrom shinydashboard dashboardSidebar
 #' @importFrom shinyjs show hide
 #' @importFrom digest digest
+# Helper function: Create design problem signature identical to app_server.R
+create_design_problem_signature_local <- function(user_config) {
+  if (is.null(user_config)) return(NULL)
+  
+  # Include ONLY non-shared sidebar parameters that should trigger complete clearing
+  non_shared_elements <- list(
+    # Design options (Steps 1/2/3) - ALWAYS included as these are structural
+    design_options = if (!is.null(user_config$design_options)) {
+      list(
+        optimization_type = user_config$design_options$optimization_type,
+        minimization_target = user_config$design_options$minimization_target,
+        parameter_controls = if (!is.null(user_config$design_options$parameter_controls)) {
+          lapply(user_config$design_options$parameter_controls, function(param) param$type)
+        } else NULL
+      )
+    } else NULL,
+    
+    # ONLY non-shared parameters from other sidebar sections
+    non_shared_params = list(
+      # Experimental setup - non-shared only
+      biological_system = user_config$experimental_setup$biological_system,
+      pilot_data_choice = user_config$experimental_setup$pilot_data_choice,
+      non_targeting_gRNAs = user_config$experimental_setup$non_targeting_gRNAs,
+      
+      # Analysis choices - non-shared only  
+      side = user_config$analysis_choices$side,
+      gene_list_mode = user_config$analysis_choices$gene_list_mode,
+      
+      # Effect sizes - non-shared only
+      prop_non_null = user_config$effect_sizes$prop_non_null,
+      
+      # Advanced choices - ALL (none are shared)
+      gRNA_variability = user_config$advanced_choices$gRNA_variability,
+      mapping_efficiency = user_config$advanced_choices$mapping_efficiency,
+      control_group = user_config$advanced_choices$control_group,
+      fdr_target = user_config$advanced_choices$fdr_target
+    )
+  )
+  
+  # Create signature hash of non-shared elements only
+  return(digest::digest(non_shared_elements, algo = "md5"))
+}
+
 mod_sidebar_ui <- function(id) {
   ns <- NS(id)
   
@@ -92,14 +135,9 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         current_config <- combined_config()
         
         # Create signature for current design problem
-        if (!is.null(current_config) && !is.null(current_config$design_options)) {
-          current_signature <- digest::digest(list(
-            optimization_type = current_config$design_options$optimization_type,
-            minimization_target = current_config$design_options$minimization_target,
-            parameter_controls = if (!is.null(current_config$design_options$parameter_controls)) {
-              lapply(current_config$design_options$parameter_controls, function(param) param$type)
-            } else NULL
-          ), algo = "md5")
+        if (!is.null(current_config)) {
+          # Use the SAME comprehensive signature as app_server.R
+          current_signature <- create_design_problem_signature_local(current_config)
           
           # Check if this is first plan click for current design problem
           if (!plan_state$first_plan_clicked || 

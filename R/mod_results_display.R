@@ -348,27 +348,54 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Track previous design configuration to detect changes
     previous_design_config <- reactiveVal(NULL)
     
-    # Clear pinned solutions and plots when design options change
+    # Clear pinned solutions and plots when ANY non-shared sidebar parameters change
     observe({
       config <- user_config()
-      if (!is.null(config) && !is.null(config$design_options)) {
-        # Extract only the control types (not fixed_values) to avoid slider triggers
-        param_control_types <- NULL
-        if (!is.null(config$design_options$parameter_controls)) {
-          param_control_types <- lapply(config$design_options$parameter_controls, function(control) {
-            list(type = control$type)  # Only track the type, not fixed_value
-          })
-        }
-        
+      if (!is.null(config)) {
+        # Track ALL non-shared sidebar parameters (same as app_server.R design signature)
         current_design <- list(
-          optimization_type = config$design_options$optimization_type,
-          minimization_target = config$design_options$minimization_target,
-          parameter_control_types = param_control_types
+          # Design options (Steps 1/2/3) - ALWAYS included as these are structural
+          design_options = if (!is.null(config$design_options)) {
+            # Extract only the control types (not fixed_values) to avoid slider triggers
+            param_control_types <- NULL
+            if (!is.null(config$design_options$parameter_controls)) {
+              param_control_types <- lapply(config$design_options$parameter_controls, function(control) {
+                list(type = control$type)  # Only track the type, not fixed_value
+              })
+            }
+            
+            list(
+              optimization_type = config$design_options$optimization_type,
+              minimization_target = config$design_options$minimization_target,
+              parameter_control_types = param_control_types
+            )
+          } else NULL,
+          
+          # ONLY non-shared parameters from other sidebar sections
+          non_shared_params = list(
+            # Experimental setup - non-shared only
+            biological_system = config$experimental_setup$biological_system,
+            pilot_data_choice = config$experimental_setup$pilot_data_choice,
+            non_targeting_gRNAs = config$experimental_setup$non_targeting_gRNAs,
+            
+            # Analysis choices - non-shared only  
+            side = config$analysis_choices$side,
+            gene_list_mode = config$analysis_choices$gene_list_mode,
+            
+            # Effect sizes - non-shared only
+            prop_non_null = config$effect_sizes$prop_non_null,
+            
+            # Advanced choices - ALL (none are shared)
+            gRNA_variability = config$advanced_choices$gRNA_variability,
+            mapping_efficiency = config$advanced_choices$mapping_efficiency,
+            control_group = config$advanced_choices$control_group,
+            fdr_target = config$advanced_choices$fdr_target
+          )
         )
         
         prev_design <- previous_design_config()
         if (!is.null(prev_design) && !identical(prev_design, current_design)) {
-          # Design options changed - clear pinned solutions
+          # Non-shared sidebar parameters changed - clear pinned solutions
           pinned_solutions$solutions <- list()
           pinned_solutions$next_index <- 1
           

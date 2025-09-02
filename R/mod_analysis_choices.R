@@ -90,11 +90,8 @@ mod_analysis_choices_server <- function(id, design_config, param_manager){
     # Use observeEvent + isolate to prevent circular reactive dependencies
     observeEvent(input$TPM_threshold_fixed, {
       isolate({
-        param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
-        # Trigger real-time analysis like sliders do
-        if (!is.null(param_manager$trigger_real_time_analysis)) {
-          param_manager$trigger_real_time_analysis()
-        }
+        # Update parameter manager with "slider" source to behave like sliders
+        param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "slider")
       })
     })
     

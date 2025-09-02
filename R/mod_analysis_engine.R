@@ -89,13 +89,13 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       }
     })
     
-    # Track non-shared sidebar parameters for comprehensive clearing (like design options)
+    # Track non-shared sidebar parameters for cache clearing (like design options)
     previous_non_shared <- reactiveVal(NULL)
     
     observe({
       config <- workflow_config()
       if (!is.null(config)) {
-        # Track sidebar-only parameters that should trigger comprehensive clearing
+        # Track sidebar-only parameters that should trigger cache clearing
         current_non_shared <- list(
           # Experimental setup - non-shared parameters only
           biological_system = config$experimental_setup$biological_system,
@@ -116,20 +116,15 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           fdr_target = config$advanced_choices$fdr_target
         )
         
-        # If any non-shared sidebar parameter changed, apply IDENTICAL clearing as design options
+        # If any non-shared sidebar parameter changed, apply cache clearing ONLY
         if (!is.null(previous_non_shared()) && !identical(previous_non_shared(), current_non_shared)) {
-          # Analysis engine clearing
+          # Analysis engine cache clearing (IDENTICAL to design options)
           in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
           previous_config_object(NULL)   # Reset configuration object
           
-          # Plan state clearing (IDENTICAL to design options in app_server.R)
-          if (!is.null(plan_state)) {
-            plan_state$first_plan_clicked <- FALSE
-            plan_state$real_time_enabled <- FALSE
-            plan_state$sliders_visible <- FALSE
-          }
+          # Note: Plan state clearing (sliders_visible) is handled by app_server.R
         }
         
         previous_non_shared(current_non_shared)
