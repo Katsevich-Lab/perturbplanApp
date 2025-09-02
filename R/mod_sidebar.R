@@ -15,43 +15,74 @@
 create_design_problem_signature_local <- function(user_config) {
   if (is.null(user_config)) return(NULL)
   
-  # Include ONLY non-shared sidebar parameters that should trigger complete clearing
-  non_shared_elements <- list(
-    # Design options (Steps 1/2/3) - ALWAYS included as these are structural
+  # Include ALL sidebar parameters that should trigger complete clearing
+  all_sidebar_elements <- list(
+    # Design options (Steps 1/2/3) - Structure AND shared parameter values
     design_options = if (!is.null(user_config$design_options)) {
       list(
         optimization_type = user_config$design_options$optimization_type,
         minimization_target = user_config$design_options$minimization_target,
         parameter_controls = if (!is.null(user_config$design_options$parameter_controls)) {
           lapply(user_config$design_options$parameter_controls, function(param) param$type)
-        } else NULL
+        } else NULL,
+        # Include shared parameter value
+        cost_budget = user_config$design_options$cost_budget
       )
     } else NULL,
     
-    # ONLY non-shared parameters from other sidebar sections
-    non_shared_params = list(
-      # Experimental setup - non-shared only
-      biological_system = user_config$experimental_setup$biological_system,
-      pilot_data_choice = user_config$experimental_setup$pilot_data_choice,
-      non_targeting_gRNAs = user_config$experimental_setup$non_targeting_gRNAs,
-      
-      # Analysis choices - non-shared only  
-      side = user_config$analysis_choices$side,
-      gene_list_mode = user_config$analysis_choices$gene_list_mode,
-      
-      # Effect sizes - non-shared only
-      prop_non_null = user_config$effect_sizes$prop_non_null,
-      
-      # Advanced choices - ALL (none are shared)
-      gRNA_variability = user_config$advanced_choices$gRNA_variability,
-      mapping_efficiency = user_config$advanced_choices$mapping_efficiency,
-      control_group = user_config$advanced_choices$control_group,
-      fdr_target = user_config$advanced_choices$fdr_target
-    )
+    # Experimental setup - ALL parameters (shared + non-shared)
+    experimental_setup = if (!is.null(user_config$experimental_setup)) {
+      list(
+        # Non-shared parameters
+        biological_system = user_config$experimental_setup$biological_system,
+        pilot_data_choice = user_config$experimental_setup$pilot_data_choice,
+        non_targeting_gRNAs = user_config$experimental_setup$non_targeting_gRNAs,
+        
+        # Shared parameters
+        MOI = user_config$experimental_setup$MOI,
+        num_targets = user_config$experimental_setup$num_targets,
+        gRNAs_per_target = user_config$experimental_setup$gRNAs_per_target,
+        cells_fixed = user_config$experimental_setup$cells_fixed,
+        sequenced_reads_fixed = user_config$experimental_setup$sequenced_reads_fixed
+      )
+    } else NULL,
+    
+    # Analysis choices - ALL parameters (shared + non-shared)
+    analysis_choices = if (!is.null(user_config$analysis_choices)) {
+      list(
+        # Non-shared parameters
+        side = user_config$analysis_choices$side,
+        gene_list_mode = user_config$analysis_choices$gene_list_mode,
+        
+        # Shared parameter
+        TPM_threshold_fixed = user_config$analysis_choices$TPM_threshold_fixed
+      )
+    } else NULL,
+    
+    # Effect sizes - ALL parameters (shared + non-shared)
+    effect_sizes = if (!is.null(user_config$effect_sizes)) {
+      list(
+        # Non-shared parameter
+        prop_non_null = user_config$effect_sizes$prop_non_null,
+        
+        # Shared parameter
+        minimum_fold_change_fixed = user_config$effect_sizes$minimum_fold_change_fixed
+      )
+    } else NULL,
+    
+    # Advanced choices - ALL parameters (none are shared with sliders)
+    advanced_choices = if (!is.null(user_config$advanced_choices)) {
+      list(
+        gRNA_variability = user_config$advanced_choices$gRNA_variability,
+        mapping_efficiency = user_config$advanced_choices$mapping_efficiency,
+        control_group = user_config$advanced_choices$control_group,
+        fdr_target = user_config$advanced_choices$fdr_target
+      )
+    } else NULL
   )
   
-  # Create signature hash of non-shared elements only
-  return(digest::digest(non_shared_elements, algo = "md5"))
+  # Create signature hash of ALL sidebar elements
+  return(digest::digest(all_sidebar_elements, algo = "md5"))
 }
 
 mod_sidebar_ui <- function(id) {

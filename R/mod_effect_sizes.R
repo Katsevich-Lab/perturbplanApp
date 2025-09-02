@@ -62,8 +62,7 @@ mod_effect_sizes_server <- function(id, design_config, param_manager, analysis_c
     # Use observeEvent + isolate to prevent circular reactive dependencies
     observeEvent(input$minimum_fold_change_fixed, {
       isolate({
-        # Update parameter manager with "slider" source to behave like sliders
-        param_manager$update_parameter("minimum_fold_change", input$minimum_fold_change_fixed, "slider")
+        param_manager$update_parameter("minimum_fold_change", input$minimum_fold_change_fixed, "sidebar")
       })
     })
     

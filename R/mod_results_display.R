@@ -348,11 +348,11 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # Track previous design configuration to detect changes
     previous_design_config <- reactiveVal(NULL)
     
-    # Clear pinned solutions and plots when ANY non-shared sidebar parameters change
+    # Clear pinned solutions and plots when ANY sidebar parameters change
     observe({
       config <- user_config()
       if (!is.null(config)) {
-        # Track ALL non-shared sidebar parameters (same as app_server.R design signature)
+        # Track ALL sidebar parameters (same as app_server.R design signature)
         current_design <- list(
           # Design options (Steps 1/2/3) - ALWAYS included as these are structural
           design_options = if (!is.null(config$design_options)) {
@@ -367,35 +367,66 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             list(
               optimization_type = config$design_options$optimization_type,
               minimization_target = config$design_options$minimization_target,
-              parameter_control_types = param_control_types
+              parameter_control_types = param_control_types,
+              # Include shared parameter value
+              cost_budget = config$design_options$cost_budget
             )
           } else NULL,
           
-          # ONLY non-shared parameters from other sidebar sections
-          non_shared_params = list(
-            # Experimental setup - non-shared only
-            biological_system = config$experimental_setup$biological_system,
-            pilot_data_choice = config$experimental_setup$pilot_data_choice,
-            non_targeting_gRNAs = config$experimental_setup$non_targeting_gRNAs,
-            
-            # Analysis choices - non-shared only  
-            side = config$analysis_choices$side,
-            gene_list_mode = config$analysis_choices$gene_list_mode,
-            
-            # Effect sizes - non-shared only
-            prop_non_null = config$effect_sizes$prop_non_null,
-            
-            # Advanced choices - ALL (none are shared)
-            gRNA_variability = config$advanced_choices$gRNA_variability,
-            mapping_efficiency = config$advanced_choices$mapping_efficiency,
-            control_group = config$advanced_choices$control_group,
-            fdr_target = config$advanced_choices$fdr_target
-          )
+          # Experimental setup - ALL parameters (shared + non-shared)
+          experimental_setup = if (!is.null(config$experimental_setup)) {
+            list(
+              # Non-shared parameters
+              biological_system = config$experimental_setup$biological_system,
+              pilot_data_choice = config$experimental_setup$pilot_data_choice,
+              non_targeting_gRNAs = config$experimental_setup$non_targeting_gRNAs,
+              
+              # Shared parameters
+              MOI = config$experimental_setup$MOI,
+              num_targets = config$experimental_setup$num_targets,
+              gRNAs_per_target = config$experimental_setup$gRNAs_per_target,
+              cells_fixed = config$experimental_setup$cells_fixed,
+              sequenced_reads_fixed = config$experimental_setup$sequenced_reads_fixed
+            )
+          } else NULL,
+          
+          # Analysis choices - ALL parameters (shared + non-shared)
+          analysis_choices = if (!is.null(config$analysis_choices)) {
+            list(
+              # Non-shared parameters
+              side = config$analysis_choices$side,
+              gene_list_mode = config$analysis_choices$gene_list_mode,
+              
+              # Shared parameter
+              TPM_threshold_fixed = config$analysis_choices$TPM_threshold_fixed
+            )
+          } else NULL,
+          
+          # Effect sizes - ALL parameters (shared + non-shared)
+          effect_sizes = if (!is.null(config$effect_sizes)) {
+            list(
+              # Non-shared parameter
+              prop_non_null = config$effect_sizes$prop_non_null,
+              
+              # Shared parameter
+              minimum_fold_change_fixed = config$effect_sizes$minimum_fold_change_fixed
+            )
+          } else NULL,
+          
+          # Advanced choices - ALL parameters (none are shared with sliders)
+          advanced_choices = if (!is.null(config$advanced_choices)) {
+            list(
+              gRNA_variability = config$advanced_choices$gRNA_variability,
+              mapping_efficiency = config$advanced_choices$mapping_efficiency,
+              control_group = config$advanced_choices$control_group,
+              fdr_target = config$advanced_choices$fdr_target
+            )
+          } else NULL
         )
         
         prev_design <- previous_design_config()
         if (!is.null(prev_design) && !identical(prev_design, current_design)) {
-          # Non-shared sidebar parameters changed - clear pinned solutions
+          # ANY sidebar parameters changed - clear pinned solutions
           pinned_solutions$solutions <- list()
           pinned_solutions$next_index <- 1
           

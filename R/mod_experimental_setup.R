@@ -152,36 +152,31 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     # Use observeEvent + isolate to prevent circular reactive dependencies
     observeEvent(input$MOI, {
       isolate({
-        # Update parameter manager with "slider" source to behave like sliders
-        param_manager$update_parameter("MOI", input$MOI, "slider")
+        param_manager$update_parameter("MOI", input$MOI, "sidebar")
       })
     })
     
     observeEvent(input$num_targets, {
       isolate({
-        # Update parameter manager with "slider" source to behave like sliders
-        param_manager$update_parameter("num_targets", input$num_targets, "slider")
+        param_manager$update_parameter("num_targets", input$num_targets, "sidebar")
       })
     })
     
     observeEvent(input$gRNAs_per_target, {
       isolate({
-        # Update parameter manager with "slider" source to behave like sliders
-        param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "slider")
+        param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "sidebar")
       })
     })
     
     observeEvent(input$cells_fixed, {
       isolate({
-        # Update parameter manager with "slider" source to behave like sliders
-        param_manager$update_parameter("cells_per_target", input$cells_fixed, "slider")
+        param_manager$update_parameter("cells_per_target", input$cells_fixed, "sidebar")
       })
     })
     
     observeEvent(input$sequenced_reads_fixed, {
       isolate({
-        # Update parameter manager with "slider" source to behave like sliders
-        param_manager$update_parameter("reads_per_cell", input$sequenced_reads_fixed, "slider")
+        param_manager$update_parameter("reads_per_cell", input$sequenced_reads_fixed, "sidebar")
       })
     })
     

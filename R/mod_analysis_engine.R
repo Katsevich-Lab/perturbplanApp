@@ -95,29 +95,39 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
     observe({
       config <- workflow_config()
       if (!is.null(config)) {
-        # Track sidebar-only parameters that should trigger cache clearing
-        current_non_shared <- list(
-          # Experimental setup - non-shared parameters only
+        # Track ALL sidebar parameters that should trigger cache clearing
+        current_sidebar_params <- list(
+          # Experimental setup - ALL parameters (shared + non-shared)
           biological_system = config$experimental_setup$biological_system,
           pilot_data_choice = config$experimental_setup$pilot_data_choice,
           non_targeting_gRNAs = config$experimental_setup$non_targeting_gRNAs,
+          MOI = config$experimental_setup$MOI,
+          num_targets = config$experimental_setup$num_targets,
+          gRNAs_per_target = config$experimental_setup$gRNAs_per_target,
+          cells_fixed = config$experimental_setup$cells_fixed,
+          sequenced_reads_fixed = config$experimental_setup$sequenced_reads_fixed,
           
-          # Analysis choices - non-shared parameters only  
+          # Analysis choices - ALL parameters (shared + non-shared)  
           side = config$analysis_choices$side,
           gene_list_mode = config$analysis_choices$gene_list_mode,
+          TPM_threshold_fixed = config$analysis_choices$TPM_threshold_fixed,
           
-          # Effect sizes - non-shared parameters only
+          # Effect sizes - ALL parameters (shared + non-shared)
           prop_non_null = config$effect_sizes$prop_non_null,
+          minimum_fold_change_fixed = config$effect_sizes$minimum_fold_change_fixed,
           
-          # Advanced choices - all parameters (none are shared with sliders)
+          # Design options shared parameter
+          cost_budget = config$design_options$cost_budget,
+          
+          # Advanced choices - ALL parameters (none are shared with sliders)
           gRNA_variability = config$advanced_choices$gRNA_variability,
           mapping_efficiency = config$advanced_choices$mapping_efficiency,
           control_group = config$advanced_choices$control_group,
           fdr_target = config$advanced_choices$fdr_target
         )
         
-        # If any non-shared sidebar parameter changed, apply cache clearing ONLY
-        if (!is.null(previous_non_shared()) && !identical(previous_non_shared(), current_non_shared)) {
+        # If any sidebar parameter changed, apply cache clearing ONLY
+        if (!is.null(previous_non_shared()) && !identical(previous_non_shared(), current_sidebar_params)) {
           # Analysis engine cache clearing (IDENTICAL to design options)
           in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
@@ -127,7 +137,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           # Note: Plan state clearing (sliders_visible) is handled by app_server.R
         }
         
-        previous_non_shared(current_non_shared)
+        previous_non_shared(current_sidebar_params)
       }
     })
 

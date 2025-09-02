@@ -823,8 +823,7 @@ mod_design_options_server <- function(id, param_manager = NULL){
       # Sync cost budget from design section to parameter manager
       observeEvent(input$cost_budget, {
         if (!is.null(input$cost_budget)) {
-          # Update parameter manager with "slider" source to behave like sliders
-          param_manager$update_parameter("cost_budget", input$cost_budget, "slider")
+          param_manager$update_parameter("cost_budget", input$cost_budget, "sidebar")
         }
       })
     }
