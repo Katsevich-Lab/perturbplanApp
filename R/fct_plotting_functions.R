@@ -567,10 +567,7 @@ create_cost_tradeoff_plots <- function(results) {
         ),
         legend = list(
           orientation = "v",
-          x = 1.02, y = 1,
-          bgcolor = "rgba(255,255,255,0.8)",
-          bordercolor = "rgba(0,0,0,0.2)",
-          borderwidth = 1
+          x = 1.02, y = 1
         ),
         showlegend = TRUE,
         hovermode = "closest"
@@ -815,10 +812,7 @@ create_multi_solution_cost_plots <- function(results) {
       yaxis = list(title = "Power"),
       legend = list(
         orientation = "v",
-        x = 1.02, y = 1,
-        bgcolor = "rgba(255,255,255,0.8)",
-        bordercolor = "rgba(0,0,0,0.2)",
-        borderwidth = 1
+        x = 1.02, y = 1
       ),
       showlegend = TRUE,
       hovermode = "closest"
@@ -1104,10 +1098,7 @@ create_multi_curve_minimization_plots <- function(results) {
       legend = list(
         orientation = "h",
         x = 0.5, y = -0.25,
-        xanchor = "center",
-        bgcolor = "rgba(255,255,255,0.8)",
-        bordercolor = "rgba(0,0,0,0.2)",
-        borderwidth = 1
+        xanchor = "center"
       ),
       showlegend = TRUE,
       hovermode = "closest"
@@ -1698,10 +1689,7 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
       legend = list(
         orientation = "h",
         x = 0.5, y = -0.25,
-        xanchor = "center",
-        bgcolor = "rgba(255,255,255,0.9)",
-        bordercolor = "rgba(0,0,0,0.3)",
-        borderwidth = 1
+        xanchor = "center"
       ),
       showlegend = TRUE,
       hovermode = "closest"
