@@ -465,9 +465,9 @@ create_cost_tradeoff_plots <- function(results) {
   # Extract workflow info for routing logic
   workflow_info <- results$workflow_info
   
-  # For single solution, convert to multi-solution format and use same logic
+  # For single solution cost minimization, convert to multi-solution format
   if (workflow_info$workflow_id == "power_cost_minimization") {
-    # Convert single solution to multi-solution format for consistent handling
+    # Cost minimization: use equi-power/equi-cost plotting
     single_to_multi_results <- results
     single_to_multi_results$plot_data <- list(
       solutions = list(

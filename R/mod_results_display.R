@@ -948,8 +948,13 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
                 plot_type <- current_results$workflow_info$plot_type
                 
                 if (plot_type == "cost_tradeoff_curves") {
-                  # Workflows 10-11 and other cost-based workflows
-                  multi_plots <- create_multi_solution_cost_plots(enhanced_results)
+                  # Check if this is cost minimization workflow specifically
+                  if (workflow_id == "power_cost_minimization") {
+                    multi_plots <- create_multi_solution_equi_power_cost_plots(enhanced_results)
+                  } else {
+                    # Workflows 10-11 and other cost-based workflows
+                    multi_plots <- create_multi_solution_cost_plots(enhanced_results)
+                  }
                 } else {
                   # Single parameter workflows (1-9)
                   multi_plots <- create_multi_solution_parameter_plots(enhanced_results)
