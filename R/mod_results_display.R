@@ -303,26 +303,28 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
                             !is.null(plan_state$show_loading) && 
                             plan_state$show_loading
         
-        # Turn off loading flag when results are ready AND minimum display time has passed
-        if ((show_loading_flag || analysis_invalidated) && analysis_ready && !is.null(plan_state)) {
-          # Enforce minimum loading display time of 800ms
-          min_display_time <- 0.8  # seconds
-          time_elapsed <- 0
-          
-          if (!is.null(plan_state$loading_start_time)) {
+        # Clear loading states when results are ready
+        if (analysis_ready && !is.null(plan_state)) {
+          # For slider loading (has loading_start_time): enforce minimum display time
+          if (show_loading_flag && !is.null(plan_state$loading_start_time)) {
+            min_display_time <- 0.8  # seconds
             time_elapsed <- as.numeric(difftime(Sys.time(), plan_state$loading_start_time, units = "secs"))
+            
+            if (time_elapsed >= min_display_time) {
+              plan_state$show_loading <- FALSE
+              plan_state$loading_start_time <- NULL  # Clean up
+              show_loading_flag <- FALSE
+            } else {
+              # Schedule a delayed check to turn off loading after minimum time
+              remaining_time <- max(100, (min_display_time - time_elapsed) * 1000)  # Convert to ms, min 100ms
+              invalidateLater(remaining_time, session)
+            }
           }
           
-          if (time_elapsed >= min_display_time) {
-            plan_state$show_loading <- FALSE
-            plan_state$loading_start_time <- NULL  # Clean up
-            plan_state$analysis_invalidated <- FALSE  # Clear invalidation flag
-            show_loading_flag <- FALSE
+          # For Plan button (analysis_invalidated without loading_start_time): clear immediately
+          if (analysis_invalidated && is.null(plan_state$loading_start_time)) {
+            plan_state$analysis_invalidated <- FALSE  # Clear invalidation flag immediately
             analysis_invalidated <- FALSE
-          } else {
-            # Schedule a delayed check to turn off loading after minimum time
-            remaining_time <- max(100, (min_display_time - time_elapsed) * 1000)  # Convert to ms, min 100ms
-            invalidateLater(remaining_time, session)
           }
         }
         
@@ -330,7 +332,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
         real_time_loading <- is_real_time_mode && !analysis_ready
         
-        show_overlay <- show_loading_flag || analysis_invalidated || real_time_loading
+        # Show overlay for: slider loading (with timing) OR real-time analysis
+        # Do NOT show overlay for Plan button analysis_invalidated (no loading for Plan button)
+        show_overlay <- show_loading_flag || real_time_loading
         
         # Temporary debug to diagnose loading issues
         if (show_loading_flag || analysis_invalidated) {
