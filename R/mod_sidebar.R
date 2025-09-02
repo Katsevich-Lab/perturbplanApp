@@ -203,6 +203,9 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       # Get design and non-parameter configurations from sidebar modules
       design_opts <- design_config()
       
+      # Get parameter manager state to include source information
+      param_manager_state <- param_manager$combined_config()
+      
       # Get parameter values from parameter manager (single source of truth)
       config <- list(
         # Design options with complete configuration from design module
@@ -220,8 +223,17 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
         plan_clicked = input$plan_btn - plan_count_adjustment(),  # Reset plan count on mode change
-        timestamp = Sys.time()
+        timestamp = Sys.time(),
+        
+        # CRITICAL: Pass through source information from parameter manager
+        last_parameter_source = param_manager_state$last_updated_by,
+        last_parameter_timestamp = param_manager_state$timestamp
       )
+      
+      # DEBUG: Track source propagation in sidebar config
+      if (!is.null(param_manager_state$last_updated_by)) {
+        cat("DEBUG [Sidebar Config]: Propagating SOURCE: ", param_manager_state$last_updated_by, " at ", as.character(param_manager_state$timestamp), "\n")
+      }
       
       # Update parameter controls with current parameter manager values
       if (!is.null(config$design_options) && !is.null(config$design_options$parameter_controls)) {

@@ -308,9 +308,20 @@ app_server <- function(input, output, session) {
     current_config <- user_workflow_config()
     new_signature <- create_design_problem_signature(current_config)
     
+    # Check the source of the change before resetting state
+    recent_slider_change <- if (!is.null(current_config) && 
+                               !is.null(current_config$last_parameter_source) &&
+                               !is.null(current_config$last_parameter_timestamp) &&
+                               current_config$last_parameter_source == "slider") {
+      difftime(Sys.time(), current_config$last_parameter_timestamp, units = "secs") < 1
+    } else {
+      FALSE
+    }
+    
     # Check if core design structure changed
     if (!is.null(new_signature) && 
-        !identical(plan_state$current_design_signature, new_signature)) {
+        !identical(plan_state$current_design_signature, new_signature) &&
+        !recent_slider_change) {  # Don't reset for recent slider changes
       
       # Sidebar configuration changed - reset state completely
       old_signature <- plan_state$current_design_signature

@@ -426,15 +426,42 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         
         prev_design <- previous_design_config()
         if (!is.null(prev_design) && !identical(prev_design, current_design)) {
-          # ANY sidebar parameters changed - clear pinned solutions
-          pinned_solutions$solutions <- list()
-          pinned_solutions$next_index <- 1
+          # Check the source of the parameter change that triggered this
+          parameter_source <- if (!is.null(config$last_parameter_source)) {
+            config$last_parameter_source
+          } else {
+            "sidebar"  # Default to sidebar if unknown
+          }
           
-          showNotification(
-            "Design options changed - cleared all results. Click 'Plan' to generate new analysis.",
-            type = "message",
-            duration = 4
-          )
+          # Check if this is a recent change (within 1 second)
+          recent_change <- if (!is.null(config$last_parameter_timestamp)) {
+            difftime(Sys.time(), config$last_parameter_timestamp, units = "secs") < 1
+          } else {
+            TRUE  # Default to treating as recent if unknown
+          }
+          
+          # DEBUG: Track clearing decision
+          cat("DEBUG [Results Display]: Design change detected\n")
+          cat("  - parameter_source: ", parameter_source, "\n")
+          cat("  - recent_change: ", recent_change, "\n")
+          cat("  - timestamp: ", as.character(config$last_parameter_timestamp), "\n")
+          cat("  - will_clear: ", (parameter_source != "slider" || !recent_change), "\n")
+          
+          # Only clear for sidebar changes or non-recent changes
+          if (parameter_source != "slider" || !recent_change) {
+            cat("DEBUG [CLEARING]: Clearing pinned solutions - parameter_source:", parameter_source, "recent_change:", recent_change, "\n")
+            pinned_solutions$solutions <- list()
+            pinned_solutions$next_index <- 1
+            
+            showNotification(
+              "Design options changed - cleared all results. Click 'Plan' to generate new analysis.",
+              type = "message",
+              duration = 4
+            )
+          } else {
+            cat("DEBUG [PRESERVING]: Preserving pinned solutions - parameter_source:", parameter_source, "recent_change:", recent_change, "\n")
+          }
+          # For recent slider changes, preserve pinned solutions
         }
       }
     })
