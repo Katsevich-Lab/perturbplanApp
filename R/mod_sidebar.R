@@ -164,6 +164,10 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
               "plan_count:", plan_state$effective_plan_count %||% 0, "\n")
           plan_state$effective_plan_count <- 0  # Reset to force fresh analysis
           plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
+          # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
+          plan_state$waiting_for_plan_result <- FALSE
+          plan_state$user_plan_click_timestamp <- NULL
+          cat("DEBUG: After reset - cleared waiting and timestamp\n")
         }
         plan_count_adjustment(0)  # Reset adjustment for backward compatibility
       }
