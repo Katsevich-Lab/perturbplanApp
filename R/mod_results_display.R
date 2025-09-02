@@ -44,8 +44,30 @@ mod_results_display_ui <- function(id) {
             conditionalPanel(
               condition = "output.show_results == true && output.show_error == false",
               ns = ns,
-              # Interactive plot output
-              plotlyOutput(ns("main_plot"), height = "400px")
+              # Results container with loading overlay
+              tags$div(
+                style = "position: relative;",
+                # Interactive plot output
+                plotlyOutput(ns("main_plot"), height = "400px"),
+                
+                # Loading overlay (only shown during analysis)
+                conditionalPanel(
+                  condition = "output.show_loading_overlay == true",
+                  ns = ns,
+                  tags$div(
+                    style = "position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                            background-color: rgba(255, 255, 255, 0.8); 
+                            display: flex; flex-direction: column; justify-content: center; align-items: center;
+                            z-index: 1000; border-radius: 5px;",
+                    tags$div(
+                      style = "text-align: center;",
+                      tags$i(class = "fa fa-spinner fa-spin fa-2x", style = "color: #3c8dbc; margin-bottom: 15px;"),
+                      tags$h4("Updating Analysis...", style = "color: #5A6B73; margin: 0;"),
+                      tags$p("Real-time results will appear shortly", style = "color: #7A8B93; margin: 5px 0 0 0;")
+                    )
+                  )
+                )
+              )
             ),
             
             # Error display panel (only when there's an actual error)
@@ -108,8 +130,29 @@ mod_results_display_ui <- function(id) {
               solidHeader = TRUE,
               width = NULL,
               
-              # Solution table
-              uiOutput(ns("solutions_table"))
+              # Solutions container with loading overlay
+              tags$div(
+                style = "position: relative; min-height: 100px;",
+                # Solution table
+                uiOutput(ns("solutions_table")),
+                
+                # Loading overlay for solutions table
+                conditionalPanel(
+                  condition = "output.show_loading_overlay == true",
+                  ns = ns,
+                  tags$div(
+                    style = "position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                            background-color: rgba(255, 255, 255, 0.8); 
+                            display: flex; justify-content: center; align-items: center;
+                            z-index: 1000; border-radius: 5px; min-height: 100px;",
+                    tags$div(
+                      style = "text-align: center;",
+                      tags$i(class = "fa fa-spinner fa-spin", style = "color: #3c8dbc; margin-bottom: 10px;"),
+                      tags$p("Updating table...", style = "color: #7A8B93; margin: 0;")
+                    )
+                  )
+                )
+              )
             )
           )
         )
@@ -205,6 +248,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # ========================================================================
     
     # Determine if results should be shown
+    # Determine if results should be shown (always TRUE in real-time mode)
     output$show_results <- reactive({
       # Don't show results if design changed more recently than the last Plan click
       # EXCEPT in real-time mode where parameter changes should not hide results
@@ -214,10 +258,15 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       # Check if we're in real-time mode
       is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
       
+      # In real-time mode, always keep results visible (use loading overlay instead of hiding)
+      if (is_real_time_mode) {
+        return(TRUE)
+      }
+      
       if (!is.null(design_change_time) && 
-          (is.null(plan_click_time) || design_change_time > plan_click_time) &&
-          !is_real_time_mode) {
-        return(FALSE)  # Design changed after last Plan click - don't show results (unless real-time)
+          (is.null(plan_click_time) || design_change_time > plan_click_time)) {
+        cat("DEBUG [show_results]: FALSE - design changed after Plan click (non-real-time)\n")
+        return(FALSE)  # Design changed after last Plan click - don't show results (non-real-time only)
       }
       
       # Use tryCatch to handle any errors in plot_objects() or analysis_results()
@@ -225,14 +274,46 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         plots <- plot_objects()
         results <- analysis_results()
         
-        !is.null(plots) && !is.null(results) && 
-          is.null(plots$error) && is.null(results$error)
+        plots_available <- !is.null(plots) && is.null(plots$error)
+        results_available <- !is.null(results) && is.null(results$error)
+        should_show <- plots_available && results_available
+        
+        cat("DEBUG [show_results]: plots_available=", plots_available, " results_available=", results_available, " should_show=", should_show, "\n")
+        
+        return(should_show)
       }, error = function(e) {
-        # If there's an error accessing plots or results, don't show results
-        FALSE
+        cat("DEBUG [show_results]: FALSE - error occurred:", e$message, "\n")
+        return(FALSE)
+      })
+    })
+    
+    # Determine if loading overlay should be shown
+    output$show_loading_overlay <- reactive({
+      is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
+      
+      if (!is_real_time_mode) {
+        return(FALSE)  # No overlay in non-real-time mode
+      }
+      
+      # In real-time mode, show overlay when analysis is in progress
+      tryCatch({
+        plots <- plot_objects()
+        results <- analysis_results()
+        
+        plots_available <- !is.null(plots) && is.null(plots$error)
+        results_available <- !is.null(results) && is.null(results$error)
+        analysis_ready <- plots_available && results_available
+        
+        cat("DEBUG [loading_overlay]: analysis_ready=", analysis_ready, " overlay=", !analysis_ready, "\n")
+        
+        return(!analysis_ready)  # Show overlay when analysis is NOT ready
+      }, error = function(e) {
+        cat("DEBUG [loading_overlay]: TRUE - analysis error occurred\n")
+        return(TRUE)  # Show overlay during errors
       })
     })
     outputOptions(output, "show_results", suspendWhenHidden = FALSE)
+    outputOptions(output, "show_loading_overlay", suspendWhenHidden = FALSE)
     
     # Determine if errors should be shown
     output$show_error <- reactive({
@@ -488,7 +569,24 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         
         prev_design <- previous_design_config()
         if (!is.null(prev_design) && !identical(prev_design, current_design)) {
-          last_design_change_time(Sys.time())  # Record when design changed
+          # Apply same source discrimination as pin clearing
+          parameter_source <- if (!is.null(config$last_parameter_source)) {
+            config$last_parameter_source
+          } else {
+            "sidebar"  # Default to sidebar if unknown
+          }
+          
+          recent_change <- if (!is.null(config$last_parameter_timestamp)) {
+            difftime(Sys.time(), config$last_parameter_timestamp, units = "secs") < 1
+          } else {
+            TRUE  # Default to treating as recent if unknown
+          }
+          
+          # Only record design change time for sidebar changes or non-recent changes
+          if (parameter_source != "slider" || !recent_change) {
+            last_design_change_time(Sys.time())  # Record when design changed
+          }
+          # For recent slider changes, don't update design change time
         }
         
         previous_design_config(current_design)  # Update tracking state
