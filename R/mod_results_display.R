@@ -777,9 +777,32 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         return(NULL)
       }
       
-      # If no pinned solutions, return current data as-is (single solution)
+      # Always return multi-solution format - convert single solution to "Current" if no pinned solutions
       if (length(pinned_solutions$solutions) == 0) {
-        return(current_plot_data)
+        # Special handling for cost minimization workflow
+        current_workflow_id <- current_results$workflow_info$workflow_id
+        if (!is.null(current_workflow_id) && current_workflow_id == "power_cost_minimization") {
+          # Cost minimization: create multi-solution with special data structure
+          return(list(
+            solutions = list(
+              list(
+                id = 1,
+                color = get_solution_color(1),
+                label = "Current",
+                # Special cost minimization data structure
+                equi_power_data = current_results$power_data,
+                equi_cost_data = current_results$cost_data,
+                optimal_design = current_results$optimal_design,
+                data = current_plot_data,  # Keep for backward compatibility
+                style = "dashed"
+              )
+            ),
+            color_palette = SOLUTION_COLORS
+          ))
+        } else {
+          # Standard workflows: use generic conversion
+          return(convert_to_multi_solution_format(current_plot_data, solution_index = 1, solution_label = "Current"))
+        }
       }
       
       # Create multi-solution structure for pinned + current
@@ -912,8 +935,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             "power_cost_fc_cells_reads"
           )
           
-          if (workflow_id %in% pinning_enabled_workflows && length(pinned_solutions$solutions) > 0) {
-            # We have pinned solutions - use multi-solution plotting
+          if (workflow_id %in% pinning_enabled_workflows) {
+            # Always use multi-solution plotting for pinning-enabled workflows (including zero pinned solutions)
             unified_data <- unified_plot_data()
             
             if (!is.null(unified_data) && is.list(unified_data) && "solutions" %in% names(unified_data)) {
@@ -944,7 +967,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           }
         }
         
-        # Standard plot rendering (original logic)
+        # Fallback plot rendering - should rarely be used now that all workflows use multi-solution format
         req(plot_objects())
         plots <- plot_objects()
         
@@ -1202,8 +1225,8 @@ create_enhanced_solutions_table <- function(results, plots, user_config = reacti
     current_row$is_pinned <- FALSE
     all_solution_rows[[length(all_solution_rows) + 1]] <- current_row
   } else {
-    # No pinned solutions - show just current solution with index 1
-    current_row <- extract_solution_data(optimal, workflow_info, user_config, param_manager, index = 1)
+    # No pinned solutions - show just current solution with "Current" label
+    current_row <- extract_solution_data(optimal, workflow_info, user_config, param_manager, index = "Current")
     current_row$is_pinned <- FALSE
     all_solution_rows[[1]] <- current_row
   }
@@ -1680,7 +1703,7 @@ create_enhanced_solutions_table_ui <- function(solution_rows, workflow_info = NU
       tags$td(
         style = paste0("text-align: center; padding: 12px; vertical-align: top; border-right: 1px solid #dee2e6; background-color: ", row_bg_color, ";"),
         if (!is.null(row_data$is_pinned) && !row_data$is_pinned) {
-          tags$span(row_data$index, style = "font-size: 18px; font-weight: bold;")  # Current solution
+          tags$span("Current", style = "font-size: 18px; font-weight: bold;")  # Current solution
         } else {
           tags$span(row_data$index, style = "font-size: 18px; font-weight: bold;")  # Pinned solution
         }

@@ -66,16 +66,17 @@ is_multi_solution_data <- function(plot_data) {
 #'
 #' @param single_plot_data Single solution data structure
 #' @param solution_index Index for this solution (default 1)
+#' @param solution_label Label for this solution (default "Current")
 #' @return Multi-solution format data structure
 #' @noRd
-convert_to_multi_solution_format <- function(single_plot_data, solution_index = 1) {
+convert_to_multi_solution_format <- function(single_plot_data, solution_index = 1, solution_label = "Current") {
   list(
     solutions = list(
       list(
         id = solution_index,
         color = get_solution_color(solution_index),
         data = single_plot_data,
-        label = paste("Solution", solution_index)
+        label = solution_label
       )
     ),
     color_palette = SOLUTION_COLORS
@@ -418,6 +419,7 @@ create_multi_solution_parameter_plots <- function(results) {
         x = 0.5, y = -0.25,
         xanchor = "center"
       ),
+      showlegend = TRUE,
       hovermode = "closest"
     ) %>%
     config(
@@ -460,7 +462,31 @@ create_cost_tradeoff_plots <- function(results) {
     return(create_multi_solution_cost_plots(results))
   }
   
-  # Original single solution logic (backward compatibility)
+  # Extract workflow info for routing logic
+  workflow_info <- results$workflow_info
+  
+  # For single solution, convert to multi-solution format and use same logic
+  if (workflow_info$workflow_id == "power_cost_minimization") {
+    # Convert single solution to multi-solution format for consistent handling
+    single_to_multi_results <- results
+    single_to_multi_results$plot_data <- list(
+      solutions = list(
+        list(
+          id = 1,
+          color = get_solution_color(1),
+          label = "Current",
+          equi_power_data = results$power_data,
+          equi_cost_data = results$cost_data,
+          optimal_design = results$optimal_design,
+          style = "dashed"
+        )
+      ),
+      color_palette = SOLUTION_COLORS
+    )
+    return(create_multi_solution_equi_power_cost_plots(single_to_multi_results))
+  }
+  
+  # Original single solution logic for other workflows (backward compatibility)
   
   power_data <- results$power_data
   cost_data <- results$cost_data  
@@ -539,7 +565,14 @@ create_cost_tradeoff_plots <- function(results) {
                        "<sup>", workflow_info$description, "</sup>"),
           font = list(size = 14)
         ),
-        showlegend = FALSE,
+        legend = list(
+          orientation = "v",
+          x = 1.02, y = 1,
+          bgcolor = "rgba(255,255,255,0.8)",
+          bordercolor = "rgba(0,0,0,0.2)",
+          borderwidth = 1
+        ),
+        showlegend = TRUE,
         hovermode = "closest"
       )
   }, error = function(e) {
@@ -1110,7 +1143,7 @@ add_solution_to_plot_data <- function(current_plot_data, new_solution_data, solu
   
   # Convert to multi-solution format if currently single solution
   if (!is_multi_solution_data(current_plot_data)) {
-    current_plot_data <- convert_to_multi_solution_format(current_plot_data, solution_index = 1)
+    current_plot_data <- convert_to_multi_solution_format(current_plot_data, solution_index = 1, solution_label = "Current")
   }
   
   # Create new solution entry
@@ -1171,11 +1204,11 @@ get_color_legend_mapping <- function(solutions_data) {
   if (is.list(solutions_data) && "solutions" %in% names(solutions_data)) {
     # Multi-solution format
     for (solution in solutions_data$solutions) {
-      mapping[[as.character(solution$id)]] <- solution$color
+      mapping[[solution$label]] <- solution$color
     }
   } else if (is.list(solutions_data)) {
-    # Single solution format - create mapping for solution 1
-    mapping[["1"]] <- get_solution_color(1)
+    # Single solution format - create mapping for "Current"
+    mapping[["Current"]] <- get_solution_color(1)
   }
   
   return(mapping)
@@ -1278,26 +1311,33 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
     tryCatch({
       p <- ggplot()
       
-      # Single equi-power curve (teal/green color like in your screenshot)
+      # Single equi-power curve with solution color legend
+      solution_color <- get_solution_color(1)  # Get first solution color
+      
       p <- p + geom_smooth(
         data = power_data,
-        mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell),
+        mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell, color = "Current"),
         se = FALSE,
-        color = "#20B2AA",  # Teal color
         size = 1.2
       )
       
-      # Single equi-cost curve at optimal cost level (black)
+      # Single equi-cost curve at optimal cost level (same color, dashed)
       if (nrow(cost_grid_data) > 0) {
         p <- p + geom_smooth(
           data = cost_grid_data,
-          mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell),
+          mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell, color = "Current"),
           se = FALSE,
-          color = "black",
           linetype = "dashed",
           size = 1
         )
       }
+      
+      # Manual color scale to match multi-curve legend style
+      p <- p + scale_color_manual(
+        name = "",
+        values = c("Current" = solution_color),
+        labels = c("Current")
+      )
       
       # Highlight optimal point
       p <- p + geom_point(
@@ -1358,7 +1398,8 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
           axis.text.x = element_text(size = 12),
           axis.title.y = element_text(size = 14),
           axis.text.y = element_text(size = 12),
-          legend.position = "none",  # Remove all legends
+          legend.position = "bottom",  # Show legend at bottom
+          legend.title = element_blank(),  # Remove legend title for cleaner look
           plot.title = element_text(hjust = 0.5, size = 20)
         )
       
@@ -1458,7 +1499,15 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
     
     # Validate that we have the required data
     if (is.null(equi_power_data) || is.null(equi_cost_data)) {
-      warning("Missing curve data for ", solution_label, " - skipping")
+      warning("Missing curve data for ", solution_label, " - equi_power: ", !is.null(equi_power_data), 
+              ", equi_cost: ", !is.null(equi_cost_data), " - skipping")
+      next
+    }
+    
+    # Additional validation
+    if (nrow(equi_power_data) == 0 || nrow(equi_cost_data) == 0) {
+      warning("Empty curve data for ", solution_label, " - equi_power rows: ", nrow(equi_power_data), 
+              ", equi_cost rows: ", nrow(equi_cost_data), " - skipping")
       next
     }
     
