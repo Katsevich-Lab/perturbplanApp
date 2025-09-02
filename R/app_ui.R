@@ -28,6 +28,18 @@ app_ui <- function(request) {
         # Add the exact same styles from original perturbplan app
         create_styles(),
         
+        # Simple toggle button - no shadow, positioned outside collapse zone
+        tags$div(
+          id = "simple-toggle",
+          style = "position: fixed; top: 50%; left: 0px; transform: translateY(-50%); 
+                   background: white; border: 1px solid #ddd; border-left: none;
+                   width: 24px; height: 60px; border-radius: 0 8px 8px 0;
+                   cursor: pointer; z-index: 9999; display: none; 
+                   align-items: center; justify-content: center;
+                   font-size: 12px; color: #666;",
+          "▶"
+        ),
+        
         # Main content area with results display module
         tags$div(
           style = "padding: 20px;",

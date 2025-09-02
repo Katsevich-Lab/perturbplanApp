@@ -209,3 +209,155 @@
   border-color: rgba(255, 255, 255, 0.2);
   margin: var(--space-md) 0;
 }
+
+/* ========================================================================
+   SIDEBAR COLLAPSE COMPONENTS
+   ======================================================================== */
+
+/* Header Toggle Controls */
+.main-header .navbar .sidebar-toggle-btn {
+  background: transparent !important;
+  border: none !important;
+  color: white !important;
+  font-size: 18px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.main-header .navbar .sidebar-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+/* Auto-collapse checkbox styling in header */
+.main-header .navbar .checkbox {
+  margin: 0;
+  padding: 5px 0;
+}
+
+.main-header .navbar .checkbox input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.main-header .navbar .checkbox label {
+  color: white !important;
+  font-size: 12px;
+  font-weight: normal;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Toggle Button Component */
+.sidebar-toggle-component {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.sidebar-toggle-icon {
+  font-size: 14px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.sidebar-toggle-icon.collapsed {
+  transform: rotate(180deg);
+}
+
+/* Collapse Control in Sidebar Header */
+.sidebar-header-controls {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-title {
+  font-weight: var(--font-weight-bold);
+  color: white;
+  font-size: 16px;
+}
+
+/* Auto-collapse toggle component */
+.auto-collapse-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: var(--space-sm);
+  padding: var(--space-xs);
+}
+
+.auto-collapse-toggle input[type="checkbox"] {
+  transform: scale(0.8);
+}
+
+.auto-collapse-toggle label {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Simple toggle button - show only when sidebar is collapsed */
+#simple-toggle {
+  display: none; /* Hidden by default */
+}
+
+/* Show toggle when sidebar is collapsed */
+.content-wrapper.sidebar-collapsed ~ * #simple-toggle,
+.main-sidebar.collapsed ~ * #simple-toggle {
+  display: flex !important;
+}
+
+/* Show state for floating toggle - use ID selector for specificity */
+#floating-sidebar-toggle.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* When sidebar is collapsed, show the toggle button */
+.content-wrapper.sidebar-collapsed + * #floating-sidebar-toggle,
+.sidebar-collapsed ~ * #floating-sidebar-toggle,
+body.sidebar-collapsed #floating-sidebar-toggle {
+  display: flex !important;
+}
+
+#floating-sidebar-toggle:hover {
+  background: #f5f5f5;
+  color: #333;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+}
+
+#floating-sidebar-toggle i {
+  font-size: 12px;
+  transform: rotate(0deg);
+}
+
+/* Arrow icon pointing right to indicate "expand" */
+#floating-sidebar-toggle::before {
+  content: "▶";
+  font-size: 12px;
+  color: #666;
+}
+
+/* Sidebar collapse animation states */
+.sidebar-collapsing {
+  pointer-events: none;
+}
+
+.sidebar-collapsed .sidebar-content {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Visual feedback during collapse */
+.main-sidebar.collapse-transition {
+  overflow: hidden;
+}
+
+.main-sidebar.collapse-transition .sidebar-content {
+  transition: opacity 0.2s ease-in-out 0.1s;
+}

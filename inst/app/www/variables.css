@@ -43,4 +43,18 @@
   /* Animation */
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease-in-out;
+  
+  /* Sidebar Collapse System */
+  --sidebar-collapse-duration: 0.3s;
+  --sidebar-collapse-easing: ease-in-out;
+  --sidebar-standard-width: 230px; /* shinydashboard default */
+  --sidebar-collapsed-offset: -230px;
+  --toggle-button-size: 44px;
+  --toggle-button-radius: 50%;
+  --collapse-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --collapse-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.2);
+  
+  /* Hover States for Collapse */
+  --primary-hover: #2e6da4;
+  --text-dark: #333;
 }

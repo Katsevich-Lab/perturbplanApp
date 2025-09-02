@@ -335,6 +335,17 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       # Cache the results to prevent duplicate computation
       cached_results(results)
       
+      # Trigger auto-collapse if this was a Plan button click and analysis succeeded
+      if (is_plan_click && !is.null(results) && is.null(results$error) && !is.null(session)) {
+        session$sendCustomMessage(
+          type = "plan_success_collapse",
+          message = list(
+            delay = 500,
+            showProgress = TRUE
+          )
+        )
+      }
+      
       return(results)
     })
 

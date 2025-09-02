@@ -145,3 +145,177 @@
   max-height: 90vh;
   overflow-y: auto;
 }
+
+/* ========================================================================
+   SIDEBAR COLLAPSE SYSTEM
+   ======================================================================== */
+
+/* Sidebar Collapse Animations - Smooth transitions without shadows */
+.main-sidebar {
+  transition: margin-left var(--sidebar-collapse-duration) var(--sidebar-collapse-easing), 
+              transform var(--sidebar-collapse-duration) var(--sidebar-collapse-easing);
+  width: var(--sidebar-standard-width);
+  position: fixed;
+  height: 100%;
+  z-index: 1001;
+}
+
+/* Collapsed sidebar state - completely hide sidebar */
+.main-sidebar.collapsed {
+  margin-left: var(--sidebar-collapsed-offset);
+  transform: translateX(-100%);
+  /* Completely hide the sidebar */
+  visibility: hidden;
+  opacity: 0;
+  /* Remove all shadows during collapse */
+  box-shadow: none !important;
+}
+
+.main-sidebar.collapsed:after {
+  box-shadow: none !important;
+}
+
+/* Remove any shadow artifacts from dashboard body */
+.content-wrapper.sidebar-collapsed {
+  box-shadow: none !important;
+}
+
+.content-wrapper.sidebar-collapsed:before,
+.content-wrapper.sidebar-collapsed:after {
+  box-shadow: none !important;
+  display: none !important;
+}
+
+/* Remove all shadows from dashboard components when sidebar collapsed */
+.content-wrapper.sidebar-collapsed * {
+  box-shadow: none !important;
+}
+
+.content-wrapper.sidebar-collapsed::before,
+.content-wrapper.sidebar-collapsed::after {
+  display: none !important;
+}
+
+/* Force remove shadows from body when sidebar collapsed */
+body:has(.content-wrapper.sidebar-collapsed) * {
+  box-shadow: none !important;
+}
+
+/* Remove shadows from entire page during sidebar collapse */
+.main-sidebar.collapsed ~ * {
+  box-shadow: none !important;
+}
+
+/* Content area adjustment when sidebar is collapsed */
+.content-wrapper {
+  transition: margin-left var(--sidebar-collapse-duration) var(--sidebar-collapse-easing);
+  margin-left: var(--sidebar-standard-width);
+}
+
+.content-wrapper.sidebar-collapsed {
+  margin-left: 0 !important; /* Expand to full width when sidebar collapsed */
+}
+
+/* Show floating toggle when sidebar is collapsed - CSS only approach */
+.content-wrapper.sidebar-collapsed::before {
+  content: "▶";
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 1010;
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-left: none;
+  width: 24px;
+  height: 60px;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Sidebar toggle button styling */
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1002;
+  background-color: var(--primary-color);
+  border: none;
+  color: white;
+  width: var(--toggle-button-size);
+  height: var(--toggle-button-size);
+  border-radius: var(--toggle-button-radius);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: none; /* Hidden by default, shown when sidebar is collapsed */
+  box-shadow: var(--collapse-shadow);
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.05);
+  box-shadow: var(--collapse-shadow-hover);
+}
+
+.sidebar-toggle-btn.visible {
+  display: block;
+}
+
+/* In-sidebar collapse toggle */
+.sidebar-collapse-control {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #666);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.sidebar-collapse-control:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-dark, #333);
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  /* On mobile, sidebar starts collapsed */
+  .main-sidebar {
+    margin-left: var(--sidebar-collapsed-offset);
+    transform: translateX(-100%);
+  }
+  
+  .content-wrapper {
+    margin-left: 0 !important;
+  }
+  
+  .sidebar-toggle-btn {
+    display: block;
+  }
+}
+
+/* Animation performance optimization */
+.main-sidebar,
+.content-wrapper {
+  will-change: margin-left, transform;
+}
+
+/* Smooth transitions for all interactive elements */
+.main-sidebar * {
+  transition: opacity 0.15s ease-in-out;
+}
+
+.main-sidebar.collapsed * {
+  opacity: 0.5;
+}

@@ -20,16 +20,43 @@ app_server <- function(input, output, session) {
   param_manager <- mod_parameter_manager_server("param_manager")
   
   # ========================================================================
-  # PLAN STATE MANAGEMENT - Real-time Analysis Control
+  # PLAN STATE MANAGEMENT - Real-time Analysis & UI Control
   # ========================================================================
-  # Track design problem structure and plan button clicks for slider visibility
+  # Comprehensive state management for analysis workflow and UI interactions
+  # Tracks design problem structure, plan button clicks, slider visibility, and sidebar collapse
   plan_state <- reactiveValues(
     first_plan_clicked = FALSE,      # Has plan been clicked for current design problem
     real_time_enabled = FALSE,       # Is real-time analysis active
     sliders_visible = FALSE,         # Should sliders be visible in UI
     current_design_signature = NULL, # Signature of current design problem structure
-    last_analysis_completed = NULL   # Timestamp when last analysis completed
+    last_analysis_completed = NULL,  # Timestamp when last analysis completed
+    
+    # Sidebar collapse state management
+    sidebar_collapsed = FALSE,       # Current sidebar visibility state (TRUE = collapsed/hidden)
+    auto_collapse_enabled = TRUE,    # Enable automatic sidebar collapse after Plan execution
+    collapse_toggle_available = TRUE # Allow manual sidebar toggle via UI controls
   )
+  
+  # Helper functions: Sidebar collapse state management
+  
+  # Toggle sidebar collapsed state
+  # @param collapse: NULL (toggle), TRUE (collapse), FALSE (expand)
+  # @return: New collapse state (TRUE/FALSE)
+  toggle_sidebar_collapse <- function(collapse = NULL) {
+    if (is.null(collapse)) {
+      collapse <- !plan_state$sidebar_collapsed
+    }
+    plan_state$sidebar_collapsed <- collapse
+    return(collapse)
+  }
+  
+  # Handle automatic sidebar collapse after successful Plan execution
+  # Only collapses if auto_collapse_enabled is TRUE
+  handle_auto_collapse <- function() {
+    if (plan_state$auto_collapse_enabled) {
+      toggle_sidebar_collapse(TRUE)
+    }
+  }
   
   # Helper function: Create design problem signature from ALL sidebar parameters
   create_design_problem_signature <- function(user_config) {
@@ -292,6 +319,18 @@ app_server <- function(input, output, session) {
       plan_state$real_time_enabled <- FALSE
       plan_state$sliders_visible <- FALSE
       
+      # Reset sidebar collapse state when configuration changes
+      plan_state$sidebar_collapsed <- FALSE
+      
+      # Send sidebar state update to client
+      session$sendCustomMessage(
+        type = "sidebar_collapse_state",
+        message = list(
+          collapsed = FALSE,
+          animate = FALSE
+        )
+      )
+      
       # Clear pinned solutions from previous design problem
       # Note: pinned_solutions will be handled by results_display module
       
@@ -304,6 +343,39 @@ app_server <- function(input, output, session) {
         )
       }
     }
+  })
+  
+  # ========================================================================
+  # SIDEBAR COLLAPSE SYSTEM
+  # ========================================================================
+  
+  # Handle sidebar state changes from client
+  observeEvent(input$sidebar_state_changed, {
+    if (!is.null(input$sidebar_state_changed)) {
+      plan_state$sidebar_collapsed <- input$sidebar_state_changed$collapsed
+    }
+  })
+  
+  # Handle sidebar error reports from client
+  observeEvent(input$sidebar_error, {
+    if (!is.null(input$sidebar_error)) {
+      warning("Sidebar error: ", input$sidebar_error$message, 
+              " Context: ", input$sidebar_error$context)
+    }
+  })
+  
+  # Handle floating sidebar toggle button (handled by JavaScript, but track state)
+  observeEvent(input$`floating-sidebar-toggle`, {
+    # This will be handled primarily by JavaScript
+    plan_state$sidebar_collapsed <- FALSE
+    
+    session$sendCustomMessage(
+      type = "sidebar_collapse_state", 
+      message = list(
+        collapsed = FALSE,
+        animate = TRUE
+      )
+    )
   })
   
   # Combined observer for loading states and error handling
