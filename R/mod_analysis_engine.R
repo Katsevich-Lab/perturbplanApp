@@ -444,10 +444,6 @@ generate_real_analysis <- function(config, workflow_info) {
 
   }, error = function(e) {
     # Return error object to display to user instead of falling back
-    cat("=== REAL ANALYSIS ERROR ===\n")
-    cat("Error:", e$message, "\n")
-    cat("Returning error to user\n")
-    cat("==========================\n")
 
     return(list(
       error = e$message,

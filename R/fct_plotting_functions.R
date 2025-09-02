@@ -1485,7 +1485,6 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
     solution_color <- solution$color
     solution_label <- solution$label
     
-    message("DEBUG: Processing solution: ", solution_label, ", color: ", solution_color)
     
     # Get curve data
     equi_power_data <- solution$equi_power_data
@@ -1531,7 +1530,6 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
         
         # Add equi-power curve to plotly (show in legend)
         plotly_equi_power_dash <- if (is_current_solution) "dash" else "solid"
-        message("DEBUG: Adding equi-power curve to plotly - name: ", solution_label, ", showlegend: TRUE, color: ", solution_color)
         p_interactive <- p_interactive %>%
           add_lines(
             data = equi_power_data,
@@ -1700,8 +1698,6 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
       modeBarButtonsToRemove = list("all")
     )
   
-  message("DEBUG: Final plotly object created with ", length(solutions_data), " solutions")
-  message("DEBUG: Legend configuration - orientation: h, x: 0.5, y: -0.25, showlegend = TRUE")
   
   # Create summary for the first solution (primary)
   primary_solution_data <- solutions_data[[1]]
@@ -1729,7 +1725,6 @@ create_multi_solution_equi_power_cost_plots <- function(results) {
     }
   )
   
-  message("DEBUG: Returning plot objects - interactive_plot is null: ", is.null(p_interactive))
   
   return(list(
     main_plot = p,

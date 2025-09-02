@@ -551,7 +551,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             TRUE  # Default to treating as recent if unknown
           }
           
-          # DEBUG: Track clearing decision
           
           # Only clear for sidebar changes or non-recent changes
           if (parameter_source != "slider" || !recent_change) {
@@ -950,10 +949,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
                 if (plot_type == "cost_tradeoff_curves") {
                   # Check if this is cost minimization workflow specifically
                   if (workflow_id == "power_cost_minimization") {
-                    message("DEBUG: Cost minimization - using create_multi_solution_equi_power_cost_plots")
-                    message("DEBUG: Enhanced results solutions count: ", length(enhanced_results$plot_data$solutions))
                     multi_plots <- create_multi_solution_equi_power_cost_plots(enhanced_results)
-                    message("DEBUG: Cost minimization plot created, interactive_plot is null: ", is.null(multi_plots$interactive_plot))
                   } else {
                     # Workflows 10-11 and other cost-based workflows
                     multi_plots <- create_multi_solution_cost_plots(enhanced_results)
@@ -964,7 +960,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
                 }
                 
                 if (!is.null(multi_plots$interactive_plot)) {
-                  message("DEBUG: Returning interactive_plot to UI for rendering")
                   return(multi_plots$interactive_plot)
                 } else if (!is.null(multi_plots$plotly_obj)) {
                   return(multi_plots$plotly_obj)
