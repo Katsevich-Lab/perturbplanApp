@@ -167,6 +167,11 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         plan_state$user_plan_click_timestamp <- Sys.time()
         plan_state$waiting_for_plan_result <- TRUE
         
+        # Immediate loading trigger - set flag that loading should show
+        plan_state$show_loading <- TRUE
+        plan_state$loading_start_time <- Sys.time()  # Track when loading started
+        cat("DEBUG [Plan Click]: show_loading flag set to TRUE at", as.character(Sys.time()), "\n")
+        
         current_config <- combined_config()
         
         # Create signature for current design problem

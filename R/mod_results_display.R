@@ -50,10 +50,9 @@ mod_results_display_ui <- function(id) {
                 # Interactive plot output
                 plotlyOutput(ns("main_plot"), height = "400px"),
                 
-                # Loading overlay (only shown during analysis)
+                # Loading overlay
                 conditionalPanel(
-                  condition = "output.show_loading_overlay == true",
-                  ns = ns,
+                  condition = "output['show_loading_overlay']", ns = ns,
                   tags$div(
                     style = "position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
                             background-color: rgba(255, 255, 255, 0.8); 
@@ -62,8 +61,8 @@ mod_results_display_ui <- function(id) {
                     tags$div(
                       style = "text-align: center;",
                       tags$i(class = "fa fa-spinner fa-spin fa-2x", style = "color: #3c8dbc; margin-bottom: 15px;"),
-                      tags$h4("Updating Analysis...", style = "color: #5A6B73; margin: 0;"),
-                      tags$p("Real-time results will appear shortly", style = "color: #7A8B93; margin: 5px 0 0 0;")
+                      tags$h4("Analyzing...", style = "color: #5A6B73; margin: 0;"),
+                      tags$p("Results will appear shortly", style = "color: #7A8B93; margin: 5px 0 0 0;")
                     )
                   )
                 )
@@ -138,8 +137,7 @@ mod_results_display_ui <- function(id) {
                 
                 # Loading overlay for solutions table
                 conditionalPanel(
-                  condition = "output.show_loading_overlay == true",
-                  ns = ns,
+                  condition = "output['show_loading_overlay']", ns = ns,
                   tags$div(
                     style = "position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
                             background-color: rgba(255, 255, 255, 0.8); 
@@ -148,7 +146,7 @@ mod_results_display_ui <- function(id) {
                     tags$div(
                       style = "text-align: center;",
                       tags$i(class = "fa fa-spinner fa-spin", style = "color: #3c8dbc; margin-bottom: 10px;"),
-                      tags$p("Updating table...", style = "color: #7A8B93; margin: 0;")
+                      tags$p("Generating results...", style = "color: #7A8B93; margin: 0;")
                     )
                   )
                 )
@@ -188,7 +186,7 @@ mod_results_display_ui <- function(id) {
 #' 
 #' @noRd 
 #' 
-#' @importFrom shiny moduleServer reactive observe req renderUI
+#' @importFrom shiny moduleServer reactive observe req renderUI invalidateLater
 #' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
 #' @importFrom plotly renderPlotly
 # DT import removed - detailed results table no longer used
@@ -289,13 +287,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     # Determine if loading overlay should be shown
     output$show_loading_overlay <- reactive({
-      is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
-      
-      if (!is_real_time_mode) {
-        return(FALSE)  # No overlay in non-real-time mode
-      }
-      
-      # In real-time mode, show overlay when analysis is in progress
+      # Simple logic: Show loading if Plan was clicked, hide when results are ready
       tryCatch({
         plots <- plot_objects()
         results <- analysis_results()
@@ -304,9 +296,58 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         results_available <- !is.null(results) && is.null(results$error)
         analysis_ready <- plots_available && results_available
         
-        cat("DEBUG [loading_overlay]: analysis_ready=", analysis_ready, " overlay=", !analysis_ready, "\n")
+        # Check if loading should be shown based on plan_state flag
+        show_loading_flag <- !is.null(plan_state) && 
+                            !is.null(plan_state$show_loading) && 
+                            plan_state$show_loading
         
-        return(!analysis_ready)  # Show overlay when analysis is NOT ready
+        # Turn off loading flag when results are ready AND minimum display time has passed
+        if (show_loading_flag && analysis_ready && !is.null(plan_state)) {
+          # Enforce minimum loading display time of 800ms
+          min_display_time <- 0.8  # seconds
+          time_elapsed <- 0
+          
+          if (!is.null(plan_state$loading_start_time)) {
+            time_elapsed <- as.numeric(difftime(Sys.time(), plan_state$loading_start_time, units = "secs"))
+          }
+          
+          if (time_elapsed >= min_display_time) {
+            cat("DEBUG [loading_overlay]: Turning off show_loading flag - results ready and min time elapsed (", round(time_elapsed, 2), "s)\n")
+            plan_state$show_loading <- FALSE
+            plan_state$loading_start_time <- NULL  # Clean up
+            show_loading_flag <- FALSE
+          } else {
+            cat("DEBUG [loading_overlay]: Keeping loading visible - min time not elapsed (", round(time_elapsed, 2), "/", min_display_time, "s)\n")
+            # Schedule a delayed check to turn off loading after minimum time
+            remaining_time <- max(100, (min_display_time - time_elapsed) * 1000)  # Convert to ms, min 100ms
+            
+            invalidateLater(remaining_time, session)
+          }
+        }
+        
+        # Also show loading for real-time slider changes (backward compatibility)
+        is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
+        real_time_loading <- is_real_time_mode && !analysis_ready
+        
+        show_overlay <- show_loading_flag || real_time_loading
+        
+        # Debug: check if this is cost minimization workflow
+        config <- user_config()
+        workflow_debug <- "unknown"
+        if (!is.null(config) && !is.null(config$design_options) && !is.null(config$design_options$minimization_target)) {
+          if (config$design_options$minimization_target == "cost") {
+            workflow_debug <- "cost_minimization"
+          }
+        }
+        
+        cat("DEBUG [loading_overlay]: workflow=", workflow_debug, " flag=", show_loading_flag, " real_time=", real_time_loading, " ready=", analysis_ready, " overlay=", show_overlay, "\n")
+        
+        # Additional debug: Check plan_state details
+        if (!is.null(plan_state)) {
+          cat("DEBUG [loading_overlay]: plan_state details - show_loading=", plan_state$show_loading, " loading_start_time=", !is.null(plan_state$loading_start_time), "\n")
+        }
+        
+        return(show_overlay)
       }, error = function(e) {
         cat("DEBUG [loading_overlay]: TRUE - analysis error occurred\n")
         return(TRUE)  # Show overlay during errors
