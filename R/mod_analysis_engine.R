@@ -171,28 +171,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       # Track config hash to detect spurious invalidations
       current_config_hash <- create_config_hash(config)
       
-
-      # Early validation: Skip analysis if essential configuration is missing OR incompatible
-      # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
-      # THIS MUST HAPPEN BEFORE BOTH PLAN CHECK AND CACHING LOGIC
-      design_config <- config$design_options
-      
-      # Check for missing essential fields
-      if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
-          is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
-          is.null(design_config$parameter_controls)) {
-        return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
-      }
-      
-      # Check for incompatible optimization type + minimization target combinations (transition states)
-      opt_type <- design_config$optimization_type
-      target <- design_config$minimization_target
-      
-      # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
-      if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
-        return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
-      }
-      
       # PHASE 1 FIX (ENHANCED): Determine trigger source (only one can be active at a time)
       is_plan_click <- FALSE
       is_real_time_trigger <- FALSE
@@ -269,7 +247,28 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         return(NULL)  # Don't run analysis during design transitions
       }
 
-      # Validate configuration (only after essential fields are present)
+      # Early validation for real-time triggers only (Plan clicks should proceed to full validation)
+      if (is_real_time_trigger) {
+        design_config <- config$design_options
+        
+        # Check for missing essential fields - only exit early for real-time triggers
+        if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
+            is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
+            is.null(design_config$parameter_controls)) {
+          return(NULL)  # Don't show errors during UI transitions for real-time triggers
+        }
+        
+        # Check for incompatible optimization type + minimization target combinations 
+        opt_type <- design_config$optimization_type
+        target <- design_config$minimization_target
+        
+        # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
+        if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
+          return(NULL)  # Incompatible combination during transition - only for real-time triggers
+        }
+      }
+
+      # Validate configuration (Plan clicks get full validation with proper error messages)
       validation <- validate_workflow_config(config)
       if (!validation$is_valid) {
         return(list(
