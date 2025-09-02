@@ -175,16 +175,28 @@ app_server <- function(input, output, session) {
           plan_state$waiting_for_plan_result && 
           !is.null(plan_state$user_plan_click_timestamp)) {
         
+        cat("DEBUG: Auto-collapse conditions met - plan_clicked:", config$plan_clicked, 
+            "waiting:", plan_state$waiting_for_plan_result, 
+            "timestamp exists:", !is.null(plan_state$user_plan_click_timestamp), "\n")
+        
         # Verify the analysis result is recent (within 30 seconds of Plan click)
         time_since_click <- difftime(Sys.time(), plan_state$user_plan_click_timestamp, units = "secs")
         
         if (time_since_click <= 30) {
+          cat("DEBUG: TRIGGERING AUTO-COLLAPSE - time since click:", time_since_click, "seconds\n")
           plan_state$last_analysis_completed <- Sys.time()
           plan_state$waiting_for_plan_result <- FALSE  # Reset flag
           
           # Trigger auto-collapse after successful Plan analysis ONLY
           handle_auto_collapse()
+        } else {
+          cat("DEBUG: Auto-collapse skipped - too much time elapsed:", time_since_click, "seconds\n")
         }
+      } else {
+        cat("DEBUG: Auto-collapse conditions NOT met - plan_clicked:", config$plan_clicked %||% "NULL", 
+            "waiting:", plan_state$waiting_for_plan_result %||% "NULL", 
+            "timestamp:", !is.null(plan_state$user_plan_click_timestamp), "\n")
+      }
       }
     }
   })
@@ -345,6 +357,10 @@ app_server <- function(input, output, session) {
         !identical(plan_state$current_design_signature, new_signature) &&
         !recent_slider_change) {  # Don't reset for recent slider changes
       
+      cat("DEBUG: Configuration signature changed - clearing Plan button tracking\n")
+      cat("DEBUG: Old signature:", substr(plan_state$current_design_signature %||% "NULL", 1, 8), 
+          "New signature:", substr(new_signature, 1, 8), "\n")
+      
       # Sidebar configuration changed - reset state completely
       old_signature <- plan_state$current_design_signature
       plan_state$current_design_signature <- new_signature
@@ -358,6 +374,8 @@ app_server <- function(input, output, session) {
       # Reset Plan button tracking to prevent inappropriate auto-collapse
       plan_state$waiting_for_plan_result <- FALSE
       plan_state$user_plan_click_timestamp <- NULL
+      cat("DEBUG: Plan button tracking cleared - waiting:", plan_state$waiting_for_plan_result, 
+          "timestamp:", is.null(plan_state$user_plan_click_timestamp), "\n")
       
       # Send sidebar state update to client
       session$sendCustomMessage(
