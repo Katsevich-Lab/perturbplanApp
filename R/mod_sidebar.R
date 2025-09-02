@@ -170,6 +170,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
     # Plan button logic
     # Plan button click handler with real-time analysis state management
     observeEvent(input$plan_btn, {
+      cat("DEBUG: Plan button clicked! input$plan_btn =", input$plan_btn, "\n")
       if (!is.null(plan_state)) {
         # Track user Plan button click for auto-collapse detection
         plan_state$user_plan_click_timestamp <- Sys.time()
@@ -180,7 +181,9 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         
         # CRITICAL FIX: Force plan count to increment reliably by bypassing adjustment
         # This ensures analysis always triggers on Plan clicks regardless of mode change timing
-        plan_state$effective_plan_count <- (plan_state$effective_plan_count %||% 0) + 1
+        old_count <- plan_state$effective_plan_count %||% 0
+        plan_state$effective_plan_count <- old_count + 1
+        cat("DEBUG: Plan count updated from", old_count, "to", plan_state$effective_plan_count, "\n")
         
         current_config <- combined_config()
         

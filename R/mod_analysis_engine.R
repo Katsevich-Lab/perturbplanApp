@@ -162,6 +162,8 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       has_new_real_time_trigger <- (current_trigger_count > last_trigger_count())
       has_valid_trigger <- has_new_plan_click || has_new_real_time_trigger
       
+      cat("DEBUG: Analysis engine - plan_count:", current_plan_count, "last:", last_plan_count(), "new_click:", has_new_plan_click, "\n")
+      
       
       # EARLY EXIT: If in transition mode AND no valid trigger, return NULL
       if (in_mode_transition() && !has_valid_trigger) {
@@ -178,12 +180,14 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # Check for Plan button click (takes priority)
       if (current_plan_count > last_plan_count()) {
+        cat("DEBUG: PLAN CLICK DETECTED! Processing plan click", current_plan_count, "\n")
         
         # Check if we just processed this plan click (within 1 second)
         last_processed <- last_processed_plan()
         if (last_processed$count == current_plan_count && 
             !is.null(last_processed$time) &&
             difftime(Sys.time(), last_processed$time, units = "secs") < 1) {
+          cat("DEBUG: Plan click", current_plan_count, "already processed recently, returning cached results\n")
           return(cached_results())
         }
         
@@ -195,6 +199,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         previous_config_hash(current_config_hash)
         # Mark this plan as being processed
         last_processed_plan(list(count = current_plan_count, time = Sys.time()))
+        cat("DEBUG: Plan click setup complete, will proceed to analysis\n")
       }
       # Check for real-time trigger (only if NOT a plan click)
       else if (current_trigger_count > last_trigger_count()) {
@@ -213,8 +218,10 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # Skip analysis if neither trigger is active
       if (!is_plan_click && !is_real_time_trigger) {
+        cat("DEBUG: NO TRIGGERS ACTIVE - plan_click:", is_plan_click, "real_time:", is_real_time_trigger, "\n")
         # Always return cached results if available when no explicit trigger
         if (!is.null(cached_results())) {
+          cat("DEBUG: Returning cached results (no trigger)\n")
           if (is_spurious_invalidation) {
           } else {
           }
@@ -223,9 +230,11 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         
         # Check if we have initial plan but no triggers yet
         if (current_plan_count == 0) {
+          cat("DEBUG: No plan clicked yet (count = 0)\n")
           return(NULL)  # No plan clicked yet
         }
         
+        cat("DEBUG: No cached results and no triggers - returning NULL\n")
         return(NULL)  # No cached results and no triggers
       }
 
