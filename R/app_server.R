@@ -87,7 +87,12 @@ app_server <- function(input, output, session) {
             lapply(user_config$design_options$parameter_controls, function(param) param$type)
           } else NULL,
           # Include shared parameter value
-          cost_budget = user_config$design_options$cost_budget
+          cost_budget = user_config$design_options$cost_budget,
+          # Include parameters that should trigger slider reset when changed
+          # Handle NULL values to ensure consistent signature comparison
+          target_power = user_config$design_options$target_power %||% 0.8,
+          cost_per_cell = user_config$design_options$cost_per_cell %||% "not_applicable",
+          cost_per_million_reads = user_config$design_options$cost_per_million_reads %||% "not_applicable"
         )
       } else NULL,
       

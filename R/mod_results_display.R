@@ -582,7 +582,12 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             })
           } else {
             NULL
-          }
+          },
+          # CRITICAL: Include parameters that should trigger cleanup
+          target_power = config$design_options$target_power,
+          cost_budget = config$design_options$cost_budget,
+          cost_per_cell = config$design_options$cost_per_cell,
+          cost_per_million_reads = config$design_options$cost_per_million_reads
         )
         
         prev_design <- previous_design_config()
