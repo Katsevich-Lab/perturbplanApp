@@ -157,7 +157,11 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       if (!is.null(current_mode) && current_mode != "" && 
           !is.null(previous_mode()) && previous_mode() != current_mode) {
         # Mode changed - reset plan state to force new analysis
+        cat("DEBUG MODE SWITCH: From", previous_mode(), "to", current_mode, "\n")
         if (!is.null(plan_state)) {
+          cat("DEBUG: Before reset - waiting:", plan_state$waiting_for_plan_result %||% "NULL", 
+              "timestamp:", !is.null(plan_state$user_plan_click_timestamp), 
+              "plan_count:", plan_state$effective_plan_count %||% 0, "\n")
           plan_state$effective_plan_count <- 0  # Reset to force fresh analysis
           plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
         }

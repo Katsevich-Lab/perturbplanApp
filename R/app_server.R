@@ -175,16 +175,26 @@ app_server <- function(input, output, session) {
           plan_state$waiting_for_plan_result && 
           !is.null(plan_state$user_plan_click_timestamp)) {
         
+        cat("DEBUG AUTO-COLLAPSE: Analysis completed with conditions met\n")
+        cat("DEBUG: plan_clicked:", config$plan_clicked, "waiting:", plan_state$waiting_for_plan_result, 
+            "has_timestamp:", !is.null(plan_state$user_plan_click_timestamp), "\n")
+        
         # Verify the analysis result is recent (within 30 seconds of Plan click)
         time_since_click <- difftime(Sys.time(), plan_state$user_plan_click_timestamp, units = "secs")
         
         if (time_since_click <= 30) {
+          cat("DEBUG: TRIGGERING AUTO-COLLAPSE! Time since click:", time_since_click, "seconds\n")
           plan_state$last_analysis_completed <- Sys.time()
           plan_state$waiting_for_plan_result <- FALSE  # Reset flag
           
           # Trigger auto-collapse after successful Plan analysis ONLY
           handle_auto_collapse()
         }
+      } else {
+        cat("DEBUG: Auto-collapse conditions NOT met\n")
+        cat("DEBUG: plan_clicked:", config$plan_clicked %||% "NULL", 
+            "waiting:", plan_state$waiting_for_plan_result %||% "NULL", 
+            "has_timestamp:", !is.null(plan_state$user_plan_click_timestamp), "\n")
       }
     }
   })
