@@ -152,7 +152,8 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
     previous_mode <- reactiveVal(NULL)
     plan_count_adjustment <- reactiveVal(0)  # Adjustment to subtract from plan button count
     
-    observe({
+    # Use observeEvent with high priority to ensure mode changes are processed BEFORE analysis observer
+    observeEvent(design_config()$optimization_type, {
       current_mode <- design_config()$optimization_type
       if (!is.null(current_mode) && current_mode != "" && 
           !is.null(previous_mode()) && previous_mode() != current_mode) {
@@ -168,7 +169,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       if (!is.null(current_mode)) {
         previous_mode(current_mode)
       }
-    })
+    }, priority = 100)  # High priority to run before analysis observer
     
     # Plan button logic
     # Plan button click handler with real-time analysis state management

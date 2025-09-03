@@ -158,6 +158,12 @@ app_server <- function(input, output, session) {
   
   # Track when Plan analysis completes
   observeEvent(analysis_results_raw(), {
+    # CRITICAL: Check plan_state flags BEFORE accessing results to prevent race condition
+    # If waiting_for_plan_result is FALSE, this is likely a spurious trigger from mode change
+    if (!plan_state$waiting_for_plan_result) {
+      return()  # Exit early - no Plan button click is pending
+    }
+    
     results <- analysis_results_raw()
     # Only mark completion for successful Plan-triggered analysis
     if (!is.null(results) && is.null(results$error)) {
