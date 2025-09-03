@@ -298,43 +298,22 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
                                !is.null(plan_state$analysis_invalidated) && 
                                plan_state$analysis_invalidated
         
-        # Check if loading should be shown based on plan_state flag
-        show_loading_flag <- !is.null(plan_state) && 
-                            !is.null(plan_state$show_loading) && 
-                            plan_state$show_loading
-        
         # Clear loading states when results are ready
         if (analysis_ready && !is.null(plan_state)) {
-          # For slider loading (has loading_start_time): enforce minimum display time
-          if (show_loading_flag && !is.null(plan_state$loading_start_time)) {
-            min_display_time <- 0.8  # seconds
-            time_elapsed <- as.numeric(difftime(Sys.time(), plan_state$loading_start_time, units = "secs"))
-            
-            if (time_elapsed >= min_display_time) {
-              plan_state$show_loading <- FALSE
-              plan_state$loading_start_time <- NULL  # Clean up
-              show_loading_flag <- FALSE
-            } else {
-              # Schedule a delayed check to turn off loading after minimum time
-              remaining_time <- max(100, (min_display_time - time_elapsed) * 1000)  # Convert to ms, min 100ms
-              invalidateLater(remaining_time, session)
-            }
-          }
-          
-          # For Plan button (analysis_invalidated without loading_start_time): clear immediately
-          if (analysis_invalidated && is.null(plan_state$loading_start_time)) {
+          # For Plan button: clear immediately when analysis ready
+          if (analysis_invalidated) {
             plan_state$analysis_invalidated <- FALSE  # Clear invalidation flag immediately
             analysis_invalidated <- FALSE
           }
         }
         
-        # Also show loading for real-time slider changes (backward compatibility)
+        # Show loading overlay for real-time slider changes only
         is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
         real_time_loading <- is_real_time_mode && !analysis_ready
         
-        # Show overlay for: slider loading (with timing) OR real-time analysis
-        # Do NOT show overlay for Plan button analysis_invalidated (no loading for Plan button)
-        show_overlay <- show_loading_flag || real_time_loading
+        # Show overlay ONLY for real-time analysis
+        # NO loading overlay for Plan button (instant analysis)
+        show_overlay <- real_time_loading
         
         
         return(show_overlay)
