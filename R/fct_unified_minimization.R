@@ -51,28 +51,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   perturbplan_params$fixed_variable$reads_per_cell <- NULL
   
   # Step 6: Call cost_power_computation to get power-cost grid
-  cat("=== CONSTRAINED MINIMIZATION DEBUG: cost_power_computation ===\n")
-  cat("Calling perturbplan::cost_power_computation with parameters:\n")
-  cat("  - minimizing_variable:", perturbplan_params$minimizing_variable, "\n")
-  cat("  - cost_constraint:", perturbplan_params$cost_constraint, "\n")
-  cat("  - grid_size:", perturbplan_params$grid_size, "\n")
-  cat("  - fixed_variable:\n")
-  if (length(perturbplan_params$fixed_variable) > 0) {
-    for (name in names(perturbplan_params$fixed_variable)) {
-      cat("    ", name, ":", perturbplan_params$fixed_variable[[name]], "\n")
-    }
-  } else {
-    cat("    (none)\n")
-  }
-  
-  cost_power_grid <- tryCatch({
-    do.call(perturbplan::cost_power_computation, perturbplan_params)
-  }, error = function(e) {
-    cat("ERROR in cost_power_computation:\n")
-    cat("  Full error:", e$message, "\n")
-    cat("  Error class:", class(e), "\n")
-    stop("cost_power_computation failed: ", e$message)
-  })
+  cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
   
   # Step 7: Call find_optimal_cost_design with all required parameters
   find_optimal_params <- list(
@@ -89,36 +68,10 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     cost_grid_size = 200
   )
   
-  cat("=== CONSTRAINED MINIMIZATION DEBUG: find_optimal_cost_design ===\n")
-  cat("Calling perturbplan::find_optimal_cost_design with parameters:\n")
-  cat("  - cost_power_df dimensions:", nrow(cost_power_grid), "x", ncol(cost_power_grid), "\n")
-  cat("  - minimizing_variable:", find_optimal_params$minimizing_variable, "\n")
-  cat("  - power_target:", find_optimal_params$power_target, "\n")
-  cat("  - power_precision:", find_optimal_params$power_precision, "\n")
-  cat("  - cost_grid_size:", find_optimal_params$cost_grid_size, "\n")
-  
-  optimal_results <- tryCatch({
-    do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
-  }, error = function(e) {
-    cat("ERROR in find_optimal_cost_design:\n")
-    cat("  Full error:", e$message, "\n")
-    cat("  Error class:", class(e), "\n")
-    if (!is.null(cost_power_grid)) {
-      cat("  cost_power_grid structure:\n")
-      cat("    columns:", paste(names(cost_power_grid), collapse = ", "), "\n")
-      cat("    first few rows:\n")
-      print(head(cost_power_grid, 3))
-    }
-    stop("find_optimal_cost_design failed: ", e$message)
-  })
+  optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
   
   # Step 8: Apply consistent data grouping for both plotting and optimal solution
   power_data <- optimal_results$optimal_cost_power_df
-  cat("DEBUG: Raw power_data from perturbplan:\n")
-  cat("  - Dimensions:", nrow(power_data), "x", ncol(power_data), "\n")
-  cat("  - ", minimization_config$variable, "range:", min(power_data[[minimization_config$variable]], na.rm = TRUE), 
-      "to", max(power_data[[minimization_config$variable]], na.rm = TRUE), "\n")
-  cat("  - Unique", minimization_config$variable, "values:", length(unique(power_data[[minimization_config$variable]])), "\n")
   
   # Standardize column names in power_data for UI compatibility
   if ("raw_reads_per_cell" %in% names(power_data)) {
@@ -134,14 +87,6 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     dplyr::group_by(.data[[minimization_config$variable]]) %>%
     dplyr::slice_min(total_cost, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup()
-  
-  cat("DEBUG: After grouping and cost filtering:\n")
-  cat("  - Grouped data dimensions:", nrow(grouped_data), "x", ncol(grouped_data), "\n")
-  cat("  - ", minimization_config$variable, "range:", min(grouped_data[[minimization_config$variable]], na.rm = TRUE), 
-      "to", max(grouped_data[[minimization_config$variable]], na.rm = TRUE), "\n")
-  cat("  - Unique", minimization_config$variable, "values:", length(unique(grouped_data[[minimization_config$variable]])), "\n")
-  cat("  - Cost range:", min(grouped_data$total_cost, na.rm = TRUE), "to", max(grouped_data$total_cost, na.rm = TRUE), "\n")
-  cat("  - Cost constraint:", cost_constraint, "\n")
   
   # Step 9: Find optimal solution using the same grouped data
   optimal_point <- find_optimal_point_in_grouped_data(
