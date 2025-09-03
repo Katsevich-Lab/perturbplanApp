@@ -114,6 +114,11 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   
   # Step 8: Apply consistent data grouping for both plotting and optimal solution
   power_data <- optimal_results$optimal_cost_power_df
+  cat("DEBUG: Raw power_data from perturbplan:\n")
+  cat("  - Dimensions:", nrow(power_data), "x", ncol(power_data), "\n")
+  cat("  - ", minimization_config$variable, "range:", min(power_data[[minimization_config$variable]], na.rm = TRUE), 
+      "to", max(power_data[[minimization_config$variable]], na.rm = TRUE), "\n")
+  cat("  - Unique", minimization_config$variable, "values:", length(unique(power_data[[minimization_config$variable]])), "\n")
   
   # Standardize column names in power_data for UI compatibility
   if ("raw_reads_per_cell" %in% names(power_data)) {
@@ -129,6 +134,14 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     dplyr::group_by(.data[[minimization_config$variable]]) %>%
     dplyr::slice_min(total_cost, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup()
+  
+  cat("DEBUG: After grouping and cost filtering:\n")
+  cat("  - Grouped data dimensions:", nrow(grouped_data), "x", ncol(grouped_data), "\n")
+  cat("  - ", minimization_config$variable, "range:", min(grouped_data[[minimization_config$variable]], na.rm = TRUE), 
+      "to", max(grouped_data[[minimization_config$variable]], na.rm = TRUE), "\n")
+  cat("  - Unique", minimization_config$variable, "values:", length(unique(grouped_data[[minimization_config$variable]])), "\n")
+  cat("  - Cost range:", min(grouped_data$total_cost, na.rm = TRUE), "to", max(grouped_data$total_cost, na.rm = TRUE), "\n")
+  cat("  - Cost constraint:", cost_constraint, "\n")
   
   # Step 9: Find optimal solution using the same grouped data
   optimal_point <- find_optimal_point_in_grouped_data(
