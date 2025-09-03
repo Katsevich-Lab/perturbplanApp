@@ -32,7 +32,6 @@ app_server <- function(input, output, session) {
     
     # Sidebar collapse state management
     sidebar_collapsed = FALSE,       # Current sidebar visibility state (TRUE = collapsed/hidden)
-    auto_collapse_enabled = TRUE,    # Enable automatic sidebar collapse after Plan execution
     
     # Track actual user Plan button clicks for auto-collapse
     waiting_for_plan_result = FALSE   # Whether we're waiting for Plan-triggered analysis
@@ -52,21 +51,18 @@ app_server <- function(input, output, session) {
   }
   
   # Handle automatic sidebar collapse after successful Plan execution
-  # Only collapses if auto_collapse_enabled is TRUE
   handle_auto_collapse <- function() {
-    if (plan_state$auto_collapse_enabled) {
-      # Update internal state
-      toggle_sidebar_collapse(TRUE)
-      
-      # Send collapse command to client with delay for smooth UX
-      session$sendCustomMessage(
-        type = "plan_success_collapse",
-        message = list(
-          delay = 500,
-          showProgress = TRUE
-        )
+    # Update internal state
+    toggle_sidebar_collapse(TRUE)
+    
+    # Send collapse command to client with delay for smooth UX
+    session$sendCustomMessage(
+      type = "plan_success_collapse",
+      message = list(
+        delay = 500,
+        showProgress = TRUE
       )
-    }
+    )
   }
   
   # Helper function: Create design problem signature from ALL sidebar parameters

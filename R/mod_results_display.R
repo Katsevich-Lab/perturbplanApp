@@ -293,19 +293,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         results_available <- !is.null(results) && is.null(results$error)
         analysis_ready <- plots_available && results_available
         
-        # Check if analysis has been invalidated by a new Plan click
-        analysis_invalidated <- !is.null(plan_state) && 
-                               !is.null(plan_state$analysis_invalidated) && 
-                               plan_state$analysis_invalidated
-        
-        # Clear loading states when results are ready
-        if (analysis_ready && !is.null(plan_state)) {
-          # For Plan button: clear immediately when analysis ready
-          if (analysis_invalidated) {
-            plan_state$analysis_invalidated <- FALSE  # Clear invalidation flag immediately
-            analysis_invalidated <- FALSE
-          }
-        }
+        # No Plan button loading state tracking needed
         
         # Show loading overlay for real-time slider changes only
         is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled

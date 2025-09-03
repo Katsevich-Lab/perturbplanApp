@@ -177,8 +177,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         # Track user Plan button click for auto-collapse detection
         plan_state$waiting_for_plan_result <- TRUE
         
-        # Note: Loading indicators removed for Plan button - only sliders show loading now
-        plan_state$analysis_invalidated <- TRUE  # Mark that new analysis is needed
+        # Note: Loading indicators completely removed for Plan button
         
         # CRITICAL FIX: Force plan count to increment reliably by bypassing adjustment
         # This ensures analysis always triggers on Plan clicks regardless of mode change timing
