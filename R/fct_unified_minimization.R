@@ -51,7 +51,28 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   perturbplan_params$fixed_variable$reads_per_cell <- NULL
   
   # Step 6: Call cost_power_computation to get power-cost grid
-  cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+  cat("=== CONSTRAINED MINIMIZATION DEBUG: cost_power_computation ===\n")
+  cat("Calling perturbplan::cost_power_computation with parameters:\n")
+  cat("  - minimizing_variable:", perturbplan_params$minimizing_variable, "\n")
+  cat("  - cost_constraint:", perturbplan_params$cost_constraint, "\n")
+  cat("  - grid_size:", perturbplan_params$grid_size, "\n")
+  cat("  - fixed_variable:\n")
+  if (length(perturbplan_params$fixed_variable) > 0) {
+    for (name in names(perturbplan_params$fixed_variable)) {
+      cat("    ", name, ":", perturbplan_params$fixed_variable[[name]], "\n")
+    }
+  } else {
+    cat("    (none)\n")
+  }
+  
+  cost_power_grid <- tryCatch({
+    do.call(perturbplan::cost_power_computation, perturbplan_params)
+  }, error = function(e) {
+    cat("ERROR in cost_power_computation:\n")
+    cat("  Full error:", e$message, "\n")
+    cat("  Error class:", class(e), "\n")
+    stop("cost_power_computation failed: ", e$message)
+  })
   
   # Step 7: Call find_optimal_cost_design with all required parameters
   find_optimal_params <- list(
@@ -68,7 +89,28 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     cost_grid_size = 200
   )
   
-  optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
+  cat("=== CONSTRAINED MINIMIZATION DEBUG: find_optimal_cost_design ===\n")
+  cat("Calling perturbplan::find_optimal_cost_design with parameters:\n")
+  cat("  - cost_power_df dimensions:", nrow(cost_power_grid), "x", ncol(cost_power_grid), "\n")
+  cat("  - minimizing_variable:", find_optimal_params$minimizing_variable, "\n")
+  cat("  - power_target:", find_optimal_params$power_target, "\n")
+  cat("  - power_precision:", find_optimal_params$power_precision, "\n")
+  cat("  - cost_grid_size:", find_optimal_params$cost_grid_size, "\n")
+  
+  optimal_results <- tryCatch({
+    do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
+  }, error = function(e) {
+    cat("ERROR in find_optimal_cost_design:\n")
+    cat("  Full error:", e$message, "\n")
+    cat("  Error class:", class(e), "\n")
+    if (!is.null(cost_power_grid)) {
+      cat("  cost_power_grid structure:\n")
+      cat("    columns:", paste(names(cost_power_grid), collapse = ", "), "\n")
+      cat("    first few rows:\n")
+      print(head(cost_power_grid, 3))
+    }
+    stop("find_optimal_cost_design failed: ", e$message)
+  })
   
   # Step 8: Apply consistent data grouping for both plotting and optimal solution
   power_data <- optimal_results$optimal_cost_power_df

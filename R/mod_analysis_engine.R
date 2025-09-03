@@ -413,6 +413,24 @@ generate_real_analysis <- function(config, workflow_info) {
       return(results)
 
     }, error = function(e) {
+      cat("=== CONSTRAINED MINIMIZATION ERROR DEBUG ===\n")
+      cat("Full error message:", e$message, "\n")
+      cat("Error class:", class(e), "\n")
+      if (!is.null(e$call)) {
+        cat("Error call:", deparse(e$call), "\n")
+      }
+      cat("Workflow info:", workflow_info$workflow_id, "\n")
+      cat("Config summary:\n")
+      cat("  - optimization_type:", config$design_options$optimization_type, "\n")
+      cat("  - minimization_target:", config$design_options$minimization_target, "\n")
+      if (!is.null(config$design_options$parameter_controls)) {
+        cat("  - parameter_controls:\n")
+        for (param_name in names(config$design_options$parameter_controls)) {
+          param_info <- config$design_options$parameter_controls[[param_name]]
+          cat("    ", param_name, ":", param_info$type, "\n")
+        }
+      }
+      cat("============================================\n")
       stop("Constrained minimization analysis failed: ", e$message)
     })
   }
