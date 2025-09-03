@@ -293,15 +293,15 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         results_available <- !is.null(results) && is.null(results$error)
         analysis_ready <- plots_available && results_available
         
-        # No Plan button loading state tracking needed
+        # Plan button loading: Show loading when Plan clicked but analysis not complete
+        is_plan_loading <- !is.null(plan_state) && plan_state$waiting_for_plan_result
         
-        # Show loading overlay for real-time slider changes only
+        # Slider loading: Show loading for real-time slider changes
         is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
         real_time_loading <- is_real_time_mode && !analysis_ready
         
-        # Show overlay ONLY for real-time analysis
-        # NO loading overlay for Plan button (instant analysis)
-        show_overlay <- real_time_loading
+        # Show overlay for BOTH Plan button clicks AND real-time slider changes
+        show_overlay <- is_plan_loading || real_time_loading
         
         
         return(show_overlay)
