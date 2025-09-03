@@ -162,7 +162,6 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
           plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
           # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
           plan_state$waiting_for_plan_result <- FALSE
-          plan_state$user_plan_click_timestamp <- NULL
         }
         plan_count_adjustment(0)  # Reset adjustment for backward compatibility
       }
@@ -176,7 +175,6 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
     observeEvent(input$plan_btn, {
       if (!is.null(plan_state)) {
         # Track user Plan button click for auto-collapse detection
-        plan_state$user_plan_click_timestamp <- Sys.time()
         plan_state$waiting_for_plan_result <- TRUE
         
         # Note: Loading indicators removed for Plan button - only sliders show loading now
@@ -195,11 +193,10 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
           current_signature <- create_design_problem_signature_local(current_config)
           
           # Check if this is first plan click for current design problem
-          if (!plan_state$first_plan_clicked || 
+          if (!plan_state$sliders_visible || 
               !identical(plan_state$current_design_signature, current_signature)) {
             
             # First plan click for this design problem structure
-            plan_state$first_plan_clicked <- TRUE
             plan_state$sliders_visible <- TRUE
             plan_state$current_design_signature <- current_signature
             

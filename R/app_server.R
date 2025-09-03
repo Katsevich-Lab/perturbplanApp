@@ -25,19 +25,16 @@ app_server <- function(input, output, session) {
   # Comprehensive state management for analysis workflow and UI interactions
   # Tracks design problem structure, plan button clicks, slider visibility, and sidebar collapse
   plan_state <- reactiveValues(
-    first_plan_clicked = FALSE,      # Has plan been clicked for current design problem
     real_time_enabled = FALSE,       # Is real-time analysis active
-    sliders_visible = FALSE,         # Should sliders be visible in UI
+    sliders_visible = FALSE,         # Should sliders be visible in UI (set when Plan clicked)
     current_design_signature = NULL, # Signature of current design problem structure
     last_analysis_completed = NULL,  # Timestamp when last analysis completed
     
     # Sidebar collapse state management
     sidebar_collapsed = FALSE,       # Current sidebar visibility state (TRUE = collapsed/hidden)
     auto_collapse_enabled = TRUE,    # Enable automatic sidebar collapse after Plan execution
-    collapse_toggle_available = TRUE, # Allow manual sidebar toggle via UI controls
     
     # Track actual user Plan button clicks for auto-collapse
-    user_plan_click_timestamp = NULL, # When user last clicked Plan button
     waiting_for_plan_result = FALSE   # Whether we're waiting for Plan-triggered analysis
   )
   
@@ -172,19 +169,13 @@ app_server <- function(input, output, session) {
       
       # Check if this was a user-initiated Plan button click (not configuration change)
       if (!is.null(config) && config$plan_clicked > 0 && 
-          plan_state$waiting_for_plan_result && 
-          !is.null(plan_state$user_plan_click_timestamp)) {
+          plan_state$waiting_for_plan_result) {
         
-        # Verify the analysis result is recent (within 30 seconds of Plan click)
-        time_since_click <- difftime(Sys.time(), plan_state$user_plan_click_timestamp, units = "secs")
+        plan_state$last_analysis_completed <- Sys.time()
+        plan_state$waiting_for_plan_result <- FALSE  # Reset flag
         
-        if (time_since_click <= 30) {
-          plan_state$last_analysis_completed <- Sys.time()
-          plan_state$waiting_for_plan_result <- FALSE  # Reset flag
-          
-          # Trigger auto-collapse after successful Plan analysis ONLY
-          handle_auto_collapse()
-        }
+        # Trigger auto-collapse after successful Plan analysis ONLY
+        handle_auto_collapse()
       }
     }
   })
@@ -348,7 +339,6 @@ app_server <- function(input, output, session) {
       # Sidebar configuration changed - reset state completely
       old_signature <- plan_state$current_design_signature
       plan_state$current_design_signature <- new_signature
-      plan_state$first_plan_clicked <- FALSE
       plan_state$real_time_enabled <- FALSE
       plan_state$sliders_visible <- FALSE
       
@@ -357,7 +347,6 @@ app_server <- function(input, output, session) {
       
       # Reset Plan button tracking to prevent inappropriate auto-collapse
       plan_state$waiting_for_plan_result <- FALSE
-      plan_state$user_plan_click_timestamp <- NULL
       
       # Send sidebar state update to client
       session$sendCustomMessage(
