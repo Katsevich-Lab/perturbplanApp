@@ -158,45 +158,30 @@ app_server <- function(input, output, session) {
   
   # Track when Plan analysis completes
   observeEvent(analysis_results_raw(), {
-    # DEBUG: Track analysis observer firing
-    cat("DEBUG: Analysis observer fired\n")
-    cat("  - waiting_for_plan_result:", plan_state$waiting_for_plan_result, "\n")
     
     # CRITICAL: Check plan_state flags BEFORE accessing results to prevent race condition
     # If waiting_for_plan_result is FALSE, this is likely a spurious trigger from mode change
     if (!plan_state$waiting_for_plan_result) {
-      cat("  - EARLY EXIT: No Plan button pending\n")
       return()  # Exit early - no Plan button click is pending
     }
     
     results <- analysis_results_raw()
-    cat("  - Results obtained, error status:", !is.null(results$error), "\n")
     
     # Only mark completion for successful Plan-triggered analysis
     if (!is.null(results) && is.null(results$error)) {
       config <- user_workflow_config()
       
-      cat("  - Config plan_clicked:", config$plan_clicked %||% "NULL", "\n")
-      cat("  - waiting_for_plan_result check:", plan_state$waiting_for_plan_result, "\n")
       
       # Check if this was a user-initiated Plan button click (not configuration change)
       if (!is.null(config) && config$plan_clicked > 0 && 
           plan_state$waiting_for_plan_result) {
-        
-        cat("  - CONDITIONS MET: Triggering auto-collapse\n")
         
         plan_state$last_analysis_completed <- Sys.time()
         plan_state$waiting_for_plan_result <- FALSE  # Reset flag
         
         # Trigger auto-collapse after successful Plan analysis ONLY
         handle_auto_collapse()
-        
-        cat("  - AUTO-COLLAPSE EXECUTED\n")
-      } else {
-        cat("  - CONDITIONS NOT MET: No auto-collapse\n")
       }
-    } else {
-      cat("  - No results or error present: No auto-collapse\n")
     }
   })
   

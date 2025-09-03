@@ -76,9 +76,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         
         # If any design options changed, clear cached results and stay in transition until user acts
         if (!is.null(previous_design_options()) && !identical(previous_design_options(), current_design)) {
-          cat("DEBUG: Design options observer - MODE TRANSITION DETECTED\n")
-          cat("  - Previous design:", !is.null(previous_design_options()), "\n")
-          cat("  - Setting in_mode_transition to TRUE\n")
           in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
@@ -87,9 +84,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           # last_plan_count(0)           # This was causing the bug!
           # Note: We don't clear parameter controls here - that would cause UI issues
           # Note: We don't set in_mode_transition(FALSE) here - user must explicitly trigger analysis
-          cat("  - in_mode_transition now set to:", in_mode_transition(), "\n")
-        } else {
-          cat("DEBUG: Design options observer - No design change detected\n")
         }
         
         previous_design_options(current_design)
@@ -192,19 +186,9 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       }
       
       # DEBUG: Log transition state and trigger detection
-      cat("DEBUG: Analysis engine reactive fired\n")
-      cat("  - current_optimization_type:", current_optimization_type %||% "NULL", "\n")
-      cat("  - is_mode_transition:", is_mode_transition, "\n")
-      cat("  - in_mode_transition:", in_mode_transition(), "\n")
-      cat("  - has_valid_trigger:", has_valid_trigger, "\n")
-      cat("  - has_new_plan_click:", has_new_plan_click, "\n")
-      cat("  - has_new_real_time_trigger:", has_new_real_time_trigger, "\n")
-      cat("  - current_plan_count:", current_plan_count, "vs last:", last_plan_count(), "\n")
-      cat("  - current_trigger_count:", current_trigger_count, "vs last:", last_trigger_count(), "\n")
       
       # SMART EARLY EXIT: Block fake triggers but allow legitimate Plan clicks
       if (is_mode_transition) {
-        cat("  - EARLY EXIT: Mode transition detected immediately\n")
         in_mode_transition(TRUE)  # Set flag for subsequent runs
         return(NULL)
       } else if (in_mode_transition()) {
@@ -216,20 +200,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         is_real_slider_change <- has_new_real_time_trigger  # Real-time triggers are always legitimate
         
         if (is_real_plan_click) {
-          cat("  - TRANSITION OVERRIDE: Real Plan click detected, proceeding with analysis\n")
           in_mode_transition(FALSE)  # Clear transition mode for legitimate Plan clicks
         } else if (is_real_slider_change) {
-          cat("  - TRANSITION OVERRIDE: Real slider change detected, proceeding with analysis\n")
           in_mode_transition(FALSE)  # Clear transition mode for legitimate slider changes
         } else {
-          cat("  - EARLY EXIT: In transition mode, ignoring fake trigger\n")
-          cat("    - has_new_plan_click:", has_new_plan_click, "\n")
-          cat("    - has_new_real_time_trigger:", has_new_real_time_trigger, "\n")
-          cat("    - waiting_for_plan_result:", plan_state$waiting_for_plan_result %||% "NULL", "\n")
           return(NULL)
         }
-      } else {
-        cat("  - NORMAL EXECUTION: Not in transition mode\n")
       }
       
       # Track config hash to detect spurious invalidations

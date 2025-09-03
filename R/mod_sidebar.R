@@ -166,19 +166,14 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         return()  # Early exit - prevents excessive firing
       }
       
-      cat("DEBUG: Mode observer fired, current_mode:", current_mode %||% "NULL", "\n")
-      cat("  - previous_mode:", previous_mode() %||% "NULL", "\n")
-      cat("  - REAL MODE CHANGE DETECTED:", previous_mode(), "→", current_mode, "\n")
       
       # Mode changed - reset plan state WITHOUT creating fake plan triggers
       if (!is.null(plan_state)) {
-        cat("  - Resetting plan_state flags\n")
         # DON'T reset effective_plan_count - this creates fake "new plan click" triggers
         # plan_state$effective_plan_count <- 0  # REMOVED: This was causing unwanted analysis
         plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
         # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
         plan_state$waiting_for_plan_result <- FALSE
-        cat("  - waiting_for_plan_result set to FALSE\n")
       }
       plan_count_adjustment(0)  # Reset adjustment for backward compatibility
       
