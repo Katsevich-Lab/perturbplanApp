@@ -208,17 +208,23 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         in_mode_transition(TRUE)  # Set flag for subsequent runs
         return(NULL)
       } else if (in_mode_transition()) {
-        # In transition mode - only allow REAL user Plan clicks (not fake triggers)
+        # In transition mode - allow REAL user actions (Plan clicks OR slider changes)
         is_real_plan_click <- has_new_plan_click && 
                              !is.null(plan_state) && 
                              plan_state$waiting_for_plan_result  # User actually clicked Plan
         
+        is_real_slider_change <- has_new_real_time_trigger  # Real-time triggers are always legitimate
+        
         if (is_real_plan_click) {
           cat("  - TRANSITION OVERRIDE: Real Plan click detected, proceeding with analysis\n")
           in_mode_transition(FALSE)  # Clear transition mode for legitimate Plan clicks
+        } else if (is_real_slider_change) {
+          cat("  - TRANSITION OVERRIDE: Real slider change detected, proceeding with analysis\n")
+          in_mode_transition(FALSE)  # Clear transition mode for legitimate slider changes
         } else {
           cat("  - EARLY EXIT: In transition mode, ignoring fake trigger\n")
           cat("    - has_new_plan_click:", has_new_plan_click, "\n")
+          cat("    - has_new_real_time_trigger:", has_new_real_time_trigger, "\n")
           cat("    - waiting_for_plan_result:", plan_state$waiting_for_plan_result %||% "NULL", "\n")
           return(NULL)
         }
