@@ -320,6 +320,12 @@ app_server <- function(input, output, session) {
   
   # Monitor for ANY sidebar configuration changes (complete clearing trigger)
   observe({
+    # CRITICAL: Check for mode transitions before accessing user_workflow_config()
+    # This prevents race condition during mode switching
+    if (plan_state$waiting_for_plan_result) {
+      return()  # Exit early during pending Plan operations to avoid interference
+    }
+    
     current_config <- user_workflow_config()
     new_signature <- create_design_problem_signature(current_config)
     
