@@ -152,24 +152,39 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
     previous_mode <- reactiveVal(NULL)
     plan_count_adjustment <- reactiveVal(0)  # Adjustment to subtract from plan button count
     
-    # Use observeEvent with high priority to ensure mode changes are processed BEFORE analysis observer
-    observeEvent(design_config()$optimization_type, {
+    # Use observeEvent with intelligent filtering to prevent excessive firing
+    observeEvent({
+      config <- design_config()
+      # Only return the optimization_type, ignore other config changes
+      if (!is.null(config)) config$optimization_type else NULL
+    }, {
       current_mode <- design_config()$optimization_type
-      if (!is.null(current_mode) && current_mode != "" && 
-          !is.null(previous_mode()) && previous_mode() != current_mode) {
-        # Mode changed - reset plan state to force new analysis
-        if (!is.null(plan_state)) {
-          plan_state$effective_plan_count <- 0  # Reset to force fresh analysis
-          plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
-          # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
-          plan_state$waiting_for_plan_result <- FALSE
-        }
-        plan_count_adjustment(0)  # Reset adjustment for backward compatibility
+      
+      # OPTIMIZATION: Skip processing if no actual change occurred
+      if (is.null(current_mode) || current_mode == "" || 
+          identical(current_mode, previous_mode())) {
+        return()  # Early exit - prevents excessive firing
       }
-      if (!is.null(current_mode)) {
-        previous_mode(current_mode)
+      
+      cat("DEBUG: Mode observer fired, current_mode:", current_mode %||% "NULL", "\n")
+      cat("  - previous_mode:", previous_mode() %||% "NULL", "\n")
+      cat("  - REAL MODE CHANGE DETECTED:", previous_mode(), "→", current_mode, "\n")
+      
+      # Mode changed - reset plan state WITHOUT creating fake plan triggers
+      if (!is.null(plan_state)) {
+        cat("  - Resetting plan_state flags\n")
+        # DON'T reset effective_plan_count - this creates fake "new plan click" triggers
+        # plan_state$effective_plan_count <- 0  # REMOVED: This was causing unwanted analysis
+        plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
+        # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
+        plan_state$waiting_for_plan_result <- FALSE
+        cat("  - waiting_for_plan_result set to FALSE\n")
       }
-    }, priority = 100)  # High priority to run before analysis observer
+      plan_count_adjustment(0)  # Reset adjustment for backward compatibility
+      
+      # Update previous mode tracking
+      previous_mode(current_mode)
+    }, priority = 100, ignoreInit = TRUE)  # High priority + ignore initial firing
     
     # Plan button logic
     # Plan button click handler with real-time analysis state management
