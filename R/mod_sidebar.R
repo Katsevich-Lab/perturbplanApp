@@ -152,35 +152,40 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
     previous_mode <- reactiveVal(NULL)
     plan_count_adjustment <- reactiveVal(0)  # Adjustment to subtract from plan button count
     
-    # Use observeEvent with intelligent filtering to prevent excessive firing
-    observeEvent({
-      config <- design_config()
-      # Only return the optimization_type, ignore other config changes
-      if (!is.null(config)) config$optimization_type else NULL
-    }, {
-      current_mode <- design_config()$optimization_type
-      
-      # OPTIMIZATION: Skip processing if no actual change occurred
-      if (is.null(current_mode) || current_mode == "" || 
-          identical(current_mode, previous_mode())) {
-        return()  # Early exit - prevents excessive firing
-      }
-      
-      
-      # Mode changed - reset plan state WITHOUT creating fake plan triggers
-      if (!is.null(plan_state)) {
-        # Reset plan state for new optimization mode
-        plan_state$reset_plan_state <- TRUE   # Signal analysis engine to reset tracking
-        # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
-        plan_state$waiting_for_plan_result <- FALSE
-        cat("[DEBUG] Mode changed - waiting_for_plan_result reset to FALSE\n")
-        plan_state$has_plan_been_clicked <- FALSE
-      }
-      plan_count_adjustment(0)  # Reset adjustment for backward compatibility
-      
-      # Update previous mode tracking
-      previous_mode(current_mode)
-    }, priority = 100, ignoreInit = TRUE)  # High priority + ignore initial firing
+    # COMMENTED OUT FOR TESTING: Location 1B - Sidebar mode observer
+    # This observer may be unnecessary since Location 1A (analysis engine) already handles
+    # optimization_type changes with in_mode_transition(TRUE). Commenting out to test if
+    # step 1 can work like step 2 without Plan state resets.
+    
+    # # Use observeEvent with intelligent filtering to prevent excessive firing
+    # observeEvent({
+    #   config <- design_config()
+    #   # Only return the optimization_type, ignore other config changes
+    #   if (!is.null(config)) config$optimization_type else NULL
+    # }, {
+    #   current_mode <- design_config()$optimization_type
+    #   
+    #   # OPTIMIZATION: Skip processing if no actual change occurred
+    #   if (is.null(current_mode) || current_mode == "" || 
+    #       identical(current_mode, previous_mode())) {
+    #     return()  # Early exit - prevents excessive firing
+    #   }
+    #   
+    #   
+    #   # Mode changed - reset plan state WITHOUT creating fake plan triggers
+    #   if (!is.null(plan_state)) {
+    #     # Reset plan state for new optimization mode
+    #     plan_state$reset_plan_state <- TRUE   # Signal analysis engine to reset tracking
+    #     # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
+    #     plan_state$waiting_for_plan_result <- FALSE
+    #     cat("[DEBUG] Mode changed - waiting_for_plan_result reset to FALSE\n")
+    #     plan_state$has_plan_been_clicked <- FALSE
+    #   }
+    #   plan_count_adjustment(0)  # Reset adjustment for backward compatibility
+    #   
+    #   # Update previous mode tracking
+    #   previous_mode(current_mode)
+    # }, priority = 100, ignoreInit = TRUE)  # High priority + ignore initial firing
     
     # Plan button logic
     # Plan button click handler with real-time analysis state management
@@ -274,7 +279,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       }
       
       return(config)
-    }) %>% debounce(500)
+    }) %>% debounce(100)
     
     return(combined_config)
   })
