@@ -142,12 +142,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           # Reset Plan click tracking so next Plan click is detected as "new"
           last_plan_clicked(FALSE)       # Allow next Plan click to be detected
           
-          # Reset plan_state completely (like app_server.R observer did)
+          # Reset plan_state completely (like app_server.R observer did) - ONLY for sidebar changes
           if (!is.null(plan_state)) {
             plan_state$has_plan_been_clicked <- FALSE
             plan_state$waiting_for_plan_result <- FALSE
             plan_state$sliders_visible <- FALSE  # Hide sliders like other design parameter changes
-            plan_state$real_time_enabled <- FALSE  # Disable real-time mode
+            plan_state$real_time_enabled <- FALSE  # Disable real-time mode for sidebar changes
             plan_state$sidebar_collapsed <- FALSE  # Reset sidebar collapse state
             plan_state$reset_plan_state <- TRUE  # Signal for any additional cleanup needed
           }
