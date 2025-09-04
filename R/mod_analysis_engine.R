@@ -41,13 +41,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
     # Track previous configuration to detect sidebar changes
     previous_config_hash <- reactiveVal(NULL)
     previous_config_object <- reactiveVal(NULL)
-    last_plan_count <- reactiveVal(0)
+    last_plan_clicked <- reactiveVal(FALSE)
     
     # PHASE 1 FIX: Track last real-time trigger to prevent duplicate analysis
     last_trigger_count <- reactiveVal(0)
     
-    # Track the last processed plan count AND timestamp to detect duplicates
-    last_processed_plan <- reactiveVal(list(count = 0, time = NULL))
+    # Note: Complex deduplication logic removed - boolean state prevents duplicate processing
 
     # Cache for expensive computation results
     cached_results <- reactiveVal(NULL)
@@ -150,10 +149,10 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # PHASE 1 FIX (ENHANCED): Establish dependencies on both triggers but process only one
       # Create dependencies (these must be outside conditionals to work properly)
-      current_plan_count <- if (!is.null(plan_state) && !is.null(plan_state$effective_plan_count)) {
-        plan_state$effective_plan_count
+      current_plan_clicked <- if (!is.null(plan_state)) {
+        plan_state$has_plan_been_clicked
       } else {
-        0
+        FALSE
       }
       current_trigger_count <- if (!is.null(param_manager) && !is.null(param_manager$analysis_trigger)) {
         param_manager$analysis_trigger()
@@ -163,13 +162,14 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # Check for plan count reset signal (from mode changes)
       if (!is.null(plan_state) && !is.null(plan_state$plan_count_reset) && plan_state$plan_count_reset) {
-        last_plan_count(current_plan_count - 1)  # Set to one less so next increment triggers
+        last_plan_clicked(FALSE)  # Reset tracking to detect next click
         plan_state$plan_count_reset <- FALSE     # Clear the signal
       }
       
       # Check if this is a valid NEW trigger that should exit transition mode
-      has_new_plan_click <- (current_plan_count > last_plan_count())
+      has_new_plan_click <- current_plan_clicked && !last_plan_clicked()
       has_new_real_time_trigger <- (current_trigger_count > last_trigger_count())
+      
       has_valid_trigger <- has_new_plan_click || has_new_real_time_trigger
       
       
@@ -221,24 +221,13 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       is_spurious_invalidation <- FALSE
       
       # Check for Plan button click (takes priority)
-      if (current_plan_count > last_plan_count()) {
-        
-        # Check if we just processed this plan click (within 1 second)
-        last_processed <- last_processed_plan()
-        if (last_processed$count == current_plan_count && 
-            !is.null(last_processed$time) &&
-            difftime(Sys.time(), last_processed$time, units = "secs") < 1) {
-          return(cached_results())
-        }
-        
+      if (has_new_plan_click) {
         is_plan_click <- TRUE
-        last_plan_count(current_plan_count)
+        last_plan_clicked(TRUE)
         # Reset trigger counter to prevent immediate real-time trigger
         last_trigger_count(current_trigger_count)
         # Update config hash for this plan click
         previous_config_hash(current_config_hash)
-        # Mark this plan as being processed
-        last_processed_plan(list(count = current_plan_count, time = Sys.time()))
       }
       # Check for real-time trigger (only if NOT a plan click)
       else if (current_trigger_count > last_trigger_count()) {
@@ -266,7 +255,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         }
         
         # Check if we have initial plan but no triggers yet
-        if (current_plan_count == 0) {
+        if (!current_plan_clicked) {
           return(NULL)  # No plan clicked yet
         }
         

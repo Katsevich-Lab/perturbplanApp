@@ -169,11 +169,11 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       
       # Mode changed - reset plan state WITHOUT creating fake plan triggers
       if (!is.null(plan_state)) {
-        # DON'T reset effective_plan_count - this creates fake "new plan click" triggers
-        # plan_state$effective_plan_count <- 0  # REMOVED: This was causing unwanted analysis
+        # Reset plan state for new optimization mode
         plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
         # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
         plan_state$waiting_for_plan_result <- FALSE
+        plan_state$has_plan_been_clicked <- FALSE
       }
       plan_count_adjustment(0)  # Reset adjustment for backward compatibility
       
@@ -185,15 +185,16 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
     # Plan button click handler with real-time analysis state management
     observeEvent(input$plan_btn, {
       if (!is.null(plan_state)) {
+        # Prevent multiple clicks on same configuration  
+        if (plan_state$has_plan_been_clicked) {
+          return()  # Ignore subsequent clicks until config changes
+        }
+        
         # Track user Plan button click for auto-collapse detection
         plan_state$waiting_for_plan_result <- TRUE
         
-        # Note: Loading indicators completely removed for Plan button
-        
-        # CRITICAL FIX: Force plan count to increment reliably by bypassing adjustment
-        # This ensures analysis always triggers on Plan clicks regardless of mode change timing
-        old_count <- plan_state$effective_plan_count %||% 0
-        plan_state$effective_plan_count <- old_count + 1
+        # Set plan clicked flag to trigger analysis
+        plan_state$has_plan_been_clicked <- TRUE
         
         current_config <- combined_config()
         
@@ -246,6 +247,9 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
+        
+        # Plan click state for analysis engine reactive dependency
+        plan_clicked_flag = plan_state$has_plan_been_clicked,
         timestamp = Sys.time(),
         
         # CRITICAL: Pass through source information from parameter manager

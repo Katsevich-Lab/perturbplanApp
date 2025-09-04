@@ -34,7 +34,8 @@ app_server <- function(input, output, session) {
     sidebar_collapsed = FALSE,       # Current sidebar visibility state (TRUE = collapsed/hidden)
     
     # Track actual user Plan button clicks for auto-collapse
-    waiting_for_plan_result = FALSE   # Whether we're waiting for Plan-triggered analysis
+    waiting_for_plan_result = FALSE,  # Whether we're waiting for Plan-triggered analysis
+    has_plan_been_clicked = FALSE     # Whether Plan has been clicked for current config
   )
   
   # Helper functions: Sidebar collapse state management
@@ -351,6 +352,8 @@ app_server <- function(input, output, session) {
       
       # Reset Plan button tracking to prevent inappropriate auto-collapse
       plan_state$waiting_for_plan_result <- FALSE
+      plan_state$has_plan_been_clicked <- FALSE
+      plan_state$plan_count_reset <- TRUE  # Signal analysis engine to reset tracking
       
       # Send sidebar state update to client
       session$sendCustomMessage(
