@@ -84,6 +84,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           # Reset Plan click tracking so next Plan click is detected as "new"
           last_plan_clicked(FALSE)       # Allow next Plan click to be detected
           
+          # Reset plan_state to allow new Plan button clicks (like app_server.R observer does)
+          if (!is.null(plan_state)) {
+            plan_state$has_plan_been_clicked <- FALSE
+            plan_state$waiting_for_plan_result <- FALSE
+          }
+          
           # DON'T reset last_plan_count - this prevents old plan clicks from being detected as new triggers
           # last_plan_count(0)           # This was causing the bug!
           # Note: We don't clear parameter controls here - that would cause UI issues
