@@ -353,7 +353,7 @@ app_server <- function(input, output, session) {
       # Reset Plan button tracking to prevent inappropriate auto-collapse
       plan_state$waiting_for_plan_result <- FALSE
       plan_state$has_plan_been_clicked <- FALSE
-      plan_state$plan_count_reset <- TRUE  # Signal analysis engine to reset tracking
+      plan_state$reset_plan_state <- TRUE  # Signal analysis engine to reset tracking
       
       # Send sidebar state update to client
       session$sendCustomMessage(

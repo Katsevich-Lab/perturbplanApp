@@ -170,7 +170,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       # Mode changed - reset plan state WITHOUT creating fake plan triggers
       if (!is.null(plan_state)) {
         # Reset plan state for new optimization mode
-        plan_state$plan_count_reset <- TRUE   # Signal analysis engine to reset tracking
+        plan_state$reset_plan_state <- TRUE   # Signal analysis engine to reset tracking
         # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
         plan_state$waiting_for_plan_result <- FALSE
         plan_state$has_plan_been_clicked <- FALSE
