@@ -64,6 +64,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         current_design <- list(
           optimization_type = config$design_options$optimization_type,
           minimization_target = config$design_options$minimization_target,
+          target_power = config$design_options$target_power,  # Handle target_power like other design options
           parameter_control_types = if (!is.null(config$design_options$parameter_controls)) {
             lapply(config$design_options$parameter_controls, function(control) {
               list(type = control$type)  # Only track the type, not fixed_value

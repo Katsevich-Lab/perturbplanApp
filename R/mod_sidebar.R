@@ -29,7 +29,7 @@ create_design_problem_signature_local <- function(user_config) {
         cost_budget = user_config$design_options$cost_budget,
         # Include parameters that should trigger slider reset when changed (must match app_server.R)
         # Handle NULL values to ensure consistent signature comparison
-        # Note: target_power excluded - it's a parameter users adjust during analysis
+        # Note: target_power now handled by analysis engine observer (Location 1A) for clean transitions
         cost_per_cell = user_config$design_options$cost_per_cell %||% "not_applicable",
         cost_per_million_reads = user_config$design_options$cost_per_million_reads %||% "not_applicable"
       )
