@@ -345,6 +345,11 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     observeEvent(input$cells_slider, {
       isolate({
         enable_real_time_if_needed()
+        # Set loading state immediately when slider changes (for loading overlay)
+        if (!is.null(plan_state) && plan_state$real_time_enabled) {
+          plan_state$waiting_for_plan_result <- TRUE
+          cat("[DEBUG] Slider change - loading state set immediately\n")
+        }
         param_manager$update_parameter("cells_per_target", input$cells_slider, "slider")
       })
     }, ignoreInit = TRUE)
@@ -352,6 +357,11 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     observeEvent(input$reads_slider, {
       isolate({
         enable_real_time_if_needed()
+        # Set loading state immediately when slider changes (for loading overlay)
+        if (!is.null(plan_state) && plan_state$real_time_enabled) {
+          plan_state$waiting_for_plan_result <- TRUE
+          cat("[DEBUG] Slider change - loading state set immediately\n")
+        }
         param_manager$update_parameter("reads_per_cell", input$reads_slider, "slider")
       })
     }, ignoreInit = TRUE)
@@ -359,6 +369,11 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     observeEvent(input$TPM_slider, {
       isolate({
         enable_real_time_if_needed()
+        # Set loading state immediately when slider changes (for loading overlay)
+        if (!is.null(plan_state) && plan_state$real_time_enabled) {
+          plan_state$waiting_for_plan_result <- TRUE
+          cat("[DEBUG] Slider change - loading state set immediately\n")
+        }
         param_manager$update_parameter("TPM_threshold", input$TPM_slider, "slider")
       })
     }, ignoreInit = TRUE)
