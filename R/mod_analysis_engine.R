@@ -80,6 +80,10 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
           previous_config_object(NULL)   # Reset configuration object
+          
+          # Reset Plan click tracking so next Plan click is detected as "new"
+          last_plan_clicked(FALSE)       # Allow next Plan click to be detected
+          
           # DON'T reset last_plan_count - this prevents old plan clicks from being detected as new triggers
           # last_plan_count(0)           # This was causing the bug!
           # Note: We don't clear parameter controls here - that would cause UI issues
