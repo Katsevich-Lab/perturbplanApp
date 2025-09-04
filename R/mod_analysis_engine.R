@@ -260,6 +260,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         last_trigger_count(current_trigger_count)
         # Update config hash for this real-time trigger
         previous_config_hash(current_config_hash)
+        
+        # Set loading state for real-time analysis (for loading overlay)
+        if (!is.null(plan_state)) {
+          plan_state$waiting_for_plan_result <- TRUE
+          cat("[DEBUG] Real-time analysis started - waiting_for_plan_result = TRUE\n")
+        }
       }
       # Check if this is just a spurious config invalidation
       else if (!is.null(previous_config_hash()) && 
