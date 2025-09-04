@@ -282,6 +282,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       })
     })
     
+    # Track loading start time for minimum display duration
+    loading_start_time <- reactiveVal(NULL)
+    
     # Determine if loading overlay should be shown
     output$show_loading_overlay <- reactive({
       # Simple logic: Show loading if Plan was clicked, hide when results are ready
@@ -302,12 +305,32 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
         real_time_loading <- is_real_time_mode && !analysis_ready
         
-        # Show overlay for BOTH Plan button clicks AND real-time slider changes
-        show_overlay <- is_plan_loading || real_time_loading
+        # Basic overlay logic
+        should_show_overlay <- is_plan_loading || real_time_loading
+        
+        # Minimum display duration logic
+        current_time <- Sys.time()
+        if (should_show_overlay && is.null(loading_start_time())) {
+          # Loading just started - record start time
+          loading_start_time(current_time)
+          show_overlay <- TRUE
+        } else if (!should_show_overlay && !is.null(loading_start_time())) {
+          # Loading should stop - check minimum duration
+          elapsed <- difftime(current_time, loading_start_time(), units = "secs")
+          if (elapsed < 0.4) {  # Minimum 400ms display time
+            show_overlay <- TRUE  # Keep showing for minimum duration
+          } else {
+            show_overlay <- FALSE
+            loading_start_time(NULL)  # Reset start time
+          }
+        } else {
+          show_overlay <- should_show_overlay
+        }
+        
         cat("[DEBUG] Loading overlay result: show_overlay =", show_overlay, 
+            "| should_show =", should_show_overlay,
             "| is_plan_loading =", is_plan_loading, 
             "| real_time_loading =", real_time_loading, "\n")
-        
         
         return(show_overlay)
       }, error = function(e) {
