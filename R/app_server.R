@@ -178,6 +178,7 @@ app_server <- function(input, output, session) {
         
         plan_state$last_analysis_completed <- Sys.time()
         plan_state$waiting_for_plan_result <- FALSE  # Reset flag
+        cat("[DEBUG] Analysis completed - waiting_for_plan_result set to FALSE\n")
         
         # Trigger auto-collapse after successful Plan analysis ONLY
         handle_auto_collapse()

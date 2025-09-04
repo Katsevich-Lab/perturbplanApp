@@ -162,12 +162,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         } else if (recent_slider_change) {
           # For slider changes, don't clean state - allow real-time analysis to proceed
           # Just update tracking without any state clearing
-          cat("[DEBUG] Slider change detected - preserving state\n")
-          if (!is.null(plan_state)) {
-            cat("[DEBUG] real_time_enabled =", plan_state$real_time_enabled, "\n")
-            cat("[DEBUG] sliders_visible =", plan_state$sliders_visible, "\n")
-            cat("[DEBUG] waiting_for_plan_result =", plan_state$waiting_for_plan_result, "\n")
-          }
+          cat("[DEBUG] Slider change detected - preserving state (unified observer)\n")
         }
         
         # Always update tracking regardless of whether we cleaned or not

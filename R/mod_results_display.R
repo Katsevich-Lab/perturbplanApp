@@ -295,6 +295,8 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         
         # Plan button loading: Show loading when Plan clicked but analysis not complete
         is_plan_loading <- !is.null(plan_state) && plan_state$waiting_for_plan_result
+        cat("[DEBUG] Loading overlay check: waiting_for_plan_result =", 
+            if (!is.null(plan_state)) plan_state$waiting_for_plan_result else "NULL", "\n")
         
         # Slider loading: Show loading for real-time slider changes
         is_real_time_mode <- !is.null(plan_state) && plan_state$real_time_enabled
@@ -302,6 +304,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
         
         # Show overlay for BOTH Plan button clicks AND real-time slider changes
         show_overlay <- is_plan_loading || real_time_loading
+        cat("[DEBUG] Loading overlay result: show_overlay =", show_overlay, 
+            "| is_plan_loading =", is_plan_loading, 
+            "| real_time_loading =", real_time_loading, "\n")
         
         
         return(show_overlay)
