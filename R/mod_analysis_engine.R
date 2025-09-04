@@ -88,6 +88,8 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           if (!is.null(plan_state)) {
             plan_state$has_plan_been_clicked <- FALSE
             plan_state$waiting_for_plan_result <- FALSE
+            plan_state$sliders_visible <- FALSE  # Hide sliders like other design parameter changes
+            plan_state$real_time_enabled <- FALSE  # Disable real-time mode
           }
           
           # DON'T reset last_plan_count - this prevents old plan clicks from being detected as new triggers
