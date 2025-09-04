@@ -60,6 +60,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
     observe({
       config <- workflow_config()
       if (!is.null(config)) {
+        cat("[DEBUG] Unified observer triggered\n")
         # Track ALL sidebar parameters that should trigger cache clearing and state reset
         current_sidebar_config <- list(
           # Design options - ALL parameters
@@ -129,11 +130,13 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         } else {
           FALSE
         }
+        cat("[DEBUG] Source:", config$last_parameter_source, "| Recent slider change:", recent_slider_change, "\n")
         
         # If any sidebar parameters changed AND it's not from slider, clear cached results and stay in transition
         if (!is.null(previous_sidebar_config()) && 
             !identical(previous_sidebar_config(), current_sidebar_config) &&
             !recent_slider_change) {  # Don't clean for recent slider changes
+          cat("[DEBUG] Sidebar parameter change detected - cleaning state\n")
           in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
@@ -159,6 +162,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         } else if (recent_slider_change) {
           # For slider changes, don't clean state - allow real-time analysis to proceed
           # Just update tracking without any state clearing
+          cat("[DEBUG] Slider change detected - preserving state\n")
+          if (!is.null(plan_state)) {
+            cat("[DEBUG] real_time_enabled =", plan_state$real_time_enabled, "\n")
+            cat("[DEBUG] sliders_visible =", plan_state$sliders_visible, "\n")
+            cat("[DEBUG] waiting_for_plan_result =", plan_state$waiting_for_plan_result, "\n")
+          }
         }
         
         # Always update tracking regardless of whether we cleaned or not
