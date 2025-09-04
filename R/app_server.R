@@ -321,57 +321,58 @@ app_server <- function(input, output, session) {
   # APP STATE MANAGEMENT
   # ========================================================================
   
-  # Monitor for ANY sidebar configuration changes (complete clearing trigger)
-  observe({
-    current_config <- user_workflow_config()
-    new_signature <- create_design_problem_signature(current_config)
-    
-    # Check the source of the change before resetting state
-    recent_slider_change <- if (!is.null(current_config) && 
-                               !is.null(current_config$last_parameter_source) &&
-                               !is.null(current_config$last_parameter_timestamp) &&
-                               current_config$last_parameter_source == "slider") {
-      difftime(Sys.time(), current_config$last_parameter_timestamp, units = "secs") < 1
-    } else {
-      FALSE
-    }
-    
-    # Check if core design structure changed
-    if (!is.null(new_signature) && 
-        !identical(plan_state$current_design_signature, new_signature) &&
-        !recent_slider_change) {  # Don't reset for recent slider changes
-      
-      # Sidebar configuration changed - reset state completely
-      old_signature <- plan_state$current_design_signature
-      plan_state$current_design_signature <- new_signature
-      plan_state$real_time_enabled <- FALSE
-      plan_state$sliders_visible <- FALSE
-      
-      # Reset sidebar collapse state when configuration changes
-      plan_state$sidebar_collapsed <- FALSE
-      
-      # Reset Plan button tracking to prevent inappropriate auto-collapse
-      plan_state$waiting_for_plan_result <- FALSE
-      plan_state$has_plan_been_clicked <- FALSE
-      plan_state$reset_plan_state <- TRUE  # Signal analysis engine to reset tracking
-      
-      # Send sidebar state update to client
-      session$sendCustomMessage(
-        type = "sidebar_collapse_state",
-        message = list(
-          collapsed = FALSE,
-          animate = FALSE
-        )
-      )
-      
-      # Clear pinned solutions from previous design problem
-      # Note: pinned_solutions will be handled by results_display module
-      
-      # Notify user only if we had a previous valid design problem
-      if (!is.null(old_signature)) {
-      }
-    }
-  })
+  # UNIFIED PARAMETER HANDLING: All sidebar parameter changes now handled by analysis engine observer
+  # This observer is temporarily commented out since analysis engine handles all sidebar parameters
+  # observe({
+  #   current_config <- user_workflow_config()
+  #   new_signature <- create_design_problem_signature(current_config)
+  #   
+  #   # Check the source of the change before resetting state
+  #   recent_slider_change <- if (!is.null(current_config) && 
+  #                              !is.null(current_config$last_parameter_source) &&
+  #                              !is.null(current_config$last_parameter_timestamp) &&
+  #                              current_config$last_parameter_source == "slider") {
+  #     difftime(Sys.time(), current_config$last_parameter_timestamp, units = "secs") < 1
+  #   } else {
+  #     FALSE
+  #   }
+  #   
+  #   # Check if core design structure changed
+  #   if (!is.null(new_signature) && 
+  #       !identical(plan_state$current_design_signature, new_signature) &&
+  #       !recent_slider_change) {  # Don't reset for recent slider changes
+  #     
+  #     # Sidebar configuration changed - reset state completely
+  #     old_signature <- plan_state$current_design_signature
+  #     plan_state$current_design_signature <- new_signature
+  #     plan_state$real_time_enabled <- FALSE
+  #     plan_state$sliders_visible <- FALSE
+  #     
+  #     # Reset sidebar collapse state when configuration changes
+  #     plan_state$sidebar_collapsed <- FALSE
+  #     
+  #     # Reset Plan button tracking to prevent inappropriate auto-collapse
+  #     plan_state$waiting_for_plan_result <- FALSE
+  #     plan_state$has_plan_been_clicked <- FALSE
+  #     plan_state$reset_plan_state <- TRUE  # Signal analysis engine to reset tracking
+  #     
+  #     # Send sidebar state update to client
+  #     session$sendCustomMessage(
+  #       type = "sidebar_collapse_state",
+  #       message = list(
+  #         collapsed = FALSE,
+  #         animate = FALSE
+  #       )
+  #     )
+  #     
+  #     # Clear pinned solutions from previous design problem
+  #     # Note: pinned_solutions will be handled by results_display module
+  #     
+  #     # Notify user only if we had a previous valid design problem
+  #     if (!is.null(old_signature)) {
+  #     }
+  #   }
+  # })
   
   # ========================================================================
   # SIDEBAR COLLAPSE SYSTEM

@@ -52,30 +52,77 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
     cached_results <- reactiveVal(NULL)
     
     # Track design option changes to clear cache and refresh state
-    previous_design_options <- reactiveVal(NULL)
+    previous_sidebar_config <- reactiveVal(NULL)  # Track all sidebar parameters
     in_mode_transition <- reactiveVal(FALSE)
     plan_reset_active <- reactiveVal(FALSE)  # Track when Plan state was reset to prevent false positives
     
-    # Clear cache when any design options change (optimization type, minimization target, parameter controls)
+    # UNIFIED SIDEBAR PARAMETER OBSERVER - Handle ALL sidebar parameter changes consistently
     observe({
       config <- workflow_config()
-      if (!is.null(config) && !is.null(config$design_options)) {
-        # Track all key design options that should trigger plot refresh
-        current_design <- list(
-          optimization_type = config$design_options$optimization_type,
-          minimization_target = config$design_options$minimization_target,
-          target_power = config$design_options$target_power,  # Handle target_power like other design options
-          parameter_control_types = if (!is.null(config$design_options$parameter_controls)) {
-            lapply(config$design_options$parameter_controls, function(control) {
-              list(type = control$type)  # Only track the type, not fixed_value
-            })
-          } else {
-            NULL
-          }
+      if (!is.null(config)) {
+        # Track ALL sidebar parameters that should trigger cache clearing and state reset
+        current_sidebar_config <- list(
+          # Design options - ALL parameters
+          design_options = if (!is.null(config$design_options)) {
+            list(
+              optimization_type = config$design_options$optimization_type,
+              minimization_target = config$design_options$minimization_target,
+              target_power = config$design_options$target_power,
+              cost_budget = config$design_options$cost_budget,
+              cost_per_cell = config$design_options$cost_per_cell,
+              cost_per_million_reads = config$design_options$cost_per_million_reads,
+              parameter_control_types = if (!is.null(config$design_options$parameter_controls)) {
+                lapply(config$design_options$parameter_controls, function(control) {
+                  list(type = control$type)  # Only track the type, not fixed_value
+                })
+              } else NULL
+            )
+          } else NULL,
+          
+          # Experimental setup - ALL parameters
+          experimental_setup = if (!is.null(config$experimental_setup)) {
+            list(
+              biological_system = config$experimental_setup$biological_system,
+              pilot_data_choice = config$experimental_setup$pilot_data_choice,
+              non_targeting_gRNAs = config$experimental_setup$non_targeting_gRNAs,
+              MOI = config$experimental_setup$MOI,
+              num_targets = config$experimental_setup$num_targets,
+              gRNAs_per_target = config$experimental_setup$gRNAs_per_target,
+              cells_fixed = config$experimental_setup$cells_fixed,
+              sequenced_reads_fixed = config$experimental_setup$sequenced_reads_fixed
+            )
+          } else NULL,
+          
+          # Analysis choices - ALL parameters
+          analysis_choices = if (!is.null(config$analysis_choices)) {
+            list(
+              side = config$analysis_choices$side,
+              gene_list_mode = config$analysis_choices$gene_list_mode,
+              TPM_threshold_fixed = config$analysis_choices$TPM_threshold_fixed
+            )
+          } else NULL,
+          
+          # Effect sizes - ALL parameters
+          effect_sizes = if (!is.null(config$effect_sizes)) {
+            list(
+              prop_non_null = config$effect_sizes$prop_non_null,
+              minimum_fold_change_fixed = config$effect_sizes$minimum_fold_change_fixed
+            )
+          } else NULL,
+          
+          # Advanced choices - ALL parameters
+          advanced_choices = if (!is.null(config$advanced_choices)) {
+            list(
+              gRNA_variability = config$advanced_choices$gRNA_variability,
+              mapping_efficiency = config$advanced_choices$mapping_efficiency,
+              control_group = config$advanced_choices$control_group,
+              fdr_target = config$advanced_choices$fdr_target
+            )
+          } else NULL
         )
         
-        # If any design options changed, clear cached results and stay in transition until user acts
-        if (!is.null(previous_design_options()) && !identical(previous_design_options(), current_design)) {
+        # If any sidebar parameters changed, clear cached results and stay in transition until user acts
+        if (!is.null(previous_sidebar_config()) && !identical(previous_sidebar_config(), current_sidebar_config)) {
           in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
@@ -84,12 +131,14 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           # Reset Plan click tracking so next Plan click is detected as "new"
           last_plan_clicked(FALSE)       # Allow next Plan click to be detected
           
-          # Reset plan_state to allow new Plan button clicks (like app_server.R observer does)
+          # Reset plan_state completely (like app_server.R observer did)
           if (!is.null(plan_state)) {
             plan_state$has_plan_been_clicked <- FALSE
             plan_state$waiting_for_plan_result <- FALSE
             plan_state$sliders_visible <- FALSE  # Hide sliders like other design parameter changes
             plan_state$real_time_enabled <- FALSE  # Disable real-time mode
+            plan_state$sidebar_collapsed <- FALSE  # Reset sidebar collapse state
+            plan_state$reset_plan_state <- TRUE  # Signal for any additional cleanup needed
           }
           
           # DON'T reset last_plan_count - this prevents old plan clicks from being detected as new triggers
@@ -98,61 +147,10 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           # Note: We don't set in_mode_transition(FALSE) here - user must explicitly trigger analysis
         }
         
-        previous_design_options(current_design)
+        previous_sidebar_config(current_sidebar_config)
       }
     })
     
-    # Track non-shared sidebar parameters for cache clearing (like design options)
-    previous_non_shared <- reactiveVal(NULL)
-    
-    observe({
-      config <- workflow_config()
-      if (!is.null(config)) {
-        # Track ALL sidebar parameters that should trigger cache clearing
-        current_sidebar_params <- list(
-          # Experimental setup - ALL parameters (shared + non-shared)
-          biological_system = config$experimental_setup$biological_system,
-          pilot_data_choice = config$experimental_setup$pilot_data_choice,
-          non_targeting_gRNAs = config$experimental_setup$non_targeting_gRNAs,
-          MOI = config$experimental_setup$MOI,
-          num_targets = config$experimental_setup$num_targets,
-          gRNAs_per_target = config$experimental_setup$gRNAs_per_target,
-          cells_fixed = config$experimental_setup$cells_fixed,
-          sequenced_reads_fixed = config$experimental_setup$sequenced_reads_fixed,
-          
-          # Analysis choices - ALL parameters (shared + non-shared)  
-          side = config$analysis_choices$side,
-          gene_list_mode = config$analysis_choices$gene_list_mode,
-          TPM_threshold_fixed = config$analysis_choices$TPM_threshold_fixed,
-          
-          # Effect sizes - ALL parameters (shared + non-shared)
-          prop_non_null = config$effect_sizes$prop_non_null,
-          minimum_fold_change_fixed = config$effect_sizes$minimum_fold_change_fixed,
-          
-          # Design options shared parameter
-          cost_budget = config$design_options$cost_budget,
-          
-          # Advanced choices - ALL parameters (none are shared with sliders)
-          gRNA_variability = config$advanced_choices$gRNA_variability,
-          mapping_efficiency = config$advanced_choices$mapping_efficiency,
-          control_group = config$advanced_choices$control_group,
-          fdr_target = config$advanced_choices$fdr_target
-        )
-        
-        # If any sidebar parameter changed, apply cache clearing ONLY
-        if (!is.null(previous_non_shared()) && !identical(previous_non_shared(), current_sidebar_params)) {
-          # Analysis engine cache clearing (IDENTICAL to design options)
-          in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
-          cached_results(NULL)           # Clear cached results
-          previous_config_hash(NULL)     # Reset configuration tracking
-          previous_config_object(NULL)   # Reset configuration object
-          
-          # Note: Plan state clearing (sliders_visible) is handled by app_server.R
-        }
-        
-        previous_non_shared(current_sidebar_params)
-      }
-    })
 
     analysis_results <- reactive({
       req(workflow_config())
