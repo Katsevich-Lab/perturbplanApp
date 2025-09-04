@@ -582,10 +582,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       }
     })
     
-    # Track when user clicks Plan by monitoring plan_clicked counter
+    # Track when user clicks Plan by monitoring waiting_for_plan_result flag
     observe({
-      config <- user_config()
-      if (!is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0) {
+      if (!is.null(plan_state) && plan_state$waiting_for_plan_result) {
         last_plan_click_time(Sys.time())  # Record when Plan was clicked
       }
     })

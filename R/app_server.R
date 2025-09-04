@@ -173,8 +173,7 @@ app_server <- function(input, output, session) {
       
       
       # Check if this was a user-initiated Plan button click (not configuration change)
-      if (!is.null(config) && config$plan_clicked > 0 && 
-          plan_state$waiting_for_plan_result) {
+      if (plan_state$waiting_for_plan_result) {
         
         plan_state$last_analysis_completed <- Sys.time()
         plan_state$waiting_for_plan_result <- FALSE  # Reset flag
@@ -410,7 +409,7 @@ app_server <- function(input, output, session) {
     analysis <- analysis_results_raw()
     
     # Handle loading states
-    if (!is.null(config) && config$plan_clicked > 0 && is.null(analysis)) {
+    if (plan_state$waiting_for_plan_result && is.null(analysis)) {
       # Show loading notification when Plan clicked but analysis not ready
     }
     

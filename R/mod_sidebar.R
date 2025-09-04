@@ -246,7 +246,6 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
-        plan_clicked = plan_state$effective_plan_count %||% 0,  # Use reliable plan count from observeEvent
         timestamp = Sys.time(),
         
         # CRITICAL: Pass through source information from parameter manager

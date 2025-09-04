@@ -150,7 +150,11 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # PHASE 1 FIX (ENHANCED): Establish dependencies on both triggers but process only one
       # Create dependencies (these must be outside conditionals to work properly)
-      current_plan_count <- config$plan_clicked
+      current_plan_count <- if (!is.null(plan_state) && !is.null(plan_state$effective_plan_count)) {
+        plan_state$effective_plan_count
+      } else {
+        0
+      }
       current_trigger_count <- if (!is.null(param_manager) && !is.null(param_manager$analysis_trigger)) {
         param_manager$analysis_trigger()
       } else {
