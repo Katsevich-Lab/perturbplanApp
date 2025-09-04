@@ -314,9 +314,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     
     # Determine if waiting for Plan result
     output$waiting_for_plan_result <- reactive({
-      result <- !is.null(plan_state) && plan_state$waiting_for_plan_result
-      cat("[DEBUG] waiting_for_plan_result reactive called, returning:", result, "\n")
-      result
+      !is.null(plan_state) && plan_state$waiting_for_plan_result
     })
     outputOptions(output, "waiting_for_plan_result", suspendWhenHidden = FALSE)
     

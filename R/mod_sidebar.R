@@ -198,7 +198,6 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         
         # Track user Plan button click for auto-collapse detection
         plan_state$waiting_for_plan_result <- TRUE
-        cat("[DEBUG] Plan clicked - waiting_for_plan_result set to TRUE\n")
         
         # Set plan clicked flag to trigger analysis
         plan_state$has_plan_been_clicked <- TRUE

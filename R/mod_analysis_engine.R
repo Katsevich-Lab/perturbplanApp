@@ -75,7 +75,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
         
         # If any design options changed, clear cached results and stay in transition until user acts
         if (!is.null(previous_design_options()) && !identical(previous_design_options(), current_design)) {
-          cat("[DEBUG] Design options changed - setting in_mode_transition(TRUE)\n")
           in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
@@ -163,7 +162,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # Check for plan count reset signal (from mode changes)
       if (!is.null(plan_state) && !is.null(plan_state$reset_plan_state) && plan_state$reset_plan_state) {
-        cat("[DEBUG] Processing reset signal - activating Plan reset mode\n")
         last_plan_clicked(FALSE)         # Reset tracking to detect next click
         plan_reset_active(TRUE)          # Flag that Plan state was reset
         plan_state$reset_plan_state <- FALSE     # Clear the signal
@@ -171,23 +169,17 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # Override current_plan_clicked if we're in reset mode (prevents false positives from debounced config)
       if (plan_reset_active() && current_plan_clicked) {
-        cat("[DEBUG] Plan reset active - overriding current_plan_clicked from", current_plan_clicked, "to FALSE\n")
         current_plan_clicked <- FALSE
       }
       
       # Clear reset mode when Plan state actually becomes FALSE in config
       if (plan_reset_active() && !current_plan_clicked) {
-        cat("[DEBUG] Plan state now FALSE in config - clearing reset mode\n")
         plan_reset_active(FALSE)
       }
       
       # Check if this is a valid NEW trigger that should exit transition mode
       has_new_plan_click <- current_plan_clicked && !last_plan_clicked()
       has_new_real_time_trigger <- (current_trigger_count > last_trigger_count())
-      
-      cat("[DEBUG] Trigger state: current_plan_clicked =", current_plan_clicked, 
-          ", last_plan_clicked =", last_plan_clicked(), 
-          ", has_new_plan_click =", has_new_plan_click, "\n")
       
       has_valid_trigger <- has_new_plan_click || has_new_real_time_trigger
       
@@ -221,7 +213,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       # Check for Plan button click (takes priority)
       if (has_new_plan_click) {
         is_plan_click <- TRUE
-        cat("[DEBUG] Plan click detected in analysis - is_plan_click = TRUE\n")
         last_plan_clicked(TRUE)
         # Reset trigger counter to prevent immediate real-time trigger
         last_trigger_count(current_trigger_count)
@@ -368,7 +359,6 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # Trigger auto-collapse if this was a Plan button click and analysis succeeded
       if (is_plan_click && !is.null(results) && is.null(results$error) && !is.null(session)) {
-        cat("[DEBUG] Auto-collapse triggered - Plan click analysis succeeded\n")
         session$sendCustomMessage(
           type = "plan_success_collapse",
           message = list(

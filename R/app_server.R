@@ -178,7 +178,6 @@ app_server <- function(input, output, session) {
         
         plan_state$last_analysis_completed <- Sys.time()
         plan_state$waiting_for_plan_result <- FALSE  # Reset flag
-        cat("[DEBUG] Analysis completed - waiting_for_plan_result set to FALSE\n")
         
         # Trigger auto-collapse after successful Plan analysis ONLY
         handle_auto_collapse()
@@ -353,7 +352,6 @@ app_server <- function(input, output, session) {
       
       # Reset Plan button tracking to prevent inappropriate auto-collapse
       plan_state$waiting_for_plan_result <- FALSE
-      cat("[DEBUG] Config changed - waiting_for_plan_result reset to FALSE\n")
       plan_state$has_plan_been_clicked <- FALSE
       plan_state$reset_plan_state <- TRUE  # Signal analysis engine to reset tracking
       
