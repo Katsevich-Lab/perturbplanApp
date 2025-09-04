@@ -121,8 +121,19 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           } else NULL
         )
         
-        # If any sidebar parameters changed, clear cached results and stay in transition until user acts
-        if (!is.null(previous_sidebar_config()) && !identical(previous_sidebar_config(), current_sidebar_config)) {
+        # Check the source of the change before deciding whether to clean
+        recent_slider_change <- if (!is.null(config$last_parameter_source) &&
+                                   !is.null(config$last_parameter_timestamp) &&
+                                   config$last_parameter_source == "slider") {
+          difftime(Sys.time(), config$last_parameter_timestamp, units = "secs") < 1
+        } else {
+          FALSE
+        }
+        
+        # If any sidebar parameters changed AND it's not from slider, clear cached results and stay in transition
+        if (!is.null(previous_sidebar_config()) && 
+            !identical(previous_sidebar_config(), current_sidebar_config) &&
+            !recent_slider_change) {  # Don't clean for recent slider changes
           in_mode_transition(TRUE)       # Mark as in transition - will stay TRUE until explicit user action
           cached_results(NULL)           # Clear cached results
           previous_config_hash(NULL)     # Reset configuration tracking
@@ -145,8 +156,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
           # last_plan_count(0)           # This was causing the bug!
           # Note: We don't clear parameter controls here - that would cause UI issues
           # Note: We don't set in_mode_transition(FALSE) here - user must explicitly trigger analysis
+        } else if (recent_slider_change) {
+          # For slider changes, don't clean state - allow real-time analysis to proceed
+          # Just update tracking without any state clearing
         }
         
+        # Always update tracking regardless of whether we cleaned or not
         previous_sidebar_config(current_sidebar_config)
       }
     })
