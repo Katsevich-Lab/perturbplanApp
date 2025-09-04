@@ -7,7 +7,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div actionButton observeEvent uiOutput renderUI
+#' @importFrom shiny NS tagList tags div actionButton observeEvent uiOutput renderUI debounce
 #' @importFrom shinydashboard dashboardSidebar
 #' @importFrom shinyjs show hide
 #' @importFrom digest digest
@@ -173,6 +173,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         plan_state$reset_plan_state <- TRUE   # Signal analysis engine to reset tracking
         # CRITICAL: Clear ALL Plan button tracking to prevent auto-collapse race condition
         plan_state$waiting_for_plan_result <- FALSE
+        cat("[DEBUG] Mode changed - waiting_for_plan_result reset to FALSE\n")
         plan_state$has_plan_been_clicked <- FALSE
       }
       plan_count_adjustment(0)  # Reset adjustment for backward compatibility
@@ -192,6 +193,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
         
         # Track user Plan button click for auto-collapse detection
         plan_state$waiting_for_plan_result <- TRUE
+        cat("[DEBUG] Plan clicked - waiting_for_plan_result set to TRUE\n")
         
         # Set plan clicked flag to trigger analysis
         plan_state$has_plan_been_clicked <- TRUE
@@ -272,7 +274,7 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       }
       
       return(config)
-    })
+    }) %>% debounce(500)
     
     return(combined_config)
   })

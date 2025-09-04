@@ -149,8 +149,8 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # PHASE 1 FIX (ENHANCED): Establish dependencies on both triggers but process only one
       # Create dependencies (these must be outside conditionals to work properly)
-      current_plan_clicked <- if (!is.null(plan_state)) {
-        plan_state$has_plan_been_clicked
+      current_plan_clicked <- if (!is.null(config$plan_clicked_flag)) {
+        config$plan_clicked_flag
       } else {
         FALSE
       }

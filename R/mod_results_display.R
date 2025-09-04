@@ -31,7 +31,7 @@ mod_results_display_ui <- function(id) {
             
             # Conditional display based on analysis state (mutually exclusive)
             conditionalPanel(
-              condition = "output.show_results == false && output.show_error == false",
+              condition = "output.show_results == false && output.show_error == false && output.waiting_for_plan_result == false",
               ns = ns,
               wellPanel(
                 style = "text-align: center; padding: 60px;",
@@ -42,7 +42,7 @@ mod_results_display_ui <- function(id) {
             ),
             
             conditionalPanel(
-              condition = "output.show_results == true && output.show_error == false",
+              condition = "(output.show_results == true && output.show_error == false) || output.waiting_for_plan_result == true",
               ns = ns,
               # Results container with loading overlay
               tags$div(
@@ -52,7 +52,7 @@ mod_results_display_ui <- function(id) {
                 
                 # Loading overlay
                 conditionalPanel(
-                  condition = "output['show_loading_overlay']", ns = ns,
+                  condition = "output['show_loading_overlay'] || output.waiting_for_plan_result", ns = ns,
                   tags$div(
                     style = "position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
                             background-color: rgba(255, 255, 255, 0.8); 
@@ -311,6 +311,14 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     })
     outputOptions(output, "show_results", suspendWhenHidden = FALSE)
     outputOptions(output, "show_loading_overlay", suspendWhenHidden = FALSE)
+    
+    # Determine if waiting for Plan result
+    output$waiting_for_plan_result <- reactive({
+      result <- !is.null(plan_state) && plan_state$waiting_for_plan_result
+      cat("[DEBUG] waiting_for_plan_result reactive called, returning:", result, "\n")
+      result
+    })
+    outputOptions(output, "waiting_for_plan_result", suspendWhenHidden = FALSE)
     
     # Determine if errors should be shown
     output$show_error <- reactive({
