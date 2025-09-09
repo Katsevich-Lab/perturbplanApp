@@ -16,13 +16,13 @@ NULL
 #' @param workflow_info Detected workflow information  
 #' @return List with power_data and optimal_design compatible with current plotting
 #' @noRd
-perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data) {
+perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data, param_manager = NULL) {
   
   
   # Step 1: Get comprehensive parameters from UI using existing mapping function
   # This includes MOI, num_targets, experimental setup, pilot data, costs, etc.
   # Use pre-extracted pilot data (passed as parameter to avoid duplication)
-  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
+  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data, param_manager)
   
   # Override for cost minimization workflow: 
   # - Use "cost" as minimizing variable (perturbplan now supports this)

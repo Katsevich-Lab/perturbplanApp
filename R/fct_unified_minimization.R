@@ -16,7 +16,7 @@ NULL
 #' @param pilot_data Pre-extracted pilot data to avoid duplication
 #' @return List with power_data and optimal_design compatible with plotting
 #' @noRd
-perform_constrained_minimization_analysis <- function(config, workflow_info, pilot_data) {
+perform_constrained_minimization_analysis <- function(config, workflow_info, pilot_data, param_manager = NULL) {
   
   # Step 1: Detect minimization configuration
   minimization_config <- get_minimization_config(workflow_info$workflow_id)
@@ -26,7 +26,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   
   
   # Step 3: Get comprehensive parameters from UI using existing mapping function
-  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
+  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data, param_manager)
   
   # Step 4: Configure for minimization workflow
   perturbplan_params$minimizing_variable <- minimization_config$variable

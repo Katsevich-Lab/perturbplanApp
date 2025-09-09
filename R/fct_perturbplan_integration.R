@@ -92,9 +92,10 @@ extract_pilot_data <- function(experimental_config) {
 #' @param config Complete UI configuration from sidebar modules
 #' @param workflow_info Detected workflow information
 #' @param pilot_data Pre-extracted pilot data to avoid duplicate extraction
+#' @param param_manager Parameter manager instance for current parameter values
 #' @return Named list of parameters for cost_power_computation
 #' @noRd
-map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) {
+map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data, param_manager = NULL) {
   
   
   # Use pre-extracted pilot data (passed as parameter to avoid duplication)
@@ -122,40 +123,76 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   # Build fixed_variable list
   fixed_variable <- list()
 
-  # Get parameter controls from design options
-  param_controls <- design_opts$parameter_controls
+  # PHASE 4 FIX: Get current parameter values from parameter manager
+  # instead of stale sidebar config fixed_value fields
+  if (!is.null(param_manager)) {
+    # Get parameter controls from design options for types
+    param_controls <- design_opts$parameter_controls
+    
+    if (!is.null(param_controls)) {
+      # Add fixed parameters based on their type, but get VALUES from parameter manager
+      if (!is.null(param_controls$cells_per_target) &&
+          param_controls$cells_per_target$type == "fixed") {
+        # Get current value from parameter manager
+        fixed_variable$cells_per_target <- round(param_manager$parameters$cells_per_target)
+      }
 
-  if (!is.null(param_controls)) {
-    # Add fixed parameters based on their type and fixed values
-    if (!is.null(param_controls$cells_per_target) &&
-        param_controls$cells_per_target$type == "fixed" &&
-        !is.null(param_controls$cells_per_target$fixed_value)) {
-      # Ensure integer values for perturbplan
-      fixed_variable$cells_per_target <- round(param_controls$cells_per_target$fixed_value)
+      if (!is.null(param_controls$sequenced_reads_per_cell) &&
+          param_controls$sequenced_reads_per_cell$type == "fixed") {
+        # Get current value from parameter manager and transform to mapped reads
+        sequenced_reads <- param_manager$parameters$reads_per_cell
+        mapped_reads <- sequenced_reads * advanced_opts$mapping_efficiency
+        fixed_variable$reads_per_cell <- round(mapped_reads)
+      }
+
+      if (!is.null(param_controls$TPM_threshold) &&
+          param_controls$TPM_threshold$type == "fixed") {
+        # Get current value from parameter manager
+        fixed_variable$TPM_threshold <- param_manager$parameters$TPM_threshold
+      }
+
+      if (!is.null(param_controls$minimum_fold_change) &&
+          param_controls$minimum_fold_change$type == "fixed") {
+        # Get current value from parameter manager
+        fixed_variable$minimum_fold_change <- param_manager$parameters$minimum_fold_change
+      }
     }
+  } else {
+    # FALLBACK: Use sidebar config if param_manager not available (for backwards compatibility)
+    param_controls <- design_opts$parameter_controls
 
-    if (!is.null(param_controls$sequenced_reads_per_cell) &&
-        param_controls$sequenced_reads_per_cell$type == "fixed" &&
-        !is.null(param_controls$sequenced_reads_per_cell$fixed_value)) {
-      # Transform sequenced reads to mapped reads using mapping efficiency
-      # mapped_reads = sequenced_reads × mapping_efficiency
-      sequenced_reads <- param_controls$sequenced_reads_per_cell$fixed_value
-      mapped_reads <- sequenced_reads * advanced_opts$mapping_efficiency
-      fixed_variable$reads_per_cell <- round(mapped_reads)
-    }
+    if (!is.null(param_controls)) {
+      # Add fixed parameters based on their type and fixed values
+      if (!is.null(param_controls$cells_per_target) &&
+          param_controls$cells_per_target$type == "fixed" &&
+          !is.null(param_controls$cells_per_target$fixed_value)) {
+        # Ensure integer values for perturbplan
+        fixed_variable$cells_per_target <- round(param_controls$cells_per_target$fixed_value)
+      }
 
-    if (!is.null(param_controls$TPM_threshold) &&
-        param_controls$TPM_threshold$type == "fixed" &&
-        !is.null(param_controls$TPM_threshold$fixed_value)) {
-      # TPM threshold can remain as decimal
-      fixed_variable$TPM_threshold <- param_controls$TPM_threshold$fixed_value
-    }
+      if (!is.null(param_controls$sequenced_reads_per_cell) &&
+          param_controls$sequenced_reads_per_cell$type == "fixed" &&
+          !is.null(param_controls$sequenced_reads_per_cell$fixed_value)) {
+        # Transform sequenced reads to mapped reads using mapping efficiency
+        # mapped_reads = sequenced_reads × mapping_efficiency
+        sequenced_reads <- param_controls$sequenced_reads_per_cell$fixed_value
+        mapped_reads <- sequenced_reads * advanced_opts$mapping_efficiency
+        fixed_variable$reads_per_cell <- round(mapped_reads)
+      }
 
-    if (!is.null(param_controls$minimum_fold_change) &&
-        param_controls$minimum_fold_change$type == "fixed" &&
-        !is.null(param_controls$minimum_fold_change$fixed_value)) {
-      # Fold change can remain as decimal
-      fixed_variable$minimum_fold_change <- param_controls$minimum_fold_change$fixed_value
+      if (!is.null(param_controls$TPM_threshold) &&
+          param_controls$TPM_threshold$type == "fixed" &&
+          !is.null(param_controls$TPM_threshold$fixed_value)) {
+        # TPM threshold can remain as decimal
+        fixed_variable$TPM_threshold <- param_controls$TPM_threshold$fixed_value
+      }
+
+      if (!is.null(param_controls$minimum_fold_change) &&
+          param_controls$minimum_fold_change$type == "fixed" &&
+          !is.null(param_controls$minimum_fold_change$fixed_value)) {
+        # Fold change can remain as decimal
+        fixed_variable$minimum_fold_change <- param_controls$minimum_fold_change$fixed_value
+      }
     }
   }
 

@@ -333,7 +333,7 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
       
       # PHASE 1 FIX: Use the determined trigger type for error messages
       results <- tryCatch({
-        generate_real_analysis(config, workflow_info)
+        generate_real_analysis(config, workflow_info, param_manager)
       }, error = function(e) {
         # Return error object instead of crashing
         # Provide more context based on trigger type
@@ -388,11 +388,12 @@ mod_analysis_engine_server <- function(id, workflow_config, param_manager = NULL
 #' Handles all 11 workflow scenarios with real mathematical optimization.
 #'
 #' @param config User configuration from sidebar modules
-#' @param workflow_info Detected workflow information
+#' @param workflow_info Detected workflow information  
+#' @param param_manager Parameter manager instance for current parameter values
 #'
 #' @return List containing real analysis results (same structure as placeholder)
 #' @noRd
-generate_real_analysis <- function(config, workflow_info) {
+generate_real_analysis <- function(config, workflow_info, param_manager) {
   # Extract pilot data for perturbplan function
   pilot_data <- extract_pilot_data(config$experimental_setup)
 
@@ -411,7 +412,7 @@ generate_real_analysis <- function(config, workflow_info) {
   if (workflow_info$workflow_id == "power_cost_minimization") {
     # Use specialized cost minimization analysis
     tryCatch({
-      results <- perform_cost_minimization_analysis(config, workflow_info, pilot_data)
+      results <- perform_cost_minimization_analysis(config, workflow_info, pilot_data, param_manager)
 
       # Return results directly (already in plotting format)
       return(results)
@@ -425,7 +426,7 @@ generate_real_analysis <- function(config, workflow_info) {
   if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
     # Use unified constrained minimization analysis
     tryCatch({
-      results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data)
+      results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data, param_manager)
       
       # Return results directly (already in plotting format)
       return(results)
@@ -437,7 +438,7 @@ generate_real_analysis <- function(config, workflow_info) {
 
   # For all other workflows: Use standard cost_power_computation
   # Map UI configuration to perturbplan::cost_power_computation parameters
-  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
+  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data, param_manager)
 
   # Call perturbplan::cost_power_computation
   tryCatch({
