@@ -70,13 +70,9 @@ mod_effect_sizes_server <- function(id, design_config, param_manager, analysis_c
     # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
     # ========================================================================
     
-    # Safe UI updates: Only update when parameter manager changes AND value is different
-    observeEvent(param_manager$parameters$minimum_fold_change, {
-      new_value <- param_manager$parameters$minimum_fold_change
-      if (!identical(isolate(input$minimum_fold_change_fixed), new_value)) {
-        updateNumericInput(session, "minimum_fold_change_fixed", value = new_value)
-      }
-    })
+    # PHASE 3: PARAMETER MANAGER → SIDEBAR SYNC REMOVED
+    # Eliminated fold change sync observer for UI independence  
+    # Sidebar fold change input now works independently from sliders
     
     
     # Conditional display logic for fold change input (panel is now always visible)

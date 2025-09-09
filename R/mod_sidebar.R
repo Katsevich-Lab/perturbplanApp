@@ -264,18 +264,12 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
       )
       
       
-      # Update parameter controls with current parameter manager values
-      if (!is.null(config$design_options) && !is.null(config$design_options$parameter_controls)) {
-        config$design_options$parameter_controls$cells_per_target$fixed_value <- param_manager$parameters$cells_per_target
-        config$design_options$parameter_controls$sequenced_reads_per_cell$fixed_value <- param_manager$parameters$reads_per_cell
-        config$design_options$parameter_controls$TPM_threshold$fixed_value <- param_manager$parameters$TPM_threshold
-        config$design_options$parameter_controls$minimum_fold_change$fixed_value <- param_manager$parameters$minimum_fold_change
-      }
+      # PHASE 4: SHARED PARAMETER SYNC REMOVED
+      # All sliders now work consistently through real-time analysis path
+      # No more bypassing visibility requirements for some parameters
       
-      # Update cost budget with current parameter manager value (critical for slider sync)
-      if (!is.null(config$design_options)) {
-        config$design_options$cost_budget <- param_manager$parameters$cost_budget
-      }
+      # Parameter values will come directly from parameter manager to analysis engine
+      # Sidebar config only contains non-parameter configuration (design structure, choices, etc.)
       
       return(config)
     }) %>% debounce(100)

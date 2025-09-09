@@ -298,18 +298,14 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     
     # Helper function to enable real-time mode on first slider interaction
     enable_real_time_if_needed <- function(source = "unknown") {
-      # Don't enable if Plan analysis hasn't completed yet
-      if (is.null(plan_state$last_analysis_completed)) {
-        return()
+      # PHASE 4 FIX: Check slider visibility instead of Plan completion
+      # This ensures consistent behavior for all sliders
+      if (is.null(plan_state) || !plan_state$sliders_visible) {
+        return()  # Block only if sliders shouldn't be visible yet
       }
       
-      # Don't enable if this is too soon after analysis completion (within 2 seconds)
-      time_since_analysis <- difftime(Sys.time(), plan_state$last_analysis_completed, units = "secs")
-      if (time_since_analysis < 2) {
-        return()
-      }
-      
-      if (!is.null(plan_state) && plan_state$sliders_visible && !plan_state$real_time_enabled) {
+      # If sliders are visible, always enable real-time analysis
+      if (!plan_state$real_time_enabled) {
         plan_state$real_time_enabled <- TRUE
         showNotification(
           "Real-time mode activated! Changes will update instantly.", 

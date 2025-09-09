@@ -184,41 +184,10 @@ mod_experimental_setup_server <- function(id, design_config, param_manager){
     # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
     # ========================================================================
     
-    # Safe UI updates: Only update when parameter manager changes AND value is different
-    observeEvent(param_manager$parameters$MOI, {
-      new_value <- param_manager$parameters$MOI
-      if (!identical(isolate(input$MOI), new_value)) {
-        updateNumericInput(session, "MOI", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$num_targets, {
-      new_value <- param_manager$parameters$num_targets
-      if (!identical(isolate(input$num_targets), new_value)) {
-        updateNumericInput(session, "num_targets", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$gRNAs_per_target, {
-      new_value <- param_manager$parameters$gRNAs_per_target
-      if (!identical(isolate(input$gRNAs_per_target), new_value)) {
-        updateNumericInput(session, "gRNAs_per_target", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$cells_per_target, {
-      new_value <- param_manager$parameters$cells_per_target
-      if (!identical(isolate(input$cells_fixed), new_value)) {
-        updateNumericInput(session, "cells_fixed", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$reads_per_cell, {
-      new_value <- param_manager$parameters$reads_per_cell
-      if (!identical(isolate(input$sequenced_reads_fixed), new_value)) {
-        updateNumericInput(session, "sequenced_reads_fixed", value = new_value)
-      }
-    })
+    # PHASE 3: PARAMETER MANAGER → SIDEBAR SYNC REMOVED
+    # Eliminated 5 updateNumericInput observers to achieve UI independence
+    # Sidebar inputs now work independently from sliders - no automatic updates
+    # This completes the direct path architecture: independent input streams
     
     
     # Logic for "Other" biological system selection

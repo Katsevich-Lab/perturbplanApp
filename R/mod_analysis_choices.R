@@ -98,13 +98,9 @@ mod_analysis_choices_server <- function(id, design_config, param_manager){
     # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
     # ========================================================================
     
-    # Safe UI updates: Only update when parameter manager changes AND value is different
-    observeEvent(param_manager$parameters$TPM_threshold, {
-      new_value <- param_manager$parameters$TPM_threshold
-      if (!identical(isolate(input$TPM_threshold_fixed), new_value)) {
-        updateNumericInput(session, "TPM_threshold_fixed", value = new_value)
-      }
-    })
+    # PHASE 3: PARAMETER MANAGER → SIDEBAR SYNC REMOVED
+    # Eliminated TPM threshold sync observer for UI independence
+    # Sidebar TPM input now works independently from sliders
 
 
     # VARIABLE CONSISTENCY TRACKING:
