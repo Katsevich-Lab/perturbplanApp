@@ -63,18 +63,22 @@
 
 ### Expected Behavior:
 1. **Before Plan Click** → Sliders not visible, none work
-2. **After Plan Click** → All 8 sliders become visible and work identically  
-3. **Any slider change** → Real-time analysis triggers immediately
-4. **No shared parameters** → All sliders use same real-time path
+2. **Plan Click** → Analysis starts, sliders still not visible  
+3. **After Results Obtained** → All 8 sliders become visible and work identically
+4. **Any slider change** → Real-time analysis triggers immediately
+5. **No shared parameters** → All sliders use same real-time path
 
 ### Test Scenarios:
-1. Move MOI slider → Analysis should trigger (previously broken) ✓
-2. Move TPM slider → Analysis should trigger (same as before) ✓
-3. Move any of 8 sliders → All work identically ✓
-4. No Plan requirement → Once visible, sliders work without additional Plan clicks ✓
+1. Click Plan → Sliders should NOT be visible during analysis ✓
+2. Wait for results → Sliders should appear when results are ready ✓  
+3. Move MOI slider → Analysis should trigger (previously broken) ✓
+4. Move TPM slider → Analysis should trigger (same as before) ✓
+5. Move any of 8 sliders → All work identically ✓
+6. No Plan requirement → Once visible, sliders work without additional Plan clicks ✓
 
 ### Success Criteria for Phase 4:
 - ✅ All 8 sliders work consistently (no special cases)
 - ✅ MOI, targets, gRNAs sliders now work like TPM, cells, reads sliders
-- ✅ Proper UX flow: Plan first → Then all sliders work independently  
+- ✅ Improved UX flow: Plan → Analysis → Results → Then all sliders work independently  
 - ✅ Single real-time path for all sliders (no shared parameter bypass)
+- ✅ Sliders only appear after results are ready (better UX timing)

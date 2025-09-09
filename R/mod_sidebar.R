@@ -210,11 +210,11 @@ mod_sidebar_server <- function(id, param_manager, plan_state = NULL){
           current_signature <- create_design_problem_signature_local(current_config)
           
           # Check if this is first plan click for current design problem
-          if (!plan_state$sliders_visible || 
-              !identical(plan_state$current_design_signature, current_signature)) {
+          if (!identical(plan_state$current_design_signature, current_signature)) {
             
             # First plan click for this design problem structure
-            plan_state$sliders_visible <- TRUE
+            # SLIDER VISIBILITY: Now controlled by analysis completion in app_server.R
+            # plan_state$sliders_visible <- TRUE  # MOVED to analysis completion handler
             plan_state$current_design_signature <- current_signature
             
           } else {

@@ -179,6 +179,9 @@ app_server <- function(input, output, session) {
         plan_state$last_analysis_completed <- Sys.time()
         plan_state$waiting_for_plan_result <- FALSE  # Reset flag
         
+        # SLIDER VISIBILITY: Show sliders only after successful analysis results
+        plan_state$sliders_visible <- TRUE
+        
         # Trigger auto-collapse after successful Plan analysis ONLY
         handle_auto_collapse()
       }
