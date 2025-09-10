@@ -6,21 +6,21 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
 #' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
     tags$div(
       id = ns("slider_container"),
       class = "parameter-sliders-horizontal",
       style = "padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
-      
+
       # ROW 1: Fixed experimental parameters (always 3 sliders)
       uiOutput(ns("experimental_sliders")),
-      
+
       # ROW 2: Power-determining parameters (dynamic - 3 out of 4 shown)
       tags$div(
         class = "slider-row power-params",
@@ -36,7 +36,7 @@ mod_parameter_sliders_ui <- function(id) {
 #' for horizontal layout
 #'
 #' @param inputId Slider input ID
-#' @param label Parameter label 
+#' @param label Parameter label
 #' @param min Minimum value
 #' @param max Maximum value
 #' @param value Default value
@@ -47,7 +47,7 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
   tags$div(
     class = "compact-slider-container",
     tags$label(
-      label, 
+      label,
       class = "slider-label",
       style = "font-size: 13px; font-weight: 500; color: #495057; margin-bottom: 8px; display: block; text-align: center;"
     ),
@@ -55,7 +55,7 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
       inputId = inputId,
       label = NULL,
       min = min,
-      max = max, 
+      max = max,
       value = value,
       step = step,
       width = "100%"
@@ -63,7 +63,7 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
   )
 }
 
-    
+
 #' parameter_sliders Server Functions
 #'
 #' @description Server logic for smart horizontal parameter sliders with
@@ -74,15 +74,15 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
 #' @param sidebar_config Reactive containing complete sidebar configuration with workflow_info
 #' @param app_state Global app state reactiveValues for phase management
 #'
-#' @noRd 
+#' @noRd
 mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-    
+
     # ========================================================================
     # SLIDER INDEPENDENCE STATE MANAGEMENT
     # ========================================================================
-    
+
     # Independent slider state - initialized from sidebar when results available
     slider_state <- reactiveValues(
       initialized = FALSE,
@@ -94,56 +94,56 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       TPM_threshold_fixed = NULL,
       minimum_fold_change_fixed = NULL
     )
-    
+
     # Initialize sliders exactly when sidebar becomes frozen
     observe({
       # Trigger: sidebar_frozen is TRUE AND not yet initialized
       if (app_state$sidebar_frozen && !slider_state$initialized) {
         # Get current sidebar config at the moment of freezing
         config <- sidebar_config()
-        
+
         if (!is.null(config)) {
           # Initialize sliders with sidebar values at freeze moment
           experimental <- config$experimental_setup %||% list()
           analysis <- config$analysis_choices %||% list()
           effects <- config$effect_sizes %||% list()
-          
-          slider_state$MOI <- experimental$MOI %||% 10
-          slider_state$num_targets <- experimental$num_targets %||% 100
-          slider_state$gRNAs_per_target <- experimental$gRNAs_per_target %||% 4
-          slider_state$cells_fixed <- experimental$cells_fixed %||% 1000
-          slider_state$mapped_reads_fixed <- experimental$mapped_reads_fixed %||% 5000
-          slider_state$TPM_threshold_fixed <- analysis$TPM_threshold_fixed %||% 10
-          slider_state$minimum_fold_change_fixed <- effects$minimum_fold_change_fixed %||% 0.8
-          
+
+          slider_state$MOI <- experimental$MOI
+          slider_state$num_targets <- experimental$num_targets
+          slider_state$gRNAs_per_target <- experimental$gRNAs_per_target
+          slider_state$cells_fixed <- experimental$cells_fixed
+          slider_state$mapped_reads_fixed <- experimental$mapped_reads_fixed
+          slider_state$TPM_threshold_fixed <- analysis$TPM_threshold_fixed
+          slider_state$minimum_fold_change_fixed <- effects$minimum_fold_change_fixed
+
           slider_state$initialized <- TRUE
-          
+
         }
       }
     })
-    
+
     # ========================================================================
     # DYNAMIC SLIDER GENERATION
     # ========================================================================
-    
+
     # Generate dynamic Row 1 experimental sliders with current values
     output$experimental_sliders <- renderUI({
       config <- sidebar_config()
       if (is.null(config)) return(NULL)
-      
+
       # Use slider_state if initialized, otherwise use sidebar values
       if (slider_state$initialized) {
         moi_value <- slider_state$MOI
-        targets_value <- slider_state$num_targets  
+        targets_value <- slider_state$num_targets
         grnas_value <- slider_state$gRNAs_per_target
       } else {
         # Extract values from sidebar configuration with defaults
-        experimental <- config$experimental_setup %||% list()
-        moi_value <- experimental$MOI %||% 10
-        targets_value <- experimental$num_targets %||% 100  
-        grnas_value <- experimental$gRNAs_per_target %||% 4
+        experimental <- config$experimental_setup
+        moi_value <- experimental$MOI
+        targets_value <- experimental$num_targets
+        grnas_value <- experimental$gRNAs_per_target
       }
-      
+
       tags$div(
         class = "slider-row experimental-params",
         style = "margin-bottom: 20px;",
@@ -154,26 +154,26 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         )
       )
     })
-    
+
     # Generate dynamic Row 2 based on workflow
     output$dynamic_power_sliders <- renderUI({
       config <- sidebar_config()
       if (is.null(config)) return(NULL)
-      
+
       # Use pre-computed workflow_info from sidebar (Option B)
       workflow <- config$workflow_info
       if (is.null(workflow)) return(NULL)
-      
+
       # Get design configuration from sidebar_config
       design_config <- config$design_options
-      param_controls <- design_config$parameter_controls %||% list()
+      param_controls <- design_config$parameter_controls
       optimization_type <- design_config$optimization_type
-      
+
       # Extract power parameter values from sidebar configuration
-      experimental <- config$experimental_setup %||% list()
-      analysis <- config$analysis_choices %||% list()
-      effects <- config$effect_sizes %||% list()
-      
+      experimental <- config$experimental_setup
+      analysis <- config$analysis_choices
+      effects <- config$effect_sizes
+
       # Get parameter values with defaults (use slider_state if initialized)
       if (slider_state$initialized) {
         cells_value <- slider_state$cells_fixed
@@ -181,12 +181,12 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         tpm_value <- slider_state$TPM_threshold_fixed
         fc_value <- slider_state$minimum_fold_change_fixed
       } else {
-        cells_value <- experimental$cells_fixed %||% 1000
-        reads_value <- experimental$mapped_reads_fixed %||% 5000
-        tpm_value <- analysis$TPM_threshold_fixed %||% 10
-        fc_value <- effects$minimum_fold_change_fixed %||% 0.8
+        cells_value <- experimental$cells_fixed
+        reads_value <- experimental$mapped_reads_fixed
+        tpm_value <- analysis$TPM_threshold_fixed
+        fc_value <- effects$minimum_fold_change_fixed
       }
-      
+
       # Define all 4 power-determining parameters (use sidebar values)
       all_power_params <- list(
         cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = cells_value, step = 20),
@@ -194,26 +194,25 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = tpm_value, step = 1),
         minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 2, value = fc_value, step = 0.1)
       )
-      
+
       # Determine which parameter is being minimized (exclude from Row 2)
       minimized_param <- get_minimized_parameter(workflow$workflow_id)
-      
+
       # Filter out the minimized parameter
       visible_power_params <- all_power_params[!names(all_power_params) %in% minimized_param]
-      
+
       # POWER+COST MODE FILTERING OR COST MINIMIZATION: Show sliders for "fixed" parameters
-      # Only apply filtering logic when in Phase 2 (slider mode) with valid configuration
-      if (!is.null(app_state) && app_state$phase == 2 && 
-          !is.null(optimization_type) && optimization_type != "" &&
+      # Apply filtering logic when we have valid configuration data
+      if (!is.null(optimization_type) && optimization_type != "" &&
           length(param_controls) > 0 &&
           length(minimized_param) > 0) {
-        
+
         # Safe comparison for minimized_param to avoid NA issues
         is_cost_minimization <- length(minimized_param) > 0 && minimized_param[1] == "cost"
-        
+
         if ((optimization_type == "power_cost" && !is.null(param_controls)) ||
             is_cost_minimization) {
-        
+
         # Map parameter names to their control types
         param_name_mapping <- list(
           "cells_per_target" = "cells_per_target",
@@ -221,7 +220,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
           "TPM_threshold" = "TPM_threshold",
           "minimum_fold_change" = "minimum_fold_change"
         )
-        
+
         # For cost minimization, show TPM and FC sliders (both are fixed)
         if (!is.null(minimized_param) && minimized_param == "cost") {
           # Cost minimization: show only TPM and FC sliders (they are fixed)
@@ -250,16 +249,16 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         }
         }  # Close the inner if statement (power_cost || cost minimization)
       }    # Close the outer if statement (phase == 2 && valid config)
-      
+
       # If no parameters to show, return empty
       if (length(visible_power_params) == 0) {
         return(NULL)
       }
-      
+
       # Create dynamic column layout based on number of visible parameters
       num_params <- length(visible_power_params)
       col_width <- if (num_params == 1) 12 else if (num_params == 2) 6 else 4
-      
+
       fluidRow(
         lapply(names(visible_power_params), function(param_name) {
           param <- visible_power_params[[param_name]]
@@ -269,77 +268,77 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         })
       )
     })
-    
+
     # ========================================================================
     # INPUT COLLECTION - Slider Independence
     # ========================================================================
     # Collect slider inputs and update slider_state (only when initialized)
-    
+
     observeEvent(input$moi_slider, {
       if (slider_state$initialized) {
         slider_state$MOI <- input$moi_slider
       }
     })
-    
+
     observeEvent(input$targets_slider, {
       if (slider_state$initialized) {
         slider_state$num_targets <- input$targets_slider
       }
     })
-    
+
     observeEvent(input$grnas_slider, {
       if (slider_state$initialized) {
         slider_state$gRNAs_per_target <- input$grnas_slider
       }
     })
-    
+
     observeEvent(input$cells_slider, {
       if (slider_state$initialized) {
         slider_state$cells_fixed <- input$cells_slider
       }
     })
-    
+
     observeEvent(input$reads_slider, {
       if (slider_state$initialized) {
         slider_state$mapped_reads_fixed <- input$reads_slider
       }
     })
-    
+
     observeEvent(input$TPM_slider, {
       if (slider_state$initialized) {
         slider_state$TPM_threshold_fixed <- input$TPM_slider
       }
     })
-    
+
     observeEvent(input$fc_slider, {
       if (slider_state$initialized) {
         slider_state$minimum_fold_change_fixed <- input$fc_slider
       }
     })
-    
+
     # ========================================================================
     # UI UPDATES - REMOVED to prevent sync between sliders and sidebar
     # ========================================================================
-    
+
     # UI update observers removed to make sliders independent from sidebar
     # Sliders will not automatically update when parameter manager changes
     # This prevents sync between sidebar inputs and slider values
-    
+
     # ========================================================================
     # RETURN SLIDER CONFIGURATION
     # ========================================================================
     # Return reactive containing slider parameter overrides for param_source_manager
-    
+
     slider_config <- reactive({
       # Return NULL during Phase 1 - sliders should not interfere with sidebar
       if (is.null(app_state) || app_state$phase == 1) {
         return(NULL)
       }
-      
+
       if (!slider_state$initialized) {
         return(NULL)  # No overrides until sliders are initialized
       }
-      
+
       list(
         experimental_setup = list(
           MOI = slider_state$MOI,
@@ -357,9 +356,9 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         slider_active = TRUE  # Flag to indicate sliders are providing overrides
       )
     })
-    
+
     return(slider_config)
-    
+
   })
 }
 
@@ -368,25 +367,29 @@ get_minimized_parameter <- function(workflow_id) {
   minimized_map <- list(
     # Power-only workflows
     "power_single_cells_per_target" = "cells_per_target",
-    "power_single_reads_per_cell" = "reads_per_cell", 
+    "power_single_reads_per_cell" = "reads_per_cell",
     "power_single_TPM_threshold" = "TPM_threshold",
     "power_single_minimum_fold_change" = "minimum_fold_change",
-    
+
     # Cost minimization workflow
     "power_cost_minimization" = "cost",
-    
-    # Power+cost workflows
+
+    # Power+cost workflows (fixing cells/reads)
     "power_cost_TPM_cells" = "TPM_threshold",      # TPM being minimized
     "power_cost_TPM_reads" = "TPM_threshold",      # TPM being minimized
     "power_cost_fc_cells" = "minimum_fold_change", # FC being minimized
-    "power_cost_fc_reads" = "minimum_fold_change"  # FC being minimized
+    "power_cost_fc_reads" = "minimum_fold_change", # FC being minimized
+
+    # Power+cost workflow (varying cells and reads)
+    "power_cost_TPM_cells_reads" = "TPM_threshold",      # TPM being minimized
+    "power_cost_fc_cells_reads" = "minimum_fold_change"  # FC being minimized
   )
-  
+
   return(minimized_map[[workflow_id]] %||% character(0))
 }
-    
+
 ## To be copied in the UI
 # mod_parameter_sliders_ui("parameter_sliders_1")
-    
+
 ## To be copied in the server
 # mod_parameter_sliders_server("parameter_sliders_1")

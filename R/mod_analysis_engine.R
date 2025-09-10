@@ -55,16 +55,6 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
         return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
 
-
-      # Check for incompatible optimization type + minimization target combinations (transition states)
-      opt_type <- design_config$optimization_type
-      target <- design_config$minimization_target
-
-      # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
-      if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
-        return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
-      }
-
       # Phase-based analysis triggering
       if (!is.null(app_state) && app_state$phase == 2) {
         # Phase 2: Real-time analysis on any config change
@@ -74,18 +64,6 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
         if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
           return(NULL)
         }
-      }
-
-      # Validate configuration (only after essential fields are present)
-      validation <- validate_workflow_config(config)
-      if (!validation$is_valid) {
-        return(list(
-          error = paste("Configuration Error:", paste(validation$errors, collapse = ", ")),
-          metadata = list(
-            analysis_mode = get_analysis_mode(),
-            timestamp = Sys.time()
-          )
-        ))
       }
 
       # ============================================================================
