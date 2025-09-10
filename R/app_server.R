@@ -209,12 +209,11 @@ app_server <- function(input, output, session) {
       app_state$phase <- 2
       app_state$sidebar_frozen <- TRUE
       app_state$sliders_visible <- TRUE
-      app_state$plan_button_text <- "Restart"
       app_state$initial_config_snapshot <- user_workflow_config()
 
       showNotification(
         "Analysis complete! Switched to interactive mode.",
-        type = "success",
+        type = "message",
         duration = 3
       )
     }
