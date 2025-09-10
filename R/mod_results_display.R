@@ -106,7 +106,7 @@ mod_results_display_ui <- function(id) {
             ns = ns,
             tags$div(
               style = "max-height: 400px; overflow-y: auto;",
-              mod_parameter_sliders_ui(ns("sliders"))
+              mod_parameter_sliders_ui("sliders")
             )
           ),
           
@@ -185,20 +185,16 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     })
     outputOptions(output, "show_error", suspendWhenHidden = FALSE)
     
-    # Workflow-based slider visibility for 8 target workflows
+    # App state-based slider visibility (Phase 3.5)
     output$show_sliders <- reactive({
       tryCatch({
-        # Use design configuration instead of analysis results for immediate visibility
-        config <- user_config()
-        
-        if (is.null(config) || is.null(config$design_options)) {
-          return(FALSE)
+        # Use app_state$sliders_visible instead of workflow detection
+        if (!is.null(app_state)) {
+          return(app_state$sliders_visible)
         }
         
-        # Use the new lightweight detection function
-        workflow_detection <- detect_slider_workflow(config$design_options)
-        
-        return(workflow_detection$should_show_sliders)
+        # Fallback: return FALSE if app_state not available
+        return(FALSE)
         
       }, error = function(e) {
         FALSE
