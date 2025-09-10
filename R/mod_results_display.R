@@ -252,7 +252,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     mod_plot_display_server("plot_display", plot_objects)
     
     # Solution table component for data summaries
-    mod_solution_table_server("solution_table", analysis_results, plot_objects, user_config, param_manager = NULL)
+    mod_solution_table_server("solution_table", analysis_results, plot_objects, user_config)
     
     # Error message display
     output$error_message <- renderUI({

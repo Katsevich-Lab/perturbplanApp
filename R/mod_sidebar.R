@@ -36,10 +36,10 @@ mod_sidebar_ui <- function(id) {
       # Horizontal separator line
       tags$hr(class = "sidebar-separator"),
       
-      # Plan button
+      # Dynamic Plan/Restart button
       tags$div(
         style = "text-align: center; padding: 0 20px;",
-        actionButton(ns("plan_btn"), "Plan", class = "btn-success", style = "width: 200px; max-width: 90%;")
+        uiOutput(ns("dynamic_plan_button"))
       )
     )
   )
@@ -53,7 +53,7 @@ mod_sidebar_ui <- function(id) {
 #' @param id Module namespace ID
 #'
 #' @noRd 
-mod_sidebar_server <- function(id){
+mod_sidebar_server <- function(id, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -80,6 +80,17 @@ mod_sidebar_server <- function(id){
       if (!is.null(current_mode)) {
         previous_mode(current_mode)
       }
+    })
+    
+    # Dynamic Plan/Restart button UI
+    output$dynamic_plan_button <- renderUI({
+      if (!is.null(app_state)) {
+        button_text <- app_state$plan_button_text
+      } else {
+        button_text <- "Plan"  # Fallback if app_state is NULL
+      }
+      
+      actionButton(ns("plan_btn"), button_text, class = "btn-success", style = "width: 200px; max-width: 90%;")
     })
     
     # Plan button logic

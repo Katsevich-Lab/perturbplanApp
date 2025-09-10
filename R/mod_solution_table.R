@@ -25,12 +25,11 @@ mod_solution_table_ui <- function(id) {
 #' @param analysis_results Reactive containing analysis results
 #' @param plot_objects Reactive containing plot objects from plotting engine
 #' @param user_config Reactive containing user configuration
-#' @param param_manager Parameter manager for accessing current values (legacy)
 #'
 #' @noRd 
 #'
 #' @importFrom shiny moduleServer req renderUI tags h4
-mod_solution_table_server <- function(id, analysis_results, plot_objects, user_config, param_manager = NULL) {
+mod_solution_table_server <- function(id, analysis_results, plot_objects, user_config) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -52,8 +51,8 @@ mod_solution_table_server <- function(id, analysis_results, plot_objects, user_c
       }
       
       # Create solutions table with current solution as first row
-      # Pass user_config and param_manager to access actual slider values
-      create_solutions_table(results, plots, user_config, param_manager)
+      # Pass user_config to access actual slider values
+      create_solutions_table(results, plots, user_config)
     })
     
     # ========================================================================

@@ -11,7 +11,7 @@
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
 #' @noRd
 app_server <- function(input, output, session) {
-  
+
   # ========================================================================
   # MODULE 0: GLOBAL APP STATE MANAGEMENT
   # ========================================================================
@@ -23,54 +23,54 @@ app_server <- function(input, output, session) {
     initial_config_snapshot = NULL,  # Frozen sidebar config for Phase 2
     plan_button_text = "Plan"     # Button text: "Plan" or "Restart"
   )
-  
+
   # ========================================================================
   # MODULE 1: INPUT COLLECTION (Sidebar)
   # ========================================================================
-  user_workflow_config <- mod_sidebar_server("sidebar")
-  
+  user_workflow_config <- mod_sidebar_server("sidebar", app_state)
+
   # ========================================================================
   # MODULE 2: PARAMETER SOURCE COORDINATION
   # ========================================================================
   # Clean linear architecture: sidebar → sliders → param_source → analysis
-  
+
   # Initialize sliders with visibility-triggered initialization
   slider_config <- mod_parameter_sliders_server("sliders", user_workflow_config, app_state)
-  
-  # Central parameter coordination: sidebar-base + slider-override logic  
+
+  # Central parameter coordination: sidebar-base + slider-override logic
   unified_config <- mod_parameter_source_manager_server("param_source", user_workflow_config, slider_config)
-  
-  # ========================================================================  
+
+  # ========================================================================
   # MODULE 3: ANALYSIS ENGINE
   # ========================================================================
   # Analysis engine now uses unified_config from parameter_source_manager
   analysis_results_raw <- mod_analysis_engine_server("analysis", unified_config)
-  
+
   # ========================================================================
   # MODULE 4: PLOTTING ENGINE
   # ========================================================================
   plot_objects <- mod_plotting_engine_server("plotting", analysis_results_raw)
-  
+
   # ========================================================================
   # MODULE 5: RESULTS DISPLAY
   # ========================================================================
   display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, unified_config, app_state)
-  
+
   # ========================================================================
   # HEADER EXPORT FUNCTIONALITY
   # ========================================================================
-  
+
   # Header export buttons UI
   output$header_export_buttons <- renderUI({
     # Show export buttons only when results are available
     req(plot_objects(), analysis_results_raw())
-    
+
     plots <- plot_objects()
     results <- analysis_results_raw()
-    
-    if (!is.null(plots) && !is.null(results) && 
+
+    if (!is.null(plots) && !is.null(results) &&
         is.null(plots$error) && is.null(results$error)) {
-      
+
       tags$div(
         style = "display: flex; gap: 8px; align-items: center;",
         downloadButton(
@@ -82,17 +82,17 @@ app_server <- function(input, output, session) {
           title = "Export to Excel"
         ),
         downloadButton(
-          "header_export_plot", 
+          "header_export_plot",
           "",
           icon = icon("image"),
-          class = "btn btn-info btn-sm", 
+          class = "btn btn-info btn-sm",
           style = "padding: 4px 8px;",
           title = "Download Plot"
         )
       )
     }
   })
-  
+
   # Header export handlers (reuse logic from results display module)
   output$header_export_excel <- downloadHandler(
     filename = function() {
@@ -100,10 +100,10 @@ app_server <- function(input, output, session) {
     },
     content = function(file) {
       req(analysis_results_raw(), plot_objects())
-      
+
       results <- analysis_results_raw()
       plots <- plot_objects()
-      
+
       tryCatch({
         # Reuse Excel export logic
         excel_data <- list(
@@ -123,13 +123,13 @@ app_server <- function(input, output, session) {
             )
           )
         )
-        
+
         if (!is.null(results$user_config$cost_info)) {
           excel_data[["Cost_Information"]] <- create_excel_cost_info(results$user_config$cost_info)
         }
-        
+
         openxlsx::write.xlsx(excel_data, file = file)
-        
+
       }, error = function(e) {
         showNotification(
           paste("Export failed:", e$message),
@@ -141,16 +141,16 @@ app_server <- function(input, output, session) {
     },
     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   )
-  
+
   output$header_export_plot <- downloadHandler(
     filename = function() {
       paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
     },
     content = function(file) {
       req(plot_objects())
-      
+
       plots <- plot_objects()
-      
+
       tryCatch({
         if (!is.null(plots$plots$main_plot)) {
           ggplot2::ggsave(
@@ -165,7 +165,7 @@ app_server <- function(input, output, session) {
         } else {
           stop("No plot available for download")
         }
-        
+
       }, error = function(e) {
         showNotification(
           paste("Plot download failed:", e$message),
@@ -173,47 +173,52 @@ app_server <- function(input, output, session) {
           duration = 5
         )
         # Create error plot fallback
-        error_plot <- ggplot2::ggplot() + 
-          ggplot2::annotate("text", x = 0.5, y = 0.5, 
-                          label = "Plot generation failed", 
+        error_plot <- ggplot2::ggplot() +
+          ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "Plot generation failed",
                           size = 6) +
           ggplot2::theme_void()
-        
-        ggplot2::ggsave(filename = file, plot = error_plot, 
+
+        ggplot2::ggsave(filename = file, plot = error_plot,
                        width = 8, height = 6, dpi = 150, device = "png")
       })
     },
     contentType = "image/png"
   )
-  
+
   # ========================================================================
   # APP STATE MANAGEMENT
   # ========================================================================
-  
+
   # Combined observer for loading states and error handling
   observe({
     config <- user_workflow_config()
     analysis <- analysis_results_raw()
-    
-    # Handle loading states
-    if (!is.null(config) && config$plan_clicked > 0 && is.null(analysis)) {
-      # Show loading notification when Plan clicked but analysis not ready
-      showNotification(
-        "Analyzing your experimental design...", 
-        type = "message", 
-        duration = 2
-      )
-    }
-    
-    # Handle analysis errors  
+
+    # Handle analysis errors
     if (!is.null(analysis) && !is.null(analysis$error)) {
       showNotification(
-        paste("Analysis Error:", analysis$error), 
+        paste("Analysis Error:", analysis$error),
         type = "error",
         duration = 5
       )
     }
+
+    # Phase transition logic: Successful analysis in Phase 1 → Phase 2
+    if (!is.null(analysis) && is.null(analysis$error) && app_state$phase == 1) {
+      app_state$phase <- 2
+      app_state$sidebar_frozen <- TRUE
+      app_state$sliders_visible <- TRUE
+      app_state$plan_button_text <- "Restart"
+      app_state$initial_config_snapshot <- user_workflow_config()
+
+      showNotification(
+        "Analysis complete! Switched to interactive mode.",
+        type = "success",
+        duration = 3
+      )
+    }
   })
-  
+
   # Development debug output disabled to reduce console output
 }

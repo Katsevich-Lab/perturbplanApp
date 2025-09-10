@@ -12,10 +12,9 @@
 #' @param results Analysis results object
 #' @param plots Plot objects
 #' @param user_config Reactive containing user configuration
-#' @param param_manager Parameter manager instance
 #' @return Shiny UI tagList with table
 #' @noRd
-create_solutions_table <- function(results, plots, user_config = reactive(NULL), param_manager = NULL) {
+create_solutions_table <- function(results, plots, user_config = reactive(NULL)) {
   if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
     return(create_empty_solutions_table())
   }
@@ -24,7 +23,7 @@ create_solutions_table <- function(results, plots, user_config = reactive(NULL),
   workflow_info <- results$workflow_info
   
   # Extract current solution data with access to slider values
-  solution_row <- extract_solution_data(optimal, workflow_info, user_config, param_manager, index = 1)
+  solution_row <- extract_solution_data(optimal, workflow_info, user_config, index = 1)
   
   # Create table structure
   create_solutions_table_ui(list(solution_row))
@@ -35,18 +34,17 @@ create_solutions_table <- function(results, plots, user_config = reactive(NULL),
 #' @param optimal Optimal design results
 #' @param workflow_info Workflow information
 #' @param user_config Reactive containing user configuration
-#' @param param_manager Parameter manager instance
 #' @param index Solution index number
 #' @return List with solution data
 #' @noRd
-extract_solution_data <- function(optimal, workflow_info, user_config = reactive(NULL), param_manager = NULL, index = 1) {
+extract_solution_data <- function(optimal, workflow_info, user_config = reactive(NULL), index = 1) {
   list(
     index = index,
     achieved_power = extract_achieved_power(optimal),
     optimal_design = extract_optimal_design_value(optimal, workflow_info),
-    experimental_choices = extract_experimental_choices(optimal, workflow_info, user_config, param_manager),
-    analysis_choices = extract_analysis_choices(optimal, workflow_info, user_config, param_manager),
-    effect_sizes = extract_effect_sizes(optimal, workflow_info, user_config, param_manager)
+    experimental_choices = extract_experimental_choices(optimal, workflow_info, user_config),
+    analysis_choices = extract_analysis_choices(optimal, workflow_info, user_config),
+    effect_sizes = extract_effect_sizes(optimal, workflow_info, user_config)
   )
 }
 
@@ -330,10 +328,9 @@ create_multi_param_display <- function(param_list) {
 #'
 #' @param optimal Optimal design results
 #' @param user_config Reactive containing user configuration
-#' @param param_manager Parameter manager instance
 #' @return Named list of experimental choice parameters (only those with sliders)
 #' @noRd
-extract_experimental_choices <- function(optimal, workflow_info = NULL, user_config = reactive(NULL), param_manager = NULL) {
+extract_experimental_choices <- function(optimal, workflow_info = NULL, user_config = reactive(NULL)) {
   params <- list()
   
   # Get the parameter being minimized and workflow type
@@ -344,33 +341,8 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
     is_cost_minimization <- workflow_info$workflow_id == "power_cost_minimization"
   }
   
-  # Show experimental parameters that appear in sliders AND are not being minimized
-  # This includes both Row 1 (MOI, targets, gRNAs) and Row 2 experimental parameters (cells, reads)
-  if (!is.null(param_manager) && !is.null(param_manager$parameters)) {
-    
-    # Row 1 parameters (always experimental choices when present and not minimized)
-    if (!is.null(param_manager$parameters$MOI)) {
-      params[["MOI"]] <- param_manager$parameters$MOI
-    }
-    if (!is.null(param_manager$parameters$num_targets)) {
-      params[["Number of targets"]] <- param_manager$parameters$num_targets
-    }
-    if (!is.null(param_manager$parameters$gRNAs_per_target)) {
-      params[["gRNAs per target"]] <- param_manager$parameters$gRNAs_per_target
-    }
-    
-    # Row 2 experimental parameters (cells and reads)
-    # In cost minimization, cells and reads don't have sliders (they are varying parameters)
-    # so they should NOT appear in slider columns
-    if (!is_cost_minimization && !is.null(param_manager$parameters$cells_per_target) && 
-        (is.null(minimizing_param) || minimizing_param != "cells_per_target")) {
-      params[["Cells per target"]] <- param_manager$parameters$cells_per_target
-    }
-    if (!is_cost_minimization && !is.null(param_manager$parameters$reads_per_cell) && 
-        (is.null(minimizing_param) || !minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell"))) {
-      params[["Reads per cell"]] <- param_manager$parameters$reads_per_cell
-    }
-  }
+  # param_manager removed - this function now returns empty list
+  # TODO: Implement user_config-based parameter extraction if needed
   
   return(params)
 }
@@ -380,26 +352,14 @@ extract_experimental_choices <- function(optimal, workflow_info = NULL, user_con
 #' @param optimal Optimal design results
 #' @param workflow_info Workflow information
 #' @param user_config Reactive containing user configuration
-#' @param param_manager Parameter manager instance
 #' @return Named list of analysis choice parameters (only those with sliders, excluding minimized parameter)
 #' @noRd
-extract_analysis_choices <- function(optimal, workflow_info, user_config = reactive(NULL), param_manager = NULL) {
+extract_analysis_choices <- function(optimal, workflow_info, user_config = reactive(NULL)) {
   minimizing_param <- workflow_info$minimizing_parameter
   params <- list()
   
-  # Only show parameters that appear in sliders AND are not being minimized
-  if (!is.null(param_manager) && !is.null(param_manager$parameters)) {
-    
-    # Analysis choices should only include analysis-specific parameters (TPM threshold)
-    # Cells and reads are now handled in experimental choices
-    
-    # Check if TPM threshold slider is visible (Row 2) and not being minimized
-    if ((is.null(minimizing_param) || minimizing_param != "TPM_threshold") && 
-        parameter_has_slider("TPM_threshold", user_config, workflow_info) &&
-        !is.null(param_manager$parameters$TPM_threshold)) {
-      params[["TPM threshold"]] <- param_manager$parameters$TPM_threshold
-    }
-  }
+  # param_manager removed - this function now returns empty list
+  # TODO: Implement user_config-based parameter extraction if needed
   
   return(params)
 }
@@ -409,23 +369,14 @@ extract_analysis_choices <- function(optimal, workflow_info, user_config = react
 #' @param optimal Optimal design results
 #' @param workflow_info Workflow information
 #' @param user_config Reactive containing user configuration
-#' @param param_manager Parameter manager instance
 #' @return Named list of effect size parameters (only those with sliders, excluding minimized parameter)
 #' @noRd
-extract_effect_sizes <- function(optimal, workflow_info, user_config = reactive(NULL), param_manager = NULL) {
+extract_effect_sizes <- function(optimal, workflow_info, user_config = reactive(NULL)) {
   minimizing_param <- workflow_info$minimizing_parameter
   params <- list()
   
-  # Only show parameters that appear in sliders AND are not being minimized
-  if (!is.null(param_manager) && !is.null(param_manager$parameters)) {
-    
-    # Check if fold change slider is visible (Row 2) and not being minimized
-    if ((is.null(minimizing_param) || minimizing_param != "minimum_fold_change") && 
-        parameter_has_slider("minimum_fold_change", user_config, workflow_info) &&
-        !is.null(param_manager$parameters$minimum_fold_change)) {
-      params[["Fold change"]] <- param_manager$parameters$minimum_fold_change
-    }
-  }
+  # param_manager removed - this function now returns empty list
+  # TODO: Implement user_config-based parameter extraction if needed
   
   # Note: Prop non-null is typically not a slider parameter, so we don't include it
   # unless it specifically appears in sliders
