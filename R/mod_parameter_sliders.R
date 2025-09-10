@@ -118,12 +118,6 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
           
           slider_state$initialized <- TRUE
           
-          cat("=== SLIDER INITIALIZATION ===\n")
-          cat("Initialized from sidebar at freeze moment\n")
-          cat("sidebar_frozen:", app_state$sidebar_frozen, "\n")
-          cat("MOI:", slider_state$MOI, "\n")
-          cat("Targets:", slider_state$num_targets, "\n")
-          cat("=============================\n")
         }
       }
     })

@@ -127,19 +127,6 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   # Get parameter controls from design options
   param_controls <- design_opts$parameter_controls
 
-  # DEBUG: Check param_controls value
-  cat("=== DEBUG: param_controls ===\n")
-  cat("param_controls is NULL:", is.null(param_controls), "\n")
-  if (!is.null(param_controls)) {
-    cat("param_controls names:", names(param_controls), "\n")
-    for (name in names(param_controls)) {
-      cat("  ", name, ":\n")
-      cat("    type:", param_controls[[name]]$type, "\n")
-      cat("    fixed_value:", param_controls[[name]]$fixed_value, "\n")
-    }
-  }
-  cat("minimizing_variable:", minimizing_variable, "\n")
-  cat("=============================\n")
 
   if (!is.null(param_controls)) {
     # Default values to use when fixed_value is NULL but type is "fixed"
@@ -180,17 +167,6 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     }
   }
 
-  # DEBUG: Check final fixed_variable contents
-  cat("=== DEBUG: fixed_variable ===\n")
-  cat("fixed_variable is NULL:", is.null(fixed_variable), "\n")
-  cat("fixed_variable length:", length(fixed_variable), "\n")
-  if (length(fixed_variable) > 0) {
-    cat("fixed_variable names:", names(fixed_variable), "\n")
-    for (name in names(fixed_variable)) {
-      cat("  ", name, ":", fixed_variable[[name]], "\n")
-    }
-  }
-  cat("=============================\n")
 
   # POWER+COST WORKFLOW LOGIC: Calculate missing parameter using cost constraints
   if (!is.null(config$design_options$optimization_type) && 

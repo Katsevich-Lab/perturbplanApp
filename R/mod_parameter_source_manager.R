@@ -47,15 +47,10 @@ mod_parameter_source_manager_server <- function(id, sidebar_config, slider_confi
       
       # Phase 1: Sidebar-only mode (sliders not initialized)
       if (is.null(slider_overrides) || !isTRUE(slider_overrides$slider_active)) {
-        cat("=== PARAMETER SOURCE: SIDEBAR ONLY ===\n")
-        cat("Using sidebar configuration directly\n")
-        cat("=====================================\n")
         return(base_config)
       }
       
       # Phase 2: Sidebar + Slider override mode
-      cat("=== PARAMETER SOURCE: SIDEBAR + SLIDERS ===\n") 
-      cat("Applying slider overrides to sidebar base\n")
       
       # Create merged configuration with slider overrides
       merged_config <- base_config  # Start with sidebar as base
@@ -82,8 +77,6 @@ mod_parameter_source_manager_server <- function(id, sidebar_config, slider_confi
         merged_config$effect_sizes$minimum_fold_change_fixed <- slider_effects$minimum_fold_change_fixed %||% merged_config$effect_sizes$minimum_fold_change_fixed
       }
       
-      cat("Applied overrides - MOI:", merged_config$experimental_setup$MOI, "\n")
-      cat("=========================================\n")
       
       return(merged_config)
     })
