@@ -202,8 +202,17 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       visible_power_params <- all_power_params[!names(all_power_params) %in% minimized_param]
       
       # POWER+COST MODE FILTERING OR COST MINIMIZATION: Show sliders for "fixed" parameters
-      if ((!is.null(optimization_type) && optimization_type == "power_cost" && !is.null(param_controls)) ||
-          (!is.null(minimized_param) && minimized_param == "cost")) {
+      # Only apply filtering logic when in Phase 2 (slider mode) with valid configuration
+      if (!is.null(app_state) && app_state$phase == 2 && 
+          !is.null(optimization_type) && optimization_type != "" &&
+          length(param_controls) > 0 &&
+          length(minimized_param) > 0) {
+        
+        # Safe comparison for minimized_param to avoid NA issues
+        is_cost_minimization <- length(minimized_param) > 0 && minimized_param[1] == "cost"
+        
+        if ((optimization_type == "power_cost" && !is.null(param_controls)) ||
+            is_cost_minimization) {
         
         # Map parameter names to their control types
         param_name_mapping <- list(
@@ -239,7 +248,8 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
           }
           visible_power_params <- filtered_params
         }
-      }
+        }  # Close the inner if statement (power_cost || cost minimization)
+      }    # Close the outer if statement (phase == 2 && valid config)
       
       # If no parameters to show, return empty
       if (length(visible_power_params) == 0) {
@@ -321,6 +331,11 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     # Return reactive containing slider parameter overrides for param_source_manager
     
     slider_config <- reactive({
+      # Return NULL during Phase 1 - sliders should not interfere with sidebar
+      if (is.null(app_state) || app_state$phase == 1) {
+        return(NULL)
+      }
+      
       if (!slider_state$initialized) {
         return(NULL)  # No overrides until sliders are initialized
       }

@@ -36,63 +36,30 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
     # MAIN ANALYSIS REACTIVE - PERTURBPLAN INTEGRATION
     # ========================================================================
 
-    # Track previous configuration to detect sidebar changes
-    previous_config <- reactiveVal(NULL)
-
-    # Cache for expensive computation results
-    cached_results <- reactiveVal(NULL)
-    
-    # Track optimization mode changes to clear cache and refresh state
-    previous_optimization_mode <- reactiveVal(NULL)
-    in_mode_transition <- reactiveVal(FALSE)
-    
-    # Clear cache when optimization mode changes
-    observe({
-      config <- workflow_config()
-      if (!is.null(config) && !is.null(config$design_options$optimization_type)) {
-        current_mode <- config$design_options$optimization_type
-        
-        # If mode changed, clear cached results to show "Ready for Analysis"
-        if (!is.null(previous_optimization_mode()) && previous_optimization_mode() != current_mode) {
-          in_mode_transition(TRUE)       # Mark as in transition
-          cached_results(NULL)           # Clear cached results
-          previous_config(NULL)          # Reset configuration tracking
-          # Note: We don't clear parameter controls here - that would cause UI issues
-          # Instead, the early validation (lines 85-88) will return NULL during transitions
-        } else {
-          in_mode_transition(FALSE)      # Not in transition
-        }
-        
-        previous_optimization_mode(current_mode)
-      }
-    })
-
     analysis_results <- reactive({
       req(workflow_config())
-      
-      # CRITICAL: Stop reactive execution entirely during mode transitions
-      req(!in_mode_transition())
 
+      # CRITICAL: Stop reactive execution entirely during mode transitions
       config <- workflow_config()
 
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
       # THIS MUST HAPPEN BEFORE BOTH PLAN CHECK AND CACHING LOGIC
       design_config <- config$design_options
-      
+
       # Check for missing essential fields
-      
+
       if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
           is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
           is.null(design_config$parameter_controls)) {
         return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
-      
-      
+
+
       # Check for incompatible optimization type + minimization target combinations (transition states)
       opt_type <- design_config$optimization_type
       target <- design_config$minimization_target
-      
+
       # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
       if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
         return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
@@ -107,25 +74,6 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
         if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
           return(NULL)
         }
-      }
-
-      # Phase-based cache management
-      current_config_hash <- create_config_hash(config)
-      previous_hash <- previous_config()
-
-      if (!is.null(app_state) && app_state$phase == 2) {
-        # Phase 2: Always clear cache for real-time analysis
-        cached_results(NULL)
-        previous_config(current_config_hash)
-      } else {
-        # Phase 1: Traditional cache behavior - return cached results if available
-        if (!is.null(cached_results()) && !is.null(previous_hash) && 
-            current_config_hash == previous_hash) {
-          return(cached_results())
-        }
-        # Clear cache for new analysis
-        cached_results(NULL)
-        previous_config(current_config_hash)
       }
 
       # Validate configuration (only after essential fields are present)
@@ -154,10 +102,10 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
           config$design_options$minimization_target  # No change for TPM_threshold, cost
         )
       }
-      
+
       # Use pre-computed workflow_info from sidebar (performance optimization)
       workflow_info <- config$workflow_info
-      
+
       # Skip analysis if workflow detection failed (prevents invalid configurations)
       # Return NULL during transitions to show "Ready for Analysis" instead of errors
       if (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id == "unknown") {
@@ -181,8 +129,6 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
         )
       })
 
-      # Cache the results to prevent duplicate computation
-      cached_results(results)
       return(results)
     })
 
@@ -240,7 +186,7 @@ generate_real_analysis <- function(config, workflow_info) {
     # Use unified constrained minimization analysis
     tryCatch({
       results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data)
-      
+
       # Return results directly (already in plotting format)
       return(results)
 
