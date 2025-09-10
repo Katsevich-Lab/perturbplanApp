@@ -236,58 +236,12 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     })
     
     # ========================================================================
-    # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
+    # UI UPDATES - REMOVED to prevent sync between sliders and sidebar
     # ========================================================================
     
-    # Safe UI updates: Only update when parameter manager changes AND value is different
-    observeEvent(param_manager$parameters$MOI, {
-      new_value <- param_manager$parameters$MOI
-      if (!identical(isolate(input$moi_slider), new_value)) {
-        updateSliderInput(session, "moi_slider", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$num_targets, {
-      new_value <- param_manager$parameters$num_targets
-      if (!identical(isolate(input$targets_slider), new_value)) {
-        updateSliderInput(session, "targets_slider", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$gRNAs_per_target, {
-      new_value <- param_manager$parameters$gRNAs_per_target
-      if (!identical(isolate(input$grnas_slider), new_value)) {
-        updateSliderInput(session, "grnas_slider", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$cells_per_target, {
-      new_value <- param_manager$parameters$cells_per_target
-      if (!identical(isolate(input$cells_slider), new_value)) {
-        updateSliderInput(session, "cells_slider", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$reads_per_cell, {
-      new_value <- param_manager$parameters$reads_per_cell
-      if (!identical(isolate(input$reads_slider), new_value)) {
-        updateSliderInput(session, "reads_slider", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$TPM_threshold, {
-      new_value <- param_manager$parameters$TPM_threshold
-      if (!identical(isolate(input$TPM_slider), new_value)) {
-        updateSliderInput(session, "TPM_slider", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$minimum_fold_change, {
-      new_value <- param_manager$parameters$minimum_fold_change
-      if (!identical(isolate(input$fc_slider), new_value)) {
-        updateSliderInput(session, "fc_slider", value = new_value)
-      }
-    })
+    # UI update observers removed to make sliders independent from sidebar
+    # Sliders will not automatically update when parameter manager changes
+    # This prevents sync between sidebar inputs and slider values
     
     # No return needed - central manager handles all data flow
     

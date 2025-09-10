@@ -75,36 +75,17 @@ mod_analysis_choices_ui <- function(id) {
 #' @description Server logic for analysis choice parameters and gene list processing
 #'
 #' @param design_config Reactive containing design options configuration
-#' @param param_manager Parameter manager instance (central hub)
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd
-mod_analysis_choices_server <- function(id, design_config, param_manager){
+mod_analysis_choices_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
     # ========================================================================
-    # INPUT FEEDING - SAFE: Using isolate() to break reactive cycles
+    # SIDEBAR MODULE - INDEPENDENT FROM SLIDERS
     # ========================================================================
-    
-    # Use observeEvent + isolate to prevent circular reactive dependencies
-    observeEvent(input$TPM_threshold_fixed, {
-      isolate({
-        param_manager$update_parameter("TPM_threshold", input$TPM_threshold_fixed, "sidebar")
-      })
-    })
-    
-    # ========================================================================
-    # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
-    # ========================================================================
-    
-    # Safe UI updates: Only update when parameter manager changes AND value is different
-    observeEvent(param_manager$parameters$TPM_threshold, {
-      new_value <- param_manager$parameters$TPM_threshold
-      if (!identical(isolate(input$TPM_threshold_fixed), new_value)) {
-        updateNumericInput(session, "TPM_threshold_fixed", value = new_value)
-      }
-    })
+    # No parameter manager integration - sidebar operates independently
 
 
     # VARIABLE CONSISTENCY TRACKING:

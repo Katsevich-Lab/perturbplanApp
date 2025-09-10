@@ -59,14 +59,14 @@ mod_sidebar_server <- function(id, param_manager){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Initialize module servers with parameter manager integration
+    # Initialize module servers without parameter manager (completely independent from sliders)
     design_config <- mod_design_options_server("design_options")
-    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, param_manager)
-    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, param_manager)
+    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
+    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
     
-    # Initialize effect sizes server with parameter manager integration
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, param_manager)
+    # Initialize effect sizes server without parameter manager (completely independent from sliders)
+    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
     
     # Track optimization mode changes to reset plan button
     previous_mode <- reactiveVal(NULL)
@@ -100,25 +100,14 @@ mod_sidebar_server <- function(id, param_manager){
         # Design options with complete configuration from design module
         design_options = design_opts,
         
-        # Experimental setup from parameter manager
-        experimental_setup = list(
-          MOI = param_manager$parameters$MOI,
-          num_targets = param_manager$parameters$num_targets,
-          gRNAs_per_target = param_manager$parameters$gRNAs_per_target,
-          non_targeting_gRNAs = param_manager$parameters$non_targeting_gRNAs,
-          cells_fixed = param_manager$parameters$cells_per_target,
-          mapped_reads_fixed = param_manager$parameters$reads_per_cell
-        ),
+        # Experimental setup from sidebar modules (independent of sliders)
+        experimental_setup = experimental_config(),
         
-        # Analysis choices from parameter manager
-        analysis_choices = list(
-          TPM_threshold_fixed = param_manager$parameters$TPM_threshold
-        ),
+        # Analysis choices from sidebar modules (independent of sliders)
+        analysis_choices = analysis_config(),
         
-        # Effect sizes from parameter manager
-        effect_sizes = list(
-          minimum_fold_change_fixed = param_manager$parameters$minimum_fold_change
-        ),
+        # Effect sizes from sidebar modules (independent of sliders)
+        effect_sizes = effect_sizes_config(),
         
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
@@ -126,13 +115,8 @@ mod_sidebar_server <- function(id, param_manager){
         timestamp = Sys.time()
       )
       
-      # Update parameter controls with current parameter manager values
-      if (!is.null(config$design_options) && !is.null(config$design_options$parameter_controls)) {
-        config$design_options$parameter_controls$cells_per_target$fixed_value <- param_manager$parameters$cells_per_target
-        config$design_options$parameter_controls$mapped_reads_per_cell$fixed_value <- param_manager$parameters$reads_per_cell
-        config$design_options$parameter_controls$TPM_threshold$fixed_value <- param_manager$parameters$TPM_threshold
-        config$design_options$parameter_controls$minimum_fold_change$fixed_value <- param_manager$parameters$minimum_fold_change
-      }
+      # Note: Parameter controls now use their own fixed values (independent of sliders)
+      # No sync with parameter manager to maintain sidebar/slider independence
       
       return(config)
     })

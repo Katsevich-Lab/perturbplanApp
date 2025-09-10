@@ -47,36 +47,17 @@ mod_effect_sizes_ui <- function(id) {
 #' @description Server logic for effect size parameters
 #'
 #' @param design_config Reactive containing design options configuration
-#' @param param_manager Parameter manager instance (central hub)
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_effect_sizes_server <- function(id, design_config, param_manager){
+mod_effect_sizes_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
     # ========================================================================
-    # INPUT FEEDING - SAFE: Using isolate() to break reactive cycles
+    # SIDEBAR MODULE - INDEPENDENT FROM SLIDERS
     # ========================================================================
-    
-    # Use observeEvent + isolate to prevent circular reactive dependencies
-    observeEvent(input$minimum_fold_change_fixed, {
-      isolate({
-        param_manager$update_parameter("minimum_fold_change", input$minimum_fold_change_fixed, "sidebar")
-      })
-    })
-    
-    # ========================================================================
-    # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
-    # ========================================================================
-    
-    # Safe UI updates: Only update when parameter manager changes AND value is different
-    observeEvent(param_manager$parameters$minimum_fold_change, {
-      new_value <- param_manager$parameters$minimum_fold_change
-      if (!identical(isolate(input$minimum_fold_change_fixed), new_value)) {
-        updateNumericInput(session, "minimum_fold_change_fixed", value = new_value)
-      }
-    })
+    # No parameter manager integration - sidebar operates independently
     
     
     # Conditional display logic for fold change input (panel is now always visible)

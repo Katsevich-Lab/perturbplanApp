@@ -127,37 +127,70 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   # Get parameter controls from design options
   param_controls <- design_opts$parameter_controls
 
+  # DEBUG: Check param_controls value
+  cat("=== DEBUG: param_controls ===\n")
+  cat("param_controls is NULL:", is.null(param_controls), "\n")
   if (!is.null(param_controls)) {
+    cat("param_controls names:", names(param_controls), "\n")
+    for (name in names(param_controls)) {
+      cat("  ", name, ":\n")
+      cat("    type:", param_controls[[name]]$type, "\n")
+      cat("    fixed_value:", param_controls[[name]]$fixed_value, "\n")
+    }
+  }
+  cat("minimizing_variable:", minimizing_variable, "\n")
+  cat("=============================\n")
+
+  if (!is.null(param_controls)) {
+    # Default values to use when fixed_value is NULL but type is "fixed"
+    default_values <- list(
+      cells_per_target = 1000,
+      mapped_reads_per_cell = 5000,
+      TPM_threshold = 10,
+      minimum_fold_change = 0.8
+    )
+    
     # Add fixed parameters based on their type and fixed values
     if (!is.null(param_controls$cells_per_target) &&
-        param_controls$cells_per_target$type == "fixed" &&
-        !is.null(param_controls$cells_per_target$fixed_value)) {
-      # Ensure integer values for perturbplan
-      fixed_variable$cells_per_target <- round(param_controls$cells_per_target$fixed_value)
+        param_controls$cells_per_target$type == "fixed") {
+      # Use fixed_value if available, otherwise use default
+      value <- param_controls$cells_per_target$fixed_value %||% default_values$cells_per_target
+      fixed_variable$cells_per_target <- round(value)
     }
 
     if (!is.null(param_controls$mapped_reads_per_cell) &&
-        param_controls$mapped_reads_per_cell$type == "fixed" &&
-        !is.null(param_controls$mapped_reads_per_cell$fixed_value)) {
-      # Pass mapped reads directly to perturbplan (perturbplan will apply mapping efficiency internally)
-      mapped_value <- param_controls$mapped_reads_per_cell$fixed_value
-      fixed_variable$reads_per_cell <- round(mapped_value)
+        param_controls$mapped_reads_per_cell$type == "fixed") {
+      # Use fixed_value if available, otherwise use default
+      value <- param_controls$mapped_reads_per_cell$fixed_value %||% default_values$mapped_reads_per_cell
+      fixed_variable$reads_per_cell <- round(value)
     }
 
     if (!is.null(param_controls$TPM_threshold) &&
-        param_controls$TPM_threshold$type == "fixed" &&
-        !is.null(param_controls$TPM_threshold$fixed_value)) {
-      # TPM threshold can remain as decimal
-      fixed_variable$TPM_threshold <- param_controls$TPM_threshold$fixed_value
+        param_controls$TPM_threshold$type == "fixed") {
+      # Use fixed_value if available, otherwise use default
+      value <- param_controls$TPM_threshold$fixed_value %||% default_values$TPM_threshold
+      fixed_variable$TPM_threshold <- value
     }
 
     if (!is.null(param_controls$minimum_fold_change) &&
-        param_controls$minimum_fold_change$type == "fixed" &&
-        !is.null(param_controls$minimum_fold_change$fixed_value)) {
-      # Fold change can remain as decimal
-      fixed_variable$minimum_fold_change <- param_controls$minimum_fold_change$fixed_value
+        param_controls$minimum_fold_change$type == "fixed") {
+      # Use fixed_value if available, otherwise use default
+      value <- param_controls$minimum_fold_change$fixed_value %||% default_values$minimum_fold_change
+      fixed_variable$minimum_fold_change <- value
     }
   }
+
+  # DEBUG: Check final fixed_variable contents
+  cat("=== DEBUG: fixed_variable ===\n")
+  cat("fixed_variable is NULL:", is.null(fixed_variable), "\n")
+  cat("fixed_variable length:", length(fixed_variable), "\n")
+  if (length(fixed_variable) > 0) {
+    cat("fixed_variable names:", names(fixed_variable), "\n")
+    for (name in names(fixed_variable)) {
+      cat("  ", name, ":", fixed_variable[[name]], "\n")
+    }
+  }
+  cat("=============================\n")
 
   # POWER+COST WORKFLOW LOGIC: Calculate missing parameter using cost constraints
   if (!is.null(config$design_options$optimization_type) && 
@@ -247,8 +280,8 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
     cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
     
-    # Grid parameters
-    grid_size = 100,
+    # Grid parameters - reduced for better performance in single-parameter optimization
+    grid_size = 15,
     
     # Mapping efficiency (from advanced settings)
     mapping_efficiency = advanced_opts$mapping_efficiency %||% 0.72,

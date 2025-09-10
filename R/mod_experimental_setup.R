@@ -137,88 +137,17 @@ mod_experimental_setup_ui <- function(id) {
 #' @description Server logic for experimental setup parameters and file uploads
 #'
 #' @param design_config Reactive containing design options configuration
-#' @param param_manager Parameter manager instance (central hub)
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_experimental_setup_server <- function(id, design_config, param_manager){
+mod_experimental_setup_server <- function(id, design_config){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
     # ========================================================================
-    # INPUT FEEDING - SAFE: Using isolate() to break reactive cycles
+    # SIDEBAR MODULE - INDEPENDENT FROM SLIDERS
     # ========================================================================
-    
-    # Use observeEvent + isolate to prevent circular reactive dependencies
-    observeEvent(input$MOI, {
-      isolate({
-        param_manager$update_parameter("MOI", input$MOI, "sidebar")
-      })
-    })
-    
-    observeEvent(input$num_targets, {
-      isolate({
-        param_manager$update_parameter("num_targets", input$num_targets, "sidebar")
-      })
-    })
-    
-    observeEvent(input$gRNAs_per_target, {
-      isolate({
-        param_manager$update_parameter("gRNAs_per_target", input$gRNAs_per_target, "sidebar")
-      })
-    })
-    
-    observeEvent(input$cells_fixed, {
-      isolate({
-        param_manager$update_parameter("cells_per_target", input$cells_fixed, "sidebar")
-      })
-    })
-    
-    observeEvent(input$mapped_reads_fixed, {
-      isolate({
-        param_manager$update_parameter("reads_per_cell", input$mapped_reads_fixed, "sidebar")
-      })
-    })
-    
-    # ========================================================================
-    # UI UPDATES - SAFE: Using observeEvent + isolate for controlled updates
-    # ========================================================================
-    
-    # Safe UI updates: Only update when parameter manager changes AND value is different
-    observeEvent(param_manager$parameters$MOI, {
-      new_value <- param_manager$parameters$MOI
-      if (!identical(isolate(input$MOI), new_value)) {
-        updateNumericInput(session, "MOI", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$num_targets, {
-      new_value <- param_manager$parameters$num_targets
-      if (!identical(isolate(input$num_targets), new_value)) {
-        updateNumericInput(session, "num_targets", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$gRNAs_per_target, {
-      new_value <- param_manager$parameters$gRNAs_per_target
-      if (!identical(isolate(input$gRNAs_per_target), new_value)) {
-        updateNumericInput(session, "gRNAs_per_target", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$cells_per_target, {
-      new_value <- param_manager$parameters$cells_per_target
-      if (!identical(isolate(input$cells_fixed), new_value)) {
-        updateNumericInput(session, "cells_fixed", value = new_value)
-      }
-    })
-    
-    observeEvent(param_manager$parameters$reads_per_cell, {
-      new_value <- param_manager$parameters$reads_per_cell
-      if (!identical(isolate(input$mapped_reads_fixed), new_value)) {
-        updateNumericInput(session, "mapped_reads_fixed", value = new_value)
-      }
-    })
+    # No parameter manager integration - sidebar operates independently
     
     
     # Logic for "Other" biological system selection
