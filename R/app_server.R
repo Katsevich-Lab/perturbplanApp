@@ -1,6 +1,6 @@
 #' The application server-side
 #'
-#' Clean 3-module architecture: Input → Analysis → Plotting → Display
+#' Clean linear architecture: Sidebar → Param Source → Analysis → Plotting → Display
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
@@ -13,35 +13,41 @@
 app_server <- function(input, output, session) {
   
   # ========================================================================
-  # MODULE 0: CENTRAL PARAMETER MANAGEMENT
+  # MODULE 0: GLOBAL APP STATE MANAGEMENT
   # ========================================================================
-  # Initialize the central parameter manager (single source of truth)
-  param_manager <- mod_parameter_manager_server("param_manager")
+  # Global application state for dual-workflow system (Phase 1 foundation)
+  app_state <- reactiveValues(
+    phase = 1,                    # 1 = sidebar mode, 2 = slider mode
+    sidebar_frozen = FALSE,       # Are sidebar inputs disabled?
+    sliders_visible = FALSE,      # Should sliders be shown in results?
+    initial_config_snapshot = NULL,  # Frozen sidebar config for Phase 2
+    plan_button_text = "Plan"     # Button text: "Plan" or "Restart"
+  )
   
   # ========================================================================
-  # MODULE 1: INPUT COLLECTION 
+  # MODULE 1: INPUT COLLECTION (Sidebar)
   # ========================================================================
-  # Collect all user inputs through sidebar with parameter manager integration
-  # No more slider_updates needed - parameter manager handles all coordination
-  user_workflow_config <- mod_sidebar_server("sidebar", param_manager)
+  user_workflow_config <- mod_sidebar_server("sidebar")
+  
+  # ========================================================================
+  # MODULE 2: PARAMETER SOURCE COORDINATION (Future)
+  # ========================================================================
+  # TODO: Add parameter_source_manager between sidebar and analysis
   
   # ========================================================================  
-  # MODULE 2: ANALYSIS ENGINE (Perturbplan Integration)
+  # MODULE 3: ANALYSIS ENGINE
   # ========================================================================
-  # Generate real analysis results using perturbplan package functions
   analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config)
   
   # ========================================================================
-  # MODULE 3: PLOTTING ENGINE (Always Same)
+  # MODULE 4: PLOTTING ENGINE
   # ========================================================================
-  # Convert analysis data into plot objects
   plot_objects <- mod_plotting_engine_server("plotting", analysis_results_raw)
   
   # ========================================================================
-  # MODULE 4: RESULTS DISPLAY (Always Same)  
+  # MODULE 5: RESULTS DISPLAY
   # ========================================================================
-  # Handle UI presentation of plots and tables with parameter manager integration
-  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config, param_manager)
+  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config)
   
   # ========================================================================
   # HEADER EXPORT FUNCTIONALITY

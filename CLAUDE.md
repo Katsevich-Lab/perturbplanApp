@@ -582,15 +582,115 @@ Use roxygen2 for all functions:
 #' @export
 ```
 
+## 🚧 ACTIVE DEVELOPMENT: Dual-Workflow Implementation
+
+### **Current Project: Sidebar-Base + Slider-Override Architecture**
+
+**Vision**: Implement a dual-workflow system where:
+1. **Phase 1 (Sidebar Mode)**: Users configure all parameters via sidebar → Plan button → Analysis → Results
+2. **Phase 2 (Slider Mode)**: After first results, sidebar freezes and sliders appear for real-time parameter overrides
+
+### **Implementation Status**: Phase 1.1 COMPLETE ✅
+
+#### **Architecture Overview**:
+```
+Phase 1: Sidebar (Complete Config) → Plan → Analysis → Results
+Phase 2: Sidebar (Frozen) + Sliders (Override Subset) → Real-time Analysis
+```
+
+#### **Key Design Decisions**:
+- **Sidebar-base**: Sidebar contains complete parameter set, remains master configuration source
+- **Slider-override**: Sliders contain only subset of parameters, provide real-time overrides
+- **Parameter Source Manager**: Central coordination hub managing sidebar-base + slider-override logic
+- **App State Management**: Global reactiveValues for phase tracking and UI state control
+
+### **7-Phase Implementation Plan**:
+
+#### **✅ Phase 1.1: App State Foundation (COMPLETE)**
+- **File**: `R/app_server.R:19-25`
+- **Implementation**: Added global app state management
+```r
+app_state <- reactiveValues(
+  phase = 1,                    # 1 = sidebar mode, 2 = slider mode
+  sidebar_frozen = FALSE,       # Are sidebar inputs disabled?
+  sliders_visible = FALSE,      # Should sliders be shown in results?
+  initial_config_snapshot = NULL,  # Frozen sidebar config for Phase 2
+  plan_button_text = "Plan"     # Button text: "Plan" or "Restart"
+)
+```
+
+#### **🔄 Phase 1.2: Parameter Source Manager (NEXT)**
+- **Goal**: Create central parameter coordination without changing current behavior
+- **Implementation**: Pass-through mode where sidebar values flow directly to analysis
+- **File**: New `R/mod_parameter_source_manager.R`
+
+#### **📋 Phase 2: Integration Wiring**
+- **Goal**: Connect parameter source manager to analysis engine without behavior changes
+- **Implementation**: Update analysis engine to accept parameter_source_manager input
+
+#### **📋 Phase 3: Plan/Restart Button Logic**
+- **Goal**: Button switches between "Plan" and "Restart" based on app_state$phase
+- **Implementation**: Dynamic button text and phase transition logic
+
+#### **📋 Phase 4: Sidebar Freezing/Unfreezing**
+- **Goal**: Disable sidebar inputs in Phase 2, enable in Phase 1
+- **Implementation**: Conditional `disabled` attributes based on app_state$sidebar_frozen
+
+#### **📋 Phase 5: Conditional Slider Visibility**
+- **Goal**: Show sliders only in Phase 2 results panel
+- **Implementation**: Conditional UI rendering based on app_state$sliders_visible
+
+#### **📋 Phase 6: Real-time Slider Overrides**
+- **Goal**: Sliders override sidebar parameters and trigger immediate analysis
+- **Implementation**: Parameter source manager priority logic (slider > sidebar)
+
+#### **📋 Phase 7: Performance & Polish**
+- **Goal**: Optimize reactivity, add smooth transitions, error handling
+- **Implementation**: Debouncing, caching, UI animations
+
+### **Technical Architecture**:
+
+#### **Parameter Flow (Target State)**:
+```
+Sidebar Parameters (Complete Set)
+       ↓
+Parameter Source Manager
+       ↓ (Phase 1: sidebar-only)
+       ↓ (Phase 2: sidebar + slider overrides)  
+       ↓
+Analysis Engine
+       ↓
+Results Display (+ Sliders in Phase 2)
+```
+
+#### **App State Transitions**:
+```
+Phase 1 (Initial):
+- sidebar_frozen = FALSE
+- sliders_visible = FALSE  
+- plan_button_text = "Plan"
+
+Phase 2 (Post-Plan):
+- sidebar_frozen = TRUE
+- sliders_visible = TRUE
+- plan_button_text = "Restart"
+```
+
+### **Progress Tracking**:
+- **Branch**: `intermediate-rebuild` 
+- **Last Commit**: Phase 1.1 app_state foundation complete
+- **Test Status**: All functionality preserved, zero regressions
+- **Next Step**: Phase 1.2 parameter source manager creation
+
 ## Known Issues and TODOs
 
-### Current Limitations
+### Current Development Tasks (Active)
 
-- Placeholder visualizations need real plot implementation
-- Parameter ranges need dynamic detection from perturbplan package
-- Error handling needs comprehensive testing
+1. **Phase 1.2**: Create parameter source manager in pass-through mode
+2. **Phase 2**: Wire integration without behavior changes  
+3. **Phase 3-7**: Sequential implementation of dual-workflow features
 
-### Future Enhancement Opportunities
+### Future Enhancement Opportunities (Post-Dual-Workflow)
 
 1. **Advanced Visualization**: Additional plot types (heatmaps, 3D surfaces)
 2. **Export Formats**: PDF reports, PowerPoint presentations

@@ -48,14 +48,12 @@ mod_sidebar_ui <- function(id) {
 #' sidebar Server Functions
 #'
 #' @description Server logic for sidebar using modular components
-#' with central parameter manager integration
+#' operating independently from parameter manager and sliders
 #'
 #' @param id Module namespace ID
-#' @param param_manager Parameter manager instance (central hub)
-#' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_sidebar_server <- function(id, param_manager){
+mod_sidebar_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
