@@ -30,14 +30,21 @@ app_server <- function(input, output, session) {
   user_workflow_config <- mod_sidebar_server("sidebar")
   
   # ========================================================================
-  # MODULE 2: PARAMETER SOURCE COORDINATION (Future)
+  # MODULE 2: PARAMETER SOURCE COORDINATION
   # ========================================================================
-  # TODO: Add parameter_source_manager between sidebar and analysis
+  # Clean linear architecture: sidebar → sliders → param_source → analysis
+  
+  # Initialize sliders with visibility-triggered initialization
+  slider_config <- mod_parameter_sliders_server("sliders", user_workflow_config, app_state)
+  
+  # Central parameter coordination: sidebar-base + slider-override logic  
+  unified_config <- mod_parameter_source_manager_server("param_source", user_workflow_config, slider_config)
   
   # ========================================================================  
   # MODULE 3: ANALYSIS ENGINE
   # ========================================================================
-  analysis_results_raw <- mod_analysis_engine_server("analysis", user_workflow_config)
+  # Analysis engine now uses unified_config from parameter_source_manager
+  analysis_results_raw <- mod_analysis_engine_server("analysis", unified_config)
   
   # ========================================================================
   # MODULE 4: PLOTTING ENGINE
@@ -47,7 +54,7 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # MODULE 5: RESULTS DISPLAY
   # ========================================================================
-  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, user_workflow_config)
+  display_outputs <- mod_results_display_server("display", plot_objects, analysis_results_raw, unified_config, app_state)
   
   # ========================================================================
   # HEADER EXPORT FUNCTIONALITY

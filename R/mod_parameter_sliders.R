@@ -67,17 +67,66 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
 #' parameter_sliders Server Functions
 #'
 #' @description Server logic for smart horizontal parameter sliders with
-#' dynamic Row 2 generation based on workflow type. Now uses central parameter manager.
+#' visibility-triggered initialization. Sliders initialize from sidebar when results
+#' become available, then maintain independence.
 #'
 #' @param id Module namespace ID
-#' @param param_manager Parameter manager instance (central hub)
-#' @param workflow_info Reactive containing workflow information
-#' @param user_config Reactive containing full user configuration (optional, for power+cost filtering)
+#' @param sidebar_config Reactive containing complete sidebar configuration with workflow_info
+#' @param app_state Global app state reactiveValues for phase management
 #'
 #' @noRd 
-mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_config = reactive(NULL)){
+mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+    
+    # ========================================================================
+    # SLIDER INDEPENDENCE STATE MANAGEMENT
+    # ========================================================================
+    
+    # Independent slider state - initialized from sidebar when results available
+    slider_state <- reactiveValues(
+      initialized = FALSE,
+      MOI = NULL,
+      num_targets = NULL,
+      gRNAs_per_target = NULL,
+      cells_fixed = NULL,
+      mapped_reads_fixed = NULL,
+      TPM_threshold_fixed = NULL,
+      minimum_fold_change_fixed = NULL
+    )
+    
+    # Initialize sliders exactly when sidebar becomes frozen
+    observe({
+      # Trigger: sidebar_frozen is TRUE AND not yet initialized
+      if (app_state$sidebar_frozen && !slider_state$initialized) {
+        # Get current sidebar config at the moment of freezing
+        config <- sidebar_config()
+        
+        if (!is.null(config)) {
+          # Initialize sliders with sidebar values at freeze moment
+          experimental <- config$experimental_setup %||% list()
+          analysis <- config$analysis_choices %||% list()
+          effects <- config$effect_sizes %||% list()
+          
+          slider_state$MOI <- experimental$MOI %||% 10
+          slider_state$num_targets <- experimental$num_targets %||% 100
+          slider_state$gRNAs_per_target <- experimental$gRNAs_per_target %||% 4
+          slider_state$cells_fixed <- experimental$cells_fixed %||% 1000
+          slider_state$mapped_reads_fixed <- experimental$mapped_reads_fixed %||% 5000
+          slider_state$TPM_threshold_fixed <- analysis$TPM_threshold_fixed %||% 10
+          slider_state$minimum_fold_change_fixed <- effects$minimum_fold_change_fixed %||% 0.8
+          
+          slider_state$initialized <- TRUE
+          
+          cat("=== SLIDER INITIALIZATION ===\n")
+          cat("Initialized from sidebar at freeze moment\n")
+          cat("sidebar_frozen:", app_state$sidebar_frozen, "\n")
+          cat("MOI:", slider_state$MOI, "\n")
+          cat("Targets:", slider_state$num_targets, "\n")
+          cat("=============================\n")
+        }
+      }
+    })
     
     # ========================================================================
     # DYNAMIC SLIDER GENERATION
@@ -85,42 +134,71 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     
     # Generate dynamic Row 1 experimental sliders with current values
     output$experimental_sliders <- renderUI({
+      config <- sidebar_config()
+      if (is.null(config)) return(NULL)
+      
+      # Use slider_state if initialized, otherwise use sidebar values
+      if (slider_state$initialized) {
+        moi_value <- slider_state$MOI
+        targets_value <- slider_state$num_targets  
+        grnas_value <- slider_state$gRNAs_per_target
+      } else {
+        # Extract values from sidebar configuration with defaults
+        experimental <- config$experimental_setup %||% list()
+        moi_value <- experimental$MOI %||% 10
+        targets_value <- experimental$num_targets %||% 100  
+        grnas_value <- experimental$gRNAs_per_target %||% 4
+      }
+      
       tags$div(
         class = "slider-row experimental-params",
         style = "margin-bottom: 20px;",
         fluidRow(
-          column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, param_manager$parameters$MOI, 1)),
-          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, param_manager$parameters$num_targets, 50)),
-          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, param_manager$parameters$gRNAs_per_target, 1))
+          column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
+          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, targets_value, 50)),
+          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
         )
       )
     })
     
     # Generate dynamic Row 2 based on workflow
     output$dynamic_power_sliders <- renderUI({
-      workflow <- workflow_info()
+      config <- sidebar_config()
+      if (is.null(config)) return(NULL)
       
+      # Use pre-computed workflow_info from sidebar (Option B)
+      workflow <- config$workflow_info
       if (is.null(workflow)) return(NULL)
       
-      # Get design configuration from user_config to check parameter control types
-      config <- user_config()
-      if (is.null(config) || is.null(config$design_options)) {
-        # Fallback to basic workflow-based filtering if config not available
-        design_config <- NULL
-        param_controls <- NULL
-        optimization_type <- NULL
+      # Get design configuration from sidebar_config
+      design_config <- config$design_options
+      param_controls <- design_config$parameter_controls %||% list()
+      optimization_type <- design_config$optimization_type
+      
+      # Extract power parameter values from sidebar configuration
+      experimental <- config$experimental_setup %||% list()
+      analysis <- config$analysis_choices %||% list()
+      effects <- config$effect_sizes %||% list()
+      
+      # Get parameter values with defaults (use slider_state if initialized)
+      if (slider_state$initialized) {
+        cells_value <- slider_state$cells_fixed
+        reads_value <- slider_state$mapped_reads_fixed
+        tpm_value <- slider_state$TPM_threshold_fixed
+        fc_value <- slider_state$minimum_fold_change_fixed
       } else {
-        design_config <- config$design_options
-        param_controls <- design_config$parameter_controls
-        optimization_type <- design_config$optimization_type
+        cells_value <- experimental$cells_fixed %||% 1000
+        reads_value <- experimental$mapped_reads_fixed %||% 5000
+        tpm_value <- analysis$TPM_threshold_fixed %||% 10
+        fc_value <- effects$minimum_fold_change_fixed %||% 0.8
       }
       
-      # Define all 4 power-determining parameters (use current parameter manager values)
+      # Define all 4 power-determining parameters (use sidebar values)
       all_power_params <- list(
-        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = param_manager$parameters$cells_per_target, step = 20),
-        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = param_manager$parameters$reads_per_cell, step = 1000),
-        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = param_manager$parameters$TPM_threshold, step = 1),
-        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 2, value = param_manager$parameters$minimum_fold_change, step = 0.1)
+        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = cells_value, step = 20),
+        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = reads_value, step = 1000),
+        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 500, value = tpm_value, step = 1),
+        minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = 0.3, max = 2, value = fc_value, step = 0.1)
       )
       
       # Determine which parameter is being minimized (exclude from Row 2)
@@ -189,50 +267,50 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     })
     
     # ========================================================================
-    # INPUT COLLECTION - SAFE: Using isolate() to break reactive cycles
+    # INPUT COLLECTION - Slider Independence
     # ========================================================================
+    # Collect slider inputs and update slider_state (only when initialized)
     
-    # Use observeEvent + isolate to prevent circular reactive dependencies
     observeEvent(input$moi_slider, {
-      isolate({
-        param_manager$update_parameter("MOI", input$moi_slider, "slider")
-      })
+      if (slider_state$initialized) {
+        slider_state$MOI <- input$moi_slider
+      }
     })
     
     observeEvent(input$targets_slider, {
-      isolate({
-        param_manager$update_parameter("num_targets", input$targets_slider, "slider")
-      })
+      if (slider_state$initialized) {
+        slider_state$num_targets <- input$targets_slider
+      }
     })
     
     observeEvent(input$grnas_slider, {
-      isolate({
-        param_manager$update_parameter("gRNAs_per_target", input$grnas_slider, "slider")
-      })
+      if (slider_state$initialized) {
+        slider_state$gRNAs_per_target <- input$grnas_slider
+      }
     })
     
     observeEvent(input$cells_slider, {
-      isolate({
-        param_manager$update_parameter("cells_per_target", input$cells_slider, "slider")
-      })
+      if (slider_state$initialized) {
+        slider_state$cells_fixed <- input$cells_slider
+      }
     })
     
     observeEvent(input$reads_slider, {
-      isolate({
-        param_manager$update_parameter("reads_per_cell", input$reads_slider, "slider")
-      })
+      if (slider_state$initialized) {
+        slider_state$mapped_reads_fixed <- input$reads_slider
+      }
     })
     
     observeEvent(input$TPM_slider, {
-      isolate({
-        param_manager$update_parameter("TPM_threshold", input$TPM_slider, "slider")
-      })
+      if (slider_state$initialized) {
+        slider_state$TPM_threshold_fixed <- input$TPM_slider
+      }
     })
     
     observeEvent(input$fc_slider, {
-      isolate({
-        param_manager$update_parameter("minimum_fold_change", input$fc_slider, "slider")
-      })
+      if (slider_state$initialized) {
+        slider_state$minimum_fold_change_fixed <- input$fc_slider
+      }
     })
     
     # ========================================================================
@@ -243,7 +321,35 @@ mod_parameter_sliders_server <- function(id, param_manager, workflow_info, user_
     # Sliders will not automatically update when parameter manager changes
     # This prevents sync between sidebar inputs and slider values
     
-    # No return needed - central manager handles all data flow
+    # ========================================================================
+    # RETURN SLIDER CONFIGURATION
+    # ========================================================================
+    # Return reactive containing slider parameter overrides for param_source_manager
+    
+    slider_config <- reactive({
+      if (!slider_state$initialized) {
+        return(NULL)  # No overrides until sliders are initialized
+      }
+      
+      list(
+        experimental_setup = list(
+          MOI = slider_state$MOI,
+          num_targets = slider_state$num_targets,
+          gRNAs_per_target = slider_state$gRNAs_per_target,
+          cells_fixed = slider_state$cells_fixed,
+          mapped_reads_fixed = slider_state$mapped_reads_fixed
+        ),
+        analysis_choices = list(
+          TPM_threshold_fixed = slider_state$TPM_threshold_fixed
+        ),
+        effect_sizes = list(
+          minimum_fold_change_fixed = slider_state$minimum_fold_change_fixed
+        ),
+        slider_active = TRUE  # Flag to indicate sliders are providing overrides
+      )
+    })
+    
+    return(slider_config)
     
   })
 }

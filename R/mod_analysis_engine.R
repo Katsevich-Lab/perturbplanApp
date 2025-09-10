@@ -167,8 +167,8 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         )
       }
       
-      # Detect workflow scenario (with translated parameter names)
-      workflow_info <- detect_workflow_scenario(config)
+      # Use pre-computed workflow_info from sidebar (performance optimization)
+      workflow_info <- config$workflow_info
       
       # Skip analysis if workflow detection failed (prevents invalid configurations)
       # Return NULL during transitions to show "Ready for Analysis" instead of errors

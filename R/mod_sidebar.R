@@ -113,8 +113,10 @@ mod_sidebar_server <- function(id){
         timestamp = Sys.time()
       )
       
-      # Note: Parameter controls now use their own fixed values (independent of sliders)
-      # No sync with parameter manager to maintain sidebar/slider independence
+      # OPTION B: Compute workflow_info once here (performance optimization)
+      # This eliminates duplicate computation in analysis engine and enables
+      # sliders to access workflow_info without circular dependencies
+      config$workflow_info <- detect_workflow_scenario(config)
       
       return(config)
     })
