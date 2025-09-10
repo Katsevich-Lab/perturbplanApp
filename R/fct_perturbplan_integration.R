@@ -137,32 +137,32 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
       minimum_fold_change = 0.8
     )
     
-    # Add fixed parameters based on their type and fixed values
+    # Add fixed parameters based on their type and actual config values (including slider overrides)
     if (!is.null(param_controls$cells_per_target) &&
         param_controls$cells_per_target$type == "fixed") {
-      # Use fixed_value if available, otherwise use default
-      value <- param_controls$cells_per_target$fixed_value %||% default_values$cells_per_target
+      # Use actual config value (includes slider overrides), fallback to default
+      value <- experimental_opts$cells_fixed %||% default_values$cells_per_target
       fixed_variable$cells_per_target <- round(value)
     }
 
     if (!is.null(param_controls$mapped_reads_per_cell) &&
         param_controls$mapped_reads_per_cell$type == "fixed") {
-      # Use fixed_value if available, otherwise use default
-      value <- param_controls$mapped_reads_per_cell$fixed_value %||% default_values$mapped_reads_per_cell
+      # Use actual config value (includes slider overrides), fallback to default
+      value <- experimental_opts$mapped_reads_fixed %||% default_values$mapped_reads_per_cell
       fixed_variable$reads_per_cell <- round(value)
     }
 
     if (!is.null(param_controls$TPM_threshold) &&
         param_controls$TPM_threshold$type == "fixed") {
-      # Use fixed_value if available, otherwise use default
-      value <- param_controls$TPM_threshold$fixed_value %||% default_values$TPM_threshold
+      # Use actual config value (includes slider overrides), fallback to default
+      value <- analysis_opts$TPM_threshold_fixed %||% default_values$TPM_threshold
       fixed_variable$TPM_threshold <- value
     }
 
     if (!is.null(param_controls$minimum_fold_change) &&
         param_controls$minimum_fold_change$type == "fixed") {
-      # Use fixed_value if available, otherwise use default
-      value <- param_controls$minimum_fold_change$fixed_value %||% default_values$minimum_fold_change
+      # Use actual config value (includes slider overrides), fallback to default
+      value <- effect_opts$minimum_fold_change_fixed %||% default_values$minimum_fold_change
       fixed_variable$minimum_fold_change <- value
     }
   }

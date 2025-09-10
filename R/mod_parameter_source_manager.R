@@ -77,7 +77,6 @@ mod_parameter_source_manager_server <- function(id, sidebar_config, slider_confi
         merged_config$effect_sizes$minimum_fold_change_fixed <- slider_effects$minimum_fold_change_fixed %||% merged_config$effect_sizes$minimum_fold_change_fixed
       }
       
-      
       return(merged_config)
     })
     
