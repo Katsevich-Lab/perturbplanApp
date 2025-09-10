@@ -28,7 +28,7 @@ mod_analysis_engine_ui <- function(id) {
 #'
 #' @importFrom shiny moduleServer reactive req bindCache
 #' @importFrom magrittr %>%
-mod_analysis_engine_server <- function(id, workflow_config) {
+mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -38,7 +38,6 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 
     # Track previous configuration to detect sidebar changes
     previous_config <- reactiveVal(NULL)
-    last_plan_count <- reactiveVal(0)
 
     # Cache for expensive computation results
     cached_results <- reactiveVal(NULL)
@@ -58,7 +57,6 @@ mod_analysis_engine_server <- function(id, workflow_config) {
           in_mode_transition(TRUE)       # Mark as in transition
           cached_results(NULL)           # Clear cached results
           previous_config(NULL)          # Reset configuration tracking
-          last_plan_count(0)             # Reset plan tracking
           # Note: We don't clear parameter controls here - that would cause UI issues
           # Instead, the early validation (lines 85-88) will return NULL during transitions
         } else {
@@ -109,35 +107,34 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         return(NULL)  # Incompatible combination during transition - show "Ready for Analysis"
       }
 
-      # Skip analysis if plan not clicked (only after configuration is validated as compatible)
-      if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
-        return(NULL)
+      # Phase-based analysis triggering
+      if (!is.null(app_state) && app_state$phase == 2) {
+        # Phase 2: Real-time analysis on any config change
+        req(config)
+      } else {
+        # Phase 1: Traditional plan button triggering
+        if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
+          return(NULL)
+        }
       }
 
-      # Protection mechanism: Clear results if sidebar inputs changed since last plan
+      # Phase-based cache management
       current_config_hash <- create_config_hash(config)
       previous_hash <- previous_config()
-      current_plan_count <- config$plan_clicked
 
-      # If this is a new plan click, update tracking and clear cache
-      if (current_plan_count > last_plan_count()) {
+      if (!is.null(app_state) && app_state$phase == 2) {
+        # Phase 2: Always clear cache for real-time analysis
+        cached_results(NULL)
         previous_config(current_config_hash)
-        last_plan_count(current_plan_count)
-        cached_results(NULL)  # Clear cache for new plan
       } else {
-        # Check if sidebar inputs changed since last plan
-        if (!is.null(previous_hash) && current_config_hash != previous_hash) {
-          # Sidebar changed but no new plan click - keep showing old results
-          if (!is.null(cached_results())) {
-            return(cached_results())  # Show old results instead of clearing
-          }
-          # If no cached results, continue to analysis (shouldn't happen normally)
-        }
-
-        # Same config as before - return cached results if available
-        if (!is.null(cached_results())) {
+        # Phase 1: Traditional cache behavior - return cached results if available
+        if (!is.null(cached_results()) && !is.null(previous_hash) && 
+            current_config_hash == previous_hash) {
           return(cached_results())
         }
+        # Clear cache for new analysis
+        cached_results(NULL)
+        previous_config(current_config_hash)
       }
 
       # Validate configuration (only after essential fields are present)

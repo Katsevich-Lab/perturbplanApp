@@ -44,7 +44,7 @@ app_server <- function(input, output, session) {
   # MODULE 3: ANALYSIS ENGINE
   # ========================================================================
   # Analysis engine now uses unified_config from parameter_source_manager
-  analysis_results_raw <- mod_analysis_engine_server("analysis", unified_config)
+  analysis_results_raw <- mod_analysis_engine_server("analysis", unified_config, app_state)
 
   # ========================================================================
   # MODULE 4: PLOTTING ENGINE
