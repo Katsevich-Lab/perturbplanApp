@@ -97,28 +97,25 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
 
     # Initialize sliders exactly when sidebar becomes frozen
     observe({
-      # Trigger: sidebar_frozen is TRUE AND not yet initialized
-      if (app_state$sidebar_frozen && !slider_state$initialized) {
-        # Get current sidebar config at the moment of freezing
-        config <- sidebar_config()
+      # Get current sidebar config at the moment of freezing
+      config <- sidebar_config()
 
-        if (!is.null(config)) {
-          # Initialize sliders with sidebar values at freeze moment
-          experimental <- config$experimental_setup %||% list()
-          analysis <- config$analysis_choices %||% list()
-          effects <- config$effect_sizes %||% list()
+      if (!is.null(config)) {
+        # Initialize sliders with sidebar values at freeze moment
+        experimental <- config$experimental_setup %||% list()
+        analysis <- config$analysis_choices %||% list()
+        effects <- config$effect_sizes %||% list()
 
-          slider_state$MOI <- experimental$MOI
-          slider_state$num_targets <- experimental$num_targets
-          slider_state$gRNAs_per_target <- experimental$gRNAs_per_target
-          slider_state$cells_fixed <- experimental$cells_fixed
-          slider_state$mapped_reads_fixed <- experimental$mapped_reads_fixed
-          slider_state$TPM_threshold_fixed <- analysis$TPM_threshold_fixed
-          slider_state$minimum_fold_change_fixed <- effects$minimum_fold_change_fixed
+        slider_state$MOI <- experimental$MOI
+        slider_state$num_targets <- experimental$num_targets
+        slider_state$gRNAs_per_target <- experimental$gRNAs_per_target
+        slider_state$cells_fixed <- experimental$cells_fixed
+        slider_state$mapped_reads_fixed <- experimental$mapped_reads_fixed
+        slider_state$TPM_threshold_fixed <- analysis$TPM_threshold_fixed
+        slider_state$minimum_fold_change_fixed <- effects$minimum_fold_change_fixed
 
-          slider_state$initialized <- TRUE
+        slider_state$initialized <- TRUE
 
-        }
       }
     })
 
