@@ -199,7 +199,7 @@ mod_design_options_ui <- function(id) {
 #' design_options Server Functions
 #'
 #' @noRd 
-mod_design_options_server <- function(id){
+mod_design_options_server <- function(id, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -230,6 +230,31 @@ mod_design_options_server <- function(id){
       updateNumericInput(session, "target_power", value = 0.8)
       updateNumericInput(session, "cost_budget", value = 10000)
     })
+    
+    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+    observeEvent(app_state$phase, {
+      if (!is.null(app_state)) {
+        inputs_disabled <- (app_state$phase == 2)
+        
+        # Core inputs that should be disabled in Phase 2
+        shinyjs::toggleState("optimization_type", condition = !inputs_disabled)
+        shinyjs::toggleState("target_power", condition = !inputs_disabled)  
+        shinyjs::toggleState("cost_budget", condition = !inputs_disabled)
+        shinyjs::toggleState("cost_per_cell", condition = !inputs_disabled)
+        shinyjs::toggleState("cost_per_million_reads", condition = !inputs_disabled)
+        shinyjs::toggleState("minimization_target", condition = !inputs_disabled)
+        shinyjs::toggleState("cost_per_cell_min", condition = !inputs_disabled)
+        shinyjs::toggleState("cost_per_million_reads_min", condition = !inputs_disabled)
+        
+        # Dynamic parameter controls (Step 3)
+        shinyjs::toggleState("cells_per_target_control", condition = !inputs_disabled)
+        shinyjs::toggleState("reads_per_cell_control", condition = !inputs_disabled)
+        shinyjs::toggleState("TPM_control", condition = !inputs_disabled)
+        shinyjs::toggleState("fc_control", condition = !inputs_disabled)
+        
+        # Note: Section headers (#design-header) remain functional for collapse/expand
+      }
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
     observe({
       # Step 2 appears ONLY when Step 1 is complete AND power (and cost if needed) inputs are provided

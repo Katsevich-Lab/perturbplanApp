@@ -7,7 +7,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification uiOutput renderUI
+#' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification uiOutput renderUI modalDialog showModal removeModal
 #' @importFrom shinydashboard dashboardSidebar
 #' @importFrom shinyjs show hide
 mod_sidebar_ui <- function(id) {
@@ -57,13 +57,13 @@ mod_sidebar_server <- function(id, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Initialize module servers without parameter manager (completely independent from sliders)
-    design_config <- mod_design_options_server("design_options")
+    # Initialize module servers - only design_options has app_state implemented
+    design_config <- mod_design_options_server("design_options", app_state)
     experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
     advanced_config <- mod_advanced_choices_server("advanced_choices")
     
-    # Initialize effect sizes server without parameter manager (completely independent from sliders)
+    # Initialize effect sizes server - app_state will be added when implementing freezing
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
     
     # Track optimization mode changes to reset plan button
@@ -82,21 +82,55 @@ mod_sidebar_server <- function(id, app_state = NULL){
       }
     })
     
-    # Dynamic Plan/Restart button UI
+    # Static button - prevent renderUI re-creation that causes double analysis
     output$dynamic_plan_button <- renderUI({
-      if (!is.null(app_state)) {
-        button_text <- app_state$plan_button_text
-      } else {
-        button_text <- "Plan"  # Fallback if app_state is NULL
-      }
-      
-      actionButton(ns("plan_btn"), button_text, class = "btn-success", style = "width: 200px; max-width: 90%;")
+      actionButton(ns("plan_btn"), "Plan", class = "btn-success", style = "width: 200px; max-width: 90%;")
     })
     
-    # Plan button logic
+    # Update button text without re-rendering using updateActionButton
+    observeEvent(app_state$phase, {
+      if (!is.null(app_state)) {
+        button_text <- if(app_state$phase == 1) "Plan" else "Restart"
+        updateActionButton(session, "plan_btn", label = button_text)
+      }
+    }, ignoreInit = TRUE)
+    
+    # Plan/Restart button logic
     observeEvent(input$plan_btn, {
-      # TODO: Trigger analysis with combined configuration
-      showNotification("Plan button clicked - analysis will be implemented", type = "message")
+      if (!is.null(app_state)) {
+        if (app_state$phase == 1) {
+          # Phase 1: Plan behavior - trigger analysis (existing logic)
+          showNotification("Analysis starting...", type = "message", duration = 2)
+          # The plan_clicked counter will trigger analysis in analysis_engine
+        } else if (app_state$phase == 2) {
+          # Phase 2: Restart behavior - show confirmation dialog
+          showModal(modalDialog(
+            title = "Restart Analysis",
+            "This will clear all results and reset all parameters to default values. Are you sure?",
+            footer = tagList(
+              actionButton(ns("restart_cancel"), "Cancel", class = "btn btn-secondary"),
+              actionButton(ns("restart_confirm"), "Yes, Restart", class = "btn btn-danger")
+            ),
+            easyClose = FALSE  # Prevent closing by clicking outside
+          ))
+        }
+      }
+    })
+    
+    # Confirmation dialog handlers
+    observeEvent(input$restart_cancel, {
+      removeModal()  # Close dialog, do nothing
+    })
+    
+    observeEvent(input$restart_confirm, {
+      removeModal()  # Close dialog
+      
+      # Placeholder: Show notification until full restart is implemented
+      showNotification(
+        "Restart functionality will be implemented in next phase.",
+        type = "warning",
+        duration = 3
+      )
     })
     
     # Return configuration from parameter manager (now safe with isolate() patterns)

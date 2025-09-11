@@ -217,5 +217,11 @@ app_server <- function(input, output, session) {
     }
   }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
+  # ========================================================================
+  # RESTART HANDLER - Placeholder for restart functionality
+  # ========================================================================
+  # This will be implemented in later phases when we add reset functionality
+  # For now, the restart trigger in sidebar will show a notification
+
   # Development debug output disabled to reduce console output
 }
