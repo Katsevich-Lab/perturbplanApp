@@ -55,10 +55,8 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
       # Phase-based analysis triggering
 
       # Phase 1: Require plan button click
-      if (isolate(app_state$phase) == 1) {
-        if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
-          return(NULL)
-        }
+      if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
+        return(NULL)
       }
 
       # ============================================================================
