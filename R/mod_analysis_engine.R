@@ -37,8 +37,18 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
     # ========================================================================
 
     analysis_results <- reactive({
+      cat("=== ANALYSIS_RESULTS REACTIVE TRIGGERED ===\n")
+      cat("Time:", format(Sys.time(), "%H:%M:%OS3"), "\n")
+
       # extract the workflow_config
       config <- workflow_config()
+
+      # DEBUG: Check what's in the config that might be changing
+      cat("Config has plan_clicked:", config$plan_clicked %||% "NULL", "\n")
+      cat("Config optimization_type:", config$design_options$optimization_type %||% "NULL", "\n")
+      # if (!is.null(app_state)) {
+      #   cat("App state phase:", app_state$phase, "\n")
+      # }
 
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
@@ -55,12 +65,11 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
       # Phase-based analysis triggering
 
       # Phase 1: Require plan button click
-      if (!is.null(app_state) && isolate(app_state$phase) == 1) {
+      if (isolate(app_state$phase) == 1) {
         if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
           return(NULL)
         }
       }
-
 
       # ============================================================================
       # CENTRALIZED PARAMETER TRANSLATION: UI → Backend
