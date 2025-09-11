@@ -37,9 +37,7 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
     # ========================================================================
 
     analysis_results <- reactive({
-      req(workflow_config())
-
-      # CRITICAL: Stop reactive execution entirely during mode transitions
+      # extract the workflow_config
       config <- workflow_config()
 
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
@@ -48,7 +46,6 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
       design_config <- config$design_options
 
       # Check for missing essential fields
-
       if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
           is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
           is.null(design_config$parameter_controls)) {
@@ -56,15 +53,14 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
       }
 
       # Phase-based analysis triggering
-      if (!is.null(app_state) && app_state$phase == 2) {
-        # Phase 2: Real-time analysis on any config change
-        req(config)
-      } else {
-        # Phase 1: Traditional plan button triggering
+
+      # Phase 1: Require plan button click
+      if (!is.null(app_state) && isolate(app_state$phase) == 1) {
         if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
           return(NULL)
         }
       }
+
 
       # ============================================================================
       # CENTRALIZED PARAMETER TRANSLATION: UI → Backend
@@ -84,12 +80,6 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
       # Use pre-computed workflow_info from sidebar (performance optimization)
       workflow_info <- config$workflow_info
 
-      # Skip analysis if workflow detection failed (prevents invalid configurations)
-      # Return NULL during transitions to show "Ready for Analysis" instead of errors
-      if (!is.null(workflow_info$workflow_id) && workflow_info$workflow_id == "unknown") {
-        return(NULL)  # Let UI show "Ready for Analysis" instead of error messages
-      }
-
       # PERTURBPLAN ANALYSIS: Call perturbplan package functions
       # Wrap in comprehensive error handling to prevent app crashes
       results <- tryCatch({
@@ -106,6 +96,7 @@ mod_analysis_engine_server <- function(id, workflow_config, app_state = NULL) {
           )
         )
       })
+
 
       return(results)
     })

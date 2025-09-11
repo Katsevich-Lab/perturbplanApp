@@ -190,9 +190,8 @@ app_server <- function(input, output, session) {
   # APP STATE MANAGEMENT
   # ========================================================================
 
-  # Combined observer for loading states and error handling
+  # Error handling observer
   observe({
-    config <- user_workflow_config()
     analysis <- analysis_results_raw()
 
     # Handle analysis errors
@@ -203,9 +202,13 @@ app_server <- function(input, output, session) {
         duration = 5
       )
     }
+  })
 
-    # Phase transition logic: Successful analysis in Phase 1 → Phase 2
-    if (!is.null(analysis) && is.null(analysis$error) && app_state$phase == 1) {
+  # Phase transition: Move to Phase 2 on successful analysis
+  observeEvent(analysis_results_raw(), {
+    results <- analysis_results_raw()
+
+    if (!is.null(results) && is.null(results$error) && app_state$phase == 1) {
       app_state$phase <- 2
       app_state$sidebar_frozen <- TRUE
       app_state$sliders_visible <- TRUE
@@ -217,7 +220,7 @@ app_server <- function(input, output, session) {
         duration = 3
       )
     }
-  })
+  }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
   # Development debug output disabled to reduce console output
 }

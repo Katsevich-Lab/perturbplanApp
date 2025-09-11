@@ -330,10 +330,6 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     # Return reactive containing slider parameter overrides for param_source_manager
 
     slider_config <- reactive({
-      # Return NULL during Phase 1 - sliders should not interfere with sidebar
-      if (is.null(app_state) || app_state$phase == 1) {
-        return(NULL)
-      }
 
       if (!slider_state$initialized) {
         return(NULL)  # No overrides until sliders are initialized
