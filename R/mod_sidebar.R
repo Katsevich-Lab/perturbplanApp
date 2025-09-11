@@ -150,11 +150,7 @@ mod_sidebar_server <- function(id, app_state = NULL){
         
         # Sidebar-only configuration (not parameters)
         advanced_choices = advanced_config(),
-        plan_clicked = if(!is.null(app_state) && app_state$phase == 1) {
-          input$plan_btn - plan_count_adjustment()  # Only trigger analysis in Phase 1
-        } else {
-          0  # No analysis trigger in Phase 2 (Restart mode)
-        },
+        plan_clicked = input$plan_btn - plan_count_adjustment(),  # Reset plan count on mode change
         timestamp = Sys.time()
       )
       
