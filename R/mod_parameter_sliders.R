@@ -314,14 +314,6 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     })
 
     # ========================================================================
-    # UI UPDATES - REMOVED to prevent sync between sliders and sidebar
-    # ========================================================================
-
-    # UI update observers removed to make sliders independent from sidebar
-    # Sliders will not automatically update when parameter manager changes
-    # This prevents sync between sidebar inputs and slider values
-
-    # ========================================================================
     # RETURN SLIDER CONFIGURATION
     # ========================================================================
     # Return reactive containing slider parameter overrides for param_source_manager

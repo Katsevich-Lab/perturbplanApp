@@ -18,7 +18,6 @@ app_server <- function(input, output, session) {
   # Global application state for dual-workflow system (Phase 1 foundation)
   app_state <- reactiveValues(
     phase = 1,                    # 1 = sidebar mode, 2 = slider mode
-    sidebar_frozen = FALSE,       # Are sidebar inputs disabled?
     sliders_visible = FALSE,      # Should sliders be shown in results?
     initial_config_snapshot = NULL,  # Frozen sidebar config for Phase 2
     plan_button_text = "Plan"     # Button text: "Plan" or "Restart"
@@ -210,7 +209,6 @@ app_server <- function(input, output, session) {
 
     if (!is.null(results) && is.null(results$error) && app_state$phase == 1) {
       app_state$phase <- 2
-      # app_state$sidebar_frozen <- TRUE
       app_state$sliders_visible <- TRUE
 
       showNotification(
