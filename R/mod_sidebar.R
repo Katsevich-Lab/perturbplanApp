@@ -57,14 +57,14 @@ mod_sidebar_server <- function(id, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
-    # Initialize module servers - only design_options has app_state implemented
+    # Initialize module servers - all modules now have app_state for input freezing
     design_config <- mod_design_options_server("design_options", app_state)
-    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config)
-    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config)
-    advanced_config <- mod_advanced_choices_server("advanced_choices")
+    experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, app_state)
+    analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, app_state)
+    advanced_config <- mod_advanced_choices_server("advanced_choices", app_state)
     
-    # Initialize effect sizes server - app_state will be added when implementing freezing
-    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config)
+    # Initialize effect sizes server - now with app_state for input freezing
+    effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, app_state)
     
     # Track optimization mode changes to reset plan button
     previous_mode <- reactiveVal(NULL)
@@ -125,12 +125,8 @@ mod_sidebar_server <- function(id, app_state = NULL){
     observeEvent(input$restart_confirm, {
       removeModal()  # Close dialog
       
-      # Placeholder: Show notification until full restart is implemented
-      showNotification(
-        "Restart functionality will be implemented in next phase.",
-        type = "warning",
-        duration = 3
-      )
+      # Browser refresh restart - simple and bulletproof
+      session$reload()
     })
     
     # Return configuration from parameter manager (now safe with isolate() patterns)

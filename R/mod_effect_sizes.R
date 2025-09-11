@@ -50,7 +50,7 @@ mod_effect_sizes_ui <- function(id) {
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_effect_sizes_server <- function(id, design_config){
+mod_effect_sizes_server <- function(id, design_config, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -88,6 +88,20 @@ mod_effect_sizes_server <- function(id, design_config){
         timestamp = Sys.time()
       )
     })
+    
+    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+    observeEvent(app_state$phase, {
+      if (!is.null(app_state)) {
+        inputs_disabled <- (app_state$phase == 2)
+        
+        # Core effect size inputs that should be disabled in Phase 2
+        shinyjs::toggleState("minimum_fold_change_fixed", condition = !inputs_disabled)
+        shinyjs::toggleState("effect_size_distribution", condition = !inputs_disabled)
+        shinyjs::toggleState("prop_non_null", condition = !inputs_disabled)
+        
+        # Note: Section headers remain functional for collapse/expand
+      }
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
     return(effect_sizes_config)
   })

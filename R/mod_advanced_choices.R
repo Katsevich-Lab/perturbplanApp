@@ -64,7 +64,7 @@ mod_advanced_choices_ui <- function(id) {
 #' @return Reactive list containing advanced parameter configuration
 #' 
 #' @noRd 
-mod_advanced_choices_server <- function(id){
+mod_advanced_choices_server <- function(id, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -78,6 +78,19 @@ mod_advanced_choices_server <- function(id){
         timestamp = Sys.time()
       )
     })
+    
+    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+    observeEvent(app_state$phase, {
+      if (!is.null(app_state)) {
+        inputs_disabled <- (app_state$phase == 2)
+        
+        # Core advanced inputs that should be disabled in Phase 2
+        shinyjs::toggleState("control_group", condition = !inputs_disabled)
+        shinyjs::toggleState("fdr_target", condition = !inputs_disabled)
+        
+        # Note: Section headers remain functional for collapse/expand
+      }
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
     return(advanced_choices_config)
   })

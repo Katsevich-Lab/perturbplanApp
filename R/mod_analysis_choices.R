@@ -78,7 +78,7 @@ mod_analysis_choices_ui <- function(id) {
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd
-mod_analysis_choices_server <- function(id, design_config){
+mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
@@ -143,6 +143,20 @@ mod_analysis_choices_server <- function(id, design_config){
         timestamp = Sys.time()
       )
     })
+
+    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+    observeEvent(app_state$phase, {
+      if (!is.null(app_state)) {
+        inputs_disabled <- (app_state$phase == 2)
+        
+        # Core analysis inputs that should be disabled in Phase 2
+        shinyjs::toggleState("TPM_threshold_fixed", condition = !inputs_disabled)
+        shinyjs::toggleState("replicate_handling", condition = !inputs_disabled)
+        shinyjs::toggleState("analysis_method", condition = !inputs_disabled)
+        
+        # Note: Section headers remain functional for collapse/expand
+      }
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
     return(analysis_config)
   })

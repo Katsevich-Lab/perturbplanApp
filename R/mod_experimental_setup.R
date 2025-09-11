@@ -140,7 +140,7 @@ mod_experimental_setup_ui <- function(id) {
 #' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
 #'
 #' @noRd 
-mod_experimental_setup_server <- function(id, design_config){
+mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
     
@@ -375,6 +375,26 @@ mod_experimental_setup_server <- function(id, design_config){
         timestamp = Sys.time()
       )
     })
+    
+    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+    observeEvent(app_state$phase, {
+      if (!is.null(app_state)) {
+        inputs_disabled <- (app_state$phase == 2)
+        
+        # Core experimental inputs that should be disabled in Phase 2
+        shinyjs::toggleState("biological_system", condition = !inputs_disabled)
+        shinyjs::toggleState("pilot_data_choice", condition = !inputs_disabled)
+        shinyjs::toggleState("pilot_data_upload", condition = !inputs_disabled)
+        shinyjs::toggleState("MOI", condition = !inputs_disabled)
+        shinyjs::toggleState("num_targets", condition = !inputs_disabled)
+        shinyjs::toggleState("gRNAs_per_target", condition = !inputs_disabled)
+        shinyjs::toggleState("non_targeting_gRNAs", condition = !inputs_disabled)
+        shinyjs::toggleState("cells_fixed", condition = !inputs_disabled)
+        shinyjs::toggleState("mapped_reads_fixed", condition = !inputs_disabled)
+        
+        # Note: Section headers remain functional for collapse/expand
+      }
+    }, ignoreInit = TRUE, ignoreNULL = TRUE)
     
     return(experimental_config)
   })
