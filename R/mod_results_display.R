@@ -5,7 +5,7 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
 #' @importFrom shiny NS tagList fluidRow column h3 h4 wellPanel
 #' @importFrom shiny conditionalPanel renderUI uiOutput downloadButton
@@ -26,7 +26,7 @@ mod_results_display_ui <- function(id) {
             solidHeader = TRUE,
             width = NULL,
             height = 500,
-            
+
             # Conditional display based on analysis state (mutually exclusive)
             conditionalPanel(
               condition = "output.show_results == false && output.show_error == false",
@@ -38,14 +38,14 @@ mod_results_display_ui <- function(id) {
                        style = "color: #7A8B93; font-size: 14px;")
               )
             ),
-            
+
             conditionalPanel(
               condition = "output.show_results == true && output.show_error == false",
               ns = ns,
               # Interactive plot output - adjusted for column layout
               mod_plot_display_ui(ns("plot_display"))
             ),
-            
+
             # Error display panel (only when there's an actual error)
             conditionalPanel(
               condition = "output.show_error == true",
@@ -58,8 +58,8 @@ mod_results_display_ui <- function(id) {
             )
           )
         ),
-        
-        # Sliders Column (right half) 
+
+        # Sliders Column (right half)
         column(
           width = 6,
           box(
@@ -68,7 +68,7 @@ mod_results_display_ui <- function(id) {
             solidHeader = TRUE,
             width = NULL,
             height = 500,
-            
+
             # Parameter sliders with scrollable content
             conditionalPanel(
               condition = "output.show_sliders == true",
@@ -78,21 +78,21 @@ mod_results_display_ui <- function(id) {
                 mod_parameter_sliders_ui("sliders")
               )
             ),
-            
+
             # Placeholder when no sliders
             conditionalPanel(
               condition = "output.show_sliders == false",
               ns = ns,
               wellPanel(
                 style = "text-align: center; padding: 50px;",
-                tags$p("Parameter sliders will appear here after analysis.", 
+                tags$p("Parameter sliders will appear here after analysis.",
                        style = "color: #7A8B93; font-size: 14px;")
               )
             )
           )
         )
       ),
-      
+
       # Row 2: Solutions table spanning full width
       fluidRow(
         column(
@@ -103,7 +103,7 @@ mod_results_display_ui <- function(id) {
             solidHeader = TRUE,
             width = NULL,
             height = 400,
-            
+
             # Solution table with scrollable content
             conditionalPanel(
               condition = "output.show_results == true",
@@ -113,14 +113,14 @@ mod_results_display_ui <- function(id) {
                 mod_solution_table_ui(ns("solution_table"))
               )
             ),
-            
+
             # Placeholder when no results
             conditionalPanel(
               condition = "output.show_results == false && output.show_error == false",
               ns = ns,
               wellPanel(
                 style = "text-align: center; padding: 50px;",
-                tags$p("Solutions table will appear here after analysis.", 
+                tags$p("Solutions table will appear here after analysis.",
                        style = "color: #7A8B93; font-size: 14px;")
               )
             )
@@ -130,7 +130,7 @@ mod_results_display_ui <- function(id) {
     )
   )
 }
-    
+
 #' Results Display Server Functions
 #'
 #' @description Server logic for displaying analysis results.
@@ -139,9 +139,9 @@ mod_results_display_ui <- function(id) {
 #' @param id Module namespace ID
 #' @param plot_objects Reactive containing plot objects from mod_plotting_engine
 #' @param analysis_results Reactive containing analysis results from mod_analysis_engine
-#' 
-#' @noRd 
-#' 
+#'
+#' @noRd
+#'
 #' @importFrom shiny moduleServer reactive observe req renderUI
 #' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
 #' @importFrom openxlsx write.xlsx
@@ -149,20 +149,20 @@ mod_results_display_ui <- function(id) {
 mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), app_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # ========================================================================
     # REACTIVE DISPLAY STATE
     # ========================================================================
-    
-    
+
+
     # Determine if results should be shown
     output$show_results <- reactive({
       # Use tryCatch to handle any errors in plot_objects() or analysis_results()
       tryCatch({
         plots <- plot_objects()
         results <- analysis_results()
-        
-        !is.null(plots) && !is.null(results) && 
+
+        !is.null(plots) && !is.null(results) &&
           is.null(plots$error) && is.null(results$error)
       }, error = function(e) {
         # If there's an error accessing plots or results, don't show results
@@ -170,17 +170,17 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       })
     })
     outputOptions(output, "show_results", suspendWhenHidden = FALSE)
-    
+
     # Determine if errors should be shown
     output$show_error <- reactive({
       tryCatch({
         plots <- plot_objects()
         results <- analysis_results()
-        
+
         # Only show error if we have actual data with errors, not when data is missing
         has_plot_error <- !is.null(plots) && !is.null(plots$error)
         has_result_error <- !is.null(results) && !is.null(results$error)
-        
+
         has_plot_error || has_result_error
       }, error = function(e) {
         # If there's an error accessing plots or results, don't show error state
@@ -189,24 +189,24 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       })
     })
     outputOptions(output, "show_error", suspendWhenHidden = FALSE)
-    
+
     # App state-based slider visibility (Phase 3.5)
     output$show_sliders <- reactive({
       tryCatch({
-        # Use app_state$sliders_visible instead of workflow detection
+        # Use app_state$phase to decide whether the slider is showing or not
         if (!is.null(app_state)) {
-          return(app_state$sliders_visible)
+          return(ifelse(app_state$phase == 2, TRUE, FALSE))
         }
-        
+
         # Fallback: return FALSE if app_state not available
         return(FALSE)
-        
+
       }, error = function(e) {
         FALSE
       })
     })
     outputOptions(output, "show_sliders", suspendWhenHidden = FALSE)
-    
+
     # Initialize parameter sliders module
     # Extract sidebar config and workflow info from analysis results
     sidebar_config <- reactive({
@@ -215,16 +215,16 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       if (!is.null(config)) {
         return(config)
       }
-      
+
       # Fallback: get from analysis results (if user_config not available for some reason)
       results <- analysis_results()
       if (!is.null(results) && !is.null(results$user_config)) {
         return(results$user_config)
       }
-      
+
       return(NULL)
     })
-    
+
     workflow_info <- reactive({
       # Primary: generate workflow info from design config for immediate slider visibility
       config <- user_config()
@@ -234,35 +234,35 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           return(list(workflow_id = workflow_detection$workflow_id))
         }
       }
-      
+
       # Fallback: try to get from analysis results (if design config not available)
       results <- analysis_results()
       if (!is.null(results) && !is.null(results$workflow_info)) {
         return(results$workflow_info)
       }
-      
+
       return(NULL)
     })
-    
+
     # ========================================================================
     # FOCUSED COMPONENT INITIALIZATION
     # ========================================================================
     # Initialize the three focused display components
-    
+
     # Plot display component for interactive visualizations
     mod_plot_display_server("plot_display", plot_objects)
-    
+
     # Solution table component for data summaries
     mod_solution_table_server("solution_table", analysis_results, plot_objects, user_config)
-    
+
     # Error message display
     output$error_message <- renderUI({
       error_msg <- NULL
-      
+
       tryCatch({
         plots <- plot_objects()
         results <- analysis_results()
-        
+
         # Check for plotting errors first
         if (!is.null(plots) && !is.null(plots$error)) {
           error_msg <- paste("Plotting Error:", plots$error)
@@ -274,33 +274,33 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       }, error = function(e) {
         error_msg <- paste("Display Error:", e$message)
       })
-      
+
       if (!is.null(error_msg)) {
         tags$div(
           style = "color: #721c24; line-height: 1.5;",
           tags$p(error_msg),
-          tags$p("Please check your input parameters and try again.", 
+          tags$p("Please check your input parameters and try again.",
                  style = "margin-top: 10px; font-style: italic;")
         )
       }
     })
-    
+
     # ========================================================================
     # PLOT RENDERING MOVED TO mod_plot_display.R
     # ========================================================================
     # Plot rendering now handled by mod_plot_display_server
-    
+
     # ========================================================================
     # TABLE AND SUMMARY RENDERING MOVED TO mod_solution_table.R
     # ========================================================================
     # Solutions table and analysis summary now handled by mod_solution_table_server
-    
-    
-    
+
+
+
     # ========================================================================
     # EXPORT FUNCTIONALITY
     # ========================================================================
-    
+
     # Excel export using downloadHandler
     output$export_excel <- downloadHandler(
       filename = function() {
@@ -308,10 +308,10 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       },
       content = function(file) {
         req(analysis_results(), plot_objects())
-        
+
         results <- analysis_results()
         plots <- plot_objects()
-        
+
         tryCatch({
           # Prepare Excel data using utility functions from fct_excel_export.R
           excel_data <- list(
@@ -331,15 +331,15 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
               )
             )
           )
-          
+
           # Add cost information sheet if cost optimization is used
           if (!is.null(results$user_config$cost_info)) {
             excel_data[["Cost_Information"]] <- create_excel_cost_info(results$user_config$cost_info)
           }
-          
+
           # Write Excel file to the specified path
           write.xlsx(excel_data, file = file)
-          
+
         }, error = function(e) {
           showNotification(
             paste("Export failed:", e$message),
@@ -351,7 +351,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       },
       contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    
+
     # Plot download using downloadHandler
     output$export_plot <- downloadHandler(
       filename = function() {
@@ -359,9 +359,9 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       },
       content = function(file) {
         req(plot_objects())
-        
+
         plots <- plot_objects()
-        
+
         tryCatch({
           # Get the static ggplot (not the interactive plotly version)
           if (!is.null(plots$plots$main_plot)) {
@@ -378,7 +378,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
           } else {
             stop("No plot available for download")
           }
-          
+
         }, error = function(e) {
           showNotification(
             paste("Plot download failed:", e$message),
@@ -386,19 +386,19 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
             duration = 5
           )
           # Create a minimal error plot if main plot fails
-          error_plot <- ggplot2::ggplot() + 
-            ggplot2::annotate("text", x = 0.5, y = 0.5, 
-                            label = "Plot generation failed", 
+          error_plot <- ggplot2::ggplot() +
+            ggplot2::annotate("text", x = 0.5, y = 0.5,
+                            label = "Plot generation failed",
                             size = 6) +
             ggplot2::theme_void()
-          
-          ggplot2::ggsave(filename = file, plot = error_plot, 
+
+          ggplot2::ggsave(filename = file, plot = error_plot,
                          width = 8, height = 6, dpi = 150, device = "png")
         })
       },
       contentType = "image/png"
     )
-    
+
     # No return needed - focused modules handle all coordination
   })
 }
