@@ -150,6 +150,9 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
         inputs_disabled <- (app_state$phase == 2)
         
         # Core analysis inputs that should be disabled in Phase 2
+        shinyjs::toggleState("gene_list_mode", condition = !inputs_disabled)
+        shinyjs::toggleState("gene_list_file", condition = !inputs_disabled)
+        shinyjs::toggleState("side", condition = !inputs_disabled)
         shinyjs::toggleState("TPM_threshold_fixed", condition = !inputs_disabled)
         shinyjs::toggleState("replicate_handling", condition = !inputs_disabled)
         shinyjs::toggleState("analysis_method", condition = !inputs_disabled)

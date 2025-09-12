@@ -85,6 +85,8 @@ mod_advanced_choices_server <- function(id, app_state = NULL){
         inputs_disabled <- (app_state$phase == 2)
         
         # Core advanced inputs that should be disabled in Phase 2
+        shinyjs::toggleState("gRNA_variability", condition = !inputs_disabled)
+        shinyjs::toggleState("mapping_efficiency", condition = !inputs_disabled)
         shinyjs::toggleState("control_group", condition = !inputs_disabled)
         shinyjs::toggleState("fdr_target", condition = !inputs_disabled)
         
