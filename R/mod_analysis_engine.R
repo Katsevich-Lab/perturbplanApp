@@ -26,19 +26,26 @@ mod_analysis_engine_ui <- function(id) {
 #' @return Reactive list containing analysis results data
 #' @noRd
 #'
-#' @importFrom shiny moduleServer reactive req bindCache
+#' @importFrom shiny moduleServer reactive req bindCache debounce
 #' @importFrom magrittr %>%
 mod_analysis_engine_server <- function(id, workflow_config) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # ========================================================================
+    # DEBOUNCED CONFIG INPUT
+    # ========================================================================
+    
+    # Debounce the workflow_config by 50ms to prevent excessive analysis calls
+    workflow_config_debounced <- debounce(workflow_config, 50)
+
+    # ========================================================================
     # MAIN ANALYSIS REACTIVE - PERTURBPLAN INTEGRATION
     # ========================================================================
 
     analysis_results <- reactive({
-      # extract the workflow_config
-      config <- workflow_config()
+      # extract the debounced workflow_config
+      config <- workflow_config_debounced()
 
       # Early validation: Skip analysis if essential configuration is missing OR incompatible
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"

@@ -29,7 +29,7 @@ mod_results_display_ui <- function(id) {
 
             # Conditional display based on analysis state (mutually exclusive)
             conditionalPanel(
-              condition = "output.show_results == false && output.show_error == false",
+              condition = "output.analysis_trigger == false && output.show_error == false",
               ns = ns,
               wellPanel(
                 style = "text-align: center; padding: 50px;",
@@ -40,7 +40,7 @@ mod_results_display_ui <- function(id) {
             ),
 
             conditionalPanel(
-              condition = "output.show_results == true && output.show_error == false",
+              condition = "output.analysis_trigger == true && output.show_error == false",
               ns = ns,
               # Interactive plot output - adjusted for column layout
               mod_plot_display_ui(ns("plot_display"))
@@ -106,7 +106,7 @@ mod_results_display_ui <- function(id) {
 
             # Solution table with scrollable content
             conditionalPanel(
-              condition = "output.show_results == true",
+              condition = "output.analysis_trigger == true",
               ns = ns,
               tags$div(
                 style = "max-height: 300px; overflow-y: auto;",
@@ -116,7 +116,7 @@ mod_results_display_ui <- function(id) {
 
             # Placeholder when no results
             conditionalPanel(
-              condition = "output.show_results == false && output.show_error == false",
+              condition = "output.analysis_trigger == false && output.show_error == false",
               ns = ns,
               wellPanel(
                 style = "text-align: center; padding: 50px;",
@@ -154,23 +154,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     # REACTIVE DISPLAY STATE
     # ========================================================================
 
-
-    # Determine if results should be shown
-    output$show_results <- reactive({
-      # Use tryCatch to handle any errors in plot_objects() or analysis_results()
-      tryCatch({
-        plots <- plot_objects()
-        results <- analysis_results()
-
-        !is.null(plots) && !is.null(results) &&
-          is.null(plots$error) && is.null(results$error)
-      }, error = function(e) {
-        # If there's an error accessing plots or results, don't show results
-        FALSE
-      })
-    })
-    outputOptions(output, "show_results", suspendWhenHidden = FALSE)
-
     # Determine if errors should be shown
     output$show_error <- reactive({
       tryCatch({
@@ -206,6 +189,21 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       })
     })
     outputOptions(output, "show_sliders", suspendWhenHidden = FALSE)
+
+    # Determine if analysis is actively running/triggered
+    output$analysis_trigger <- reactive({
+
+      # Analysis is triggered if we have plan clicks but no results yet
+      config <- user_config()
+      has_plan_clicks <- !is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0
+
+      # Debug output
+      cat("DEBUG analysis_trigger: config$plan_clicked =", ifelse(!is.null(config), config$plan_clicked, "NULL"),
+          "has_plan_clicks =", has_plan_clicks, "\n")
+
+      has_plan_clicks
+    })
+    outputOptions(output, "analysis_trigger", suspendWhenHidden = FALSE)
 
     # Initialize parameter sliders module
     # Extract sidebar config and workflow info from analysis results
