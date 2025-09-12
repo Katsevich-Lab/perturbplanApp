@@ -18,7 +18,6 @@ app_server <- function(input, output, session) {
   # Global application state for dual-workflow system (Phase 1 foundation)
   app_state <- reactiveValues(
     phase = 1,                    # 1 = sidebar mode, 2 = slider mode
-    initial_config_snapshot = NULL,  # Frozen sidebar config for Phase 2
     plan_button_text = "Plan"     # Button text: "Plan" or "Restart"
   )
 
