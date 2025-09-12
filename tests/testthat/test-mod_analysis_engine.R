@@ -1,7 +1,7 @@
 testServer(
   mod_analysis_engine_server,
   # Add here your module params
-  args = list()
+  args = list(workflow_config = reactive(NULL))
   , {
     ns <- session$ns
     expect_true(

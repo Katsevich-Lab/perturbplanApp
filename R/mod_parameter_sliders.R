@@ -60,7 +60,8 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
       value = value,
       step = step,
       width = "100%",
-      height = "8px"
+      height = "8px",
+      update_on = "end"
     )
   )
 }
@@ -271,50 +272,50 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     # ========================================================================
     # INPUT COLLECTION - Mouse Release Only Updates (via noUiSliderInput)
     # ========================================================================
-    # noUiSliderInput creates two inputs: slider (continuous) and slider_set (on release)
-    # We use slider_set inputs to only trigger analysis on mouse release
+    # noUiSliderInput with update_on="end" only sends values to server on mouse release
+    # This prevents continuous analysis triggers during slider dragging
 
-    # Update slider_state with _set input values (only triggered on mouse release)
-    observeEvent(input$moi_slider_set, {
+    # Update slider_state with input values (only triggered on mouse release due to update_on="end")
+    observeEvent(input$moi_slider, {
       if (slider_state$initialized) {
-        slider_state$MOI <- input$moi_slider_set
-        cat("DEBUG: MOI updated on mouse release:", input$moi_slider_set, "\n")
+        slider_state$MOI <- input$moi_slider
+        cat("DEBUG: MOI updated on mouse release:", input$moi_slider, "\n")
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(input$targets_slider_set, {
+    observeEvent(input$targets_slider, {
       if (slider_state$initialized) {
-        slider_state$num_targets <- input$targets_slider_set
+        slider_state$num_targets <- input$targets_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(input$grnas_slider_set, {
+    observeEvent(input$grnas_slider, {
       if (slider_state$initialized) {
-        slider_state$gRNAs_per_target <- input$grnas_slider_set
+        slider_state$gRNAs_per_target <- input$grnas_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(input$cells_slider_set, {
+    observeEvent(input$cells_slider, {
       if (slider_state$initialized) {
-        slider_state$cells_fixed <- input$cells_slider_set
+        slider_state$cells_fixed <- input$cells_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(input$reads_slider_set, {
+    observeEvent(input$reads_slider, {
       if (slider_state$initialized) {
-        slider_state$mapped_reads_fixed <- input$reads_slider_set
+        slider_state$mapped_reads_fixed <- input$reads_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(input$TPM_slider_set, {
+    observeEvent(input$TPM_slider, {
       if (slider_state$initialized) {
-        slider_state$TPM_threshold_fixed <- input$TPM_slider_set
+        slider_state$TPM_threshold_fixed <- input$TPM_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(input$fc_slider_set, {
+    observeEvent(input$fc_slider, {
       if (slider_state$initialized) {
-        slider_state$minimum_fold_change_fixed <- input$fc_slider_set
+        slider_state$minimum_fold_change_fixed <- input$fc_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
