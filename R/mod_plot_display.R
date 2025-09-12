@@ -9,10 +9,16 @@
 #'
 #' @importFrom shiny NS tagList 
 #' @importFrom plotly plotlyOutput
+#' @importFrom shinycssloaders withSpinner
 mod_plot_display_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    plotlyOutput(ns("main_plot"), height = "380px")
+    withSpinner(
+      plotlyOutput(ns("main_plot"), height = "380px"),
+      type = 1,
+      color = "#0dc5c1",
+      size = 1
+    )
   )
 }
     

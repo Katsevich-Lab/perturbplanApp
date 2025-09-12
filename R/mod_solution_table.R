@@ -8,11 +8,22 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList uiOutput
+#' @importFrom shinycssloaders withSpinner
 mod_solution_table_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    uiOutput(ns("solutions_table")),
-    uiOutput(ns("analysis_summary"))
+    withSpinner(
+      uiOutput(ns("solutions_table")),
+      type = 1,
+      color = "#0dc5c1",
+      size = 1
+    ),
+    withSpinner(
+      uiOutput(ns("analysis_summary")),
+      type = 1,
+      color = "#0dc5c1",
+      size = 1
+    )
   )
 }
     
