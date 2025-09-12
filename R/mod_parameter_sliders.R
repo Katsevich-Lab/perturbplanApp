@@ -8,7 +8,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues
+#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues debounce
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
 
@@ -267,49 +267,59 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     })
 
     # ========================================================================
-    # INPUT COLLECTION - Slider Independence
+    # INPUT COLLECTION - Smooth Slider Independence with Debouncing
     # ========================================================================
-    # Collect slider inputs and update slider_state (only when initialized)
+    # Collect slider inputs with debouncing to prevent jumping and excessive updates
 
-    observeEvent(input$moi_slider, {
+    # Create debounced reactive for each slider (300ms delay for smoothness)
+    moi_debounced <- debounce(reactive(input$moi_slider), 300)
+    targets_debounced <- debounce(reactive(input$targets_slider), 300)
+    grnas_debounced <- debounce(reactive(input$grnas_slider), 300)
+    cells_debounced <- debounce(reactive(input$cells_slider), 300)
+    reads_debounced <- debounce(reactive(input$reads_slider), 300)
+    TPM_debounced <- debounce(reactive(input$TPM_slider), 300)
+    fc_debounced <- debounce(reactive(input$fc_slider), 300)
+
+    # Update slider_state with debounced values
+    observeEvent(moi_debounced(), {
       if (slider_state$initialized) {
-        slider_state$MOI <- input$moi_slider
+        slider_state$MOI <- moi_debounced()
       }
     })
 
-    observeEvent(input$targets_slider, {
+    observeEvent(targets_debounced(), {
       if (slider_state$initialized) {
-        slider_state$num_targets <- input$targets_slider
+        slider_state$num_targets <- targets_debounced()
       }
     })
 
-    observeEvent(input$grnas_slider, {
+    observeEvent(grnas_debounced(), {
       if (slider_state$initialized) {
-        slider_state$gRNAs_per_target <- input$grnas_slider
+        slider_state$gRNAs_per_target <- grnas_debounced()
       }
     })
 
-    observeEvent(input$cells_slider, {
+    observeEvent(cells_debounced(), {
       if (slider_state$initialized) {
-        slider_state$cells_fixed <- input$cells_slider
+        slider_state$cells_fixed <- cells_debounced()
       }
     })
 
-    observeEvent(input$reads_slider, {
+    observeEvent(reads_debounced(), {
       if (slider_state$initialized) {
-        slider_state$mapped_reads_fixed <- input$reads_slider
+        slider_state$mapped_reads_fixed <- reads_debounced()
       }
     })
 
-    observeEvent(input$TPM_slider, {
+    observeEvent(TPM_debounced(), {
       if (slider_state$initialized) {
-        slider_state$TPM_threshold_fixed <- input$TPM_slider
+        slider_state$TPM_threshold_fixed <- TPM_debounced()
       }
     })
 
-    observeEvent(input$fc_slider, {
+    observeEvent(fc_debounced(), {
       if (slider_state$initialized) {
-        slider_state$minimum_fold_change_fixed <- input$fc_slider
+        slider_state$minimum_fold_change_fixed <- fc_debounced()
       }
     })
 
