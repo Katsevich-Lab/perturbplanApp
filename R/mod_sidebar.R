@@ -67,12 +67,13 @@ mod_sidebar_server <- function(id, app_state = NULL){
     # Track optimization mode changes to reset plan button
     previous_mode <- reactiveVal(NULL)
     plan_count_adjustment <- reactiveVal(0)  # Adjustment to subtract from plan button count
+    actual_plan_clicks <- reactiveVal(0)     # Track actual plan clicks (not restart clicks)
     observe({
       current_mode <- design_config()$optimization_type
       if (!is.null(current_mode) && current_mode != "" &&
           !is.null(previous_mode()) && previous_mode() != current_mode) {
-        # Mode changed - reset plan by adjusting the count
-        plan_count_adjustment(input$plan_btn)  # Store current count to subtract
+        # Mode changed - reset plan counter
+        actual_plan_clicks(0)  # Reset to 0 to require new plan
       }
       if (!is.null(current_mode)) {
         previous_mode(current_mode)
@@ -100,11 +101,13 @@ mod_sidebar_server <- function(id, app_state = NULL){
     observeEvent(input$plan_btn, {
       if (!is.null(app_state)) {
         if (app_state$phase == 1) {
-          # Phase 1: Plan behavior - trigger analysis (existing logic)
+          # Phase 1: Plan behavior - trigger analysis
           showNotification("Analysis starting...", type = "message", duration = 2)
-          # The plan_clicked counter will trigger analysis in analysis_engine
+          # Increment actual plan clicks counter
+          actual_plan_clicks(actual_plan_clicks() + 1)
         } else if (app_state$phase == 2) {
           # Phase 2: Restart behavior - show confirmation dialog
+          # DON'T increment plan clicks or trigger reactive updates
           showModal(modalDialog(
             title = "Restart Analysis",
             "This will clear all results and reset all parameters to default values. Are you sure?",
@@ -116,7 +119,7 @@ mod_sidebar_server <- function(id, app_state = NULL){
           ))
         }
       }
-    })
+    }, ignoreInit = TRUE)
 
     # Confirmation dialog handlers
     observeEvent(input$restart_cancel, {
@@ -159,12 +162,9 @@ mod_sidebar_server <- function(id, app_state = NULL){
       # sliders to access workflow_info without circular dependencies
       config$workflow_info <- detect_workflow_scenario(config)
 
-      # Set the plan_clicked
-      if(isolate(app_state$phase) == 1){
-        config$plan_clicked <- input$plan_btn - plan_count_adjustment()
-      }else{
-        config$plan_clicked <- 0
-      }
+      # Use the actual plan clicks counter (not the raw button clicks)
+      # This prevents restart dialog clicks from affecting analysis
+      config$plan_clicked <- actual_plan_clicks()
 
       return(config)
     })
