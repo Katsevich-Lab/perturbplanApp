@@ -8,7 +8,8 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput sliderInput moduleServer reactive observeEvent req renderUI observe isolate updateSliderInput reactiveValues debounce
+#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput moduleServer reactive observeEvent req renderUI observe isolate reactiveValues
+#' @importFrom shinyWidgets noUiSliderInput
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
 
@@ -51,14 +52,15 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
       class = "slider-label",
       style = "font-size: 13px; font-weight: 500; color: #495057; margin-bottom: 8px; display: block; text-align: center;"
     ),
-    sliderInput(
+    shinyWidgets::noUiSliderInput(
       inputId = inputId,
       label = NULL,
       min = min,
       max = max,
       value = value,
       step = step,
-      width = "100%"
+      width = "100%",
+      height = "8px"
     )
   )
 }
@@ -267,61 +269,54 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     })
 
     # ========================================================================
-    # INPUT COLLECTION - Smooth Slider Independence with Debouncing
+    # INPUT COLLECTION - Mouse Release Only Updates (via noUiSliderInput)
     # ========================================================================
-    # Collect slider inputs with debouncing to prevent jumping and excessive updates
+    # noUiSliderInput creates two inputs: slider (continuous) and slider_set (on release)
+    # We use slider_set inputs to only trigger analysis on mouse release
 
-    # Create debounced reactive for each slider (300ms delay for smoothness)
-    moi_debounced <- debounce(reactive(input$moi_slider), 300)
-    targets_debounced <- debounce(reactive(input$targets_slider), 300)
-    grnas_debounced <- debounce(reactive(input$grnas_slider), 300)
-    cells_debounced <- debounce(reactive(input$cells_slider), 300)
-    reads_debounced <- debounce(reactive(input$reads_slider), 300)
-    TPM_debounced <- debounce(reactive(input$TPM_slider), 300)
-    fc_debounced <- debounce(reactive(input$fc_slider), 300)
-
-    # Update slider_state with debounced values
-    observeEvent(moi_debounced(), {
+    # Update slider_state with _set input values (only triggered on mouse release)
+    observeEvent(input$moi_slider_set, {
       if (slider_state$initialized) {
-        slider_state$MOI <- moi_debounced()
+        slider_state$MOI <- input$moi_slider_set
+        cat("DEBUG: MOI updated on mouse release:", input$moi_slider_set, "\n")
       }
-    })
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(targets_debounced(), {
+    observeEvent(input$targets_slider_set, {
       if (slider_state$initialized) {
-        slider_state$num_targets <- targets_debounced()
+        slider_state$num_targets <- input$targets_slider_set
       }
-    })
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(grnas_debounced(), {
+    observeEvent(input$grnas_slider_set, {
       if (slider_state$initialized) {
-        slider_state$gRNAs_per_target <- grnas_debounced()
+        slider_state$gRNAs_per_target <- input$grnas_slider_set
       }
-    })
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(cells_debounced(), {
+    observeEvent(input$cells_slider_set, {
       if (slider_state$initialized) {
-        slider_state$cells_fixed <- cells_debounced()
+        slider_state$cells_fixed <- input$cells_slider_set
       }
-    })
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(reads_debounced(), {
+    observeEvent(input$reads_slider_set, {
       if (slider_state$initialized) {
-        slider_state$mapped_reads_fixed <- reads_debounced()
+        slider_state$mapped_reads_fixed <- input$reads_slider_set
       }
-    })
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(TPM_debounced(), {
+    observeEvent(input$TPM_slider_set, {
       if (slider_state$initialized) {
-        slider_state$TPM_threshold_fixed <- TPM_debounced()
+        slider_state$TPM_threshold_fixed <- input$TPM_slider_set
       }
-    })
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(fc_debounced(), {
+    observeEvent(input$fc_slider_set, {
       if (slider_state$initialized) {
-        slider_state$minimum_fold_change_fixed <- fc_debounced()
+        slider_state$minimum_fold_change_fixed <- input$fc_slider_set
       }
-    })
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
     # ========================================================================
     # RETURN SLIDER CONFIGURATION
