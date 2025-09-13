@@ -493,3 +493,32 @@ get_minimized_parameter_for_display <- function(workflow_id) {
   
   return(minimized_map[[workflow_id]] %||% character(0))
 }
+
+#' Create enhanced solutions table (Dev branch approach)
+#'
+#' @description Creates an enhanced solutions table similar to the dev branch approach.
+#' This unifies the solution table and summary into a single comprehensive display.
+#'
+#' @param results Analysis results object
+#' @param plots Plot objects
+#' @param user_config Reactive containing user configuration
+#' @return Shiny UI tagList with enhanced table
+#' @export
+create_enhanced_solutions_table <- function(results, plots, user_config = reactive(NULL)) {
+  # For now, use the existing create_solutions_table as the foundation
+  # In future iterations, this will be enhanced with dev branch-style parameter extraction
+  
+  if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
+    return(create_empty_solutions_table())
+  }
+  
+  # Create the standard solution table for now
+  table_ui <- create_solutions_table(results, plots, user_config)
+  
+  # Return with enhanced styling container
+  tags$div(
+    class = "enhanced-solutions-table",
+    style = "background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);",
+    table_ui
+  )
+}

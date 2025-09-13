@@ -13,13 +13,7 @@ mod_solution_table_ui <- function(id) {
   ns <- NS(id)
   tagList(
     withSpinner(
-      uiOutput(ns("solutions_table")),
-      type = 1,
-      color = "#0dc5c1",
-      size = 1
-    ),
-    withSpinner(
-      uiOutput(ns("analysis_summary")),
+      uiOutput(ns("enhanced_solutions_table")),
       type = 1,
       color = "#0dc5c1",
       size = 1
@@ -45,10 +39,10 @@ mod_solution_table_server <- function(id, analysis_results, plot_objects, user_c
     ns <- session$ns
     
     # ========================================================================
-    # SOLUTIONS TABLE
+    # ENHANCED SOLUTIONS TABLE (DEV BRANCH APPROACH)
     # ========================================================================
     
-    output$solutions_table <- renderUI({
+    output$enhanced_solutions_table <- renderUI({
       req(analysis_results(), plot_objects())
       
       results <- analysis_results()
@@ -61,39 +55,9 @@ mod_solution_table_server <- function(id, analysis_results, plot_objects, user_c
         ))
       }
       
-      # Create solutions table with current solution as first row
-      # Pass user_config to access actual slider values
-      create_solutions_table(results, plots, user_config)
-    })
-    
-    # ========================================================================
-    # ANALYSIS SUMMARY
-    # ========================================================================
-    
-    output$analysis_summary <- renderUI({
-      req(analysis_results(), plot_objects())
-      
-      results <- analysis_results()
-      plots <- plot_objects()
-      
-      if (!is.null(results$error) || !is.null(plots$error)) {
-        return(tags$div(
-          style = "color: #C73E1D; padding: 10px;",
-          h4("Analysis Error"),
-          tags$p(results$error %||% plots$error)
-        ))
-      }
-      
-      # Generate summary based on plot type
-      summary_data <- if (plots$plot_type == "single_parameter_curve") {
-        plots$plots$summary_stats
-      } else {
-        plots$plots$cost_summary
-      }
-      
-      workflow_info <- results$workflow_info
-      
-      render_solution_section(results, plots)
+      # Create enhanced solutions table similar to dev branch approach
+      # This will replace both the old solutions_table and analysis_summary
+      create_enhanced_solutions_table(results, plots, user_config)
     })
     
   })
