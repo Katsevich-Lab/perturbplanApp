@@ -279,7 +279,6 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     observeEvent(input$moi_slider, {
       if (slider_state$initialized) {
         slider_state$MOI <- input$moi_slider
-        cat("DEBUG: MOI updated on mouse release:", input$moi_slider, "\n")
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 

@@ -197,9 +197,6 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
       config <- user_config()
       has_plan_clicks <- !is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0
 
-      # Debug output
-      cat("DEBUG analysis_trigger: config$plan_clicked =", ifelse(!is.null(config), config$plan_clicked, "NULL"),
-          "has_plan_clicks =", has_plan_clicks, "\n")
 
       has_plan_clicks
     })
