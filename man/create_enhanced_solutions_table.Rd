@@ -2,21 +2,23 @@
 % Please edit documentation in R/fct_solutions_table.R
 \name{create_enhanced_solutions_table}
 \alias{create_enhanced_solutions_table}
-\title{Create enhanced solutions table (Dev branch approach)}
+\title{Clean Solution Table Functions}
 \usage{
-create_enhanced_solutions_table(results, plots, user_config = reactive(NULL))
+create_enhanced_solutions_table(results, plots = NULL, user_config = NULL)
 }
 \arguments{
-\item{results}{Analysis results object}
+\item{results}{Analysis results object containing optimal_design, user_config, workflow_info}
 
-\item{plots}{Plot objects}
+\item{plots}{Plot objects (unused, kept for compatibility)}
 
-\item{user_config}{Reactive containing user configuration}
+\item{user_config}{User configuration (unused, kept for compatibility)}
 }
 \value{
-Shiny UI tagList with enhanced table
+Shiny UI tagList with clean solution table
 }
 \description{
-Creates an enhanced solutions table similar to the dev branch approach.
-This unifies the solution table and summary into a single comprehensive display.
+Clean implementation of solution table with proper two-row header
+architecture and simplified parameter extraction logic.
+
+Create Enhanced Solutions Table (Clean Implementation)
 }
