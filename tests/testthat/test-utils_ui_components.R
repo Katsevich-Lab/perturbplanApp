@@ -61,7 +61,7 @@ test_that("parameter_matrix creates proper matrix structure", {
   ns <- function(x) paste0("test-", x)
   params <- list(
     cells_per_target = "varying",
-    mapped_reads_per_cell = "fixed",
+    reads_per_cell = "fixed",
     TPM_threshold = "minimizing"
   )
   
@@ -75,7 +75,7 @@ test_that("parameter_matrix creates proper matrix structure", {
   
   # Check for proper parameter names
   expect_true(grepl("Cells per target", as.character(result)))
-  expect_true(grepl("Mapped reads per cell", as.character(result)))
+  expect_true(grepl("Sequenced reads per cell", as.character(result)))
   expect_true(grepl("TPM threshold", as.character(result)))
   
   # Check for radio buttons

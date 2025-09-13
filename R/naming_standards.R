@@ -20,13 +20,13 @@ CANONICAL_PARAMETER_NAMES <- list(
   # ==== READS PARAMETER (Complex 5-layer transformation) ====
   reads = list(
     # UI Input Layer - what users enter/see in input forms
-    ui_input_id = "mapped_reads_per_cell",
-    ui_display_label = "Mapped reads per cell",
-    ui_help_text = "Number of mapped reads per cell in the experiment",
+    ui_input_id = "reads_per_cell",
+    ui_display_label = "Sequenced reads per cell",
+    ui_help_text = "Number of sequenced reads per cell in the experiment (before mapping)",
     
     # Config Layer - parameter passing between modules  
-    config_key = "mapped_reads_fixed", 
-    config_path = "experimental_setup$mapped_reads_fixed",
+    config_key = "reads_per_cell_fixed", 
+    config_path = "experimental_setup$reads_per_cell_fixed",
     
     # API Interface Layer - perturbplan function parameters
     perturbplan_input_param = "reads_per_cell",  # What perturbplan expects
@@ -117,7 +117,7 @@ CANONICAL_PARAMETER_NAMES <- list(
 #' @export  
 PARAMETER_DISPLAY_NAMES <- list(
   "cells_per_target" = "Cells per target",
-  "mapped_reads_per_cell" = "Mapped reads per cell", 
+  "reads_per_cell" = "Sequenced reads per cell", 
   "TPM_threshold" = "TPM threshold",
   "minimum_fold_change" = "Minimum fold change"
 )

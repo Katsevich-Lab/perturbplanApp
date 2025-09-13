@@ -292,7 +292,7 @@ extract_optimal_design_value <- function(optimal, workflow_info) {
       label = "Cells per Target",
       value = if (!is.null(optimal$cells_per_target)) scales::comma(round(optimal$cells_per_target)) else "N/A"
     ))
-  } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) {
+  } else if (minimizing_param %in% c("reads_per_cell", "reads_per_cell")) {
     return(list(
       label = "Reads per Cell",
       value = if (!is.null(optimal$sequenced_reads_per_cell)) scales::comma(round(optimal$sequenced_reads_per_cell)) else "N/A"
@@ -443,7 +443,7 @@ parameter_has_slider <- function(param_name, user_config = reactive(NULL), workf
         if (!is.null(optimization_type) && optimization_type == "power_cost" && !is.null(param_controls)) {
           control_name_mapping <- list(
             "cells_per_target" = "cells_per_target",
-            "reads_per_cell" = "mapped_reads_per_cell",
+            "reads_per_cell" = "reads_per_cell",
             "TPM_threshold" = "TPM_threshold", 
             "minimum_fold_change" = "minimum_fold_change"
           )

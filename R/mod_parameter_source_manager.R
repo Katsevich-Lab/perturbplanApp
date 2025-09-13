@@ -62,7 +62,7 @@ mod_parameter_source_manager_server <- function(id, sidebar_config, slider_confi
         merged_config$experimental_setup$num_targets <- slider_exp$num_targets %||% merged_config$experimental_setup$num_targets
         merged_config$experimental_setup$gRNAs_per_target <- slider_exp$gRNAs_per_target %||% merged_config$experimental_setup$gRNAs_per_target
         merged_config$experimental_setup$cells_fixed <- slider_exp$cells_fixed %||% merged_config$experimental_setup$cells_fixed
-        merged_config$experimental_setup$mapped_reads_fixed <- slider_exp$mapped_reads_fixed %||% merged_config$experimental_setup$mapped_reads_fixed
+        merged_config$experimental_setup$reads_per_cell_fixed <- slider_exp$reads_per_cell_fixed %||% merged_config$experimental_setup$reads_per_cell_fixed
       }
       
       # Apply slider overrides to analysis_choices

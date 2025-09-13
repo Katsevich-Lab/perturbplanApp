@@ -1,7 +1,7 @@
 # ============================================================================
 # PLOTTING FUNCTIONS FOR PERTURBPLAN APP
 # ============================================================================
-# 
+#
 # This file contains all plotting functions used by mod_plotting_engine.R
 # Organized by plot type and workflow category.
 #
@@ -29,7 +29,7 @@ if(getRversion() >= "2.15.1") utils::globalVariables(c("hover_text"))
 #' @noRd
 SOLUTION_COLORS <- c(
   "#2E86AB",  # Blue (Index 1)
-  "#A23B72",  # Purple-red (Index 2) 
+  "#A23B72",  # Purple-red (Index 2)
   "#F18F01",  # Orange (Index 3)
   "#4CAF50",  # Green (Index 4)
   "#E91E63",  # Pink (Index 5)
@@ -95,64 +95,64 @@ convert_to_multi_solution_format <- function(single_plot_data, solution_index = 
 #' @return List containing ggplot and plotly objects
 #' @noRd
 create_single_parameter_plots <- function(results) {
-  
+
   # Check if this is multi-solution data
   if (!is.null(results$plot_data) && is_multi_solution_data(results$plot_data)) {
     return(create_multi_solution_parameter_plots(results))
   }
-  
+
   # Original single solution logic (backward compatibility)
-  
+
   power_data <- results$power_data
   optimal_design <- results$optimal_design
   target_power <- results$user_config$design_options$target_power
   workflow_info <- results$workflow_info
-  
+
   # Create base ggplot
   varying_param <- workflow_info$minimizing_parameter
   param_label <- format_parameter_name(varying_param)
-  
+
   # Use clean titles from workflow_info (no optimal parameter info in titles)
   plot_title <- workflow_info$title
-  
+
   # Create tooltip text before plotting
   formatted_values <- case_when(
     varying_param == "TPM_threshold" ~ scales::comma(round(power_data$parameter_value)),
-    varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(power_data$parameter_value),
+    varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(power_data$parameter_value),
     varying_param == "minimum_fold_change" ~ as.character(round(power_data$parameter_value, 2)),
     TRUE ~ as.character(power_data$parameter_value)
   )
-  
+
   power_data$tooltip_text <- paste0(param_label, ": ", formatted_values,
                                    "<br>Power: ", scales::percent(power_data$power, accuracy = 0.1))
-  
+
   # Standard single parameter power curve (same for power-only and power+cost workflows)
   p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power)) +
     geom_line() +
     suppressWarnings(geom_point(aes(text = .data$tooltip_text))) +
     geom_hline(yintercept = target_power, linetype = "dashed")
-  
+
   # Add log scale for TPM_threshold parameter to standardize with other TPM plots
   if (varying_param == "TPM_threshold") {
     p <- p + scale_x_log10(labels = scales::comma_format())
     param_label <- "TPM Threshold"
   }
-  
+
   # Add red circle to highlight optimal solution point with custom hover
   if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
-    optimal_hover_text <- paste0(param_label, ": ", 
+    optimal_hover_text <- paste0(param_label, ": ",
                                 case_when(
                                   varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-                                  varying_param %in% c("cells_per_target", "mapped_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
+                                  varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
                                   varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
                                   TRUE ~ as.character(optimal_design[[varying_param]])
                                 ),
                                 "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1),
                                 "<span style='display:none'>OPTIMAL</span>")
-    
+
     p <- p + suppressWarnings(geom_point(
       data = data.frame(
-        x = optimal_design[[varying_param]], 
+        x = optimal_design[[varying_param]],
         y = optimal_design$achieved_power,
         hover_text = optimal_hover_text
       ),
@@ -162,7 +162,7 @@ create_single_parameter_plots <- function(results) {
       shape = 19  # Circle
     ))
   }
-  
+
   p <- p +
     labs(
       title = plot_title,
@@ -171,7 +171,7 @@ create_single_parameter_plots <- function(results) {
     ) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5))
-  
+
   # Convert to interactive plotly with custom tooltips showing parameter name
   p_interactive <- ggplotly(p, tooltip = "text") %>%
     layout(
@@ -183,7 +183,7 @@ create_single_parameter_plots <- function(results) {
       showlegend = FALSE,
       hovermode = "closest"
     )
-  
+
   # Apply red hover styling specifically to optimal solution points
   if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
     for (i in 1:length(p_interactive$x$data)) {
@@ -201,17 +201,17 @@ create_single_parameter_plots <- function(results) {
       }
     }
   }
-  
+
   p_interactive <- p_interactive %>%
     config(
       displayModeBar = FALSE,  # Remove all toolbar buttons
       displaylogo = FALSE,
       modeBarButtonsToRemove = list("all")  # Remove all buttons
     )
-  
+
   # Summary statistics
   summary_stats <- create_power_curve_summary(power_data, optimal_design, target_power, workflow_info)
-  
+
   return(list(
     main_plot = p,
     interactive_plot = p_interactive,
@@ -230,14 +230,14 @@ create_single_parameter_plots <- function(results) {
 #' @return List containing ggplot and plotly objects with multiple traces
 #' @noRd
 create_multi_solution_parameter_plots <- function(results) {
-  
+
   target_power <- results$user_config$design_options$target_power
   workflow_info <- results$workflow_info
   varying_param <- workflow_info$minimizing_parameter
   param_label <- format_parameter_name(varying_param)
   plot_title <- workflow_info$title
   solutions_data <- results$plot_data$solutions
-  
+
   # Create base ggplot
   p <- ggplot() +
     geom_hline(yintercept = target_power, linetype = "dashed", alpha = 0.7) +
@@ -252,16 +252,16 @@ create_multi_solution_parameter_plots <- function(results) {
       legend.position = "right",
       legend.title = element_blank()
     )
-  
+
   # Add log scale for TPM_threshold parameter
   if (varying_param == "TPM_threshold") {
     p <- p + scale_x_log10(labels = scales::comma_format())
     param_label <- "TPM Threshold"
   }
-  
+
   # Create plotly object for interactive features
   p_interactive <- plot_ly()
-  
+
   # Add target power line to plotly
   p_interactive <- p_interactive %>%
     add_lines(
@@ -272,32 +272,32 @@ create_multi_solution_parameter_plots <- function(results) {
       showlegend = TRUE,
       hovertemplate = paste("Target Power:", scales::percent(target_power, accuracy = 0.1), "<extra></extra>")
     )
-  
+
   # Add each solution as a separate trace
   for (solution in solutions_data) {
     solution_data <- solution$data
     solution_color <- solution$color
     solution_label <- solution$label
     solution_id <- solution$id
-    
+
     # Create tooltip text for this solution
     formatted_values <- case_when(
       varying_param == "TPM_threshold" ~ scales::comma(round(solution_data$parameter_value)),
-      varying_param %in% c("cells_per_target", "mapped_reads_per_cell") ~ scales::comma(solution_data$parameter_value),
+      varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(solution_data$parameter_value),
       varying_param == "minimum_fold_change" ~ as.character(round(solution_data$parameter_value, 2)),
       TRUE ~ as.character(solution_data$parameter_value)
     )
-    
+
     solution_data$tooltip_text <- paste0(
       solution_label, "<br>",
       param_label, ": ", formatted_values, "<br>",
       "Power: ", scales::percent(solution_data$power, accuracy = 0.1)
     )
-    
+
     # Add line to ggplot
-    p <- p + 
+    p <- p +
       geom_line(
-        data = solution_data, 
+        data = solution_data,
         aes(x = .data$parameter_value, y = .data$power),
         color = solution_color,
         size = 1.2
@@ -309,12 +309,12 @@ create_multi_solution_parameter_plots <- function(results) {
         size = 0.8,
         alpha = 0.6
       )
-    
+
     # Add line to plotly
     p_interactive <- p_interactive %>%
       add_lines(
         data = solution_data,
-        x = ~parameter_value, 
+        x = ~parameter_value,
         y = ~power,
         color = I(solution_color),
         name = solution_label,
@@ -323,29 +323,29 @@ create_multi_solution_parameter_plots <- function(results) {
         hovertemplate = "%{text}<extra></extra>",
         showlegend = TRUE
       )
-    
+
     # Add optimal point if available
     if (!is.null(solution$optimal_point)) {
       optimal_design <- solution$optimal_point
-      
+
       if (!is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
         optimal_hover_text <- paste0(
           solution_label, " (Optimal)<br>",
-          param_label, ": ", 
+          param_label, ": ",
           case_when(
             varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-            varying_param %in% c("cells_per_target", "mapped_reads_per_cell", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
+            varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
             varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
             TRUE ~ as.character(optimal_design[[varying_param]])
           ),
           "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
-        
+
         # Add optimal point to ggplot
-        p <- p + 
+        p <- p +
           geom_point(
             data = data.frame(
-              x = optimal_design[[varying_param]], 
+              x = optimal_design[[varying_param]],
               y = optimal_design$achieved_power
             ),
             aes(x = x, y = y),
@@ -354,7 +354,7 @@ create_multi_solution_parameter_plots <- function(results) {
             shape = 18,  # Diamond shape for optimal points
             stroke = 1.5
           )
-        
+
         # Add optimal point to plotly
         p_interactive <- p_interactive %>%
           add_markers(
@@ -374,7 +374,7 @@ create_multi_solution_parameter_plots <- function(results) {
       }
     }
   }
-  
+
   # Apply log scale to plotly if needed
   if (varying_param == "TPM_threshold") {
     p_interactive <- p_interactive %>%
@@ -383,7 +383,7 @@ create_multi_solution_parameter_plots <- function(results) {
     p_interactive <- p_interactive %>%
       layout(xaxis = list(title = param_label))
   }
-  
+
   # Configure plotly layout
   p_interactive <- p_interactive %>%
     layout(
@@ -407,12 +407,12 @@ create_multi_solution_parameter_plots <- function(results) {
       displaylogo = FALSE,
       modeBarButtonsToRemove = list("all")
     )
-  
+
   # Create summary stats for the first solution (primary solution)
   primary_solution_data <- solutions_data[[1]]$data
   primary_optimal <- solutions_data[[1]]$optimal_point
   summary_stats <- create_power_curve_summary(primary_solution_data, primary_optimal, target_power, workflow_info)
-  
+
   return(list(
     main_plot = p,
     interactive_plot = p_interactive,
@@ -436,16 +436,16 @@ create_multi_solution_parameter_plots <- function(results) {
 #' @return List containing ggplot and plotly objects
 #' @noRd
 create_cost_tradeoff_plots <- function(results) {
-  
+
   # Check if this is multi-solution data
   if (!is.null(results$plot_data) && is_multi_solution_data(results$plot_data)) {
     return(create_multi_solution_cost_plots(results))
   }
-  
+
   # Original single solution logic (backward compatibility)
-  
+
   power_data <- results$power_data
-  cost_data <- results$cost_data  
+  cost_data <- results$cost_data
   optimal_design <- results$optimal_design
   target_power <- results$user_config$design_options$target_power
   # Extract cost budget from different locations based on workflow type
@@ -454,7 +454,7 @@ create_cost_tradeoff_plots <- function(results) {
                  results$metadata$fc_minimization_data$cost_constraint %||%
                  results$user_config$cost_info$cost_constraint_budget
   workflow_info <- results$workflow_info
-  
+
   # Route to appropriate plot creation based on workflow type
   if (workflow_info$workflow_id == "power_cost_minimization") {
     # WORKFLOW 5: Equi-power/equi-cost curves for cost minimization
@@ -469,18 +469,18 @@ create_cost_tradeoff_plots <- function(results) {
     # FALLBACK: This should not happen with proper workflow routing, but provide safe fallback
     stop("Unknown cost tradeoff workflow: ", workflow_info$workflow_id, ". This workflow should use single_parameter_plots instead.")
   }
-  
+
   # Convert to interactive plotly with error handling
   p_interactive <- tryCatch({
-    
+
     # First convert to plotly
     plotly_obj <- ggplotly(p, tooltip = NULL)
-    
+
     # Then modify traces for custom hover data
     for (i in seq_along(plotly_obj$x$data)) {
       trace_data <- plotly_obj$x$data[[i]]
       if (!is.null(trace_data$x) && !is.null(trace_data$y)) {
-        
+
         if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
           # For minimization plots: show minimizing variable and cost
           # TPM uses log scale (need 10^x), FC uses linear scale (direct x)
@@ -490,9 +490,9 @@ create_cost_tradeoff_plots <- function(results) {
             x_values <- round(trace_data$x, 2)     # FC: already linear scale, 2 decimals
           }
           y_values <- round(10^trace_data$y)       # Cost is always log scale
-          
+
           x_label <- if (workflow_info$workflow_id == "power_cost_TPM_cells_reads") "TPM Threshold" else "Fold Change"
-          
+
           plotly_obj$x$data[[i]]$hovertemplate <- paste0(
             x_label, ": %{customdata[0]}<br>",
             "Optimal Cost: $%{customdata[1]:,}<br>",
@@ -503,7 +503,7 @@ create_cost_tradeoff_plots <- function(results) {
           # For other plots: cells and reads hover data
           cells_values <- round(10^trace_data$x)
           reads_values <- round(10^trace_data$y)
-          
+
           plotly_obj$x$data[[i]]$hovertemplate <- paste0(
             "Cells per target: %{customdata[0]:,}<br>",
             "Reads per cell: %{customdata[1]:,}<br>",
@@ -513,7 +513,7 @@ create_cost_tradeoff_plots <- function(results) {
         }
       }
     }
-    
+
     plotly_obj %>%
       layout(
         title = list(
@@ -533,23 +533,23 @@ create_cost_tradeoff_plots <- function(results) {
         xaxis = list(title = "Parameter"),
         yaxis = list(title = "Value"),
         annotations = list(
-          list(text = "Plot generation failed - please check data", 
-               x = 0.5, y = 0.5, showarrow = FALSE, 
+          list(text = "Plot generation failed - please check data",
+               x = 0.5, y = 0.5, showarrow = FALSE,
                xref = "paper", yref = "paper")
         )
       )
   })
-  
+
   p_interactive <- p_interactive %>%
     config(
       displayModeBar = FALSE,  # Remove all toolbar buttons
       displaylogo = FALSE,
       modeBarButtonsToRemove = list("all")  # Remove all buttons
     )
-  
+
   # Cost analysis summary
   cost_summary <- create_cost_analysis_summary(cost_data, optimal_design, target_power, cost_budget)
-  
+
   result <- list(
     main_plot = p,
     interactive_plot = p_interactive,
@@ -569,17 +569,17 @@ create_cost_tradeoff_plots <- function(results) {
 #' @return List containing ggplot and plotly objects with multiple traces
 #' @noRd
 create_multi_solution_cost_plots <- function(results) {
-  
+
   target_power <- results$user_config$design_options$target_power
   workflow_info <- results$workflow_info
   solutions_data <- results$plot_data$solutions
-  
+
   # Extract cost budget from different locations based on workflow type
   cost_budget <- results$user_config$design_options$cost_budget %||%
                  results$metadata$TPM_minimization_data$cost_constraint %||%
                  results$metadata$fc_minimization_data$cost_constraint %||%
                  results$user_config$cost_info$cost_constraint_budget
-  
+
   # Create base ggplot for cost-power tradeoff
   p <- ggplot() +
     labs(
@@ -593,26 +593,26 @@ create_multi_solution_cost_plots <- function(results) {
       legend.position = "right",
       legend.title = element_blank()
     )
-  
+
   # Add target power line
   if (!is.null(target_power) && !is.na(target_power)) {
     p <- p + geom_hline(yintercept = target_power, linetype = "dashed", alpha = 0.7)
   }
-  
+
   # Add cost budget line if available
   if (!is.null(cost_budget) && !is.na(cost_budget)) {
     p <- p + geom_vline(xintercept = cost_budget, linetype = "dotted", color = "red", alpha = 0.7)
   }
-  
+
   # Create plotly object for interactive features
   p_interactive <- plot_ly()
-  
+
   # Add target power line to plotly
   if (!is.null(target_power) && !is.na(target_power)) {
     # Get cost range from all solutions
     all_costs <- unlist(lapply(solutions_data, function(s) s$data$cost))
     cost_range <- range(all_costs, na.rm = TRUE)
-    
+
     p_interactive <- p_interactive %>%
       add_lines(
         x = cost_range,
@@ -623,13 +623,13 @@ create_multi_solution_cost_plots <- function(results) {
         hovertemplate = paste("Target Power:", scales::percent(target_power, accuracy = 0.1), "<extra></extra>")
       )
   }
-  
+
   # Add cost budget line to plotly
   if (!is.null(cost_budget) && !is.na(cost_budget)) {
     # Get power range from all solutions
     all_powers <- unlist(lapply(solutions_data, function(s) s$data$power))
     power_range <- range(all_powers, na.rm = TRUE)
-    
+
     p_interactive <- p_interactive %>%
       add_lines(
         x = rep(cost_budget, 2),
@@ -640,35 +640,35 @@ create_multi_solution_cost_plots <- function(results) {
         hovertemplate = paste("Cost Budget: $", scales::comma(cost_budget), "<extra></extra>")
       )
   }
-  
+
   # Add each solution as a separate trace
   for (solution in solutions_data) {
     solution_data <- solution$data
     solution_color <- solution$color
     solution_label <- solution$label
-    
+
     # Create tooltip text for cost-power points
     solution_data$tooltip_text <- paste0(
       solution_label, "<br>",
       "Cost: $", scales::comma(solution_data$cost), "<br>",
       "Power: ", scales::percent(solution_data$power, accuracy = 0.1)
     )
-    
+
     # Add scatter points to ggplot
-    p <- p + 
+    p <- p +
       geom_point(
-        data = solution_data, 
+        data = solution_data,
         aes(x = .data$cost, y = .data$power),
         color = solution_color,
         size = 2,
         alpha = 0.7
       )
-    
+
     # Add scatter points to plotly
     p_interactive <- p_interactive %>%
       add_markers(
         data = solution_data,
-        x = ~cost, 
+        x = ~cost,
         y = ~power,
         color = I(solution_color),
         name = solution_label,
@@ -677,25 +677,25 @@ create_multi_solution_cost_plots <- function(results) {
         hovertemplate = "%{text}<extra></extra>",
         showlegend = TRUE
       )
-    
+
     # Add optimal point if available
     if (!is.null(solution$optimal_point)) {
       optimal_design <- solution$optimal_point
-      
+
       if (!is.null(optimal_design$total_cost) && !is.na(optimal_design$total_cost) &&
           !is.null(optimal_design$achieved_power) && !is.na(optimal_design$achieved_power)) {
-        
+
         optimal_hover_text <- paste0(
           solution_label, " (Optimal)<br>",
           "Cost: $", scales::comma(optimal_design$total_cost), "<br>",
           "Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
-        
+
         # Add optimal point to ggplot
-        p <- p + 
+        p <- p +
           geom_point(
             data = data.frame(
-              x = optimal_design$total_cost, 
+              x = optimal_design$total_cost,
               y = optimal_design$achieved_power
             ),
             aes(x = x, y = y),
@@ -704,7 +704,7 @@ create_multi_solution_cost_plots <- function(results) {
             shape = 18,  # Diamond shape for optimal points
             stroke = 2
           )
-        
+
         # Add optimal point to plotly
         p_interactive <- p_interactive %>%
           add_markers(
@@ -724,7 +724,7 @@ create_multi_solution_cost_plots <- function(results) {
       }
     }
   }
-  
+
   # Configure plotly layout
   p_interactive <- p_interactive %>%
     layout(
@@ -749,12 +749,12 @@ create_multi_solution_cost_plots <- function(results) {
       displaylogo = FALSE,
       modeBarButtonsToRemove = list("all")
     )
-  
+
   # Create cost summary for the first solution (primary solution)
   primary_solution_data <- solutions_data[[1]]$data
   primary_optimal <- solutions_data[[1]]$optimal_point
   cost_summary <- create_cost_summary(primary_solution_data, primary_optimal, target_power, cost_budget, workflow_info)
-  
+
   return(list(
     main_plot = p,
     interactive_plot = p_interactive,
@@ -780,12 +780,12 @@ create_multi_solution_cost_plots <- function(results) {
 #' @return Enhanced plot data structure with added solution
 #' @noRd
 add_solution_to_plot_data <- function(current_plot_data, new_solution_data, solution_index) {
-  
+
   # Convert to multi-solution format if currently single solution
   if (!is_multi_solution_data(current_plot_data)) {
     current_plot_data <- convert_to_multi_solution_format(current_plot_data, solution_index = 1)
   }
-  
+
   # Create new solution entry
   new_solution <- list(
     id = solution_index,
@@ -794,10 +794,10 @@ add_solution_to_plot_data <- function(current_plot_data, new_solution_data, solu
     optimal_point = new_solution_data$optimal_design,
     label = paste("Solution", solution_index)
   )
-  
+
   # Add to existing solutions
   current_plot_data$solutions <- append(current_plot_data$solutions, list(new_solution))
-  
+
   return(current_plot_data)
 }
 
@@ -811,21 +811,21 @@ add_solution_to_plot_data <- function(current_plot_data, new_solution_data, solu
 #' @return Modified plot data structure with solution removed
 #' @noRd
 remove_solution_from_plot_data <- function(current_plot_data, solution_index) {
-  
+
   if (!is_multi_solution_data(current_plot_data)) {
     return(current_plot_data)  # Nothing to remove from single solution
   }
-  
+
   # Filter out the specified solution
   remaining_solutions <- Filter(function(s) s$id != solution_index, current_plot_data$solutions)
-  
+
   # If only one solution remains, convert back to single solution format
   if (length(remaining_solutions) == 1) {
     return(remaining_solutions[[1]]$data)
   } else if (length(remaining_solutions) == 0) {
     return(NULL)  # No solutions left
   }
-  
+
   # Update multi-solution structure
   current_plot_data$solutions <- remaining_solutions
   return(current_plot_data)
@@ -840,7 +840,7 @@ remove_solution_from_plot_data <- function(current_plot_data, solution_index) {
 #' @noRd
 get_color_legend_mapping <- function(solutions_data) {
   mapping <- list()
-  
+
   if (is.list(solutions_data) && "solutions" %in% names(solutions_data)) {
     # Multi-solution format
     for (solution in solutions_data$solutions) {
@@ -850,7 +850,7 @@ get_color_legend_mapping <- function(solutions_data) {
     # Single solution format - create mapping for solution 1
     mapping[["1"]] <- get_solution_color(1)
   }
-  
+
   return(mapping)
 }
 
@@ -872,27 +872,27 @@ get_color_legend_mapping <- function(solutions_data) {
 #' @return ggplot object with equi-power/equi-cost visualization
 #' @noRd
 create_equi_power_cost_plot <- function(power_data, optimal_design, target_power, workflow_info, cost_data = NULL) {
-  
+
   # For cost minimization workflow, we use:
-  # - power_data: optimal_cost_power_df for equi-power curves  
+  # - power_data: optimal_cost_power_df for equi-power curves
   # - cost_data: optimal_cost_grid for equi-cost curves
-  
+
   if (!is.null(workflow_info) && workflow_info$workflow_id == "power_cost_minimization") {
     # power_data contains optimal_cost_power_df for equi-power curves
     equi_power_df <- power_data
-    
+
     # cost_data contains optimal_cost_grid for equi-cost curves
     if (!is.null(cost_data) && nrow(cost_data) > 0) {
       # Use cost_data directly as equi-cost curves
       cost_grid_data <- cost_data
-      
+
       # Add cost_of_interest column if not present
       if (!"cost_of_interest" %in% names(cost_grid_data)) {
         # Group by similar cost levels
         cost_range <- range(cost_grid_data$total_cost, na.rm = TRUE)
         cost_levels <- seq(from = cost_range[1], to = cost_range[2], length.out = 5)
         cost_levels <- round(cost_levels)
-        
+
         # Assign each point to nearest cost level
         cost_grid_data$cost_of_interest <- sapply(cost_grid_data$total_cost, function(cost) {
           cost_levels[which.min(abs(cost_levels - cost))]
@@ -903,7 +903,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
       cost_range <- range(power_data$total_cost, na.rm = TRUE)
       cost_levels <- seq(from = cost_range[1], to = cost_range[2], length.out = 5)
       cost_levels <- round(cost_levels)
-      
+
       # Create cost grid data for equi-cost lines
       cost_grid_data <- data.frame()
       for (cost_level in cost_levels) {
@@ -916,7 +916,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
         }
       }
     }
-    
+
     # Create label dataframe for cost curve labels
     if (nrow(cost_grid_data) > 0) {
       label_df <- cost_grid_data %>%
@@ -926,16 +926,16 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
     } else {
       label_df <- data.frame()
     }
-    
+
     # Standardize column names in power_data if needed
     if ("raw_reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
       power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
       power_data$raw_reads_per_cell <- NULL
     } else if ("reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
-      power_data$sequenced_reads_per_cell <- power_data$reads_per_cell  
+      power_data$sequenced_reads_per_cell <- power_data$reads_per_cell
       power_data$reads_per_cell <- NULL
     }
-    
+
     # Test each required column exists
     required_cols <- c("cells_per_target", "sequenced_reads_per_cell", "minimum_fold_change")
     missing_cols <- setdiff(required_cols, names(power_data))
@@ -946,11 +946,11 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
              labs(title = "Error: Missing data columns",
                   subtitle = paste("Missing:", paste(missing_cols, collapse = ", "))))
     }
-    
+
     # Create simplified plot for cost minimization (single equi-power + single equi-cost curve)
     tryCatch({
       p <- ggplot()
-      
+
       # Single equi-power curve (teal/green color like in your screenshot)
       p <- p + geom_smooth(
         data = power_data,
@@ -959,7 +959,7 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
         color = "#20B2AA",  # Teal color
         size = 1.2
       )
-      
+
       # Single equi-cost curve at optimal cost level (black)
       if (nrow(cost_grid_data) > 0) {
         p <- p + geom_smooth(
@@ -971,34 +971,34 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
           size = 1
         )
       }
-      
+
       # Highlight optimal point
       p <- p + geom_point(
         data = data.frame(x = optimal_design$cells_per_target, y = optimal_design$sequenced_reads_per_cell),
         mapping = aes(x = x, y = y),
-        color = "red", 
+        color = "red",
         size = 4,
         shape = 19  # Circle
       )
-      
+
       # Use log scales but we'll handle tooltips differently
-      p <- p + scale_x_log10(labels = scales::comma_format()) + 
+      p <- p + scale_x_log10(labels = scales::comma_format()) +
                scale_y_log10(labels = scales::comma_format())
-      
+
       # Clean labels without subtitle
       p <- p + labs(
         x = "Cells per target",
-        y = "Reads per cell", 
+        y = "Reads per cell",
         title = "Minimize Total Cost"
       )
-      
+
       # Add annotation on equi-power curve (teal curve) - position higher
       power_annotation_x <- median(power_data$cells_per_target, na.rm = TRUE)
       power_annotation_y <- power_data$sequenced_reads_per_cell[which.min(abs(power_data$cells_per_target - power_annotation_x))]
-      
+
       p <- p + annotate(
-        "text", 
-        x = power_annotation_x, 
+        "text",
+        x = power_annotation_x,
         y = power_annotation_y * 2.5,  # Position much higher above the curve
         label = sprintf("Target Power: %.0f%%", target_power * 100),
         color = "#20B2AA",  # Same color as equi-power curve
@@ -1006,24 +1006,24 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
         fontface = "bold",
         hjust = 0.5
       )
-      
+
       # Add annotation on equi-cost curve (black curve) - position lower and left
       if (nrow(cost_grid_data) > 0) {
         cost_annotation_x <- median(cost_grid_data$cells_per_target, na.rm = TRUE) * 0.92  # Position at 0.92 of median
         cost_annotation_y <- cost_grid_data$sequenced_reads_per_cell[which.min(abs(cost_grid_data$cells_per_target - cost_annotation_x))]
-        
+
         p <- p + annotate(
           "text",
           x = cost_annotation_x,
           y = cost_annotation_y * 0.4,  # Position much lower below the curve
-          label = sprintf("Cost: $%.0f", optimal_design$total_cost),  # Remove "Optimal" 
+          label = sprintf("Cost: $%.0f", optimal_design$total_cost),  # Remove "Optimal"
           color = "black",  # Same color as equi-cost curve
           size = 4,
           fontface = "bold",
           hjust = 0.5
         )
       }
-      
+
       # Theme
       p <- p + theme_bw() +
         theme(
@@ -1034,14 +1034,14 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
           legend.position = "none",  # Remove all legends
           plot.title = element_text(hjust = 0.5, size = 20)
         )
-      
+
     }, error = function(e) {
       # Create a simple fallback plot
       p <<- ggplot(power_data, aes(x = cells_per_target, y = sequenced_reads_per_cell)) +
         geom_point() +
         labs(title = "Error in plot creation")
     })
-    
+
   } else {
     # Fallback for other workflow types
     p <- ggplot(power_data, aes(x = cells_per_target, y = sequenced_reads_per_cell)) +
@@ -1053,13 +1053,13 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
         title = workflow_info$title,
         x = "Cells per Target",
         y = "Reads per Cell",
-        subtitle = paste0("Target Power: ", scales::percent(target_power), 
+        subtitle = paste0("Target Power: ", scales::percent(target_power),
                          " | Optimal Cost: $", round(optimal_design$total_cost))
       ) +
       theme_bw() +
       theme(plot.title = element_text(hjust = 0.5))
   }
-  
+
   return(p)
 }
 
@@ -1072,18 +1072,18 @@ create_equi_power_cost_plot <- function(power_data, optimal_design, target_power
 #' @return ggplot object with cost vs parameter visualization
 #' @noRd
 create_minimization_plot <- function(analysis_results) {
-  
+
   # Validate input
   if (is.null(analysis_results) || is.null(analysis_results$power_data) || is.null(analysis_results$optimal_design)) {
     stop("Invalid analysis_results: missing required data (power_data, optimal_design)")
   }
-  
+
   # Extract data from analysis results
   power_data <- analysis_results$power_data
   minimizing_variable <- analysis_results$metadata$minimizing_variable
   cost_constraint <- analysis_results$metadata$cost_constraint
   optimal_design <- analysis_results$optimal_design
-  
+
   # Group by minimizing variable and get minimum cost for each level (for plotting the curve)
   grouped_data <- power_data %>%
     dplyr::group_by(.data[[minimizing_variable]]) %>%
@@ -1091,21 +1091,21 @@ create_minimization_plot <- function(analysis_results) {
     dplyr::ungroup() %>%
     dplyr::arrange(.data[[minimizing_variable]]) %>%
     as.data.frame()
-  
+
   # Validate data
   if (is.null(grouped_data) || nrow(grouped_data) == 0) {
     stop("No grouped data available for plotting")
   }
-  
+
   # Use the authoritative optimal point from analysis engine (single source of truth)
   # This eliminates duplicate calculation and ensures consistency with solution display
   optimal_point <- data.frame(
     total_cost = optimal_design$total_cost,
     stringsAsFactors = FALSE
   )
-  # Add the minimizing variable value 
+  # Add the minimizing variable value
   optimal_point[[minimizing_variable]] <- optimal_design[[minimizing_variable]]
-  
+
   # Create base plot with log scales
   tryCatch({
     p <- ggplot(grouped_data, aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]])) +
@@ -1113,7 +1113,7 @@ create_minimization_plot <- function(analysis_results) {
       geom_line(color = "black", size = 1) +
       # Add black points
       geom_point(color = "black", size = 2) +
-      
+
       # Use conditional X scale: log for TPM, linear for fold change
       {if (minimizing_variable == "TPM_threshold") {
         scale_x_log10(labels = scales::comma_format())
@@ -1121,26 +1121,26 @@ create_minimization_plot <- function(analysis_results) {
       scale_y_log10(
         labels = scales::dollar_format()
       ) +
-      
+
       # Add cost constraint line (horizontal dashed line)
       {if (!is.null(cost_constraint) && !is.na(cost_constraint)) {
         geom_hline(
-          yintercept = cost_constraint, 
-          linetype = "dashed", 
-          color = "orange", 
+          yintercept = cost_constraint,
+          linetype = "dashed",
+          color = "orange",
           size = 1.2
         )
       }} +
-      
+
       # Add optimal point annotation (red dot)
       geom_point(
         data = optimal_point,
         aes(x = .data[[minimizing_variable]], y = .data[["total_cost"]]),
-        color = "red", 
-        size = 4, 
+        color = "red",
+        size = 4,
         shape = 19
       ) +
-      
+
       # Styling
       labs(
         title = if (minimizing_variable == "TPM_threshold") "TPM Threshold Minimization" else "Fold Change Minimization",
@@ -1154,11 +1154,11 @@ create_minimization_plot <- function(analysis_results) {
       ) +
       theme_bw() +
       theme(plot.title = element_text(hjust = 0.5))
-    
+
   }, error = function(e) {
     stop("Plot creation failed: ", e$message)
   })
-  
+
   return(p)
 }
 
@@ -1174,7 +1174,7 @@ create_minimization_plot <- function(analysis_results) {
 #' @return ggplot object
 #' @noRd
 create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, target_power, cost_budget, workflow_info) {
-  
+
   # Create base ggplot for cost-power tradeoff
   p <- ggplot(power_data, aes(x = cells, y = reads)) +
     # Power contour/surface (colored by power achievement)
@@ -1205,8 +1205,8 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
     }} +
     # Styling
     scale_color_gradient2(
-      low = "#C73E1D", 
-      mid = "#F7B32B", 
+      low = "#C73E1D",
+      mid = "#F7B32B",
       high = "#2E86AB",
       midpoint = target_power,
       name = "Power",
@@ -1223,7 +1223,7 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
       x = "Cells per Target",
       y = "Reads per Cell",
       caption = if (!is.null(cost_budget)) {
-        paste("Target Power:", scales::percent(target_power), 
+        paste("Target Power:", scales::percent(target_power),
               "| Budget: $", scales::comma(cost_budget))
       } else {
         paste("Target Power:", scales::percent(target_power))
@@ -1236,7 +1236,7 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
       axis.title = element_text(size = 11, face = "bold"),
       legend.position = "right"
     )
-  
+
   return(p)
 }
 
@@ -1253,21 +1253,21 @@ create_standard_cost_tradeoff_plot <- function(power_data, optimal_design, targe
 #' @return List with summary statistics
 #' @noRd
 create_power_curve_summary <- function(power_data, optimal_design, target_power, workflow_info) {
-  
+
   # Calculate summary metrics
   feasible_designs <- power_data[power_data$meets_threshold, ]
-  
+
   summary <- list(
     total_designs_evaluated = nrow(power_data),
     feasible_designs = nrow(feasible_designs),
     feasibility_rate = nrow(feasible_designs) / nrow(power_data),
-    
+
     power_range = list(
       min = min(power_data$power, na.rm = TRUE),
       max = max(power_data$power, na.rm = TRUE),
       mean = mean(power_data$power, na.rm = TRUE)
     ),
-    
+
     optimal_recommendation = if (!is.null(optimal_design$parameter_value) && !is.null(optimal_design$achieved_power)) {
       # Real perturbplan data structure
       minimizing_param <- workflow_info$minimizing_parameter
@@ -1300,20 +1300,20 @@ create_power_curve_summary <- function(power_data, optimal_design, target_power,
       )
     }
   )
-  
+
   return(summary)
 }
 
 #' Create cost analysis summary
 #'
 #' @param cost_data Cost analysis data
-#' @param optimal_design Optimal design information  
+#' @param optimal_design Optimal design information
 #' @param target_power Target power threshold
 #' @param cost_budget Cost budget constraint
 #' @return List with cost summary statistics
 #' @noRd
 create_cost_analysis_summary <- function(cost_data, optimal_design, target_power, cost_budget) {
-  
+
   # Check if cost_data is NULL or doesn't have total_cost column
   if (is.null(cost_data) || is.null(cost_data$total_cost)) {
     return(list(
@@ -1326,27 +1326,27 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
       )
     ))
   }
-  
+
   # For cost minimization, cost_data doesn't have power column, so skip power filtering
   feasible_designs <- cost_data  # All designs from cost_grid are relevant
-  
+
   if (!is.null(cost_budget)) {
     budget_feasible <- feasible_designs[feasible_designs$total_cost <= cost_budget, ]
   } else {
     budget_feasible <- feasible_designs
   }
-  
+
   summary <- list(
     total_designs_evaluated = nrow(cost_data),
     power_feasible_designs = nrow(feasible_designs),
     budget_feasible_designs = if (!is.null(cost_budget)) nrow(budget_feasible) else nrow(feasible_designs),
-    
+
     cost_range = list(
       min = min(cost_data$total_cost, na.rm = TRUE),
       max = max(cost_data$total_cost, na.rm = TRUE),
       mean = mean(cost_data$total_cost, na.rm = TRUE)
     ),
-    
+
     optimal_recommendation = if (!is.null(optimal_design$cells_per_target)) {
       optimal_rec <- list(
         optimal_cells = optimal_design$cells_per_target,
@@ -1359,12 +1359,12 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
           "| Power:", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
       )
-      
+
       # Add optimal minimized parameter if present (for power+cost workflows)
       if (!is.null(optimal_design$optimal_minimized_param)) {
         optimal_rec$optimal_minimized_param <- optimal_design$optimal_minimized_param
       }
-      
+
       optimal_rec
     } else {
       list(
@@ -1381,6 +1381,6 @@ create_cost_analysis_summary <- function(cost_data, optimal_design, target_power
       )
     }
   )
-  
+
   return(summary)
 }

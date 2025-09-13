@@ -144,7 +144,7 @@ currency_input <- function(ns, id, label, value = NULL, min = 0, max = NULL, ste
 #' @examples
 #' \dontrun{
 #' parameter_matrix(ns, 
-#'   list(cells_per_target = "varying", mapped_reads_per_cell = "fixed"),
+#'   list(cells_per_target = "varying", reads_per_cell = "fixed"),
 #'   workflow_info
 #' )
 #' }

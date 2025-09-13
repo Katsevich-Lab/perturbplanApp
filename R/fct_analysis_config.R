@@ -33,13 +33,13 @@ get_analysis_mode <- function() {
 #' @noRd
 detect_workflow_scenario <- function(workflow_config) {
   design_config <- workflow_config$design_options
-  
+
   opt_type <- design_config$optimization_type
   target <- design_config$minimization_target
   param_controls <- design_config$parameter_controls
   cost_budget <- design_config$cost_budget
-  
-  
+
+
   # VALIDATION: Check for missing essential values
   if (is.null(opt_type) || opt_type == "" || is.null(target) || target == "") {
     return(list(
@@ -51,12 +51,12 @@ detect_workflow_scenario <- function(workflow_config) {
       description = "Missing optimization type or minimization target"
     ))
   }
-  
+
   # FALLBACK: If optimization_type is missing but cost_budget is present, assume power_cost
   if ((is.null(opt_type) || opt_type == "") && !is.null(cost_budget) && cost_budget > 0) {
     opt_type <- "power_cost"
   }
-  
+
   # Power-only workflows (1-5)
   if (opt_type == "power_only") {
     # UI now sends perturbplan names directly - no translation needed
@@ -72,7 +72,7 @@ detect_workflow_scenario <- function(workflow_config) {
     } else if (target == "cost") {
       return(list(
         workflow_id = "power_cost_minimization",
-        plot_type = "cost_tradeoff_curves", 
+        plot_type = "cost_tradeoff_curves",
         category = "power_only_cost",
         minimizing_parameter = "cost",
         title = "Minimize Total Cost",
@@ -80,18 +80,18 @@ detect_workflow_scenario <- function(workflow_config) {
       ))
     }
   }
-  
+
   # Power+cost workflows (6-11)
   if (opt_type == "power_cost") {
     # Add null check for param_controls
     if (is.null(param_controls)) {
       param_controls <- list()
     }
-    
+
     varying_params <- get_varying_parameters(param_controls)
-    
+
     if (target == "TPM_threshold") {
-      if (length(varying_params) == 2 && all(c("cells_per_target", "mapped_reads_per_cell") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
         # Workflow 8: TPM + cells + reads varying
         return(list(
           workflow_id = "power_cost_TPM_cells_reads",
@@ -107,13 +107,13 @@ detect_workflow_scenario <- function(workflow_config) {
         # Map UI control name to internal name
         other_param <- switch(other_param_ui,
           "cells_per_target" = "cells",
-          "mapped_reads_per_cell" = "reads",
+          "reads_per_cell" = "reads",
           other_param_ui  # fallback
         )
         return(list(
           workflow_id = paste0("power_cost_TPM_", other_param),
           plot_type = "single_parameter_curve",
-          category = "power_cost_single", 
+          category = "power_cost_single",
           minimizing_parameter = "TPM_threshold",
           varying_parameter = other_param,  # Track which cells/reads parameter is varying
           title = "Minimize TPM Threshold",  # Clean title without varying parameter info
@@ -122,12 +122,12 @@ detect_workflow_scenario <- function(workflow_config) {
       }
     } else if (target %in% c("minimum_fold_change", "fold_change")) {
       # Similar logic for fold change workflows 9-11
-      if (length(varying_params) == 2 && all(c("cells_per_target", "mapped_reads_per_cell") %in% varying_params)) {
+      if (length(varying_params) == 2 && all(c("cells_per_target", "reads_per_cell") %in% varying_params)) {
         return(list(
           workflow_id = "power_cost_fc_cells_reads",
           plot_type = "cost_tradeoff_curves",
           category = "power_cost_multi",
-          minimizing_parameter = "minimum_fold_change", 
+          minimizing_parameter = "minimum_fold_change",
           title = "Minimize Fold Change",
           description = "Power+cost optimization with fold change, cells, and reads varying"
         ))
@@ -136,7 +136,7 @@ detect_workflow_scenario <- function(workflow_config) {
         # Map UI control name to internal name
         other_param <- switch(other_param_ui,
           "cells_per_target" = "cells",
-          "mapped_reads_per_cell" = "reads",
+          "reads_per_cell" = "reads",
           other_param_ui  # fallback
         )
         return(list(
@@ -151,7 +151,7 @@ detect_workflow_scenario <- function(workflow_config) {
       }
     }
   }
-  
+
   # Fallback for unknown configurations
   # Choose a safer default minimizing parameter based on optimization type
   safe_minimizing_param <- if (!is.null(opt_type) && opt_type == "power_cost") {
@@ -159,7 +159,7 @@ detect_workflow_scenario <- function(workflow_config) {
   } else {
     "cells_per_target"  # Safe default for power_only mode
   }
-  
+
   return(list(
     workflow_id = "unknown",
     plot_type = "single_parameter_curve",  # Default to safe plot type
@@ -177,41 +177,41 @@ detect_workflow_scenario <- function(workflow_config) {
 #' @noRd
 validate_workflow_config <- function(workflow_config) {
   errors <- character()
-  
+
   # Check design options
   design_config <- workflow_config$design_options
   if (is.null(design_config$optimization_type) || design_config$optimization_type == "") {
     errors <- c(errors, "Optimization type not selected")
   }
-  
+
   if (is.null(design_config$target_power) || !is.numeric(design_config$target_power)) {
     errors <- c(errors, "Target power not specified")
   } else if (design_config$target_power <= 0 || design_config$target_power >= 1) {
     errors <- c(errors, "Target power must be between 0 and 1")
   }
-  
+
   if (is.null(design_config$minimization_target) || design_config$minimization_target == "") {
     errors <- c(errors, "Minimization target not selected")
   }
-  
+
   # Validate minimization target compatibility with optimization type
   if (!is.null(design_config$optimization_type) && !is.null(design_config$minimization_target) &&
       design_config$optimization_type != "" && design_config$minimization_target != "") {
-    
+
     opt_type <- design_config$optimization_type
     target <- design_config$minimization_target
-    
+
     # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
     if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
       errors <- c(errors, paste("Power+cost optimization can only minimize TPM threshold or fold change, not", target))
     }
-    
+
     # Power-only mode supports all targets
     if (opt_type == "power_only" && !target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change", "cost")) {
       errors <- c(errors, paste("Invalid minimization target for power-only optimization:", target))
     }
   }
-  
+
   # Check cost budget for power+cost optimization
   if (!is.null(design_config$optimization_type) && design_config$optimization_type == "power_cost") {
     if (is.null(design_config$cost_budget) || !is.numeric(design_config$cost_budget)) {
@@ -220,18 +220,18 @@ validate_workflow_config <- function(workflow_config) {
       errors <- c(errors, "Cost budget must be positive")
     }
   }
-  
+
   # Check parameter controls
   param_controls <- design_config$parameter_controls
   if (is.null(param_controls)) {
     errors <- c(errors, "Parameter controls not configured")
   }
-  
+
   # Check for required experimental setup
   if (is.null(workflow_config$experimental_setup)) {
     errors <- c(errors, "Experimental setup not configured")
   }
-  
+
   return(list(
     is_valid = length(errors) == 0,
     errors = errors,
@@ -240,7 +240,7 @@ validate_workflow_config <- function(workflow_config) {
 }
 
 # ============================================================================
-# PARAMETER EXTRACTION UTILITIES  
+# PARAMETER EXTRACTION UTILITIES
 # ============================================================================
 
 #' Extract parameter ranges from workflow configuration
@@ -251,12 +251,12 @@ validate_workflow_config <- function(workflow_config) {
 #' @noRd
 extract_parameter_range <- function(workflow_config, parameter_name) {
   param_control <- workflow_config$design_options$parameter_controls[[parameter_name]]
-  
+
   if (is.null(param_control)) {
     # Return default ranges
     return(get_default_parameter_range(parameter_name))
   }
-  
+
   if (param_control$type == "fixed") {
     # Return fixed value
     return(param_control$fixed_value)
@@ -267,7 +267,7 @@ extract_parameter_range <- function(workflow_config, parameter_name) {
     # Return range that will be optimized over
     return(get_default_parameter_range(parameter_name))
   }
-  
+
   # Fallback
   return(get_default_parameter_range(parameter_name))
 }
@@ -295,14 +295,14 @@ get_default_parameter_range <- function(parameter_name) {
 #' @noRd
 get_varying_parameters <- function(param_controls) {
   varying_params <- character()
-  
+
   for (param_name in names(param_controls)) {
     param_info <- param_controls[[param_name]]
     if (!is.null(param_info$type) && param_info$type == "varying") {
       varying_params <- c(varying_params, param_name)
     }
   }
-  
+
   return(varying_params)
 }
 
@@ -319,12 +319,13 @@ format_parameter_name <- function(parameter_name) {
   switch(parameter_name,
     # Full parameter names (preferred)
     "cells_per_target" = "Cells per Target",
-    "mapped_reads_per_cell" = "Mapped Reads per Cell",
+    "reads_per_cell" = "Sequenced Reads per Cell",
+    "reads_per_cell" = "Sequenced Reads per Cell",
     "TPM_threshold" = "TPM Threshold",
     "minimum_fold_change" = "Fold Change",
     # Legacy abbreviated names (backward compatibility)
     "cells" = "Cells per Target",
-    "reads" = "Reads per Cell", 
+    "reads" = "Reads per Cell",
     "TPM_threshold" = "TPM Threshold",
     "fold_change" = "Fold Change",
     "cost" = "Total Cost",
@@ -336,7 +337,7 @@ format_parameter_name <- function(parameter_name) {
 #' Create analysis metadata for results
 #'
 #' @param workflow_config User configuration
-#' @param workflow_info Detected workflow information  
+#' @param workflow_info Detected workflow information
 #' @return List with analysis metadata
 #' @noRd
 create_analysis_metadata <- function(workflow_config, workflow_info) {

@@ -93,7 +93,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       num_targets = NULL,
       gRNAs_per_target = NULL,
       cells_fixed = NULL,
-      mapped_reads_fixed = NULL,
+      reads_per_cell_fixed = NULL,
       TPM_threshold_fixed = NULL,
       minimum_fold_change_fixed = NULL
     )
@@ -113,7 +113,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         slider_state$num_targets <- experimental$num_targets
         slider_state$gRNAs_per_target <- experimental$gRNAs_per_target
         slider_state$cells_fixed <- experimental$cells_fixed
-        slider_state$mapped_reads_fixed <- experimental$mapped_reads_fixed
+        slider_state$reads_per_cell_fixed <- experimental$reads_per_cell_fixed
         slider_state$TPM_threshold_fixed <- analysis$TPM_threshold_fixed
         slider_state$minimum_fold_change_fixed <- effects$minimum_fold_change_fixed
 
@@ -177,12 +177,12 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       # Get parameter values with defaults (use slider_state if initialized)
       if (slider_state$initialized) {
         cells_value <- slider_state$cells_fixed
-        reads_value <- slider_state$mapped_reads_fixed
+        reads_value <- slider_state$reads_per_cell_fixed
         tpm_value <- slider_state$TPM_threshold_fixed
         fc_value <- slider_state$minimum_fold_change_fixed
       } else {
         cells_value <- experimental$cells_fixed
-        reads_value <- experimental$mapped_reads_fixed
+        reads_value <- experimental$reads_per_cell_fixed
         tpm_value <- analysis$TPM_threshold_fixed
         fc_value <- effects$minimum_fold_change_fixed
       }
@@ -216,7 +216,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         # Map parameter names to their control types
         param_name_mapping <- list(
           "cells_per_target" = "cells_per_target",
-          "reads_per_cell" = "mapped_reads_per_cell",  # UI uses different name
+          "reads_per_cell" = "reads_per_cell",  # UI uses same name
           "TPM_threshold" = "TPM_threshold",
           "minimum_fold_change" = "minimum_fold_change"
         )
@@ -302,7 +302,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
 
     observeEvent(input$reads_slider, {
       if (slider_state$initialized) {
-        slider_state$mapped_reads_fixed <- input$reads_slider
+        slider_state$reads_per_cell_fixed <- input$reads_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
@@ -331,7 +331,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
           num_targets = slider_state$num_targets,
           gRNAs_per_target = slider_state$gRNAs_per_target,
           cells_fixed = slider_state$cells_fixed,
-          mapped_reads_fixed = slider_state$mapped_reads_fixed
+          reads_per_cell_fixed = slider_state$reads_per_cell_fixed
         ),
         analysis_choices = list(
           TPM_threshold_fixed = slider_state$TPM_threshold_fixed

@@ -67,7 +67,7 @@ render_minimizing_parameter_display <- function(optimal, workflow_info, minimizi
     return(render_fc_minimization_display(optimal))
   } else if (minimizing_param == "cells_per_target") {
     return(render_cells_minimization_display(optimal))
-  } else if (minimizing_param %in% c("reads_per_cell", "mapped_reads_per_cell")) {
+  } else if (minimizing_param %in% c("reads_per_cell", "reads_per_cell")) {
     return(render_reads_minimization_display(optimal))
   } else if (minimizing_param == "cost") {
     return(render_cost_minimization_display(optimal))
@@ -449,7 +449,7 @@ render_fixed_cells_display <- function(optimal, minimizing_param, workflow_info 
 #' @return Shiny UI tags$div or NULL
 #' @noRd
 render_fixed_reads_display <- function(optimal, minimizing_param, workflow_info = NULL) {
-  excluded_params <- c("reads_per_cell", "mapped_reads_per_cell", "cost")
+  excluded_params <- c("reads_per_cell", "reads_per_cell", "cost")
   
   # For workflows 10-11 and constrained minimization, handle different varying scenarios
   if (!is.null(workflow_info) && 

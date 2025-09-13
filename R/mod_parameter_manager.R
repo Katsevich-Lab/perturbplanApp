@@ -89,7 +89,7 @@ mod_parameter_manager_server <- function(id) {
         design_options = list(
           parameter_controls = list(
             cells_per_target = list(fixed_value = parameters$cells_per_target),
-            mapped_reads_per_cell = list(fixed_value = parameters$reads_per_cell),
+            reads_per_cell = list(fixed_value = parameters$reads_per_cell),
             TPM_threshold = list(fixed_value = parameters$TPM_threshold),
             minimum_fold_change = list(fixed_value = parameters$minimum_fold_change)
           )
@@ -102,7 +102,7 @@ mod_parameter_manager_server <- function(id) {
           gRNAs_per_target = parameters$gRNAs_per_target,
           non_targeting_gRNAs = parameters$non_targeting_gRNAs,
           cells_fixed = parameters$cells_per_target,
-          mapped_reads_fixed = parameters$reads_per_cell
+          reads_per_cell_fixed = parameters$reads_per_cell
         ),
         
         # Analysis choices

@@ -98,7 +98,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     for (name in names(config$design_options$parameter_controls)) {
     }
   }
-  
+
   # Use pre-extracted pilot data (passed as parameter to avoid duplication)
 
   # Extract design options
@@ -110,11 +110,11 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 
   # Determine minimizing variable from workflow
   minimizing_variable <- workflow_info$minimizing_parameter
-  
-  
+
+
   # minimizing_variable is already standardized by centralized translation in mod_sidebar.R
   # No additional mapping needed
-  
+
   # Ensure we have the correct parameter name
   valid_minimizing_params <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell", "cost")
   if (!minimizing_variable %in% valid_minimizing_params) {
@@ -132,11 +132,11 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     # Default values to use when fixed_value is NULL but type is "fixed"
     default_values <- list(
       cells_per_target = 1000,
-      mapped_reads_per_cell = 5000,
+      reads_per_cell = 5000,
       TPM_threshold = 10,
       minimum_fold_change = 0.8
     )
-    
+
     # Add fixed parameters based on their type and actual config values (including slider overrides)
     if (!is.null(param_controls$cells_per_target) &&
         param_controls$cells_per_target$type == "fixed") {
@@ -145,11 +145,16 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
       fixed_variable$cells_per_target <- round(value)
     }
 
-    if (!is.null(param_controls$mapped_reads_per_cell) &&
-        param_controls$mapped_reads_per_cell$type == "fixed") {
-      # Use actual config value (includes slider overrides), fallback to default
-      value <- experimental_opts$mapped_reads_fixed %||% default_values$mapped_reads_per_cell
-      fixed_variable$reads_per_cell <- round(value)
+    if (!is.null(param_controls$reads_per_cell) &&
+        param_controls$reads_per_cell$type == "fixed") {
+      # Get sequenced reads per cell value (includes slider overrides), fallback to default
+      sequenced_reads_per_cell <- experimental_opts$reads_per_cell_fixed %||% default_values$reads_per_cell
+
+      # Apply mapping efficiency transformation: reads_per_cell = sequenced_reads_per_cell * mapping_efficiency
+      mapping_efficiency <- advanced_opts$mapping_efficiency %||% 0.72
+      reads_per_cell <- sequenced_reads_per_cell * mapping_efficiency
+
+      fixed_variable$reads_per_cell <- round(reads_per_cell)
     }
 
     if (!is.null(param_controls$TPM_threshold) &&
@@ -169,22 +174,22 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 
 
   # POWER+COST WORKFLOW LOGIC: Calculate missing parameter using cost constraints
-  if (!is.null(config$design_options$optimization_type) && 
+  if (!is.null(config$design_options$optimization_type) &&
       config$design_options$optimization_type == "power_cost") {
-    
+
     # Check if we have a power+cost workflow with one cells/reads parameter fixed
     has_cells_fixed <- !is.null(fixed_variable$cells_per_target)
     has_reads_fixed <- !is.null(fixed_variable$reads_per_cell)
-    
+
     # Only apply if exactly one of cells/reads is fixed (our target workflows)
     if ((has_cells_fixed && !has_reads_fixed) || (!has_cells_fixed && has_reads_fixed)) {
-      
+
       # Extract cost parameters
       cost_constraint <- design_opts$cost_budget %||% 1000  # Default budget
       cost_per_cell <- design_opts$cost_per_cell %||% 0.086  # Default cost per cell
       cost_per_million_reads <- design_opts$cost_per_million_reads %||% 0.374  # Default cost per million reads
-      
-      
+
+
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
       tryCatch({
         cost_result <- perturbplan::obtain_fixed_variable_constraining_cost(
@@ -199,18 +204,18 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
           cells_per_target = if(has_cells_fixed) fixed_variable$cells_per_target else NULL,
           mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72
         )
-        
+
         # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
         if (has_cells_fixed && !has_reads_fixed) {
           fixed_variable$reads_per_cell <- round(cost_result$reads_per_cell)
         } else if (has_reads_fixed && !has_cells_fixed) {
           fixed_variable$cells_per_target <- round(cost_result$cells_per_target)
         }
-        
+
       }, error = function(e) {
         stop("Cost constraint calculation failed: ", e$message)
       })
-      
+
     }
   }
 
@@ -247,18 +252,18 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 
     # Power and cost parameters
     power_target = design_opts$target_power %||% 0.8,
-    
+
     # Cost constraint logic:
-    # - For the 4 specific power+cost workflows, cost_constraint should be NULL 
+    # - For the 4 specific power+cost workflows, cost_constraint should be NULL
     #   because the constraint was already applied via obtain_fixed_variable_constraining_cost
     # - For other power+cost workflows, use the budget
     cost_constraint = NULL,  # Set to NULL for all workflows - cost constraint already applied if needed
     cost_per_captured_cell = design_opts$cost_per_cell %||% 0.086,
     cost_per_million_reads = design_opts$cost_per_million_reads %||% 0.374,
-    
+
     # Grid parameters - reduced for better performance in single-parameter optimization
     grid_size = 15,
-    
+
     # Mapping efficiency (from advanced settings)
     mapping_efficiency = advanced_opts$mapping_efficiency %||% 0.72,
 
@@ -303,11 +308,11 @@ standardize_perturbplan_results <- function(results, config, workflow_info) {
       plot_type = workflow_info$plot_type,
       minimizing_parameter = workflow_info$minimizing_parameter,
       optimization_type = config$design_options$optimization_type,
-      cost_constraint = if (config$design_options$optimization_type == "power_cost") 
+      cost_constraint = if (config$design_options$optimization_type == "power_cost")
                          config$design_options$cost_budget else NULL,
-      cost_per_cell = if (config$design_options$optimization_type == "power_cost") 
+      cost_per_cell = if (config$design_options$optimization_type == "power_cost")
                        config$design_options$cost_per_cell %||% 0.086 else NULL,
-      cost_per_million_reads = if (config$design_options$optimization_type == "power_cost") 
+      cost_per_million_reads = if (config$design_options$optimization_type == "power_cost")
                                 config$design_options$cost_per_million_reads %||% 0.374 else NULL,
       timestamp = Sys.time(),
       n_rows = nrow(results),
@@ -373,16 +378,16 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
       "TPM_threshold" = "TPM_threshold",
       "minimum_fold_change" = "minimum_fold_change"
     )
-    
+
     actual_field <- param_field_mapping[[workflow_info$minimizing_parameter]] %||% workflow_info$minimizing_parameter
-    
+
     optimal_design <- list(
       parameter_value = optimal[[actual_field]],
       achieved_power = optimal$overall_power,
       cells_per_target = optimal$cells_per_target %||% NA,
       sequenced_reads_per_cell = optimal$sequenced_reads_per_cell %||% NA
     )
-    
+
     # Add cost information if available
     if ("total_cost" %in% names(optimal)) {
       optimal_design$total_cost <- optimal$total_cost
@@ -393,20 +398,20 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
     if ("cost_per_million_reads" %in% names(optimal)) {
       optimal_design$cost_per_million_reads <- optimal$cost_per_million_reads
     }
-    
+
     # Add parameter-specific field names for plotting compatibility (FINAL STEP)
     # When minimizing reads_per_cell, plotting code expects reads_per_cell field
     if (workflow_info$minimizing_parameter == "reads_per_cell") {
       optimal_design$reads_per_cell <- optimal$sequenced_reads_per_cell %||% NA
     }
-    
+
     summary <- list(
       optimal_design = optimal_design,
       power_range = range(results$overall_power, na.rm = TRUE),
       n_designs = nrow(results),
       feasible_designs = sum(results$overall_power >= 0.05, na.rm = TRUE)
     )
-    
+
     # Add cost range if cost column exists
     if ("total_cost" %in% names(results)) {
       summary$cost_range <- range(results$total_cost, na.rm = TRUE)
@@ -423,9 +428,9 @@ create_perturbplan_results_summary <- function(results, workflow_info) {
 
 #' Get parameter column name from perturbplan results
 #'
-#' @description Maps minimizing parameter names to actual column names 
+#' @description Maps minimizing parameter names to actual column names
 #' returned by perturbplan::cost_power_computation
-#' 
+#'
 #' @param minimizing_param The parameter being minimized
 #' @return Character string of actual column name in perturbplan results
 #' @noRd
@@ -433,7 +438,7 @@ get_parameter_column_name <- function(minimizing_param) {
   switch(minimizing_param,
     "cells_per_target" = "cells_per_target",
     "reads_per_cell" = "sequenced_reads_per_cell",  # standardized column name
-    "TPM_threshold" = "TPM_threshold", 
+    "TPM_threshold" = "TPM_threshold",
     "minimum_fold_change" = "minimum_fold_change",
     minimizing_param  # fallback to original name
   )
@@ -450,15 +455,15 @@ get_parameter_column_name <- function(minimizing_param) {
 #' @return List with plotting-compatible format (power_data, optimal_design, etc.)
 #' @noRd
 transform_perturbplan_to_plotting_format <- function(standardized_results, config, workflow_info) {
-  
+
   # Return error if standardized results contain error
   if (!is.null(standardized_results$error)) {
     return(standardized_results)
   }
-  
+
   # Extract raw perturbplan data
   raw_data <- standardized_results$data
-  
+
   if (is.null(raw_data) || nrow(raw_data) == 0) {
     return(list(
       error = "No data available from perturbplan analysis",
@@ -468,18 +473,18 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
       )
     ))
   }
-  
+
   # Get the correct parameter column name
   minimizing_param <- workflow_info$minimizing_parameter
   param_column <- get_parameter_column_name(minimizing_param)
-  
+
   # Validate that required columns exist
   required_cols <- c("overall_power", param_column)
   missing_cols <- setdiff(required_cols, names(raw_data))
-  
+
   if (length(missing_cols) > 0) {
     return(list(
-      error = sprintf("Missing required columns in perturbplan results: %s", 
+      error = sprintf("Missing required columns in perturbplan results: %s",
                      paste(missing_cols, collapse = ", ")),
       metadata = list(
         analysis_mode = "Real Analysis (Missing Columns)",
@@ -487,25 +492,25 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
       )
     ))
   }
-  
+
   # Create power_data in plotting format
   target_power <- config$design_options$target_power %||% 0.8
-  
+
   power_data <- data.frame(
     parameter_value = raw_data[[param_column]],
     power = raw_data$overall_power,
     meets_threshold = raw_data$overall_power >= target_power,
     stringsAsFactors = FALSE
   )
-  
+
   # Add cost data if available (for power+cost workflows)
   if ("total_cost" %in% names(raw_data)) {
     power_data$cost = raw_data$total_cost
   }
-  
+
   # Find optimal design based on parameter type
   feasible_designs <- raw_data[raw_data$overall_power >= target_power, ]
-  
+
   if (nrow(feasible_designs) > 0) {
     # For minimum_fold_change: find MAXIMUM value (closest to 1) among feasible designs
     # For other parameters: find MINIMUM value among feasible designs
@@ -520,7 +525,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     optimal_idx <- which.max(raw_data$overall_power)
     optimal_row <- raw_data[optimal_idx, ]
   }
-  
+
   optimal_design <- list(
     parameter_value = optimal_row[[param_column]],
     achieved_power = optimal_row$overall_power,
@@ -532,52 +537,52 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
     # Add mapping efficiency used in the analysis (from advanced choices)
     mapping_efficiency = config$advanced_choices$mapping_efficiency %||% 0.72,
     # Add cost calculation metadata for power+cost workflows
-    is_cost_optimized = !is.null(config$design_options$optimization_type) && 
+    is_cost_optimized = !is.null(config$design_options$optimization_type) &&
                         config$design_options$optimization_type == "power_cost",
-    cost_constraint = if (!is.null(config$design_options$optimization_type) && 
-                          config$design_options$optimization_type == "power_cost") 
+    cost_constraint = if (!is.null(config$design_options$optimization_type) &&
+                          config$design_options$optimization_type == "power_cost")
                         config$design_options$cost_budget else NULL,
-    cost_per_cell = if (!is.null(config$design_options$optimization_type) && 
-                        config$design_options$optimization_type == "power_cost") 
+    cost_per_cell = if (!is.null(config$design_options$optimization_type) &&
+                        config$design_options$optimization_type == "power_cost")
                       config$design_options$cost_per_cell %||% 0.086 else NULL,
-    cost_per_million_reads = if (!is.null(config$design_options$optimization_type) && 
-                                 config$design_options$optimization_type == "power_cost") 
+    cost_per_million_reads = if (!is.null(config$design_options$optimization_type) &&
+                                 config$design_options$optimization_type == "power_cost")
                                config$design_options$cost_per_million_reads %||% 0.374 else NULL
   )
-  
+
   # Add parameter-specific field names for plotting compatibility (CRITICAL for reads_per_cell)
   # When minimizing reads_per_cell, plotting code expects reads_per_cell field
   if (workflow_info$minimizing_parameter == "reads_per_cell") {
     optimal_design$reads_per_cell <- optimal_design$sequenced_reads_per_cell %||% NA
   }
-  
+
   # Create enriched workflow_info for plotting
   enriched_workflow_info <- workflow_info
   # Preserve the original plot_type from workflow detection (don't override for power+cost workflows)
   # enriched_workflow_info$plot_type is already set correctly by detect_workflow_scenario()
   enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter)
   enriched_workflow_info$description <- create_workflow_description(workflow_info$minimizing_parameter, target_power)
-  
+
   # Extract parameter ranges from real data
   parameter_ranges <- list()
   parameter_ranges[[minimizing_param]] <- range(power_data$parameter_value, na.rm = TRUE)
-  
+
   # Create plotting-compatible results structure
   plotting_results <- list(
     # Core plotting data (matches existing plotting module expectations)
     power_data = power_data,
     optimal_design = optimal_design,
-    
+
     # Workflow and user configuration
     workflow_info = enriched_workflow_info,
     user_config = config,
-    
+
     # Parameter information
     parameter_ranges = parameter_ranges,
-    
+
     # Raw data for detailed tables/export
     raw_perturbplan_data = raw_data,
-    
+
     # Metadata
     metadata = list(
       analysis_mode = "Real Analysis (perturbplan)",
@@ -587,7 +592,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
       timestamp = Sys.time()
     )
   )
-  
+
   return(plotting_results)
 }
 
@@ -599,7 +604,7 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
 create_workflow_title <- function(minimizing_param) {
   switch(minimizing_param,
     "cells_per_target" = "Power Optimization: Minimize Cells per Target",
-    "reads_per_cell" = "Power Optimization: Minimize Reads per Cell", 
+    "reads_per_cell" = "Power Optimization: Minimize Reads per Cell",
     "TPM_threshold" = "Power Optimization: Minimize TPM Threshold",
     "minimum_fold_change" = "Power Optimization: Minimize Fold Change",
     paste("Power Optimization: Minimize", minimizing_param)
@@ -614,11 +619,11 @@ create_workflow_title <- function(minimizing_param) {
 #' @noRd
 create_workflow_description <- function(minimizing_param, target_power) {
   power_pct <- scales::percent_format()(target_power)
-  
+
   switch(minimizing_param,
     "cells_per_target" = sprintf("Finding minimum cells needed to achieve %s power", power_pct),
     "reads_per_cell" = sprintf("Finding minimum reads needed to achieve %s power", power_pct),
-    "TPM_threshold" = sprintf("Finding minimum TPM threshold to achieve %s power", power_pct), 
+    "TPM_threshold" = sprintf("Finding minimum TPM threshold to achieve %s power", power_pct),
     "minimum_fold_change" = sprintf("Finding minimum fold change to achieve %s power", power_pct),
     sprintf("Finding minimum %s to achieve %s power", minimizing_param, power_pct)
   )

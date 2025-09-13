@@ -26,7 +26,7 @@ business logic for parameter control in constraint-driven workflows.
 \examples{
 \dontrun{
 parameter_matrix(ns, 
-  list(cells_per_target = "varying", mapped_reads_per_cell = "fixed"),
+  list(cells_per_target = "varying", reads_per_cell = "fixed"),
   workflow_info
 )
 }
