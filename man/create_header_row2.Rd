@@ -4,7 +4,7 @@
 \alias{create_header_row2}
 \title{Create Header Row 2 (Subcolumns)}
 \usage{
-create_header_row2(has_cost = NULL)
+create_header_row2(has_cost = NULL, minimizing_param = NULL)
 }
 \description{
 Create Header Row 2 (Subcolumns)

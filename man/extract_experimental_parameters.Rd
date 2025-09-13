@@ -4,7 +4,12 @@
 \alias{extract_experimental_parameters}
 \title{Extract Experimental Parameters}
 \usage{
-extract_experimental_parameters(optimal, user_config, minimizing_param)
+extract_experimental_parameters(
+  optimal,
+  user_config,
+  minimizing_param,
+  workflow_info = NULL
+)
 }
 \description{
 Extract Experimental Parameters

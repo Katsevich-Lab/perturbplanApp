@@ -4,7 +4,7 @@
 \alias{create_clean_solutions_table_ui}
 \title{Create Clean Solutions Table UI}
 \usage{
-create_clean_solutions_table_ui(solution_data, workflow_info)
+create_clean_solutions_table_ui(solutions_data, workflow_info)
 }
 \description{
 Create Clean Solutions Table UI

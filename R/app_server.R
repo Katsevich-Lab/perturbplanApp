@@ -20,6 +20,7 @@ app_server <- function(input, output, session) {
     phase = 1,                    # 1 = sidebar mode, 2 = slider mode
     plan_button_text = "Plan"     # Button text: "Plan" or "Restart"
   )
+  
 
   # ========================================================================
   # MODULE 1: INPUT COLLECTION (Sidebar)
@@ -32,16 +33,24 @@ app_server <- function(input, output, session) {
   # Clean linear architecture: sidebar → sliders → param_source → analysis
 
   # Initialize sliders with visibility-triggered initialization
-  slider_config <- mod_parameter_sliders_server("sliders", user_workflow_config, app_state)
+  slider_results <- mod_parameter_sliders_server("sliders", user_workflow_config, app_state)
 
   # Central parameter coordination: sidebar-base + slider-override logic
-  unified_config <- mod_parameter_source_manager_server("param_source", user_workflow_config, slider_config)
+  unified_config <- mod_parameter_source_manager_server("param_source", user_workflow_config, slider_results$slider_config)
 
   # ========================================================================
   # MODULE 3: ANALYSIS ENGINE
   # ========================================================================
   # Analysis engine now uses unified_config from parameter_source_manager
   analysis_results_raw <- mod_analysis_engine_server("analysis", unified_config)
+  
+  # ========================================================================
+  # MODULE 3.5: RESULTS CACHE MANAGEMENT  
+  # ========================================================================
+  # Wire pin buttons to cache management - use slider_config to track changes
+  cached_results <- mod_results_cache_server("cache", analysis_results_raw, 
+                                           slider_results$pin_trigger, 
+                                           slider_results$clear_trigger)
 
   # ========================================================================
   # MODULE 4: PLOTTING ENGINE

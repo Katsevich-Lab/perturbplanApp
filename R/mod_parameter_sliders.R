@@ -383,7 +383,12 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       )
     })
 
-    return(slider_config)
+    # Return both slider config and pin triggers
+    return(list(
+      slider_config = slider_config,
+      pin_trigger = reactive({ input$pin_solution }),    # Auto-increments on click
+      clear_trigger = reactive({ input$clear_pins })     # Auto-increments on click
+    ))
 
   })
 }

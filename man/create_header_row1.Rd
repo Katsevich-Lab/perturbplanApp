@@ -4,7 +4,7 @@
 \alias{create_header_row1}
 \title{Create Header Row 1 (Main Categories)}
 \usage{
-create_header_row1(optimal_col_name, has_cost = NULL)
+create_header_row1(optimal_col_name, has_cost = NULL, minimizing_param = NULL)
 }
 \description{
 Create Header Row 1 (Main Categories)

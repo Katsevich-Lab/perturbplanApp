@@ -4,7 +4,7 @@
 \alias{create_data_row}
 \title{Create Data Row}
 \usage{
-create_data_row(solution_data)
+create_data_row(solution_data, workflow_info)
 }
 \description{
 Create Data Row

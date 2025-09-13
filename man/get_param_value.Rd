@@ -4,7 +4,13 @@
 \alias{get_param_value}
 \title{Get Parameter Value (Optimal vs User Config)}
 \usage{
-get_param_value(param_name, optimal, user_config, minimizing_param)
+get_param_value(
+  param_name,
+  optimal,
+  user_config,
+  minimizing_param,
+  workflow_info = NULL
+)
 }
 \description{
 Get Parameter Value (Optimal vs User Config)
