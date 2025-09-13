@@ -211,7 +211,7 @@ format_number <- function(x) {
   if (x >= 1000) {
     scales::comma(round(x))
   } else {
-    as.character(round(x, 2))
+    as.character(round(x))
   }
 }
 
