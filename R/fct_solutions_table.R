@@ -68,19 +68,31 @@ extract_optimal_parameter_value <- function(optimal, minimizing_param) {
 
 #' Extract Experimental Parameters  
 extract_experimental_parameters <- function(optimal, user_config, minimizing_param) {
-  list(
+  
+  # Get all experimental parameter values
+  params <- list(
     moi = get_param_value("MOI", optimal, user_config, minimizing_param),
     num_targets = get_param_value("num_targets", optimal, user_config, minimizing_param),
     grnas_per_target = get_param_value("gRNAs_per_target", optimal, user_config, minimizing_param),
     cells_per_target = get_param_value("cells_fixed", optimal, user_config, minimizing_param),
     reads_per_cell = get_param_value("reads_per_cell_fixed", optimal, user_config, minimizing_param)
   )
+  
+  # Exclude minimizing parameter to avoid duplication with optimal column
+  if (minimizing_param == "cells_per_target") {
+    params$cells_per_target <- NULL  # Will show "—" in table
+  } else if (minimizing_param == "reads_per_cell") {
+    params$reads_per_cell <- NULL  # Will show "—" in table
+  }
+  
+  return(params)
 }
 
 #' Extract TPM Threshold
 extract_tpm_threshold <- function(optimal, user_config, minimizing_param) {
   if (minimizing_param == "TPM_threshold") {
-    round(optimal$TPM_threshold %||% NA)
+    # TPM is minimizing parameter - exclude from this column (will appear in optimal column)
+    return(NULL)  # Will show "—" in table
   } else {
     value <- user_config$analysis_choices$TPM_threshold %||% NA
     if (!is.na(value)) round(value) else "N/A"
@@ -89,18 +101,19 @@ extract_tpm_threshold <- function(optimal, user_config, minimizing_param) {
 
 #' Extract Effect Sizes (Clean)
 extract_effect_sizes_clean <- function(optimal, user_config, minimizing_param) {
-  # Fold change
+  # Fold change - exclude if it's the minimizing parameter
   if (minimizing_param == "minimum_fold_change") {
-    fold_change <- round(optimal$minimum_fold_change %||% NA, 2)
+    fold_change <- NULL  # Will show "—" in table (appears in optimal column instead)
   } else {
     fold_change <- round(user_config$effect_sizes$minimum_fold_change %||% NA, 2)
+    fold_change <- if (is.na(fold_change)) "N/A" else fold_change
   }
   
-  # Non-null proportion (always from user config)
+  # Non-null proportion (always from user config, never minimized)
   non_null_prop <- round(user_config$effect_sizes$prop_non_null %||% NA, 2)
   
   list(
-    fold_change = if (is.na(fold_change)) "N/A" else fold_change,
+    fold_change = fold_change,
     non_null_proportion = if (is.na(non_null_prop)) "N/A" else non_null_prop
   )
 }
@@ -163,8 +176,8 @@ create_clean_solutions_table_ui <- function(solution_data, workflow_info) {
               )
   
   # Create two-row header
-  header_row1 <- create_header_row1(optimal_col_name, has_cost)
-  header_row2 <- create_header_row2(has_cost = has_cost)
+  header_row1 <- create_header_row1(optimal_col_name, has_cost, solution_data$minimizing_param)
+  header_row2 <- create_header_row2(has_cost, solution_data$minimizing_param)
   
   # Create data row
   data_row <- create_data_row(solution_data, workflow_info)
@@ -188,57 +201,114 @@ create_clean_solutions_table_ui <- function(solution_data, workflow_info) {
 }
 
 #' Create Header Row 1 (Main Categories)
-create_header_row1 <- function(optimal_col_name, has_cost = NULL) {
+create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_param = NULL) {
   
   cells <- list(
     tags$th("Solution ID", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;"),
     tags$th("Power", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
   )
   
-  # Add cost column if workflow includes cost
-  if (has_cost) {
+  # Add cost column if workflow includes cost AND cost is not being minimized
+  if (has_cost && minimizing_param != "cost") {
     cells <- append(cells, list(
       tags$th("Cost", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
     ))
   }
   
+  # Calculate experimental parameters colspan (5 minus any minimized experimental params)
+  exp_params_colspan <- 5
+  if (minimizing_param == "cells_per_target") exp_params_colspan <- exp_params_colspan - 1
+  if (minimizing_param == "reads_per_cell") exp_params_colspan <- exp_params_colspan - 1
+  
   # Add remaining columns
   cells <- append(cells, list(
-    tags$th(optimal_col_name, style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;"),
-    tags$th("Experimental Parameters", colspan = "5", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;"),
-    tags$th("TPM Threshold", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;"),
-    tags$th("Effect Sizes", colspan = "2", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+    tags$th(optimal_col_name, style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
   ))
+  
+  # Add experimental parameters header if any columns remain
+  if (exp_params_colspan > 0) {
+    cells <- append(cells, list(
+      tags$th("Experimental Parameters", colspan = as.character(exp_params_colspan), style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+    ))
+  }
+  
+  # Add TPM threshold if not being minimized
+  if (minimizing_param != "TPM_threshold") {
+    cells <- append(cells, list(
+      tags$th("TPM Threshold", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+    ))
+  }
+  
+  # Calculate effect sizes colspan (2 minus fold change if minimized)
+  effect_sizes_colspan <- 2
+  if (minimizing_param == "minimum_fold_change") effect_sizes_colspan <- effect_sizes_colspan - 1
+  
+  # Add effect sizes header if any columns remain
+  if (effect_sizes_colspan > 0) {
+    cells <- append(cells, list(
+      tags$th("Effect Sizes", colspan = as.character(effect_sizes_colspan), style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+    ))
+  }
   
   tags$tr(cells)
 }
 
 #' Create Header Row 2 (Subcolumns)
-create_header_row2 <- function(has_cost = NULL) {
+create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
   cells <- list(
     tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"), # Solution ID
     tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")  # Power
   )
   
-  # Add cost column if workflow includes cost
-  if (has_cost) {
+  # Add cost column if workflow includes cost AND cost is not being minimized
+  if (has_cost && minimizing_param != "cost") {
     cells <- append(cells, list(
       tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;") # Cost
     ))
   }
   
-  # Add remaining columns  
+  # Add optimal parameter column
   cells <- append(cells, list(
-    tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"), # Optimal param
-    # Experimental parameter subcolumns
+    tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;") # Optimal param
+  ))
+  
+  # Add experimental parameter subcolumns (only if not being minimized)
+  cells <- append(cells, list(
     tags$th("MOI", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
     tags$th("# Targets", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
-    tags$th("gRNAs/Target", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
-    tags$th("Cells/Target", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
-    tags$th("Reads/Cell", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
-    tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"), # TPM threshold
-    # Effect size subcolumns
-    tags$th("Fold Change", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
+    tags$th("gRNAs/Target", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
+  ))
+  
+  # Add Cells/Target column only if not being minimized
+  if (minimizing_param != "cells_per_target") {
+    cells <- append(cells, list(
+      tags$th("Cells/Target", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
+    ))
+  }
+  
+  # Add Reads/Cell column only if not being minimized
+  if (minimizing_param != "reads_per_cell") {
+    cells <- append(cells, list(
+      tags$th("Reads/Cell", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
+    ))
+  }
+  
+  # Add TPM threshold column only if not being minimized
+  if (minimizing_param != "TPM_threshold") {
+    cells <- append(cells, list(
+      tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;") # TPM threshold
+    ))
+  }
+  
+  # Add Fold Change column only if not being minimized
+  if (minimizing_param != "minimum_fold_change") {
+    cells <- append(cells, list(
+      tags$th("Fold Change", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
+    ))
+  }
+  
+  # Always add Non-null Prop (never minimized)
+  cells <- append(cells, list(
     tags$th("Non-null Prop", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
   ))
   
@@ -260,28 +330,65 @@ create_data_row <- function(solution_data, workflow_info) {
                 "power_single_TPM_threshold", "power_single_minimum_fold_change"
               )
   
-  if (has_cost && !is.null(solution_data$total_cost)) {
-    cells <- append(cells, list(
-      tags$td(paste0("$", format_number(solution_data$total_cost)), style = "text-align: center; padding: 8px;")
-    ))
+  # Add cost column only if has_cost AND cost is not being minimized
+  if (has_cost && solution_data$minimizing_param != "cost") {
+    if (!is.null(solution_data$total_cost)) {
+      cells <- append(cells, list(
+        tags$td(paste0("$", format_number(solution_data$total_cost)), style = "text-align: center; padding: 8px;")
+      ))
+    } else {
+      cells <- append(cells, list(
+        tags$td("N/A", style = "text-align: center; padding: 8px;")
+      ))
+    }
   }
   
   # Add remaining columns
   exp_params <- solution_data$experimental_params
   effect_sizes <- solution_data$effect_sizes
   
+  # Add optimal parameter column
   cells <- append(cells, list(
-    tags$td(solution_data$optimal_value, style = "text-align: center; font-weight: bold; padding: 8px;"),
-    # Experimental parameters
+    tags$td(solution_data$optimal_value, style = "text-align: center; font-weight: bold; padding: 8px;")
+  ))
+  
+  # Add experimental parameters (always include MOI, # targets, gRNAs/target)
+  cells <- append(cells, list(
     tags$td(exp_params$moi %||% "N/A", style = "text-align: center; padding: 8px;"),
     tags$td(exp_params$num_targets %||% "N/A", style = "text-align: center; padding: 8px;"),
-    tags$td(exp_params$grnas_per_target %||% "N/A", style = "text-align: center; padding: 8px;"),
-    tags$td(exp_params$cells_per_target %||% "N/A", style = "text-align: center; padding: 8px;"),
-    tags$td(exp_params$reads_per_cell %||% "N/A", style = "text-align: center; padding: 8px;"),
-    # TPM threshold
-    tags$td(solution_data$tpm_threshold %||% "N/A", style = "text-align: center; padding: 8px;"),
-    # Effect sizes
-    tags$td(effect_sizes$fold_change %||% "N/A", style = "text-align: center; padding: 8px;"),
+    tags$td(exp_params$grnas_per_target %||% "N/A", style = "text-align: center; padding: 8px;")
+  ))
+  
+  # Add Cells/Target column only if not being minimized
+  if (solution_data$minimizing_param != "cells_per_target") {
+    cells <- append(cells, list(
+      tags$td(exp_params$cells_per_target %||% "N/A", style = "text-align: center; padding: 8px;")
+    ))
+  }
+  
+  # Add Reads/Cell column only if not being minimized
+  if (solution_data$minimizing_param != "reads_per_cell") {
+    cells <- append(cells, list(
+      tags$td(exp_params$reads_per_cell %||% "N/A", style = "text-align: center; padding: 8px;")
+    ))
+  }
+  
+  # Add TPM threshold column only if not being minimized
+  if (solution_data$minimizing_param != "TPM_threshold") {
+    cells <- append(cells, list(
+      tags$td(solution_data$tpm_threshold %||% "N/A", style = "text-align: center; padding: 8px;")
+    ))
+  }
+  
+  # Add Fold Change column only if not being minimized
+  if (solution_data$minimizing_param != "minimum_fold_change") {
+    cells <- append(cells, list(
+      tags$td(effect_sizes$fold_change %||% "N/A", style = "text-align: center; padding: 8px;")
+    ))
+  }
+  
+  # Always add Non-null Proportion (never minimized)
+  cells <- append(cells, list(
     tags$td(effect_sizes$non_null_proportion %||% "N/A", style = "text-align: center; padding: 8px;")
   ))
   
