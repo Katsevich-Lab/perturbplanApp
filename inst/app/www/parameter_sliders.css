@@ -4,6 +4,13 @@
    MAIN CONTAINER
    ======================================================================== */
 
+.parameter-sliders-grid {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
 .parameter-sliders-horizontal {
   width: 100%;
   max-width: 1200px;
@@ -11,13 +18,16 @@
 }
 
 /* ========================================================================
-   ROW STYLING
+   COLUMN STYLING
    ======================================================================== */
 
-.slider-row {
-  border-radius: 6px;
-  padding: 15px;
-  margin-bottom: 15px;
+.slider-columns-container {
+  margin-bottom: 20px;
+}
+
+.slider-column {
+  padding: 20px 15px;
+  min-height: 300px;
 }
 
 .experimental-params {
@@ -30,12 +40,24 @@
   border-left: 4px solid #ffc107;
 }
 
-/* Parameter section headers */
-.slider-row h5 {
+/* Column headers */
+.column-header {
   font-weight: 600;
   margin-bottom: 15px;
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(0,0,0,0.1);
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Individual slider spacing in columns - increased for better separation */
+.slider-column .compact-slider-container {
+  margin-bottom: 40px;
+  padding: 15px 8px;
+}
+
+.slider-column .compact-slider-container:last-child {
+  margin-bottom: 15px;
 }
 
 /* ========================================================================
@@ -43,40 +65,68 @@
    ======================================================================== */
 
 .compact-slider-container {
-  padding: 0 8px;
+  padding: 0 20px;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .compact-slider-container .shiny-input-container {
   margin-bottom: 0;
 }
 
+/* noUiSlider specific styling */
+.compact-slider-container .noUi-target {
+  max-width: 300px;
+  margin: 15px auto;
+  height: 8px !important;
+}
+
+.compact-slider-container .noUi-base {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.compact-slider-container .noUi-handle {
+  width: 12px !important;
+  height: 12px !important;
+}
+
 .compact-slider-container .slider-label {
   text-align: center;
-  font-size: 12px !important;
-  margin-bottom: 5px;
+  font-size: 13px !important;
+  margin-bottom: 15px;
+  font-weight: 500;
+  color: #495057;
 }
 
-/* Custom slider styling for compact horizontal layout */
-.compact-slider-container .irs {
-  height: 25px;
+/* Custom slider styling for compact horizontal layout - noUiSlider */
+.compact-slider-container .noUi-target {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  margin: 15px auto 20px auto;
 }
 
-.compact-slider-container .irs-bar {
-  height: 4px;
+.compact-slider-container .noUi-connect {
   background: linear-gradient(to right, #007bff, #0056b3);
 }
 
-.compact-slider-container .irs-handle {
-  width: 16px;
-  height: 16px;
+.compact-slider-container .noUi-handle {
+  background: #007bff;
+  border: 1px solid #0056b3;
+  box-shadow: none;
+  border-radius: 50%;
 }
 
-/* Hide only slider scale/tick marks for cleaner appearance */
-.compact-slider-container .irs-grid-text {
+.compact-slider-container .noUi-handle:hover {
+  background: #0056b3;
+}
+
+/* Hide tooltips and pips for cleaner appearance */
+.compact-slider-container .noUi-tooltip {
   display: none !important;
 }
 
-.compact-slider-container .irs-grid-pol {
+.compact-slider-container .noUi-pips {
   display: none !important;
 }
 
@@ -114,10 +164,30 @@
 }
 
 /* ========================================================================
+   PIN BUTTONS STYLING
+   ======================================================================== */
+
+.pin-buttons-section {
+  margin-top: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #dee2e6;
+}
+
+.pin-buttons-section .btn {
+  transition: all 0.2s ease;
+}
+
+.pin-buttons-section .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ========================================================================
    RESPONSIVE DESIGN
    ======================================================================== */
 
 @media (max-width: 1200px) {
+  .parameter-sliders-grid,
   .parameter-sliders-horizontal {
     padding: 10px 5px;
   }
@@ -128,27 +198,33 @@
 }
 
 @media (max-width: 768px) {
-  /* Stack sliders in 2x2 grid on mobile */
-  .parameter-sliders-horizontal .col-sm-3,
-  .parameter-sliders-horizontal .col-sm-4 {
-    width: 50%;
+  /* Stack columns vertically on mobile */
+  .slider-columns-container .col-sm-6 {
+    width: 100%;
     margin-bottom: 15px;
   }
   
-  .slider-row h5 {
+  .column-header {
     font-size: 13px;
   }
   
   .compact-slider-container .slider-label {
     font-size: 11px !important;
   }
+  
+  .slider-column {
+    min-height: auto;
+  }
 }
 
 @media (max-width: 480px) {
-  /* Single column on very small screens */
-  .parameter-sliders-horizontal .col-sm-3,
-  .parameter-sliders-horizontal .col-sm-4 {
+  /* Maintain single column layout on very small screens */
+  .slider-columns-container .col-sm-6 {
     width: 100%;
+  }
+  
+  .slider-column {
+    padding: 10px;
   }
 }
 
@@ -156,19 +232,32 @@
    INTEGRATION WITH EXISTING STYLES
    ======================================================================== */
 
+/* Global slider handle size override - applies to all sliders */
+.irs-handle {
+  width: 8px !important;
+  height: 8px !important;
+}
+
 /* Ensure sliders work well with existing dashboard theme */
-.parameter-sliders-horizontal .irs-handle {
+.parameter-sliders-horizontal .irs-handle,
+.parameter-sliders-grid .irs-handle {
+  width: 8px !important;
+  height: 8px !important;
   background: #007bff;
   border: 1px solid #0056b3;
 }
 
-.parameter-sliders-horizontal .irs-handle:hover {
+.parameter-sliders-horizontal .irs-handle:hover,
+.parameter-sliders-grid .irs-handle:hover {
   background: #0056b3;
 }
 
 .parameter-sliders-horizontal .irs-from, 
 .parameter-sliders-horizontal .irs-to, 
-.parameter-sliders-horizontal .irs-single {
+.parameter-sliders-horizontal .irs-single,
+.parameter-sliders-grid .irs-from,
+.parameter-sliders-grid .irs-to,
+.parameter-sliders-grid .irs-single {
   background: #007bff;
   color: white;
   font-size: 11px;

@@ -234,12 +234,17 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
                 "power_single_TPM_threshold", "power_single_minimum_fold_change"
               )
 
-  # Create two-row header
-  header_row1 <- create_header_row1(optimal_col_name, has_cost, solution_data$minimizing_param)
-  header_row2 <- create_header_row2(has_cost, solution_data$minimizing_param)
+  # Get minimizing parameter from first solution (all solutions have same workflow)
+  minimizing_param <- solutions_data[[1]]$minimizing_param
 
-  # Create data row
-  data_row <- create_data_row(solution_data, workflow_info)
+  # Create two-row header
+  header_row1 <- create_header_row1(optimal_col_name, has_cost, minimizing_param)
+  header_row2 <- create_header_row2(has_cost, minimizing_param)
+
+  # Create data rows for all solutions
+  data_rows <- lapply(solutions_data, function(solution) {
+    create_data_row(solution, workflow_info)
+  })
 
   # Assemble table
   tags$div(
@@ -253,7 +258,7 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
         header_row2
       ),
       tags$tbody(
-        data_row
+        data_rows
       )
     )
   )

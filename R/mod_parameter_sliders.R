@@ -8,7 +8,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput moduleServer reactive observeEvent req renderUI observe isolate reactiveValues
+#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput moduleServer reactive observeEvent req renderUI observe isolate reactiveValues actionButton
 #' @importFrom shinyWidgets noUiSliderInput
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
@@ -16,17 +16,32 @@ mod_parameter_sliders_ui <- function(id) {
   tagList(
     tags$div(
       id = ns("slider_container"),
-      class = "parameter-sliders-horizontal",
+      class = "parameter-sliders-grid",
       style = "padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
 
-      # ROW 1: Fixed experimental parameters (always 3 sliders)
-      uiOutput(ns("experimental_sliders")),
-
-      # ROW 2: Power-determining parameters (dynamic - 3 out of 4 shown)
+      # TWO-COLUMN LAYOUT: Experimental | Power-determining parameters
       tags$div(
-        class = "slider-row power-params",
-        uiOutput(ns("dynamic_power_sliders"))
-      )
+        class = "slider-columns-container",
+        fluidRow(
+          # COLUMN 1: Experimental parameters (always 3 sliders)
+          column(6, 
+            tags$div(
+              class = "slider-column",
+              uiOutput(ns("experimental_sliders_column"))
+            )
+          ),
+          # COLUMN 2: Power-determining parameters (dynamic - 3 out of 4 shown)
+          column(6,
+            tags$div(
+              class = "slider-column", 
+              uiOutput(ns("dynamic_power_sliders_column"))
+            )
+          )
+        )
+      ),
+      
+      # PINNING CONTROLS: Simple two-button layout at bottom
+      uiOutput(ns("pin_buttons_section"))
     )
   )
 }
@@ -126,8 +141,8 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     # DYNAMIC SLIDER GENERATION
     # ========================================================================
 
-    # Generate dynamic Row 1 experimental sliders with current values
-    output$experimental_sliders <- renderUI({
+    # Generate experimental parameters column (left column)
+    output$experimental_sliders_column <- renderUI({
       config <- sidebar_config()
       if (is.null(config)) return(NULL)
 
@@ -144,19 +159,15 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         grnas_value <- experimental$gRNAs_per_target
       }
 
-      tags$div(
-        class = "slider-row experimental-params",
-        style = "margin-bottom: 20px;",
-        fluidRow(
-          column(4, create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
-          column(4, create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, targets_value, 50)),
-          column(4, create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
-        )
+      tagList(
+        tags$div(style = "margin-bottom: 30px;", create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
+        tags$div(style = "margin-bottom: 30px;", create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, targets_value, 50)),
+        tags$div(style = "margin-bottom: 20px;", create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
       )
     })
 
-    # Generate dynamic Row 2 based on workflow
-    output$dynamic_power_sliders <- renderUI({
+    # Generate power parameters column (right column)
+    output$dynamic_power_sliders_column <- renderUI({
       config <- sidebar_config()
       if (is.null(config)) return(NULL)
 
@@ -259,13 +270,42 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       num_params <- length(visible_power_params)
       col_width <- if (num_params == 1) 12 else if (num_params == 2) 6 else 4
 
-      fluidRow(
-        lapply(names(visible_power_params), function(param_name) {
+      tagList(
+        lapply(seq_along(names(visible_power_params)), function(i) {
+          param_name <- names(visible_power_params)[i]
           param <- visible_power_params[[param_name]]
-          column(col_width, create_compact_slider(
-            ns(param$id), param$label, param$min, param$max, param$value, param$step
-          ))
+          # Add spacing between sliders
+          margin_bottom <- if (i == length(visible_power_params)) "20px" else "30px"
+          tags$div(
+            style = paste0("margin-bottom: ", margin_bottom, ";"),
+            create_compact_slider(
+              ns(param$id), param$label, param$min, param$max, param$value, param$step
+            )
+          )
         })
+      )
+    })
+
+    # Generate Pin buttons section conditionally
+    output$pin_buttons_section <- renderUI({
+      config <- sidebar_config()
+      if (is.null(config)) return(NULL)
+      
+      # Show Pin buttons for all workflows (simplified approach)
+      tags$div(
+        style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px; display: flex; gap: 10px; justify-content: center;",
+        actionButton(
+          ns("pin_solution"),
+          "Pin Solution",
+          class = "btn btn-success btn-sm",
+          style = "flex: 1; max-width: 140px; font-size: 16px; font-weight: 500;"
+        ),
+        actionButton(
+          ns("clear_pins"),
+          "Clear All",
+          class = "btn btn-outline-secondary btn-sm",
+          style = "flex: 1; max-width: 90px; font-size: 16px; font-weight: 500;"
+        )
       )
     })
 
