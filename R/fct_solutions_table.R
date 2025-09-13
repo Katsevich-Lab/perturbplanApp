@@ -43,10 +43,10 @@ extract_clean_solution_data <- function(results) {
   
   list(
     solution_id = 1,
-    achieved_power = round(optimal$power %||% 0.8, 3),
+    achieved_power = round(optimal$achieved_power %||% NA, 3),
     total_cost = if (!is.null(optimal$total_cost)) optimal$total_cost else NULL,
     optimal_value = extract_optimal_parameter_value(optimal, minimizing_param),
-    experimental_params = extract_experimental_parameters(optimal, user_config, minimizing_param),
+    experimental_params = extract_experimental_parameters(optimal, user_config, minimizing_param, workflow_info),
     tpm_threshold = extract_tpm_threshold(optimal, user_config, minimizing_param),
     effect_sizes = extract_effect_sizes_clean(optimal, user_config, minimizing_param),
     minimizing_param = minimizing_param
@@ -67,15 +67,15 @@ extract_optimal_parameter_value <- function(optimal, minimizing_param) {
 }
 
 #' Extract Experimental Parameters  
-extract_experimental_parameters <- function(optimal, user_config, minimizing_param) {
+extract_experimental_parameters <- function(optimal, user_config, minimizing_param, workflow_info = NULL) {
   
   # Get all experimental parameter values
   params <- list(
-    moi = get_param_value("MOI", optimal, user_config, minimizing_param),
-    num_targets = get_param_value("num_targets", optimal, user_config, minimizing_param),
-    grnas_per_target = get_param_value("gRNAs_per_target", optimal, user_config, minimizing_param),
-    cells_per_target = get_param_value("cells_fixed", optimal, user_config, minimizing_param),
-    reads_per_cell = get_param_value("reads_per_cell_fixed", optimal, user_config, minimizing_param)
+    moi = get_param_value("MOI", optimal, user_config, minimizing_param, workflow_info),
+    num_targets = get_param_value("num_targets", optimal, user_config, minimizing_param, workflow_info),
+    grnas_per_target = get_param_value("gRNAs_per_target", optimal, user_config, minimizing_param, workflow_info),
+    cells_per_target = get_param_value("cells_per_target", optimal, user_config, minimizing_param, workflow_info),
+    reads_per_cell = get_param_value("reads_per_cell", optimal, user_config, minimizing_param, workflow_info)
   )
   
   # Exclude minimizing parameter to avoid duplication with optimal column
@@ -123,24 +123,81 @@ extract_effect_sizes_clean <- function(optimal, user_config, minimizing_param) {
 # ============================================================================
 
 #' Get Parameter Value (Optimal vs User Config)
-get_param_value <- function(param_name, optimal, user_config, minimizing_param) {
-  if (minimizing_param == param_name) {
-    # Get optimal value
-    value <- optimal[[param_name]]
-    if (param_name %in% c("cells_fixed", "num_targets")) {
+get_param_value <- function(param_name, optimal, user_config, minimizing_param, workflow_info = NULL) {
+  
+  # Check if this is a power+cost workflow or cost minimization workflow
+  is_multi_param_workflow <- FALSE
+  if (!is.null(workflow_info$workflow_id)) {
+    # Power+cost workflows (all except power-only single parameter workflows)
+    power_only_workflows <- c("power_single_cells_per_target", "power_single_reads_per_cell", 
+                              "power_single_TPM_threshold", "power_single_minimum_fold_change")
+    is_multi_param_workflow <- !workflow_info$workflow_id %in% power_only_workflows
+  }
+  
+  # For cells and reads parameters in multi-parameter workflows, check if they were varied
+  if (is_multi_param_workflow && param_name %in% c("cells_per_target", "reads_per_cell")) {
+    # Determine which parameters vary based on workflow type
+    cells_varies <- FALSE
+    reads_varies <- FALSE
+    
+    if (!is.null(workflow_info$workflow_id)) {
+      # Cost minimization - both cells and reads vary
+      if (workflow_info$workflow_id == "power_cost_minimization") {
+        cells_varies <- TRUE
+        reads_varies <- TRUE
+      }
+      # Power+cost workflows with cells varying
+      else if (workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_fc_cells", 
+                                                "power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+        cells_varies <- TRUE
+      }
+      # Power+cost workflows with reads varying  
+      if (workflow_info$workflow_id %in% c("power_cost_TPM_reads", "power_cost_fc_reads",
+                                           "power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+        reads_varies <- TRUE
+      }
+    }
+    
+    # Use optimal value if parameter varies, user config if fixed
+    if (param_name == "cells_per_target" && cells_varies) {
+      format_number(optimal$cells_per_target %||% NA)
+    } else if (param_name == "reads_per_cell" && reads_varies) {
+      format_number(optimal$sequenced_reads_per_cell %||% optimal$reads_per_cell %||% NA)
+    } else {
+      # Parameter was fixed - use user config value  
+      # Map parameter names to user config structure
+      config_param <- switch(param_name,
+        "cells_per_target" = "cells_fixed",
+        "reads_per_cell" = "reads_per_cell_fixed",
+        param_name
+      )
+      value <- user_config$experimental_setup[[config_param]] %||% 
+               user_config$perturbation_choices[[config_param]] %||% NA
       format_number(value %||% NA)
-    } else if (param_name == "reads_per_cell_fixed") {
+    }
+  } else if (minimizing_param == param_name) {
+    # Get optimal value for minimizing parameter
+    value <- optimal[[param_name]]
+    if (param_name %in% c("cells_per_target", "num_targets")) {
+      format_number(value %||% NA)
+    } else if (param_name == "reads_per_cell") {
       format_number(optimal$sequenced_reads_per_cell %||% optimal$reads_per_cell %||% NA)
     } else {
       value %||% "N/A"
     }
   } else {
     # Get fixed value from user config
-    value <- user_config$experimental_setup[[param_name]] %||% 
-             user_config$perturbation_choices[[param_name]] %||% NA
-    if (param_name %in% c("cells_fixed", "num_targets")) {
+    # Map parameter names to user config structure
+    config_param <- switch(param_name,
+      "cells_per_target" = "cells_fixed",
+      "reads_per_cell" = "reads_per_cell_fixed",
+      param_name
+    )
+    value <- user_config$experimental_setup[[config_param]] %||% 
+             user_config$perturbation_choices[[config_param]] %||% NA
+    if (param_name %in% c("cells_per_target", "num_targets")) {
       format_number(value %||% NA)
-    } else if (param_name == "reads_per_cell_fixed") {
+    } else if (param_name == "reads_per_cell") {
       format_number(value %||% NA)
     } else {
       value %||% "N/A"
