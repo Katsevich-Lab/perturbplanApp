@@ -61,10 +61,7 @@ mod_solution_table_server <- function(id, cached_results, plot_objects, user_con
       has_pinned <- !is.null(results$pinned_solutions) && length(results$pinned_solutions) > 0
 
       if (!has_current && !has_pinned) {
-        return(tags$div(
-          style = "color: #666; padding: 10px; text-align: center;",
-          tags$p("No solutions available yet. Run analysis to generate results.")
-        ))
+        return(NULL)
       }
 
       # Check for errors in current result
