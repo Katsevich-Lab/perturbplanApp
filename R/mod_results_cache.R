@@ -107,14 +107,18 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
       pinned <- results_cache$pinned_solutions
 
       # Return structure for display modules
-      list(
-        current_result = current,           # For "Current" display (dashed line)
-        pinned_solutions = pinned,          # For "Solution X" displays (solid lines)
-        all_results = c(
-          if (!is.null(current)) list("Current" = current) else list(),
-          pinned
+      if(length(pinned) == 0 && is.null(current)){
+        NULL
+      }else{
+        list(
+          current_result = current,           # For "Current" display (dashed line)
+          pinned_solutions = pinned,          # For "Solution X" displays (solid lines)
+          all_results = c(
+            if (!is.null(current)) list("Current" = current) else list(),
+            pinned
+          )
         )
-      )
+      }
     })
 
     # ========================================================================

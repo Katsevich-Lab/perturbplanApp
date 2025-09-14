@@ -5,16 +5,16 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
-#' @importFrom shiny NS tagList 
+#' @importFrom shiny NS tagList
 mod_plotting_engine_ui <- function(id) {
   ns <- NS(id)
   tagList(
     # No UI - this is a backend plotting module
   )
 }
-    
+
 #' Plotting Engine Server Functions
 #'
 #' @description Converts analysis results data into interactive plot objects.
@@ -24,10 +24,10 @@ mod_plotting_engine_ui <- function(id) {
 #'
 #' @param id Module namespace ID
 #' @param cached_results Reactive containing cached results with pinned + current solutions
-#' 
+#'
 #' @return Reactive list containing plot objects for display
-#' @noRd 
-#' 
+#' @noRd
+#'
 #' @importFrom shiny moduleServer reactive req bindCache
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline geom_area
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
@@ -62,7 +62,7 @@ mod_plotting_engine_server <- function(id, cached_results) {
         workflow_info <- if (!is.null(results$current_result)) {
           results$current_result$workflow_info
         } else {
-          results$workflow_info  # fallback
+          results$pinned_solutions[[1]]$workflow_info
         }
 
 
@@ -103,7 +103,7 @@ mod_plotting_engine_server <- function(id, cached_results) {
 
         return(final_result)
     }) %>% bindCache(cached_results())
-    
+
     return(plot_objects)
   })
 }

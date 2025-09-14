@@ -136,20 +136,6 @@ create_single_parameter_plots <- function(cached_results) {
     target_power <- metadata_source$user_config$design_options$target_power
     workflow_info <- metadata_source$workflow_info
 
-  } else {
-    cat("DEBUG: Using LEGACY single result format\n")
-    # Legacy single result format (backward compatibility)
-    solutions_list <- list(
-      "Current" = list(
-        id = 1,
-        color = get_solution_color(1),
-        data = cached_results$power_data,
-        optimal_point = cached_results$optimal_design,
-        label = "Current"
-      )
-    )
-    target_power <- cached_results$user_config$design_options$target_power
-    workflow_info <- cached_results$workflow_info
   }
 
   varying_param <- workflow_info$minimizing_parameter
