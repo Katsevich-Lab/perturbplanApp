@@ -65,8 +65,11 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
         # Create solution name
         solution_name <- paste0("Solution ", results_cache$next_solution_id)
 
-        # Store current result as pinned solution
+        # Move current result to pinned solutions (not copy)
         results_cache$pinned_solutions[[solution_name]] <- current
+
+        # Clear current result since it's now pinned
+        results_cache$current_result <- NULL
 
         # Increment counter for next pin
         results_cache$next_solution_id <- results_cache$next_solution_id + 1

@@ -174,10 +174,12 @@ create_single_parameter_plots <- function(cached_results) {
     param_label <- "TPM Threshold"
   }
 
-  # Add each solution as separate layers
+  # Combine all solutions into a single dataframe for consistent color mapping
+  combined_data <- data.frame()
+  optimal_points <- data.frame()
+
   for (solution in solutions_data) {
     solution_data <- solution$data
-    solution_color <- solution$color
     solution_label <- solution$label  # "Current", "Solution 1", etc.
 
     # Create tooltip text
@@ -188,30 +190,17 @@ create_single_parameter_plots <- function(cached_results) {
       TRUE ~ as.character(solution_data$parameter_value)
     )
 
+    # Add solution info to data
+    solution_data$solution_label <- solution_label
+    solution_data$linetype <- ifelse(solution_label == "Current", "dashed", "solid")
     solution_data$tooltip_text <- paste0(
       solution_label, "<br>",
       param_label, ": ", formatted_values, "<br>",
       "Power: ", scales::percent(solution_data$power, accuracy = 0.1)
     )
 
-    # Add power curve line
-    p <- p + geom_line(
-      data = solution_data,
-      aes(x = parameter_value, y = power,
-          color = solution_label,
-          text = tooltip_text),
-      size = 1.2
-    )
-
-    # Add points for interactivity
-    p <- p + geom_point(
-      data = solution_data,
-      aes(x = parameter_value, y = power,
-          color = solution_label,
-          text = tooltip_text),
-      size = 0.8,
-      alpha = 0.6
-    )
+    # Combine with main dataset
+    combined_data <- rbind(combined_data, solution_data)
 
     # Add optimal point if available
     if (!is.null(solution$optimal_point)) {
@@ -230,19 +219,48 @@ create_single_parameter_plots <- function(cached_results) {
           "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
 
-        # Add optimal point (diamond shape)
-        p <- p + geom_point(
-          data = data.frame(
-            x = optimal_design[[varying_param]],
-            y = optimal_design$achieved_power,
-            color = solution_label,
-            tooltip_text = optimal_hover_text
-          ),
-          aes(x = x, y = y, color = color, text = tooltip_text),
-          size = 4,
-          shape = 18  # Diamond shape for optimal points
+        # Add optimal point to dataframe
+        optimal_point_data <- data.frame(
+          parameter_value = optimal_design[[varying_param]],
+          power = optimal_design$achieved_power,
+          solution_label = solution_label,
+          tooltip_text = optimal_hover_text
         )
+        optimal_points <- rbind(optimal_points, optimal_point_data)
       }
+    }
+  }
+
+  # Add all power curves at once with proper color mapping
+  if (nrow(combined_data) > 0) {
+    # Add power curve lines
+    p <- p + geom_line(
+      data = combined_data,
+      aes(x = parameter_value, y = power,
+          color = solution_label),
+      size = 1.2
+    )
+
+    # Add points for interactivity
+    p <- p + geom_point(
+      data = combined_data,
+      aes(x = parameter_value, y = power,
+          color = solution_label,
+          text = tooltip_text),
+      size = 0.8,
+      alpha = 0.6
+    )
+
+    # Add optimal points if any
+    if (nrow(optimal_points) > 0) {
+      p <- p + geom_point(
+        data = optimal_points,
+        aes(x = parameter_value, y = power,
+            color = solution_label,
+            text = tooltip_text),
+        size = 2,
+        shape = 18  # Diamond shape for optimal points
+      )
     }
   }
 
@@ -255,11 +273,7 @@ create_single_parameter_plots <- function(cached_results) {
       )
     ) +
     theme_bw() +
-    theme(
-      plot.title = element_text(hjust = 0.5),
-      legend.position = "bottom",
-      legend.title = element_blank()
-    )
+    theme(plot.title = element_text(hjust = 0.5))
 
   # Convert to interactive plotly
   p_interactive <- ggplotly(p, tooltip = "text") %>%
@@ -269,7 +283,12 @@ create_single_parameter_plots <- function(cached_results) {
                      "<sup>", workflow_info$description, "</sup>"),
         font = list(size = 14)
       ),
-      hovermode = "closest"
+      hovermode = "closest",
+      legend = list(
+        orientation = "h",     # horizontal legend
+        x = 0.5, xanchor = "center",
+        y = -0.2, yanchor = "top"  # put it below the plot
+      )
     ) %>%
     config(
       displayModeBar = FALSE,
