@@ -178,7 +178,6 @@ create_single_parameter_plots <- function(cached_results) {
 
     # Add solution info to data
     solution_data$solution_label <- solution_label
-    solution_data$linetype <- ifelse(solution_label == "Current", "dashed", "solid")
     solution_data$tooltip_text <- paste0(
       solution_label, "<br>",
       param_label, ": ", formatted_values, "<br>",
