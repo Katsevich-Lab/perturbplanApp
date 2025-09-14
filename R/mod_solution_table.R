@@ -5,7 +5,7 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
 #' @importFrom shiny NS tagList uiOutput
 #' @importFrom shinycssloaders withSpinner
@@ -20,7 +20,7 @@ mod_solution_table_ui <- function(id) {
     )
   )
 }
-    
+
 #' solution_table Server Functions
 #'
 #' @description Server logic for solution table and analysis summary rendering.
@@ -36,26 +36,23 @@ mod_solution_table_ui <- function(id) {
 mod_solution_table_server <- function(id, cached_results, user_config) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # ========================================================================
     # ENHANCED SOLUTIONS TABLE (DEV BRANCH APPROACH)
     # ========================================================================
-    
+
     output$enhanced_solutions_table <- renderUI({
+      cat("DEBUG: enhanced_solutions_table renderUI called\n")
+
       req(cached_results())
+      cat("DEBUG: cached_results() requirement passed\n")
 
       results <- cached_results()
-
-      # Check if we have any valid results (current or pinned)
-      has_current <- !is.null(results$current_result) && is.null(results$current_result$error)
-      has_pinned <- !is.null(results$pinned_solutions) && length(results$pinned_solutions) > 0
-
-      if (!has_current && !has_pinned) {
-        return(NULL)
-      }
+      cat("DEBUG: cached_results obtained\n")
 
       # Check for errors in current result
       if (!is.null(results$current_result$error)) {
+        cat("DEBUG: Current result has error, returning error message\n")
         return(tags$div(
           style = "color: #C73E1D; padding: 10px;",
           tags$p("Error in analysis - table cannot be generated.")
@@ -63,21 +60,25 @@ mod_solution_table_server <- function(id, cached_results, user_config) {
       }
 
       # Create enhanced solutions table
+      cat("DEBUG: About to call create_enhanced_solutions_table\n")
       tryCatch({
-        create_enhanced_solutions_table(results, user_config)
+        result <- create_enhanced_solutions_table(results, user_config)
+        cat("DEBUG: create_enhanced_solutions_table completed successfully\n")
+        result
       }, error = function(e) {
+        cat("DEBUG: Error in create_enhanced_solutions_table:", e$message, "\n")
         tags$div(
           style = "color: #C73E1D; padding: 10px;",
           tags$p(paste("Table generation error:", e$message))
         )
       })
     })
-    
+
   })
 }
-    
+
 ## To be copied in the UI
 # mod_solution_table_ui("solution_table_1")
-    
+
 ## To be copied in the server
 # mod_solution_table_server("solution_table_1")
