@@ -294,18 +294,18 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       
       # Show Pin buttons for all workflows (simplified approach)
       tags$div(
-        style = "padding: 0px 10px 0px 10px; text-align: center; margin-top: -5px; display: flex; gap: 10px; justify-content: center;",
+        style = "padding: 0px 10px 0px 10px; text-align: center; margin-top: -5px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;",
         actionButton(
           ns("pin_solution"),
           "Pin Solution",
           class = "btn btn-success btn-sm",
-          style = "flex: 1; max-width: 140px; font-size: 16px; font-weight: 500;"
+          style = "flex: 0 1 auto; min-width: 100px; max-width: 120px; font-size: 14px; font-weight: 500;"
         ),
         actionButton(
           ns("clear_pins"),
           "Clear All",
           class = "btn btn-outline-secondary btn-sm",
-          style = "flex: 1; max-width: 90px; font-size: 16px; font-weight: 500;"
+          style = "flex: 0 1 auto; min-width: 80px; max-width: 100px; font-size: 14px; font-weight: 500;"
         )
       )
     })

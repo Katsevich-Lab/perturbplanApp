@@ -258,10 +258,11 @@ create_single_parameter_plots <- function(cached_results) {
       )
     ) +
     theme_bw() +
+    labs(color = "Solution") +
     theme(plot.title = element_text(hjust = 0.5))
 
   # Convert to interactive plotly
-  p_interactive <- ggplotly(p, tooltip = "text") %>%
+  p_interactive <- ggplotly(p, tooltip = "text", height = 430) %>%
     layout(
       title = list(
         text = paste0("<b>", workflow_info$title, "</b><br>",
@@ -269,10 +270,11 @@ create_single_parameter_plots <- function(cached_results) {
         font = list(size = 14)
       ),
       hovermode = "closest",
+      autosize = TRUE,
       legend = list(
         orientation = "h",     # horizontal legend
         x = 0.5, xanchor = "center",
-        y = -0.2, yanchor = "top"  # put it below the plot
+        y = -0.25, yanchor = "top"  # put it below the plot with less space
       )
     ) %>%
     config(
