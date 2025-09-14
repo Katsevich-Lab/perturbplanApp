@@ -62,9 +62,9 @@ mod_solution_table_server <- function(id, cached_results, user_config) {
         ))
       }
 
-      # Create enhanced solutions table (plots parameter not needed)
+      # Create enhanced solutions table
       tryCatch({
-        create_enhanced_solutions_table(results, plots = NULL, user_config)
+        create_enhanced_solutions_table(results, user_config)
       }, error = function(e) {
         tags$div(
           style = "color: #C73E1D; padding: 10px;",

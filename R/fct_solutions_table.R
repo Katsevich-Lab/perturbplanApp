@@ -11,11 +11,10 @@
 #' Create Enhanced Solutions Table (Clean Implementation)
 #'
 #' @param results Analysis results object containing optimal_design, user_config, workflow_info
-#' @param plots Plot objects (unused, kept for compatibility)
 #' @param user_config User configuration (unused, kept for compatibility)
 #' @return Shiny UI tagList with clean solution table
 #' @export
-create_enhanced_solutions_table <- function(results, plots = NULL, user_config = NULL) {
+create_enhanced_solutions_table <- function(results, user_config = NULL) {
   # Handle both legacy single results and new cached results format
   if (!is.null(results$current_result) || !is.null(results$all_results)) {
     # New cached results format
