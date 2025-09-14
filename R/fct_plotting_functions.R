@@ -303,6 +303,77 @@ create_single_parameter_plots <- function(cached_results) {
 # COST-POWER TRADEOFF PLOTS (3 workflows)
 # ============================================================================
 
+#' Create cached cost-power tradeoff plots (Router Function)
+#'
+#' @description Router function with shared solution extraction logic for workflows 5, 10-11.
+#' Extracts current and pinned solutions from cached_results, then routes to specialized
+#' plotting functions based on workflow type.
+#'
+#' @param cached_results Cached results from mod_results_cache (current + pinned solutions)
+#' @return List containing ggplot and plotly objects
+#' @noRd
+create_cached_cost_tradeoff_plots <- function(cached_results) {
+
+  # ========================================================================
+  # SHARED SOLUTION EXTRACTION LOGIC
+  # ========================================================================
+
+  # Extract solutions in the same way as create_single_parameter_plots
+  solutions_list <- list()
+
+  # Add current result if available
+  if (!is.null(cached_results$current_result)) {
+    current <- cached_results$current_result
+    solutions_list[["Current"]] <- list(
+      id = 0,
+      color = get_solution_color(1),  # Use first color for Current
+      data = current$cost_data,       # Cost-power data for tradeoff plots
+      optimal_point = current$optimal_design,
+      label = "Current"
+    )
+  }
+
+  # Add pinned solutions if available
+  if (!is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
+    for (i in seq_along(cached_results$pinned_solutions)) {
+      solution_name <- names(cached_results$pinned_solutions)[i]
+      pinned <- cached_results$pinned_solutions[[i]]
+      solutions_list[[solution_name]] <- list(
+        id = i,
+        color = get_solution_color(i + 1),  # Skip first color (used by Current)
+        data = pinned$cost_data,            # Cost-power data for tradeoff plots
+        optimal_point = pinned$optimal_design,
+        label = solution_name
+      )
+    }
+  }
+
+  # Extract metadata from available source (current result takes priority)
+  metadata_source <- cached_results$current_result %||% cached_results$pinned_solutions[[1]]
+  if (is.null(metadata_source)) {
+    stop("No valid results available for cost tradeoff plotting")
+  }
+
+  workflow_info <- metadata_source$workflow_info
+  workflow_id <- workflow_info$workflow_id
+
+  # ========================================================================
+  # WORKFLOW ROUTING LOGIC
+  # ========================================================================
+
+  if (workflow_id == "power_cost_minimization") {
+    # Workflow 5: Cost minimization (cost vs power scatter plot)
+    return(create_cost_minimization_plots(solutions_list, workflow_info, metadata_source))
+  }
+  else if (workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+    # Workflows 10-11: Constrained minimization (parameter vs cost line plots)
+    return(create_constrained_minimization_plots(solutions_list, workflow_info, metadata_source))
+  }
+  else {
+    stop(paste("Unsupported workflow for cost tradeoff plotting:", workflow_id))
+  }
+}
+
 #' Create cost-power tradeoff plots
 #'
 #' @description Creates cost optimization plots for workflows 5, 8, 11
@@ -311,25 +382,76 @@ create_single_parameter_plots <- function(cached_results) {
 #' @param results Analysis results from mod_analysis_engine
 #' @return List containing ggplot and plotly objects
 #' @noRd
-create_cost_tradeoff_plots <- function(results) {
+create_cost_tradeoff_plots <- function(cached_results) {
 
+  # ========================================================================
+  # CACHED RESULTS ARCHITECTURE SUPPORT
+  # ========================================================================
+
+  # Handle both new cached results format and legacy direct results format
+  if (!is.null(cached_results$all_results)) {
+    # NEW CACHED FORMAT: Extract solutions from cached results
+
+    # Convert cached solutions to multi-solution format for cost plots
+    solutions_list <- list()
+    solution_counter <- 1
+
+    # Process all cached solutions (current + pinned)
+    for (solution_name in names(cached_results$all_results)) {
+      solution_result <- cached_results$all_results[[solution_name]]
+
+      # Skip if solution has errors
+      if (!is.null(solution_result$error)) {
+        next
+      }
+
+      # Create solution data structure expected by cost plot functions
+      solutions_list[[solution_name]] <- list(
+        id = solution_counter,
+        color = get_solution_color(solution_counter),
+        data = solution_result$cost_data,    # Cost-power data points
+        optimal_point = solution_result$optimal_design,
+        label = solution_name
+      )
+      solution_counter <- solution_counter + 1
+    }
+
+    if (length(solutions_list) == 0) {
+      stop("No valid solutions found for cost tradeoff plotting")
+    }
+
+    # Create plot_data structure and determine metadata from first valid solution
+    metadata_source <- cached_results$all_results[[names(cached_results$all_results)[1]]]
+
+    plot_data <- list(solutions = solutions_list)
+    results_structure <- list(
+      plot_data = plot_data,
+      user_config = metadata_source$user_config,
+      workflow_info = metadata_source$workflow_info,
+      metadata = metadata_source$metadata
+    )
+
+    return(create_multi_solution_cost_plots(results_structure))
+  }
+
+  # LEGACY SINGLE SOLUTION FORMAT (backward compatibility)
   # Check if this is multi-solution data
-  if (!is.null(results$plot_data) && is_multi_solution_data(results$plot_data)) {
-    return(create_multi_solution_cost_plots(results))
+  if (!is.null(cached_results$plot_data) && is_multi_solution_data(cached_results$plot_data)) {
+    return(create_multi_solution_cost_plots(cached_results))
   }
 
   # Original single solution logic (backward compatibility)
 
-  power_data <- results$power_data
-  cost_data <- results$cost_data
-  optimal_design <- results$optimal_design
-  target_power <- results$user_config$design_options$target_power
+  power_data <- cached_results$power_data
+  cost_data <- cached_results$cost_data
+  optimal_design <- cached_results$optimal_design
+  target_power <- cached_results$user_config$design_options$target_power
   # Extract cost budget from different locations based on workflow type
-  cost_budget <- results$user_config$design_options$cost_budget %||%
-                 results$metadata$TPM_minimization_data$cost_constraint %||%
-                 results$metadata$fc_minimization_data$cost_constraint %||%
-                 results$user_config$cost_info$cost_constraint_budget
-  workflow_info <- results$workflow_info
+  cost_budget <- cached_results$user_config$design_options$cost_budget %||%
+                 cached_results$metadata$TPM_minimization_data$cost_constraint %||%
+                 cached_results$metadata$fc_minimization_data$cost_constraint %||%
+                 cached_results$user_config$cost_info$cost_constraint_budget
+  workflow_info <- cached_results$workflow_info
 
   # Route to appropriate plot creation based on workflow type
   if (workflow_info$workflow_id == "power_cost_minimization") {
@@ -337,7 +459,7 @@ create_cost_tradeoff_plots <- function(results) {
     p <- create_equi_power_cost_plot(power_data, optimal_design, target_power, workflow_info, cost_data)
   } else if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
     # WORKFLOWS 10, 11: Unified constrained minimization plots
-    p <- create_minimization_plot(results)
+    p <- create_minimization_plot(cached_results)
   } else if (workflow_info$workflow_id %in% c("power_cost_TPM_cells", "power_cost_TPM_reads", "power_cost_fc_cells", "power_cost_fc_reads")) {
     # WORKFLOWS 6-7, 9-10: Power+cost single parameter workflows with cells/reads varying
     p <- create_standard_cost_tradeoff_plot(power_data, optimal_design, target_power, cost_budget, workflow_info)
