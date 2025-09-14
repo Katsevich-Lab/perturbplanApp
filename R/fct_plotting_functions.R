@@ -270,7 +270,6 @@ create_single_parameter_plots <- function(cached_results) {
         font = list(size = 14)
       ),
       hovermode = "closest",
-      autosize = TRUE,
       legend = list(
         orientation = "h",     # horizontal legend
         x = 0.5, xanchor = "center",
@@ -327,7 +326,8 @@ create_cached_cost_tradeoff_plots <- function(cached_results) {
     solutions_list[["Current"]] <- list(
       id = 0,
       color = get_solution_color(1),  # Use first color for Current
-      data = current$cost_data,       # Cost-power data for tradeoff plots
+      power_data = current$power_data,    # Power data for equi-power curves
+      cost_data = current$cost_data,      # Cost data for equi-cost curves
       optimal_point = current$optimal_design,
       label = "Current"
     )
@@ -341,7 +341,8 @@ create_cached_cost_tradeoff_plots <- function(cached_results) {
       solutions_list[[solution_name]] <- list(
         id = i,
         color = get_solution_color(i + 1),  # Skip first color (used by Current)
-        data = pinned$cost_data,            # Cost-power data for tradeoff plots
+        power_data = pinned$power_data,     # Power data for equi-power curves
+        cost_data = pinned$cost_data,       # Cost data for equi-cost curves
         optimal_point = pinned$optimal_design,
         label = solution_name
       )
@@ -372,6 +373,233 @@ create_cached_cost_tradeoff_plots <- function(cached_results) {
   else {
     stop(paste("Unsupported workflow for cost tradeoff plotting:", workflow_id))
   }
+}
+
+#' Create cost minimization plots for workflow 5
+#'
+#' @description Creates cost vs power scatter plots for workflow 5 (cost minimization).
+#' Shows equi-power and equi-cost curves with optimal points for each solution.
+#'
+#' @param solutions_list List of solution data from router function
+#' @param workflow_info Workflow information object
+#' @param metadata_source Source for extracting target_power and other metadata
+#' @return List containing ggplot and plotly objects
+#' @noRd
+create_cost_minimization_plots <- function(solutions_list, workflow_info, metadata_source) {
+
+  # Extract target power from metadata
+  target_power <- metadata_source$user_config$design_options$target_power
+
+  # Combine all solutions into unified dataframes for consistent plotting
+  combined_power_data <- data.frame()
+  combined_cost_data <- data.frame()
+  optimal_points <- data.frame()
+
+  for (solution in solutions_list) {
+    solution_label <- solution$label
+    solution_color <- solution$color
+
+    # Process power data (equi-power curves)
+    if (!is.null(solution$power_data)) {
+      power_data <- solution$power_data
+
+      # Standardize column names
+      if ("raw_reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
+        power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
+      } else if ("reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
+        power_data$sequenced_reads_per_cell <- power_data$reads_per_cell
+      }
+
+      # Add solution info
+      power_data$solution_label <- solution_label
+      power_data$solution_color <- solution_color
+      combined_power_data <- rbind(combined_power_data, power_data)
+    }
+
+    # Process cost data (equi-cost curves)
+    if (!is.null(solution$cost_data)) {
+      cost_data <- solution$cost_data
+
+      # Standardize column names
+      if ("raw_reads_per_cell" %in% names(cost_data) && !"sequenced_reads_per_cell" %in% names(cost_data)) {
+        cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
+      } else if ("reads_per_cell" %in% names(cost_data) && !"sequenced_reads_per_cell" %in% names(cost_data)) {
+        cost_data$sequenced_reads_per_cell <- cost_data$reads_per_cell
+      }
+
+      # Add solution info and cost level grouping
+      cost_data$solution_label <- solution_label
+      cost_data$solution_color <- solution_color
+
+      # Group cost data by cost levels if not already present
+      if (!"cost_of_interest" %in% names(cost_data) && "total_cost" %in% names(cost_data)) {
+        cost_range <- range(cost_data$total_cost, na.rm = TRUE)
+        cost_levels <- seq(from = cost_range[1], to = cost_range[2], length.out = 3)
+        cost_levels <- round(cost_levels)
+
+        # Assign each point to nearest cost level
+        cost_data$cost_of_interest <- sapply(cost_data$total_cost, function(cost) {
+          cost_levels[which.min(abs(cost_levels - cost))]
+        })
+      }
+
+      combined_cost_data <- rbind(combined_cost_data, cost_data)
+    }
+
+    # Add optimal point
+    if (!is.null(solution$optimal_point)) {
+      optimal_design <- solution$optimal_point
+
+      # Standardize reads column name
+      reads_col <- "sequenced_reads_per_cell"
+      if ("raw_reads_per_cell" %in% names(optimal_design)) {
+        optimal_design$sequenced_reads_per_cell <- optimal_design$raw_reads_per_cell
+      } else if ("reads_per_cell" %in% names(optimal_design)) {
+        optimal_design$sequenced_reads_per_cell <- optimal_design$reads_per_cell
+      }
+
+      if (!is.null(optimal_design$cells_per_target) && !is.null(optimal_design[[reads_col]])) {
+        optimal_point <- data.frame(
+          cells_per_target = optimal_design$cells_per_target,
+          sequenced_reads_per_cell = optimal_design[[reads_col]],
+          total_cost = optimal_design$total_cost %||% NA,
+          achieved_power = optimal_design$achieved_power %||% target_power,
+          solution_label = solution_label,
+          solution_color = solution_color
+        )
+        optimal_points <- rbind(optimal_points, optimal_point)
+      }
+    }
+  }
+
+  # Check required columns exist
+  required_cols <- c("cells_per_target", "sequenced_reads_per_cell")
+  if (!all(required_cols %in% names(combined_power_data))) {
+    # Return error plot
+    error_plot <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) +
+      geom_point() +
+      labs(title = "Cost Minimization Plot Error",
+           subtitle = "Missing required data columns")
+
+    return(list(
+      main_plot = error_plot,
+      interactive_plot = ggplotly(error_plot)
+    ))
+  }
+
+  # Create base plot
+  p <- ggplot()
+
+  # Add equi-power curves for each solution
+  if (nrow(combined_power_data) > 0) {
+    # Add smooth curves
+    p <- p + geom_smooth(
+      data = combined_power_data,
+      mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
+                   color = solution_label),
+      se = FALSE,
+      size = 1
+    )
+
+    # Add points for better interactivity with tooltips
+    p <- p + geom_point(
+      data = combined_power_data,
+      mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
+                    color = solution_label,
+                    text = paste0(solution_label, "<br>",
+                                  "Cells: ", scales::comma(cells_per_target), "<br>",
+                                  "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
+                                  "Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"), "<br>",
+                                  "Power: ", scales::percent(target_power, accuracy = 0.1))),
+      size = 0.8,
+      alpha = 0.7
+    )
+  }
+
+  # Add equi-cost curves if available
+  if (nrow(combined_cost_data) > 0) {
+    # Add points for better interactivity with tooltips
+    p <- p + geom_point(
+      data = combined_cost_data,
+      mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
+                   color = solution_label,
+                   text = paste0(solution_label, " (Equi-cost)<br>",
+                               "Cells: ", scales::comma(cells_per_target), "<br>",
+                               "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
+                               "Cost Level: $", scales::comma(cost_of_interest, accuracy = 1, na_default = "N/A"), "<br>",
+                               "Actual Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"))),
+      size = 0.6,
+      alpha = 0.5,
+      shape = 16
+    )
+
+    # Add dashed lines for cost curves
+    p <- p + geom_smooth(
+      data = combined_cost_data,
+      mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
+                   color = solution_label),
+      linetype = "dashed",
+      size = 1,
+      se = FALSE
+    )
+  }
+
+  # Add optimal points
+  if (nrow(optimal_points) > 0) {
+    p <- p + geom_point(
+      data = optimal_points,
+      mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
+                   color = solution_label,
+                   text = paste0(solution_label, " (Optimal)<br>",
+                               "Cells: ", scales::comma(cells_per_target), "<br>",
+                               "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
+                               "Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"), "<br>",
+                               "Power: ", scales::percent(achieved_power, accuracy = 0.1, na_default = "N/A"))),
+      size = 2,
+      shape = 18
+    )
+  }
+
+  # Apply log scales for both x and y axes
+  p <- p + scale_x_log10(labels = scales::comma_format()) +
+           scale_y_log10(labels = scales::comma_format())
+
+  # Set color scale
+  if (length(solutions_list) > 1) {
+    solution_colors <- sapply(solutions_list, function(sol) sol$color)
+    solution_names <- sapply(solutions_list, function(sol) sol$label)
+    p <- p + scale_color_manual(values = setNames(solution_colors, solution_names), name = "Solution")
+  }
+
+  # Labels and theme
+  p <- p + labs(
+    title = workflow_info$title,
+    x = "Cells per target",
+    y = "Reads per cell",
+    color = "Solution"
+  ) +
+  theme_bw() +
+  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
+
+  # Create interactive plotly version
+  interactive_plot <- ggplotly(p, tooltip = "text", height = 430) %>%
+    layout(
+      title = list(text = workflow_info$title, font = list(size = 16)),
+      xaxis = list(title = "Cells per target"),
+      yaxis = list(title = "Reads per cell"),
+      showlegend = TRUE,
+      legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.25)
+    )  %>%
+    config(
+      displayModeBar = FALSE,
+      displaylogo = FALSE,
+      modeBarButtonsToRemove = list("all")
+    )
+
+  return(list(
+    main_plot = p,
+    interactive_plot = interactive_plot
+  ))
 }
 
 #' Create cost-power tradeoff plots
