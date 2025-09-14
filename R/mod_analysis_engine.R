@@ -35,7 +35,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
     # ========================================================================
     # DEBOUNCED CONFIG INPUT
     # ========================================================================
-    
+
     # Debounce the workflow_config by 50ms to prevent excessive analysis calls
     workflow_config_debounced <- debounce(workflow_config, 50)
 

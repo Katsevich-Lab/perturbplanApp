@@ -43,26 +43,12 @@ mod_plot_display_server <- function(id, plot_objects) {
     # ========================================================================
 
     output$main_plot <- renderPlotly({
-      tryCatch({
-        req(plot_objects())
 
-        plots <- plot_objects()
-
-        if (!is.null(plots$error)) {
-          return(NULL)
-        }
-
-        # Check for direct interactive_plot (cost minimization)
-        if (!is.null(plots$plots) && !is.null(plots$plots$interactive_plot)) {
-          plots$plots$interactive_plot
-        }
-        else {
-          NULL
-        }
-      }, error = function(e) {
-        # Return empty plot if there's an error
+      plots <- plot_objects()
+      if (!is.null(plots$error)) {
         return(NULL)
-      })
+      }
+      plots$plots$interactive_plot
     })
 
   })

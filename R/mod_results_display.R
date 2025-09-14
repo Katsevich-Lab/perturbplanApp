@@ -196,8 +196,6 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
       # Analysis is triggered if we have plan clicks but no results yet
       config <- user_config()
       has_plan_clicks <- !is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0
-
-
       has_plan_clicks
     })
     outputOptions(output, "analysis_trigger", suspendWhenHidden = FALSE)

@@ -46,74 +46,53 @@ mod_plotting_engine_server <- function(id, cached_results) {
     # ========================================================================
 
     plot_objects <- reactive({
-      req(cached_results())
 
       results <- cached_results()
 
-      # Return NULL if no analysis results or error
-      if (is.null(results) || !is.null(results$error)) {
-        return(NULL)
-      }
+      # Don't process if no results available (prevent initialization issues)
+      req(!is.null(results$current_result) || !is.null(results$pinned_solutions))
 
       # Determine plot type and generate appropriate plots
-      # Wrap in error handling to prevent app crashes
-      final_result <- tryCatch({
-        # Extract workflow_info from the correct location (cached_results structure)
-        workflow_info <- if (!is.null(results$current_result)) {
-          results$current_result$workflow_info
+      # Extract workflow_info from the correct location (cached_results structure)
+      workflow_info <- if (!is.null(results$current_result)) {
+        results$current_result$workflow_info
+      } else {
+        results$pinned_solutions[[1]]$workflow_info
+      }
+
+
+      if (workflow_info$plot_type == "single_parameter_curve") {
+        # Generate single parameter power curve plots (8 workflows)
+        plots <- create_single_parameter_plots(results)
+      } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
+        # Route specific workflows to new cached function
+        if (workflow_info$workflow_id %in% c("power_cost_minimization", "power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
+          # Generate cost-power tradeoff plots for workflows 5, 10-11 using new cached architecture
+          plots <- create_cached_cost_tradeoff_plots(results)
         } else {
-          results$pinned_solutions[[1]]$workflow_info
+          # Use legacy function for other cost tradeoff workflows (if any)
+          plots <- create_cost_tradeoff_plots(results)
         }
+      } else {
+        # Error case
+        return(list(
+          error = paste("Unknown plot type:", workflow_info$plot_type),
+          plots = list()
+        ))
+      }
 
-
-        if (workflow_info$plot_type == "single_parameter_curve") {
-          # Generate single parameter power curve plots (8 workflows)
-          plots <- create_single_parameter_plots(results)
-        } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
-          # Route specific workflows to new cached function
-          if (workflow_info$workflow_id %in% c("power_cost_minimization", "power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-            # Generate cost-power tradeoff plots for workflows 5, 10-11 using new cached architecture
-            plots <- create_cached_cost_tradeoff_plots(results)
-          } else {
-            # Use legacy function for other cost tradeoff workflows (if any)
-            plots <- create_cost_tradeoff_plots(results)
-          }
-        } else {
-          # Error case
-          return(list(
-            error = paste("Unknown plot type:", workflow_info$plot_type),
-            plots = list()
-          ))
-        }
-
-        # Return plot objects with metadata (success case)
-        list(
-          plots = plots,
-          workflow_info = workflow_info,
-          plot_type = workflow_info$plot_type,
-          success = TRUE,
-          error = NULL
-        )
-      }, error = function(e) {
-        # Return error object instead of crashing
-        list(
-          error = paste("Plotting Error:", e$message),
-          plots = list(),
-          metadata = list(
-            plot_type = workflow_info$plot_type %||% "unknown",
-            timestamp = Sys.time(),
-            error_details = as.character(e)
-          )
-        )
-        })
-
-        return(final_result)
+      # Return plot objects with metadata (success case)
+      final_result <- list(
+        plots = plots,
+        workflow_info = workflow_info,
+        plot_type = workflow_info$plot_type,
+        success = TRUE,
+        error = NULL
+      )
+      return(final_result)
     }) %>% bindCache(cached_results())
 
     return(plot_objects)
   })
 }
 
-
-    # All plotting functions have been moved to fct_plotting_functions.R
-    # for better separation of concerns and maintainability
