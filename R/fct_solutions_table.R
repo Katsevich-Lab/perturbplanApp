@@ -16,15 +16,32 @@
 #' @return Shiny UI tagList with clean solution table
 #' @export
 create_enhanced_solutions_table <- function(results, plots = NULL, user_config = NULL) {
-  if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
-    return(create_empty_solutions_table())
+  # Handle both legacy single results and new cached results format
+  if (!is.null(results$current_result) || !is.null(results$all_results)) {
+    # New cached results format
+    solutions_data <- extract_cached_solutions_data(results)
+
+    # Get workflow_info from current result or first pinned result
+    workflow_info <- if (!is.null(results$current_result)) {
+      results$current_result$workflow_info
+    } else if (length(results$pinned_solutions) > 0) {
+      results$pinned_solutions[[1]]$workflow_info
+    } else {
+      return(create_empty_solutions_table())
+    }
+
+  } else {
+    # Legacy single result format
+    if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
+      return(create_empty_solutions_table())
+    }
+
+    solutions_data <- extract_clean_solutions_data(results)
+    workflow_info <- results$workflow_info
   }
 
-  # Extract solutions array using clean extraction
-  solutions_data <- extract_clean_solutions_data(results)
-
   # Create clean table UI with proper two-row header
-  create_clean_solutions_table_ui(solutions_data, results$workflow_info)
+  create_clean_solutions_table_ui(solutions_data, workflow_info)
 }
 
 # ============================================================================
@@ -53,6 +70,56 @@ extract_clean_solutions_data <- function(results) {
       minimizing_param = minimizing_param
     )
   )
+}
+
+#' Extract Cached Solutions Data
+#'
+#' @description Handles cached_results format with current and pinned solutions
+#' @param cached_results Cached results from mod_results_cache
+#' @return List with structured solutions data for all solutions
+extract_cached_solutions_data <- function(cached_results) {
+  solutions_list <- list()
+  solution_counter <- 1
+
+  # Add current result if available
+  if (!is.null(cached_results$current_result)) {
+    current <- cached_results$current_result
+    solutions_list[[solution_counter]] <- list(
+      solution_id = solution_counter,
+      solution_name = "Current",
+      achieved_power = round(current$optimal_design$achieved_power %||% NA, 3),
+      total_cost = if (!is.null(current$optimal_design$total_cost)) current$optimal_design$total_cost else NULL,
+      optimal_value = extract_optimal_parameter_value(current$optimal_design, current$workflow_info$minimizing_parameter),
+      experimental_params = extract_experimental_parameters(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter, current$workflow_info),
+      TPM_threshold = extract_TPM_threshold(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter),
+      effect_sizes = extract_effect_sizes_clean(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter),
+      minimizing_param = current$workflow_info$minimizing_parameter
+    )
+    solution_counter <- solution_counter + 1
+  }
+
+  # Add pinned solutions if available
+  if (!is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
+    for (i in seq_along(cached_results$pinned_solutions)) {
+      solution_name <- names(cached_results$pinned_solutions)[i]
+      pinned <- cached_results$pinned_solutions[[i]]
+
+      solutions_list[[solution_counter]] <- list(
+        solution_id = solution_counter,
+        solution_name = solution_name,
+        achieved_power = round(pinned$optimal_design$achieved_power %||% NA, 3),
+        total_cost = if (!is.null(pinned$optimal_design$total_cost)) pinned$optimal_design$total_cost else NULL,
+        optimal_value = extract_optimal_parameter_value(pinned$optimal_design, pinned$workflow_info$minimizing_parameter),
+        experimental_params = extract_experimental_parameters(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter, pinned$workflow_info),
+        TPM_threshold = extract_TPM_threshold(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter),
+        effect_sizes = extract_effect_sizes_clean(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter),
+        minimizing_param = pinned$workflow_info$minimizing_parameter
+      )
+      solution_counter <- solution_counter + 1
+    }
+  }
+
+  return(solutions_list)
 }
 
 #' Extract Optimal Parameter Value
@@ -383,7 +450,10 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
 create_data_row <- function(solution_data, workflow_info) {
 
   cells <- list(
-    tags$td(solution_data$solution_id, style = "text-align: center; padding: 8px;"),
+    tags$td(
+      solution_data$solution_name %||% paste("Solution", solution_data$solution_id),
+      style = "text-align: center; padding: 8px; font-weight: bold;"
+    ),
     tags$td(solution_data$achieved_power, style = "text-align: center; padding: 8px;")
   )
 
