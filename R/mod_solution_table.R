@@ -28,13 +28,12 @@ mod_solution_table_ui <- function(id) {
 #'
 #' @param id Module namespace ID
 #' @param cached_results Reactive containing cached results with pinned + current solutions
-#' @param plot_objects Reactive containing plot objects from plotting engine
 #' @param user_config Reactive containing user configuration
 #'
-#' @noRd 
+#' @noRd
 #'
 #' @importFrom shiny moduleServer req renderUI tags h4
-mod_solution_table_server <- function(id, cached_results, plot_objects, user_config) {
+mod_solution_table_server <- function(id, cached_results, user_config) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -43,18 +42,9 @@ mod_solution_table_server <- function(id, cached_results, plot_objects, user_con
     # ========================================================================
     
     output$enhanced_solutions_table <- renderUI({
-      req(cached_results(), plot_objects())
+      req(cached_results())
 
       results <- cached_results()
-      plots <- plot_objects()
-
-      # Check for errors in plots
-      if (!is.null(plots$error)) {
-        return(tags$div(
-          style = "color: #C73E1D; padding: 10px;",
-          tags$p("Error in analysis - table cannot be generated.")
-        ))
-      }
 
       # Check if we have any valid results (current or pinned)
       has_current <- !is.null(results$current_result) && is.null(results$current_result$error)
@@ -72,9 +62,9 @@ mod_solution_table_server <- function(id, cached_results, plot_objects, user_con
         ))
       }
 
-      # Create enhanced solutions table
+      # Create enhanced solutions table (plots parameter not needed)
       tryCatch({
-        create_enhanced_solutions_table(results, plots, user_config)
+        create_enhanced_solutions_table(results, plots = NULL, user_config)
       }, error = function(e) {
         tags$div(
           style = "color: #C73E1D; padding: 10px;",
