@@ -24,7 +24,7 @@ mod_parameter_sliders_ui <- function(id) {
         class = "slider-columns-container",
         fluidRow(
           # COLUMN 1: Experimental parameters (always 3 sliders)
-          column(6, 
+          column(6,
             tags$div(
               class = "slider-column",
               uiOutput(ns("experimental_sliders_column"))
@@ -33,7 +33,7 @@ mod_parameter_sliders_ui <- function(id) {
           # COLUMN 2: Power-determining parameters (dynamic - 3 out of 4 shown)
           column(6,
             tags$div(
-              class = "slider-column", 
+              class = "slider-column",
               uiOutput(ns("dynamic_power_sliders_column"))
             )
           )
@@ -76,7 +76,8 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
       step = step,
       width = "100%",
       height = "8px",
-      update_on = "end"
+      update_on = "end",
+      tooltips = TRUE
     )
   )
 }
@@ -160,9 +161,9 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       }
 
       tagList(
-        tags$div(style = "margin-bottom: 30px;", create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
-        tags$div(style = "margin-bottom: 30px;", create_compact_slider(ns("targets_slider"), "Number of Targets", 50, 20000, targets_value, 50)),
-        tags$div(style = "margin-bottom: 20px;", create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
+        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
+        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("targets_slider"), "# of Targets", 50, 20000, targets_value, 50)),
+        tags$div(style = "margin-bottom: 5px;", create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
       )
     })
 
@@ -275,7 +276,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
           param_name <- names(visible_power_params)[i]
           param <- visible_power_params[[param_name]]
           # Add spacing between sliders
-          margin_bottom <- if (i == length(visible_power_params)) "20px" else "30px"
+          margin_bottom <- if (i == length(visible_power_params)) "5px" else "8px"
           tags$div(
             style = paste0("margin-bottom: ", margin_bottom, ";"),
             create_compact_slider(
@@ -293,7 +294,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       
       # Show Pin buttons for all workflows (simplified approach)
       tags$div(
-        style = "padding: 15px 10px 10px 10px; text-align: center; border-top: 1px solid #dee2e6; margin-top: 10px; display: flex; gap: 10px; justify-content: center;",
+        style = "padding: 0px 10px 0px 10px; text-align: center; margin-top: -5px; display: flex; gap: 10px; justify-content: center;",
         actionButton(
           ns("pin_solution"),
           "Pin Solution",

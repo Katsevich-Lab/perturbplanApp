@@ -25,9 +25,19 @@
   margin-bottom: 20px;
 }
 
+.slider-columns-container .row {
+  margin-left: -5px;
+  margin-right: -5px;
+}
+
+.slider-columns-container [class*="col-"] {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
 .slider-column {
-  padding: 20px 15px;
-  min-height: 300px;
+  padding: 0px 5px;
+  min-height: 180px;
 }
 
 .experimental-params {
@@ -50,14 +60,14 @@
   font-size: 14px;
 }
 
-/* Individual slider spacing in columns - increased for better separation */
+/* Individual slider spacing in columns - very compact layout */
 .slider-column .compact-slider-container {
-  margin-bottom: 40px;
-  padding: 15px 8px;
+  margin-bottom: 8px;
+  padding: 2px;
 }
 
 .slider-column .compact-slider-container:last-child {
-  margin-bottom: 15px;
+  margin-bottom: 2px;
 }
 
 /* ========================================================================
@@ -65,7 +75,7 @@
    ======================================================================== */
 
 .compact-slider-container {
-  padding: 0 20px;
+  padding: 0 10px;
   max-width: 400px;
   margin: 0 auto;
 }
@@ -76,19 +86,19 @@
 
 /* noUiSlider specific styling */
 .compact-slider-container .noUi-target {
-  max-width: 300px;
-  margin: 15px auto;
+  max-width: 90%;
+  margin: 5px auto;
   height: 8px !important;
 }
 
 .compact-slider-container .noUi-base {
-  max-width: 300px;
+  max-width: 90%;
   margin: 0 auto;
 }
 
 .compact-slider-container .noUi-handle {
-  width: 12px !important;
-  height: 12px !important;
+  width: 10px !important;
+  height: 10px !important;
 }
 
 .compact-slider-container .slider-label {
@@ -101,13 +111,13 @@
 
 /* Custom slider styling for compact horizontal layout - noUiSlider */
 .compact-slider-container .noUi-target {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
+  background: #e9ecef;
+  border: 1px solid #adb5bd;
   margin: 15px auto 20px auto;
 }
 
 .compact-slider-container .noUi-connect {
-  background: linear-gradient(to right, #007bff, #0056b3);
+  background: transparent;
 }
 
 .compact-slider-container .noUi-handle {
@@ -121,9 +131,15 @@
   background: #0056b3;
 }
 
-/* Hide tooltips and pips for cleaner appearance */
+/* Show tooltips for value display, hide pips for cleaner appearance */
 .compact-slider-container .noUi-tooltip {
-  display: none !important;
+  display: block !important;
+  background: #007bff;
+  color: white;
+  border: none;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
 }
 
 .compact-slider-container .noUi-pips {
