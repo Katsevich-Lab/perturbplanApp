@@ -102,10 +102,6 @@ mod_plotting_engine_server <- function(id, cached_results) {
         })
 
         return(final_result)
-
-      }, error = function(e) {
-        return(list(error = paste("Plotting Engine Error:", e$message), plots = list()))
-      })
     }) %>% bindCache(cached_results())
     
     return(plot_objects)
