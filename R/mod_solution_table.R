@@ -47,17 +47,43 @@ mod_solution_table_server <- function(id, cached_results, plot_objects, user_con
 
       results <- cached_results()
       plots <- plot_objects()
-      
-      if (!is.null(results$error) || !is.null(plots$error)) {
+
+      # Check for errors in plots
+      if (!is.null(plots$error)) {
         return(tags$div(
           style = "color: #C73E1D; padding: 10px;",
           tags$p("Error in analysis - table cannot be generated.")
         ))
       }
-      
-      # Create enhanced solutions table similar to dev branch approach
-      # This will replace both the old solutions_table and analysis_summary
-      create_enhanced_solutions_table(results, plots, user_config)
+
+      # Check if we have any valid results (current or pinned)
+      has_current <- !is.null(results$current_result) && is.null(results$current_result$error)
+      has_pinned <- !is.null(results$pinned_solutions) && length(results$pinned_solutions) > 0
+
+      if (!has_current && !has_pinned) {
+        return(tags$div(
+          style = "color: #666; padding: 10px; text-align: center;",
+          tags$p("No solutions available yet. Run analysis to generate results.")
+        ))
+      }
+
+      # Check for errors in current result
+      if (!is.null(results$current_result$error)) {
+        return(tags$div(
+          style = "color: #C73E1D; padding: 10px;",
+          tags$p("Error in analysis - table cannot be generated.")
+        ))
+      }
+
+      # Create enhanced solutions table
+      tryCatch({
+        create_enhanced_solutions_table(results, plots, user_config)
+      }, error = function(e) {
+        tags$div(
+          style = "color: #C73E1D; padding: 10px;",
+          tags$p(paste("Table generation error:", e$message))
+        )
+      })
     })
     
   })
