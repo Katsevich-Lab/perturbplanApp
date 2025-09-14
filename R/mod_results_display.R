@@ -281,18 +281,6 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     })
 
     # ========================================================================
-    # PLOT RENDERING MOVED TO mod_plot_display.R
-    # ========================================================================
-    # Plot rendering now handled by mod_plot_display_server
-
-    # ========================================================================
-    # TABLE AND SUMMARY RENDERING MOVED TO mod_solution_table.R
-    # ========================================================================
-    # Solutions table and analysis summary now handled by mod_solution_table_server
-
-
-
-    # ========================================================================
     # EXPORT FUNCTIONALITY
     # ========================================================================
 

@@ -53,11 +53,7 @@ mod_plot_display_server <- function(id, plot_objects) {
         }
 
         # Check for direct interactive_plot (cost minimization)
-        if (!is.null(plots$interactive_plot)) {
-          plots$interactive_plot
-        }
-        # Check for nested plots$interactive_plot (other workflows)
-        else if (!is.null(plots$plots) && !is.null(plots$plots$interactive_plot)) {
+        if (!is.null(plots$plots) && !is.null(plots$plots$interactive_plot)) {
           plots$plots$interactive_plot
         }
         else {
