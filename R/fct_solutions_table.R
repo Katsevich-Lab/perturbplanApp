@@ -15,42 +15,23 @@
 #' @return Shiny UI tagList with clean solution table
 #' @export
 create_enhanced_solutions_table <- function(results, user_config = NULL) {
-  # DEBUG: Print input structure
-  cat("DEBUG: create_enhanced_solutions_table called\n")
-  cat("DEBUG: results structure:\n")
-  cat("  - current_result:", !is.null(results$current_result), "\n")
-  cat("  - all_results:", !is.null(results$all_results), "\n")
-  cat("  - pinned_solutions:", !is.null(results$pinned_solutions), "\n")
-  if (!is.null(results$pinned_solutions)) {
-    cat("  - pinned_solutions length:", length(results$pinned_solutions), "\n")
-  }
-
   # Handle both legacy single results and new cached results format
   if (!is.null(results$current_result) || !is.null(results$all_results)) {
     # New cached results format
-    cat("DEBUG: Using cached results format\n")
     solutions_data <- extract_cached_solutions_data(results)
-    cat("DEBUG: solutions_data extracted, length:", length(solutions_data), "\n")
 
     # Get workflow_info from current result or first pinned result
     workflow_info <- if (!is.null(results$current_result)) {
-      cat("DEBUG: Getting workflow_info from current_result\n")
       results$current_result$workflow_info
     } else if (length(results$pinned_solutions) > 0) {
-      cat("DEBUG: Getting workflow_info from pinned_solutions[1]\n")
       results$pinned_solutions[[1]]$workflow_info
     } else {
-      cat("DEBUG: No workflow_info found, returning empty table\n")
       return(create_empty_solutions_table())
     }
 
-    cat("DEBUG: workflow_info obtained:", !is.null(workflow_info), "\n")
-
   } else {
     # Legacy single result format
-    cat("DEBUG: Using legacy single result format\n")
     if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
-      cat("DEBUG: Missing optimal_design or workflow_info, returning empty table\n")
       return(create_empty_solutions_table())
     }
 
@@ -59,10 +40,7 @@ create_enhanced_solutions_table <- function(results, user_config = NULL) {
   }
 
   # Create clean table UI with proper two-row header
-  cat("DEBUG: About to create clean solutions table UI\n")
-  result <- create_clean_solutions_table_ui(solutions_data, workflow_info)
-  cat("DEBUG: Table UI created successfully\n")
-  return(result)
+  create_clean_solutions_table_ui(solutions_data, workflow_info)
 }
 
 # ============================================================================

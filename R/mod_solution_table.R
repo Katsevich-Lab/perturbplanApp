@@ -42,17 +42,20 @@ mod_solution_table_server <- function(id, cached_results, user_config) {
     # ========================================================================
 
     output$enhanced_solutions_table <- renderUI({
-      cat("DEBUG: enhanced_solutions_table renderUI called\n")
-
       req(cached_results())
-      cat("DEBUG: cached_results() requirement passed\n")
 
       results <- cached_results()
-      cat("DEBUG: cached_results obtained\n")
+
+      # Check if we have any valid results (current or pinned)
+      has_current <- !is.null(results$current_result) && is.null(results$current_result$error)
+      has_pinned <- !is.null(results$pinned_solutions) && length(results$pinned_solutions) > 0
+
+      if (!has_current && !has_pinned) {
+        return(NULL)
+      }
 
       # Check for errors in current result
       if (!is.null(results$current_result$error)) {
-        cat("DEBUG: Current result has error, returning error message\n")
         return(tags$div(
           style = "color: #C73E1D; padding: 10px;",
           tags$p("Error in analysis - table cannot be generated.")
@@ -60,13 +63,9 @@ mod_solution_table_server <- function(id, cached_results, user_config) {
       }
 
       # Create enhanced solutions table
-      cat("DEBUG: About to call create_enhanced_solutions_table\n")
       tryCatch({
-        result <- create_enhanced_solutions_table(results, user_config)
-        cat("DEBUG: create_enhanced_solutions_table completed successfully\n")
-        result
+        create_enhanced_solutions_table(results, user_config)
       }, error = function(e) {
-        cat("DEBUG: Error in create_enhanced_solutions_table:", e$message, "\n")
         tags$div(
           style = "color: #C73E1D; padding: 10px;",
           tags$p(paste("Table generation error:", e$message))
