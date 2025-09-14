@@ -27,14 +27,14 @@ mod_solution_table_ui <- function(id) {
 #' Handles different analysis result structures and error states.
 #'
 #' @param id Module namespace ID
-#' @param analysis_results Reactive containing analysis results
+#' @param cached_results Reactive containing cached results with pinned + current solutions
 #' @param plot_objects Reactive containing plot objects from plotting engine
 #' @param user_config Reactive containing user configuration
 #'
 #' @noRd 
 #'
 #' @importFrom shiny moduleServer req renderUI tags h4
-mod_solution_table_server <- function(id, analysis_results, plot_objects, user_config) {
+mod_solution_table_server <- function(id, cached_results, plot_objects, user_config) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -43,9 +43,9 @@ mod_solution_table_server <- function(id, analysis_results, plot_objects, user_c
     # ========================================================================
     
     output$enhanced_solutions_table <- renderUI({
-      req(analysis_results(), plot_objects())
-      
-      results <- analysis_results()
+      req(cached_results(), plot_objects())
+
+      results <- cached_results()
       plots <- plot_objects()
       
       if (!is.null(results$error) || !is.null(plots$error)) {

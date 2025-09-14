@@ -138,7 +138,7 @@ mod_results_display_ui <- function(id) {
 #'
 #' @param id Module namespace ID
 #' @param plot_objects Reactive containing plot objects from mod_plotting_engine
-#' @param analysis_results Reactive containing analysis results from mod_analysis_engine
+#' @param cached_results Reactive containing cached results with pinned + current solutions
 #'
 #' @noRd
 #'
@@ -146,7 +146,7 @@ mod_results_display_ui <- function(id) {
 #' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
-mod_results_display_server <- function(id, plot_objects, analysis_results, user_config = reactive(NULL), app_state = NULL) {
+mod_results_display_server <- function(id, plot_objects, cached_results, user_config = reactive(NULL), app_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -248,7 +248,7 @@ mod_results_display_server <- function(id, plot_objects, analysis_results, user_
     mod_plot_display_server("plot_display", plot_objects)
 
     # Solution table component for data summaries
-    mod_solution_table_server("solution_table", analysis_results, plot_objects, user_config)
+    mod_solution_table_server("solution_table", cached_results, plot_objects, user_config)
 
     # Error message display
     output$error_message <- renderUI({

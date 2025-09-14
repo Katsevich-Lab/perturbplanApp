@@ -23,7 +23,7 @@ mod_plotting_engine_ui <- function(id) {
 #' 2. Cost-power tradeoff curves (3 workflows)
 #'
 #' @param id Module namespace ID
-#' @param analysis_results Reactive containing analysis results from mod_analysis_engine
+#' @param cached_results Reactive containing cached results with pinned + current solutions
 #' 
 #' @return Reactive list containing plot objects for display
 #' @noRd 
@@ -37,31 +37,35 @@ mod_plotting_engine_ui <- function(id) {
 #' @importFrom scales percent_format comma
 #' @importFrom stats rnorm
 #' @importFrom rlang .data
-mod_plotting_engine_server <- function(id, analysis_results) {
+mod_plotting_engine_server <- function(id, cached_results) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # ========================================================================
     # MAIN PLOTTING REACTIVE
     # ========================================================================
-    
+
     plot_objects <- reactive({
-      req(analysis_results())
-      
-      results <- analysis_results()
-      
-      
+      req(cached_results())
+
+      results <- cached_results()
+
       # Return NULL if no analysis results or error
       if (is.null(results) || !is.null(results$error)) {
         return(NULL)
       }
-      
+
       # Determine plot type and generate appropriate plots
       # Wrap in error handling to prevent app crashes
-      tryCatch({
-        workflow_info <- results$workflow_info
-        
-        
+      final_result <- tryCatch({
+        # Extract workflow_info from the correct location (cached_results structure)
+        workflow_info <- if (!is.null(results$current_result)) {
+          results$current_result$workflow_info
+        } else {
+          results$workflow_info  # fallback
+        }
+
+
         if (workflow_info$plot_type == "single_parameter_curve") {
           # Generate single parameter power curve plots (8 workflows)
           plots <- create_single_parameter_plots(results)
@@ -75,9 +79,18 @@ mod_plotting_engine_server <- function(id, analysis_results) {
             plots = list()
           ))
         }
+
+        # Return plot objects with metadata (success case)
+        list(
+          plots = plots,
+          workflow_info = workflow_info,
+          plot_type = workflow_info$plot_type,
+          success = TRUE,
+          error = NULL
+        )
       }, error = function(e) {
         # Return error object instead of crashing
-        return(list(
+        list(
           error = paste("Plotting Error:", e$message),
           plots = list(),
           metadata = list(
@@ -85,21 +98,15 @@ mod_plotting_engine_server <- function(id, analysis_results) {
             timestamp = Sys.time(),
             error_details = as.character(e)
           )
-        ))
+        )
+        })
+
+        return(final_result)
+
+      }, error = function(e) {
+        return(list(error = paste("Plotting Engine Error:", e$message), plots = list()))
       })
-      
-      # Return plot objects with metadata
-      final_result <- list(
-        plots = plots,
-        workflow_info = workflow_info,
-        plot_type = workflow_info$plot_type,
-        success = TRUE,
-        error = NULL
-      )
-      
-      
-      return(final_result)
-    }) %>% bindCache(analysis_results())
+    }) %>% bindCache(cached_results())
     
     return(plot_objects)
   })

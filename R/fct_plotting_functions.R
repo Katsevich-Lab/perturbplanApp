@@ -91,196 +91,96 @@ convert_to_multi_solution_format <- function(single_plot_data, solution_index = 
 #' @description Creates power curve plots for workflows 1-4, 6-7, 9-10
 #' where one parameter varies and others are fixed. Enhanced to support multi-solution plotting.
 #'
-#' @param results Analysis results from mod_analysis_engine
+#' @param cached_results Cached results from mod_results_cache (current + pinned solutions)
 #' @return List containing ggplot and plotly objects
 #' @noRd
-create_single_parameter_plots <- function(results) {
+create_single_parameter_plots <- function(cached_results) {
+  # Handle both legacy single results and new cached results format
+  if (!is.null(cached_results$current_result) || !is.null(cached_results$all_results)) {
+    # New cached results format - transform to plotting format
+    solutions_list <- list()
 
-  # Check if this is multi-solution data
-  if (!is.null(results$plot_data) && is_multi_solution_data(results$plot_data)) {
-    return(create_multi_solution_parameter_plots(results))
-  }
+    # Add current result if available
+    if (!is.null(cached_results$current_result)) {
+      current <- cached_results$current_result
+      solutions_list[["Current"]] <- list(
+        id = 0,
+        color = get_solution_color(1),  # Use first color for Current
+        data = current$power_data,
+        optimal_point = current$optimal_design,
+        label = "Current"
+      )
+    }
 
-  # Original single solution logic (backward compatibility)
-
-  power_data <- results$power_data
-  optimal_design <- results$optimal_design
-  target_power <- results$user_config$design_options$target_power
-  workflow_info <- results$workflow_info
-
-  # Create base ggplot
-  varying_param <- workflow_info$minimizing_parameter
-  param_label <- format_parameter_name(varying_param)
-
-  # Use clean titles from workflow_info (no optimal parameter info in titles)
-  plot_title <- workflow_info$title
-
-  # Create tooltip text before plotting
-  formatted_values <- case_when(
-    varying_param == "TPM_threshold" ~ scales::comma(round(power_data$parameter_value)),
-    varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(power_data$parameter_value),
-    varying_param == "minimum_fold_change" ~ as.character(round(power_data$parameter_value, 2)),
-    TRUE ~ as.character(power_data$parameter_value)
-  )
-
-  power_data$tooltip_text <- paste0(param_label, ": ", formatted_values,
-                                   "<br>Power: ", scales::percent(power_data$power, accuracy = 0.1))
-
-  # Standard single parameter power curve (same for power-only and power+cost workflows)
-  p <- ggplot(power_data, aes(x = .data$parameter_value, y = .data$power)) +
-    geom_line() +
-    suppressWarnings(geom_point(aes(text = .data$tooltip_text))) +
-    geom_hline(yintercept = target_power, linetype = "dashed")
-
-  # Add log scale for TPM_threshold parameter to standardize with other TPM plots
-  if (varying_param == "TPM_threshold") {
-    p <- p + scale_x_log10(labels = scales::comma_format())
-    param_label <- "TPM Threshold"
-  }
-
-  # Add red circle to highlight optimal solution point with custom hover
-  if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
-    optimal_hover_text <- paste0(param_label, ": ",
-                                case_when(
-                                  varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-                                  varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
-                                  varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
-                                  TRUE ~ as.character(optimal_design[[varying_param]])
-                                ),
-                                "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1),
-                                "<span style='display:none'>OPTIMAL</span>")
-
-    p <- p + suppressWarnings(geom_point(
-      data = data.frame(
-        x = optimal_design[[varying_param]],
-        y = optimal_design$achieved_power,
-        hover_text = optimal_hover_text
-      ),
-      aes(x = x, y = y, text = hover_text),
-      color = "red",
-      size = 4,
-      shape = 19  # Circle
-    ))
-  }
-
-  p <- p +
-    labs(
-      title = plot_title,
-      x = param_label,
-      y = "Power"
-    ) +
-    theme_bw() +
-    theme(plot.title = element_text(hjust = 0.5))
-
-  # Convert to interactive plotly with custom tooltips showing parameter name
-  p_interactive <- ggplotly(p, tooltip = "text") %>%
-    layout(
-      title = list(
-        text = paste0("<b>", workflow_info$title, "</b><br>",
-                     "<sup>", workflow_info$description, "</sup>"),
-        font = list(size = 14)
-      ),
-      showlegend = FALSE,
-      hovermode = "closest"
-    )
-
-  # Apply red hover styling specifically to optimal solution points
-  if (!is.null(optimal_design) && !is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
-    for (i in 1:length(p_interactive$x$data)) {
-      # Find traces that contain the optimal solution text
-      if (!is.null(p_interactive$x$data[[i]]$text)) {
-        optimal_trace <- any(grepl("OPTIMAL</span>", p_interactive$x$data[[i]]$text))
-        if (optimal_trace) {
-          # Apply red hover styling only to this trace
-          p_interactive$x$data[[i]]$hoverlabel <- list(
-            bgcolor = "red",
-            bordercolor = "darkred",
-            font = list(color = "white", size = 12)
-          )
-        }
+    # Add pinned solutions if available
+    if (!is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
+      for (i in seq_along(cached_results$pinned_solutions)) {
+        solution_name <- names(cached_results$pinned_solutions)[i]
+        pinned <- cached_results$pinned_solutions[[i]]
+        solutions_list[[solution_name]] <- list(
+          id = i,
+          color = get_solution_color(i + 1),  # Skip first color (used by Current)
+          data = pinned$power_data,
+          optimal_point = pinned$optimal_design,
+          label = solution_name
+        )
       }
     }
+
+    # Use current result for metadata if available, otherwise use first result
+    metadata_source <- cached_results$current_result %||% cached_results$pinned_solutions[[1]]
+    if (is.null(metadata_source)) {
+      stop("No valid results available for plotting")
+    }
+
+    target_power <- metadata_source$user_config$design_options$target_power
+    workflow_info <- metadata_source$workflow_info
+
+  } else {
+    cat("DEBUG: Using LEGACY single result format\n")
+    # Legacy single result format (backward compatibility)
+    solutions_list <- list(
+      "Current" = list(
+        id = 1,
+        color = get_solution_color(1),
+        data = cached_results$power_data,
+        optimal_point = cached_results$optimal_design,
+        label = "Current"
+      )
+    )
+    target_power <- cached_results$user_config$design_options$target_power
+    workflow_info <- cached_results$workflow_info
   }
 
-  p_interactive <- p_interactive %>%
-    config(
-      displayModeBar = FALSE,  # Remove all toolbar buttons
-      displaylogo = FALSE,
-      modeBarButtonsToRemove = list("all")  # Remove all buttons
-    )
-
-  # Summary statistics
-  summary_stats <- create_power_curve_summary(power_data, optimal_design, target_power, workflow_info)
-
-  return(list(
-    main_plot = p,
-    interactive_plot = p_interactive,
-    summary_stats = summary_stats,
-    plot_data = power_data,
-    optimal_point = optimal_design
-  ))
-}
-
-#' Create multi-solution parameter power curve plots
-#'
-#' @description Creates power curve plots with multiple solution lines for comparison.
-#' Each solution gets a different color and appears in the legend.
-#'
-#' @param results Analysis results with multi-solution plot_data structure
-#' @return List containing ggplot and plotly objects with multiple traces
-#' @noRd
-create_multi_solution_parameter_plots <- function(results) {
-
-  target_power <- results$user_config$design_options$target_power
-  workflow_info <- results$workflow_info
   varying_param <- workflow_info$minimizing_parameter
   param_label <- format_parameter_name(varying_param)
   plot_title <- workflow_info$title
-  solutions_data <- results$plot_data$solutions
 
-  # Create base ggplot
+  # Convert to expected format
+  solutions_data <- solutions_list
+
+  # Build base ggplot
   p <- ggplot() +
-    geom_hline(yintercept = target_power, linetype = "dashed", alpha = 0.7) +
+    geom_hline(yintercept = target_power, linetype = "dashed", alpha = 0.7, color = "grey") +
     labs(
       title = plot_title,
       x = param_label,
       y = "Power"
-    ) +
-    theme_bw() +
-    theme(
-      plot.title = element_text(hjust = 0.5),
-      legend.position = "right",
-      legend.title = element_blank()
     )
 
-  # Add log scale for TPM_threshold parameter
+  # Add log scale for TPM_threshold
   if (varying_param == "TPM_threshold") {
     p <- p + scale_x_log10(labels = scales::comma_format())
     param_label <- "TPM Threshold"
   }
 
-  # Create plotly object for interactive features
-  p_interactive <- plot_ly()
-
-  # Add target power line to plotly
-  p_interactive <- p_interactive %>%
-    add_lines(
-      x = range(solutions_data[[1]]$data$parameter_value, na.rm = TRUE),
-      y = rep(target_power, 2),
-      line = list(dash = "dash", color = "grey", width = 1),
-      name = paste("Target Power (", scales::percent(target_power, accuracy = 1), ")", sep = ""),
-      showlegend = TRUE,
-      hovertemplate = paste("Target Power:", scales::percent(target_power, accuracy = 0.1), "<extra></extra>")
-    )
-
-  # Add each solution as a separate trace
+  # Add each solution as separate layers
   for (solution in solutions_data) {
     solution_data <- solution$data
     solution_color <- solution$color
-    solution_label <- solution$label
-    solution_id <- solution$id
+    solution_label <- solution$label  # "Current", "Solution 1", etc.
 
-    # Create tooltip text for this solution
+    # Create tooltip text
     formatted_values <- case_when(
       varying_param == "TPM_threshold" ~ scales::comma(round(solution_data$parameter_value)),
       varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(solution_data$parameter_value),
@@ -294,35 +194,24 @@ create_multi_solution_parameter_plots <- function(results) {
       "Power: ", scales::percent(solution_data$power, accuracy = 0.1)
     )
 
-    # Add line to ggplot
-    p <- p +
-      geom_line(
-        data = solution_data,
-        aes(x = .data$parameter_value, y = .data$power),
-        color = solution_color,
-        size = 1.2
-      ) +
-      geom_point(
-        data = solution_data,
-        aes(x = .data$parameter_value, y = .data$power),
-        color = solution_color,
-        size = 0.8,
-        alpha = 0.6
-      )
+    # Add power curve line
+    p <- p + geom_line(
+      data = solution_data,
+      aes(x = parameter_value, y = power,
+          color = solution_label,
+          text = tooltip_text),
+      size = 1.2
+    )
 
-    # Add line to plotly
-    p_interactive <- p_interactive %>%
-      add_lines(
-        data = solution_data,
-        x = ~parameter_value,
-        y = ~power,
-        color = I(solution_color),
-        name = solution_label,
-        line = list(width = 3),
-        text = ~tooltip_text,
-        hovertemplate = "%{text}<extra></extra>",
-        showlegend = TRUE
-      )
+    # Add points for interactivity
+    p <- p + geom_point(
+      data = solution_data,
+      aes(x = parameter_value, y = power,
+          color = solution_label,
+          text = tooltip_text),
+      size = 0.8,
+      alpha = 0.6
+    )
 
     # Add optimal point if available
     if (!is.null(solution$optimal_point)) {
@@ -341,64 +230,44 @@ create_multi_solution_parameter_plots <- function(results) {
           "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
         )
 
-        # Add optimal point to ggplot
-        p <- p +
-          geom_point(
-            data = data.frame(
-              x = optimal_design[[varying_param]],
-              y = optimal_design$achieved_power
-            ),
-            aes(x = x, y = y),
-            color = solution_color,
-            size = 4,
-            shape = 18,  # Diamond shape for optimal points
-            stroke = 1.5
-          )
-
-        # Add optimal point to plotly
-        p_interactive <- p_interactive %>%
-          add_markers(
+        # Add optimal point (diamond shape)
+        p <- p + geom_point(
+          data = data.frame(
             x = optimal_design[[varying_param]],
             y = optimal_design$achieved_power,
-            color = I(solution_color),
-            name = paste(solution_label, "Optimal"),
-            marker = list(
-              size = 12,
-              symbol = "diamond",
-              line = list(width = 2, color = "white")
-            ),
-            text = optimal_hover_text,
-            hovertemplate = "%{text}<extra></extra>",
-            showlegend = FALSE  # Don't show optimal points in legend to reduce clutter
-          )
+            color = solution_label,
+            tooltip_text = optimal_hover_text
+          ),
+          aes(x = x, y = y, color = color, text = tooltip_text),
+          size = 4,
+          shape = 18  # Diamond shape for optimal points
+        )
       }
     }
   }
 
-  # Apply log scale to plotly if needed
-  if (varying_param == "TPM_threshold") {
-    p_interactive <- p_interactive %>%
-      layout(xaxis = list(type = "log", title = param_label))
-  } else {
-    p_interactive <- p_interactive %>%
-      layout(xaxis = list(title = param_label))
-  }
+  # Configure colors and styling
+  p <- p +
+    scale_color_manual(
+      values = setNames(
+        sapply(solutions_data, function(s) s$color),
+        sapply(solutions_data, function(s) s$label)
+      )
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      legend.position = "bottom",
+      legend.title = element_blank()
+    )
 
-  # Configure plotly layout
-  p_interactive <- p_interactive %>%
+  # Convert to interactive plotly
+  p_interactive <- ggplotly(p, tooltip = "text") %>%
     layout(
       title = list(
         text = paste0("<b>", workflow_info$title, "</b><br>",
-                     "<sup>", workflow_info$description, " (", length(solutions_data), " solutions)</sup>"),
+                     "<sup>", workflow_info$description, "</sup>"),
         font = list(size = 14)
-      ),
-      yaxis = list(title = "Power"),
-      legend = list(
-        orientation = "v",
-        x = 1.02, y = 1,
-        bgcolor = "rgba(255,255,255,0.8)",
-        bordercolor = "rgba(0,0,0,0.2)",
-        borderwidth = 1
       ),
       hovermode = "closest"
     ) %>%
@@ -408,20 +277,21 @@ create_multi_solution_parameter_plots <- function(results) {
       modeBarButtonsToRemove = list("all")
     )
 
-  # Create summary stats for the first solution (primary solution)
-  primary_solution_data <- solutions_data[[1]]$data
-  primary_optimal <- solutions_data[[1]]$optimal_point
-  summary_stats <- create_power_curve_summary(primary_solution_data, primary_optimal, target_power, workflow_info)
+  # Create summary stats for the current solution (last in list)
+  current_solution_data <- solutions_data[[length(solutions_data)]]$data
+  current_optimal <- solutions_data[[length(solutions_data)]]$optimal_point
+  summary_stats <- create_power_curve_summary(current_solution_data, current_optimal, target_power, workflow_info)
 
   return(list(
     main_plot = p,
     interactive_plot = p_interactive,
     summary_stats = summary_stats,
     plot_data = solutions_data,
-    multi_solution = TRUE,
+    multi_solution = length(solutions_data) > 1,
     solution_count = length(solutions_data)
   ))
 }
+
 
 # ============================================================================
 # COST-POWER TRADEOFF PLOTS (3 workflows)
