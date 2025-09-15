@@ -198,25 +198,25 @@ create_single_parameter_plots <- function(cached_results) {
     )
 
     # Add points for interactivity
-    p <- p + geom_point(
+    p <- p + suppressWarnings(geom_point(
       data = combined_data,
       aes(x = parameter_value, y = power,
           color = solution_label,
           text = tooltip_text),
       size = 0.8,
       alpha = 0.6
-    )
+    ))
 
     # Add optimal points if any
     if (nrow(optimal_points) > 0) {
-      p <- p + geom_point(
+      p <- p + suppressWarnings(geom_point(
         data = optimal_points,
         aes(x = parameter_value, y = power,
             color = solution_label,
             text = tooltip_text),
         size = 3,
         shape = 18  # Diamond shape for optimal points
-      )
+      ))
     }
   }
 
@@ -233,7 +233,7 @@ create_single_parameter_plots <- function(cached_results) {
     theme(plot.title = element_text(hjust = 0.5))
 
   # Convert to interactive plotly
-  p_interactive <- ggplotly(p, tooltip = "text", height = 430) %>%
+  p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
         text = paste0("<b>", workflow_info$title, "</b><br>",
@@ -454,7 +454,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
 
     return(list(
       main_plot = error_plot,
-      interactive_plot = ggplotly(error_plot)
+      interactive_plot = suppressWarnings(ggplotly(error_plot))
     ))
   }
 
@@ -464,16 +464,16 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   # Add equi-power curves for each solution
   if (nrow(combined_power_data) > 0) {
     # Add smooth curves
-    p <- p + geom_smooth(
+    p <- p + suppressWarnings(geom_smooth(
       data = combined_power_data,
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                    color = solution_label),
       se = FALSE,
       size = 1
-    )
+    ))
 
     # Add points for better interactivity with tooltips
-    p <- p + geom_point(
+    p <- p + suppressWarnings(geom_point(
       data = combined_power_data,
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                     color = solution_label,
@@ -484,13 +484,13 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                   "Power: ", scales::percent(target_power, accuracy = 0.1))),
       size = 0.8,
       alpha = 0.7
-    )
+    ))
   }
 
   # Add equi-cost curves if available
   if (nrow(combined_cost_data) > 0) {
     # Add points for better interactivity with tooltips
-    p <- p + geom_point(
+    p <- p + suppressWarnings(geom_point(
       data = combined_cost_data,
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                    color = solution_label,
@@ -502,22 +502,22 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       size = 0.6,
       alpha = 0.5,
       shape = 16
-    )
+    ))
 
     # Add dashed lines for cost curves
-    p <- p + geom_smooth(
+    p <- p + suppressWarnings(geom_smooth(
       data = combined_cost_data,
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                    color = solution_label),
       linetype = "dashed",
       size = 1,
       se = FALSE
-    )
+    ))
   }
 
   # Add optimal points
   if (nrow(optimal_points) > 0) {
-    p <- p + geom_point(
+    p <- p + suppressWarnings(geom_point(
       data = optimal_points,
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                    color = solution_label,
@@ -528,7 +528,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                "Power: ", scales::percent(achieved_power, accuracy = 0.1, na_default = "N/A"))),
       size = 3,
       shape = 18
-    )
+    ))
   }
 
   # Apply log scales for both x and y axes
@@ -551,7 +551,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
 
   # Create interactive plotly version
-  interactive_plot <- ggplotly(p, tooltip = "text", height = 430) %>%
+  interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(text = workflow_info$title, font = list(size = 16)),
       xaxis = list(title = "Cells per target"),
@@ -725,14 +725,14 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
               aes(x = parameter_value, y = total_cost,
                   color = solution_label),
               size = 1.2) +
-    geom_line(data = combined_data,
+    suppressWarnings(geom_line(data = combined_data,
               aes(x = parameter_value, y = total_cost,
                   color = solution_label, text = solution_tooltip),
-              size = 1.2) +
-    geom_point(data = optimal_points,
+              size = 1.2)) +
+    suppressWarnings(geom_point(data = optimal_points,
                aes(x = parameter_value, y = total_cost,
                    color = solution_label, text = point_tooltip),
-               size = 2, shape = 18) +  # Diamond shape for optimal points
+               size = 2, shape = 18)) +  # Diamond shape for optimal points
     scale_x_log10(labels = scales::comma_format()) +
     scale_y_log10(labels = scales::dollar_format()) +
     labs(title = paste(param_name, "vs Cost"),
@@ -752,7 +752,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   # ========================================================================
 
   # Convert to interactive plotly
-  interactive_plot <- ggplotly(p, tooltip = "text", height = 430) %>%
+  interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(text = paste("Constrained Minimization:", param_name, "vs Cost"),
                    font = list(size = 16)),
