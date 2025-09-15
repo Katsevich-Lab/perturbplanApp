@@ -334,7 +334,7 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
 create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_param = NULL) {
 
   # Base rowspan style for single columns that span both header rows
-  rowspan_style <- "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; padding: 12px; background-color: #f8f9fa;"
+  rowspan_style <- "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 12px; background-color: #f8f9fa;"
 
   cells <- list(
     tags$th("Solution ID", rowspan = "2", style = rowspan_style),
@@ -363,7 +363,7 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
     cells <- append(cells, list(
       tags$th("Experimental Parameters",
               colspan = as.character(exp_params_colspan),
-              style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
+              style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
     ))
   }
 
@@ -380,7 +380,7 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
 
   # Handle Effect Sizes column based on number of sub-columns
   if (effect_sizes_colspan > 1) {
-    # Multi-column header for Effect Sizes
+    # Multi-column header for Effect Sizes (last group, no right border)
     cells <- append(cells, list(
       tags$th("Effect Sizes",
               colspan = as.character(effect_sizes_colspan),
@@ -388,8 +388,9 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
     ))
   } else if (effect_sizes_colspan == 1) {
     # Single column header for Effect Sizes (when fold change is minimized, only Non-null Prop remains)
+    # Remove right border for last column
     cells <- append(cells, list(
-      tags$th("Effect Sizes", rowspan = "2", style = rowspan_style)
+      tags$th("Effect Sizes", rowspan = "2", style = "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; padding: 12px; background-color: #f8f9fa;")
     ))
   }
 
@@ -406,6 +407,9 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
   # Sub-column style for row 2
   subcolumn_style <- "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
 
+  # Last sub-column in a group style (with right border)
+  last_subcolumn_style <- "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
+
   # Add experimental parameter subcolumns (only if not being minimized)
   cells <- append(cells, list(
     tags$th("MOI", style = subcolumn_style),
@@ -413,17 +417,25 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
     tags$th("gRNAs/Target", style = subcolumn_style)
   ))
 
+  # Determine the last experimental parameter column
+  exp_params_remaining <- c()
+  if (minimizing_param != "cells_per_target") exp_params_remaining <- c(exp_params_remaining, "cells")
+  if (minimizing_param != "reads_per_cell") exp_params_remaining <- c(exp_params_remaining, "reads")
+
   # Add Cells/Target column only if not being minimized
   if (minimizing_param != "cells_per_target") {
+    # Use last_subcolumn_style if this is the last experimental parameter
+    style_to_use <- if ("reads" %in% exp_params_remaining) subcolumn_style else last_subcolumn_style
     cells <- append(cells, list(
-      tags$th("Cells/Target", style = subcolumn_style)
+      tags$th("Cells/Target", style = style_to_use)
     ))
   }
 
   # Add Reads/Cell column only if not being minimized
   if (minimizing_param != "reads_per_cell") {
+    # This is always the last experimental parameter if present
     cells <- append(cells, list(
-      tags$th("Reads/Cell", style = subcolumn_style)
+      tags$th("Reads/Cell", style = last_subcolumn_style)
     ))
   }
 
@@ -436,13 +448,13 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
     # Add Fold Change column only if not being minimized
     if (minimizing_param != "minimum_fold_change") {
       cells <- append(cells, list(
-        tags$th("Fold Change", style = subcolumn_style)
+        tags$th("Fold Change", style = last_subcolumn_style)
       ))
     }
 
-    # Always add Non-null Prop (never minimized)
+    # Always add Non-null Prop (never minimized) - last column, no right border
     cells <- append(cells, list(
-      tags$th("Non-null Prop", style = subcolumn_style)
+      tags$th("Non-null Prop", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;")
     ))
   }
   # If effect_sizes_colspan == 1, Effect Sizes is a single column with rowspan=2, so no sub-columns needed
