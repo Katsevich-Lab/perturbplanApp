@@ -26,11 +26,11 @@ mod_perturbation_choices_ui <- function(id){
         style = "padding: 15px;",
         
         # MOI (Multiplicity of Infection)
-        numericInput(ns("MOI"), 
+        numericInput(ns("MOI"),
                     "Multiplicity of infection (MOI):",
                     value = 10,
                     min = 1,
-                    max = 50,
+                    max = 30,
                     step = 1),
         
         # Number of targets

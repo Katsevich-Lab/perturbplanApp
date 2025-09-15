@@ -74,11 +74,11 @@ mod_experimental_setup_ui <- function(id) {
           tags$h5("Perturbation Setup", style = "color: #2E4A62; margin-bottom: 15px;"),
           
           # MOI (Multiplicity of Infection)
-          numericInput(ns("MOI"), 
+          numericInput(ns("MOI"),
                       "Multiplicity of infection (MOI):",
                       value = 10,
                       min = 1,
-                      max = 50,
+                      max = 30,
                       step = 1),
           
           # Number of targets
