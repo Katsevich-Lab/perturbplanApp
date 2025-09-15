@@ -448,7 +448,7 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
     # Add Fold Change column only if not being minimized
     if (minimizing_param != "minimum_fold_change") {
       cells <- append(cells, list(
-        tags$th("Fold Change", style = last_subcolumn_style)
+        tags$th("Fold Change", style = subcolumn_style)
       ))
     }
 
