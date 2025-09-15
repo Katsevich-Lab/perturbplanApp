@@ -40,7 +40,7 @@ SOLUTION_COLORS <- c(
   "pink",   # Red (Index 7)
   "blue",   # Red (Index 8)
   "purple",   # Red (Index 9)
-  "brown",   # Red (Index 10)
+  "brown"   # Red (Index 10)
 )
 
 #' Get color for solution by index
