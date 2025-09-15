@@ -602,6 +602,216 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   ))
 }
 
+#' Create constrained minimization plots for workflows 10-11
+#'
+#' @description Creates parameter vs cost line plots for workflows 10-11 (constrained minimization).
+#' Shows how minimization parameter (TPM threshold or fold change) affects total cost
+#' across multiple solutions with optimal design points highlighted.
+#'
+#' @param solutions_list List of solution data from router function
+#' @param workflow_info Workflow information object
+#' @param metadata_source Source for extracting constraints and metadata
+#' @return List containing ggplot and plotly objects
+#' @noRd
+create_constrained_minimization_plots <- function(solutions_list, workflow_info, metadata_source) {
+
+  # ========================================================================
+  # STEP 1: FUNCTION SIGNATURE & PARAMETER DETECTION
+  # ========================================================================
+
+  # Determine minimization parameter from workflow
+  workflow_id <- workflow_info$workflow_id
+
+  if (workflow_id == "power_cost_TPM_cells_reads") {
+    param_column <- "TPM_threshold"
+    x_axis_label <- "TPM Threshold"
+    param_name <- "TPM"
+  } else if (workflow_id == "power_cost_fc_cells_reads") {
+    param_column <- "minimum_fold_change"
+    x_axis_label <- "Minimum Fold Change"
+    param_name <- "Fold Change"
+  } else {
+    stop("Unsupported workflow for constrained minimization: ", workflow_id)
+  }
+
+  # Extract constraints from metadata
+  target_power <- metadata_source$user_config$design_options$target_power %||% 0.8
+
+  # ========================================================================
+  # STEP 2: EXTRACT DATA FROM POWER_DATA ONLY
+  # ========================================================================
+
+  # Build combined data from power_data (NOT cost_data - workflows 10-11 don't have cost_data)
+  combined_data <- data.frame()
+  optimal_points <- data.frame()
+
+  for (solution in solutions_list) {
+    # Get power_data (contains parameter sweep + costs)
+    power_data <- solution$power_data
+
+    # Validate required columns exist
+    if (!param_column %in% names(power_data)) {
+      stop("Missing parameter column '", param_column, "' in power_data for solution: ", solution$label)
+    }
+    if (!"total_cost" %in% names(power_data)) {
+      stop("Missing total_cost column in power_data for solution: ", solution$label)
+    }
+
+    # Flexible power column detection (workflows 10-11 use "overall_power", others use "power")
+    power_col <- "overall_power"
+
+    # Extract relevant columns: parameter, cost, power
+    solution_data <- data.frame(
+      parameter_value = power_data[[param_column]],     # TPM_threshold OR minimum_fold_change
+      total_cost = power_data$total_cost,               # Cost from power_data
+      power = power_data[[power_col]],                  # Statistical power (flexible column name)
+      solution_label = solution$label,
+      solution_color = solution$color,
+      stringsAsFactors = FALSE
+    )
+
+    # Remove any rows with missing values
+    solution_data <- solution_data[complete.cases(solution_data), ]
+
+    combined_data <- rbind(combined_data, solution_data)
+  }
+
+  # ========================================================================
+  # STEP 3: CREATE LINE TOOLTIPS FOR ALL DATA POINTS
+  # ========================================================================
+
+  # Create solution_tooltip for line hover functionality (consistent with other plots)
+  # Format parameter value based on type: TPM = integer, Fold Change = 2 decimals
+  formatted_param <- ifelse(param_column == "TPM_threshold",
+                            round(combined_data$parameter_value, 0),
+                            round(combined_data$parameter_value, 2))
+
+  combined_data$solution_tooltip <- paste0(
+    combined_data$solution_label, "<br>",
+    param_name, ": ", formatted_param, "<br>",
+    "Cost: $", scales::comma(combined_data$total_cost), "<br>",
+    "Power: ", scales::percent(combined_data$power, accuracy = 0.1)
+  )
+
+  # ========================================================================
+  # STEP 4: EXTRACT OPTIMAL POINTS FROM POWER_DATA
+  # ========================================================================
+
+  for (solution in solutions_list) {
+
+    # Extract optimal design point
+    optimal_design <- solution$optimal_point
+
+    # Validate optimal design has required fields
+    if (!param_column %in% names(optimal_design)) {
+      stop("Missing parameter '", param_column, "' in optimal_design for solution: ", solution$label)
+    }
+
+    optimal_point <- data.frame(
+      parameter_value = optimal_design[[param_column]],  # Extract correct parameter
+      total_cost = optimal_design$total_cost,            # Cost at optimal point
+      power = optimal_design$power %||% optimal_design$achieved_power, # Power at optimal point
+      solution_label = solution$label,
+      solution_color = solution$color,
+      stringsAsFactors = FALSE
+    )
+
+    optimal_points <- rbind(optimal_points, optimal_point)
+  }
+
+  # Validate we have data to plot
+  if (nrow(combined_data) == 0) {
+    stop("No valid data found for constrained minimization plotting")
+  }
+  if (nrow(optimal_points) == 0) {
+    stop("No valid optimal points found for constrained minimization plotting")
+  }
+
+  # ========================================================================
+  # STEP 5: CREATE OPTIMAL POINT TOOLTIPS
+  # ========================================================================
+
+  # Optimal point tooltips
+  # Format parameter value based on type: TPM = integer, Fold Change = 2 decimals
+  formatted_optimal_param <- ifelse(param_column == "TPM_threshold",
+                                   round(optimal_points$parameter_value, 0),
+                                   round(optimal_points$parameter_value, 2))
+
+  optimal_points$point_tooltip <- paste0(
+    "Optimal Design: ", optimal_points$solution_label, "<br>",
+    param_name, ": ", formatted_optimal_param, "<br>",
+    "Cost: $", scales::comma(optimal_points$total_cost), "<br>",
+    "Power: ", scales::percent(optimal_points$power, accuracy = 0.1), "<br>",
+    "Status: Selected Design"
+  )
+
+  # ========================================================================
+  # STEP 6: CREATE LINE PLOT (PARAMETER VS COST)
+  # ========================================================================
+
+  # Create ggplot: parameter vs cost with multiple solution lines
+  p <- ggplot() +
+    geom_line(data = combined_data,
+              aes(x = parameter_value, y = total_cost,
+                  color = solution_label),
+              size = 1.2) +
+    geom_line(data = combined_data,
+              aes(x = parameter_value, y = total_cost,
+                  color = solution_label, text = solution_tooltip),
+              size = 1.2) +
+    geom_point(data = optimal_points,
+               aes(x = parameter_value, y = total_cost,
+                   color = solution_label, text = point_tooltip),
+               size = 2, shape = 18) +  # Diamond shape for optimal points
+    scale_x_log10(labels = scales::comma_format()) +
+    scale_y_log10(labels = scales::dollar_format()) +
+    labs(title = paste(param_name, "vs Cost"),
+         x = x_axis_label,
+         y = "Total Cost ($)",
+         color = "Solution") +
+    theme_bw() +
+    theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
+
+  # Set color scale for multiple solutions
+  if (length(solutions_list) > 1) {
+    solution_colors <- sapply(solutions_list, function(sol) sol$color)
+    solution_names <- sapply(solutions_list, function(sol) sol$label)
+    p <- p + scale_color_manual(values = setNames(solution_colors, solution_names), name = "Solution")
+  }
+
+  # ========================================================================
+  # STEP 7: CONVERT TO PLOTLY AND CONFIGURE STYLING
+  # ========================================================================
+
+  # Convert to interactive plotly
+  interactive_plot <- ggplotly(p, tooltip = "text", height = 430) %>%
+    layout(
+      title = list(text = paste("Constrained Minimization:", param_name, "vs Cost"),
+                   font = list(size = 16)),
+      xaxis = list(title = x_axis_label),
+      yaxis = list(title = "Total Cost ($)"),
+      showlegend = TRUE,
+      legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.25),
+      hovermode = "closest"
+    ) %>%
+    config(
+      displayModeBar = FALSE,
+      displaylogo = FALSE,
+      modeBarButtonsToRemove = list("all")
+    )
+
+  # ========================================================================
+  # STEP 8: RETURN STRUCTURE
+  # ========================================================================
+
+  return(list(
+    main_plot = p,                    # Static ggplot
+    interactive_plot = interactive_plot,  # Interactive plotly
+    plot_type = "constrained_minimization",
+    workflow_id = workflow_info$workflow_id
+  ))
+}
+
 #' Create cost-power tradeoff plots
 #'
 #' @description Creates cost optimization plots for workflows 5, 8, 11
