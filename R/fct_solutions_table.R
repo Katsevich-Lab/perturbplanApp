@@ -378,21 +378,13 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
   effect_sizes_colspan <- 2
   if (minimizing_param == "minimum_fold_change") effect_sizes_colspan <- effect_sizes_colspan - 1
 
-  # Handle Effect Sizes column based on number of sub-columns
-  if (effect_sizes_colspan > 1) {
-    # Multi-column header for Effect Sizes (last group, no right border)
-    cells <- append(cells, list(
-      tags$th("Effect Sizes",
-              colspan = as.character(effect_sizes_colspan),
-              style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
-    ))
-  } else if (effect_sizes_colspan == 1) {
-    # Single column header for Effect Sizes (when fold change is minimized, only Non-null Prop remains)
-    # Remove right border for last column
-    cells <- append(cells, list(
-      tags$th("Effect Sizes", rowspan = "2", style = "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; padding: 12px; background-color: #f8f9fa;")
-    ))
-  }
+  # Always add Effect Sizes header (even when fold change is minimized)
+  # When FC is minimized, there's still 1 sub-column (Non-null Prop), so we need row 1 + row 2 structure
+  cells <- append(cells, list(
+    tags$th("Effect Sizes",
+            colspan = if (effect_sizes_colspan > 1) as.character(effect_sizes_colspan) else "1",
+            style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
+  ))
 
   tags$tr(cells)
 }
@@ -433,10 +425,9 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
 
   # Add Reads/Cell column only if not being minimized
   if (minimizing_param != "reads_per_cell") {
-    # Check if TPM follows this column to determine border style
-    style_to_use <- if (minimizing_param != "TPM_threshold") subcolumn_style else last_subcolumn_style
+    # This is the last experimental parameter column, so use thick border to separate from Analysis Parameter
     cells <- append(cells, list(
-      tags$th("Reads/Cell", style = style_to_use)
+      tags$th("Reads/Cell", style = last_subcolumn_style)
     ))
   }
 
@@ -451,21 +442,18 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
   effect_sizes_colspan <- 2
   if (minimizing_param == "minimum_fold_change") effect_sizes_colspan <- effect_sizes_colspan - 1
 
-  # Only add Effect Sizes sub-columns if there are multiple effect size columns
-  if (effect_sizes_colspan > 1) {
-    # Add Fold Change column only if not being minimized
-    if (minimizing_param != "minimum_fold_change") {
-      cells <- append(cells, list(
-        tags$th("Fold Change", style = subcolumn_style)
-      ))
-    }
-
-    # Always add Non-null Prop (never minimized) - last column, no right border
+  # Add Effect Sizes sub-columns
+  # Add Fold Change column only if not being minimized
+  if (minimizing_param != "minimum_fold_change") {
     cells <- append(cells, list(
-      tags$th("Non-null Prop", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;")
+      tags$th("Fold Change", style = subcolumn_style)
     ))
   }
-  # If effect_sizes_colspan == 1, Effect Sizes is a single column with rowspan=2, so no sub-columns needed
+
+  # Always add Non-null Prop (never minimized) - last column, no right border
+  cells <- append(cells, list(
+    tags$th("Non-null Prop", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;")
+  ))
 
   tags$tr(cells)
 }
