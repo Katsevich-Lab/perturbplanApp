@@ -47,6 +47,8 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
 
     # Pin current result when pin button is clicked
     observeEvent(pin_trigger(), {
+      current_cached <- cached_results()
+      results_cache$current_result <- current_cached$current_result
       current <- results_cache$current_result
 
       if (!is.null(current) && is.null(current$error)) {
@@ -91,20 +93,34 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
 
     # Combine current + pinned results for unified display
     cached_results <- reactive({
-      # Update the results
+
       results <- analysis_results()
-      if (!is.null(results) && is.null(results$error)) {
-        results_cache$current_result <- results
-      }
-      current <- results_cache$current_result
       pinned <- results_cache$pinned_solutions
 
-      # Return structure for display modules
-      if(length(pinned) == 0 && is.null(current)){
+      # initialze when next_solution_id is 1
+      if(results_cache$next_solution_id == 1 && !is.null(results)){
+        list(
+          current_result = results,
+          pinned_solutions = list(),          # For "Solution X" displays (solid lines)
+          all_results = c(
+            list("Current" = results)
+          )
+        )
+      }else if(length(pinned) == 0 && is.null(results)){
         NULL
       }else{
+
+        # define current variable
+        if(is.null(isolate(results_cache$current_result))){
+          current <- NULL
+          results_cache$current_result <- results
+        }else{
+          current <- results
+        }
+
+        # Return structure for display modules
         list(
-          current_result = current,           # For "Current" display (dashed line)
+          current_result = current,
           pinned_solutions = pinned,          # For "Solution X" displays (solid lines)
           all_results = c(
             if (!is.null(current)) list("Current" = current) else list(),
