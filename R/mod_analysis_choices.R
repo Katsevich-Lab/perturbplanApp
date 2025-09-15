@@ -63,7 +63,7 @@ mod_analysis_choices_ui <- function(id) {
           id = ns("TPM_threshold_fixed_div"),
           style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
           numericInput(ns("TPM_threshold_fixed"), "TPM analysis threshold:",
-                      value = 10, min = 1, max = 500, step = 1)
+                      value = 10, min = 1, max = 200, step = 1)
         )
       )
     )
