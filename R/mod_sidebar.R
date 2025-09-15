@@ -101,7 +101,21 @@ mod_sidebar_server <- function(id, app_state = NULL){
     observeEvent(input$plan_btn, {
       if (!is.null(app_state)) {
         if (app_state$phase == 1) {
-          # Phase 1: Plan behavior - trigger analysis
+          # Phase 1: Plan behavior - validate configuration first
+          current_config <- combined_config()
+          validation_result <- validate_design_configuration(current_config$design_options)
+
+          if (!validation_result$valid) {
+            # Show specific validation error
+            showNotification(
+              validation_result$message,
+              type = "error",
+              duration = 6
+            )
+            return()  # Don't proceed with analysis
+          }
+
+          # Only proceed if validation passes
           showNotification("Analysis starting...", type = "message", duration = 2)
           # Increment actual plan clicks counter
           actual_plan_clicks(actual_plan_clicks() + 1)

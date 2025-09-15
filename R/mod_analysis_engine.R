@@ -47,15 +47,12 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       # extract the debounced workflow_config
       config <- workflow_config_debounced()
 
-      # Early validation: Skip analysis if essential configuration is missing OR incompatible
+      # Early validation: Skip analysis if configuration is missing (validation handled at Plan button level)
       # During UI transitions, don't run analysis - just return NULL to show "Ready for Analysis"
-      # THIS MUST HAPPEN BEFORE BOTH PLAN CHECK AND CACHING LOGIC
       design_config <- config$design_options
 
-      # Check for missing essential fields
-      if (is.null(design_config$optimization_type) || design_config$optimization_type == "" ||
-          is.null(design_config$minimization_target) || design_config$minimization_target == "" ||
-          is.null(design_config$parameter_controls)) {
+      # Minimal check for missing config during transitions
+      if (is.null(design_config)) {
         return(NULL)  # Don't show errors during transitions - let UI show "Ready for Analysis"
       }
 
