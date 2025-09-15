@@ -65,14 +65,8 @@ mod_plotting_engine_server <- function(id, cached_results) {
         # Generate single parameter power curve plots (8 workflows)
         plots <- create_single_parameter_plots(results)
       } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
-        # Route specific workflows to new cached function
-        if (workflow_info$workflow_id %in% c("power_cost_minimization", "power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-          # Generate cost-power tradeoff plots for workflows 5, 10-11 using new cached architecture
-          plots <- create_cached_cost_tradeoff_plots(results)
-        } else {
-          # Use legacy function for other cost tradeoff workflows (if any)
-          plots <- create_cost_tradeoff_plots(results)
-        }
+        # Generate cost-power tradeoff plots for workflows 5, 10-11 using cached architecture
+        plots <- create_cached_cost_tradeoff_plots(results)
       } else {
         # Error case
         return(list(
