@@ -367,10 +367,10 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
     ))
   }
 
-  # Add TPM threshold if not being minimized (single column, rowspan)
+  # Add TPM threshold if not being minimized (two-row structure)
   if (minimizing_param != "TPM_threshold") {
     cells <- append(cells, list(
-      tags$th("TPM Threshold", rowspan = "2", style = rowspan_style)
+      tags$th("Analysis Parameter", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
     ))
   }
 
@@ -433,9 +433,17 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
 
   # Add Reads/Cell column only if not being minimized
   if (minimizing_param != "reads_per_cell") {
-    # This is always the last experimental parameter if present
+    # Check if TPM follows this column to determine border style
+    style_to_use <- if (minimizing_param != "TPM_threshold") subcolumn_style else last_subcolumn_style
     cells <- append(cells, list(
-      tags$th("Reads/Cell", style = last_subcolumn_style)
+      tags$th("Reads/Cell", style = style_to_use)
+    ))
+  }
+
+  # Add TPM Threshold sub-column if not being minimized
+  if (minimizing_param != "TPM_threshold") {
+    cells <- append(cells, list(
+      tags$th("TPM Threshold", style = last_subcolumn_style)
     ))
   }
 
