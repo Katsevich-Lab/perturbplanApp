@@ -333,39 +333,44 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
 #' Create Header Row 1 (Main Categories)
 create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_param = NULL) {
 
+  # Base rowspan style for single columns that span both header rows
+  rowspan_style <- "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; padding: 12px; background-color: #f8f9fa;"
+
   cells <- list(
-    tags$th("Solution ID", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;"),
-    tags$th("Power", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+    tags$th("Solution ID", rowspan = "2", style = rowspan_style),
+    tags$th("Power", rowspan = "2", style = rowspan_style)
   )
 
   # Add cost column if workflow includes cost AND cost is not being minimized
   if (has_cost && minimizing_param != "cost") {
     cells <- append(cells, list(
-      tags$th("Cost", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+      tags$th("Cost", rowspan = "2", style = rowspan_style)
     ))
   }
+
+  # Add optimal parameter column (single column, rowspan)
+  cells <- append(cells, list(
+    tags$th(optimal_col_name, rowspan = "2", style = rowspan_style)
+  ))
 
   # Calculate experimental parameters colspan (5 minus any minimized experimental params)
   exp_params_colspan <- 5
   if (minimizing_param == "cells_per_target") exp_params_colspan <- exp_params_colspan - 1
   if (minimizing_param == "reads_per_cell") exp_params_colspan <- exp_params_colspan - 1
 
-  # Add remaining columns
-  cells <- append(cells, list(
-    tags$th(optimal_col_name, style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
-  ))
-
-  # Add experimental parameters header if any columns remain
+  # Add experimental parameters header if any columns remain (multi-column header)
   if (exp_params_colspan > 0) {
     cells <- append(cells, list(
-      tags$th("Experimental Parameters", colspan = as.character(exp_params_colspan), style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+      tags$th("Experimental Parameters",
+              colspan = as.character(exp_params_colspan),
+              style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
     ))
   }
 
-  # Add TPM threshold if not being minimized
+  # Add TPM threshold if not being minimized (single column, rowspan)
   if (minimizing_param != "TPM_threshold") {
     cells <- append(cells, list(
-      tags$th("TPM Threshold", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+      tags$th("TPM Threshold", rowspan = "2", style = rowspan_style)
     ))
   }
 
@@ -373,10 +378,18 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
   effect_sizes_colspan <- 2
   if (minimizing_param == "minimum_fold_change") effect_sizes_colspan <- effect_sizes_colspan - 1
 
-  # Add effect sizes header if any columns remain
-  if (effect_sizes_colspan > 0) {
+  # Handle Effect Sizes column based on number of sub-columns
+  if (effect_sizes_colspan > 1) {
+    # Multi-column header for Effect Sizes
     cells <- append(cells, list(
-      tags$th("Effect Sizes", colspan = as.character(effect_sizes_colspan), style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px;")
+      tags$th("Effect Sizes",
+              colspan = as.character(effect_sizes_colspan),
+              style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
+    ))
+  } else if (effect_sizes_colspan == 1) {
+    # Single column header for Effect Sizes (when fold change is minimized, only Non-null Prop remains)
+    cells <- append(cells, list(
+      tags$th("Effect Sizes", rowspan = "2", style = rowspan_style)
     ))
   }
 
@@ -385,62 +398,54 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
 
 #' Create Header Row 2 (Subcolumns)
 create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
-  cells <- list(
-    tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"), # Solution ID
-    tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")  # Power
-  )
+  # Row 2 only contains sub-columns for multi-column headers
+  # Single-row columns (with rowspan=2) don't appear in row 2
 
-  # Add cost column if workflow includes cost AND cost is not being minimized
-  if (has_cost && minimizing_param != "cost") {
-    cells <- append(cells, list(
-      tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;") # Cost
-    ))
-  }
+  cells <- list()
 
-  # Add optimal parameter column
-  cells <- append(cells, list(
-    tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;") # Optimal param
-  ))
+  # Sub-column style for row 2
+  subcolumn_style <- "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
 
   # Add experimental parameter subcolumns (only if not being minimized)
   cells <- append(cells, list(
-    tags$th("MOI", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
-    tags$th("# Targets", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;"),
-    tags$th("gRNAs/Target", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
+    tags$th("MOI", style = subcolumn_style),
+    tags$th("# Targets", style = subcolumn_style),
+    tags$th("gRNAs/Target", style = subcolumn_style)
   ))
 
   # Add Cells/Target column only if not being minimized
   if (minimizing_param != "cells_per_target") {
     cells <- append(cells, list(
-      tags$th("Cells/Target", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
+      tags$th("Cells/Target", style = subcolumn_style)
     ))
   }
 
   # Add Reads/Cell column only if not being minimized
   if (minimizing_param != "reads_per_cell") {
     cells <- append(cells, list(
-      tags$th("Reads/Cell", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
+      tags$th("Reads/Cell", style = subcolumn_style)
     ))
   }
 
-  # Add TPM threshold column only if not being minimized
-  if (minimizing_param != "TPM_threshold") {
+  # Calculate effect sizes colspan to determine if we need sub-columns
+  effect_sizes_colspan <- 2
+  if (minimizing_param == "minimum_fold_change") effect_sizes_colspan <- effect_sizes_colspan - 1
+
+  # Only add Effect Sizes sub-columns if there are multiple effect size columns
+  if (effect_sizes_colspan > 1) {
+    # Add Fold Change column only if not being minimized
+    if (minimizing_param != "minimum_fold_change") {
+      cells <- append(cells, list(
+        tags$th("Fold Change", style = subcolumn_style)
+      ))
+    }
+
+    # Always add Non-null Prop (never minimized)
     cells <- append(cells, list(
-      tags$th("", style = "border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;") # TPM threshold
+      tags$th("Non-null Prop", style = subcolumn_style)
     ))
   }
-
-  # Add Fold Change column only if not being minimized
-  if (minimizing_param != "minimum_fold_change") {
-    cells <- append(cells, list(
-      tags$th("Fold Change", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
-    ))
-  }
-
-  # Always add Non-null Prop (never minimized)
-  cells <- append(cells, list(
-    tags$th("Non-null Prop", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px;")
-  ))
+  # If effect_sizes_colspan == 1, Effect Sizes is a single column with rowspan=2, so no sub-columns needed
 
   tags$tr(cells)
 }
