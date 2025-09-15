@@ -712,8 +712,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
       round(optimal_points$parameter_value, 2)
     }, "<br>",
     "Cost: $", scales::comma(optimal_points$total_cost), "<br>",
-    "Power: ", scales::percent(optimal_points$power, accuracy = 0.1), "<br>",
-    "Status: Selected Design"
+    "Power: ", scales::percent(optimal_points$power, accuracy = 0.1)
   )
 
   # ========================================================================
