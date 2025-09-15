@@ -53,38 +53,6 @@ get_solution_color <- function(solution_index) {
   return(SOLUTION_COLORS[color_index])
 }
 
-#' Check if data structure supports multi-solution plotting
-#'
-#' @param plot_data Plot data structure
-#' @return Logical indicating if multi-solution format
-#' @noRd
-is_multi_solution_data <- function(plot_data) {
-  if (is.list(plot_data) && "solutions" %in% names(plot_data)) {
-    return(length(plot_data$solutions) > 1)
-  }
-  return(FALSE)
-}
-
-#' Convert single solution to multi-solution format
-#'
-#' @param single_plot_data Single solution data structure
-#' @param solution_index Index for this solution (default 1)
-#' @return Multi-solution format data structure
-#' @noRd
-convert_to_multi_solution_format <- function(single_plot_data, solution_index = 1) {
-  list(
-    solutions = list(
-      list(
-        id = solution_index,
-        color = get_solution_color(solution_index),
-        data = single_plot_data,
-        label = paste("Solution", solution_index)
-      )
-    ),
-    color_palette = SOLUTION_COLORS
-  )
-}
-
 # ============================================================================
 # SINGLE PARAMETER POWER CURVE PLOTS (8 workflows)
 # ============================================================================
@@ -288,12 +256,10 @@ create_single_parameter_plots <- function(cached_results) {
   # Create summary stats for the current solution (last in list)
   current_solution_data <- solutions_data[[length(solutions_data)]]$data
   current_optimal <- solutions_data[[length(solutions_data)]]$optimal_point
-  summary_stats <- create_power_curve_summary(current_solution_data, current_optimal, target_power, workflow_info)
 
   return(list(
     main_plot = p,
     interactive_plot = p_interactive,
-    summary_stats = summary_stats,
     plot_data = solutions_data,
     multi_solution = length(solutions_data) > 1,
     solution_count = length(solutions_data)
@@ -836,34 +802,3 @@ format_parameter_name <- function(param_name) {
     param_name  # fallback to original name
   )
 }
-
-#' Create power curve summary statistics
-#'
-#' @param power_data Power curve data
-#' @param optimal_design Optimal design point
-#' @param target_power Target power level
-#' @param workflow_info Workflow information
-#' @return Summary statistics list
-#' @noRd
-create_power_curve_summary <- function(power_data, optimal_design, target_power, workflow_info) {
-  tryCatch({
-    list(
-      max_power = max(power_data$power, na.rm = TRUE),
-      min_power = min(power_data$power, na.rm = TRUE),
-      target_power = target_power,
-      optimal_achieved_power = optimal_design$achieved_power %||% NA,
-      workflow_type = workflow_info$workflow_id,
-      data_points = nrow(power_data)
-    )
-  }, error = function(e) {
-    list(
-      max_power = NA,
-      min_power = NA,
-      target_power = target_power,
-      optimal_achieved_power = NA,
-      workflow_type = workflow_info$workflow_id %||% "unknown",
-      data_points = 0
-    )
-  })
-}
-
