@@ -61,6 +61,9 @@ mod_parameter_sliders_ui <- function(id) {
 #'
 #' @noRd
 create_compact_slider <- function(inputId, label, min, max, value, step, format_as_integer = TRUE) {
+  # Ensure format_as_integer is a logical value
+  format_as_integer <- isTRUE(format_as_integer)
+
   # Configure tooltip formatting
   tooltip_format <- if (format_as_integer) {
     list(
@@ -293,7 +296,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
             style = paste0("margin-bottom: ", margin_bottom, ";"),
             create_compact_slider(
               ns(param$id), param$label, param$min, param$max, param$value, param$step,
-              format_as_integer = (param_name != "minimum_fold_change")
+              format_as_integer = !identical(param_name, "minimum_fold_change")
             )
           )
         })
