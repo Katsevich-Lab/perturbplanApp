@@ -10,6 +10,7 @@
 #'
 #' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput moduleServer reactive observeEvent req renderUI observe isolate reactiveValues actionButton
 #' @importFrom shinyWidgets noUiSliderInput
+#' @importFrom htmlwidgets JS
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
 
@@ -59,7 +60,18 @@ mod_parameter_sliders_ui <- function(id) {
 #' @param step Step size
 #'
 #' @noRd
-create_compact_slider <- function(inputId, label, min, max, value, step) {
+create_compact_slider <- function(inputId, label, min, max, value, step, format_as_integer = TRUE) {
+  # Configure tooltip formatting
+  tooltip_format <- if (format_as_integer) {
+    list(
+      to = htmlwidgets::JS("function(value) { return Math.round(value).toLocaleString(); }")
+    )
+  } else {
+    list(
+      to = htmlwidgets::JS("function(value) { return parseFloat(value).toFixed(2); }")
+    )
+  }
+
   tags$div(
     class = "compact-slider-container",
     tags$label(
@@ -77,7 +89,7 @@ create_compact_slider <- function(inputId, label, min, max, value, step) {
       width = "100%",
       height = "8px",
       update_on = "end",
-      tooltips = TRUE
+      tooltips = tooltip_format
     )
   )
 }
@@ -161,9 +173,9 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       }
 
       tagList(
-        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
-        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("targets_slider"), "# of Targets", 50, 20000, targets_value, 50)),
-        tags$div(style = "margin-bottom: 5px;", create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
+        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1, format_as_integer = TRUE)),
+        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("targets_slider"), "# of Targets", 50, 20000, targets_value, 50, format_as_integer = TRUE)),
+        tags$div(style = "margin-bottom: 5px;", create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1, format_as_integer = TRUE))
       )
     })
 
@@ -280,7 +292,8 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
           tags$div(
             style = paste0("margin-bottom: ", margin_bottom, ";"),
             create_compact_slider(
-              ns(param$id), param$label, param$min, param$max, param$value, param$step
+              ns(param$id), param$label, param$min, param$max, param$value, param$step,
+              format_as_integer = (param_name != "minimum_fold_change")
             )
           )
         })
