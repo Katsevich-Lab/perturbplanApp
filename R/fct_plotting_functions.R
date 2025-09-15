@@ -36,11 +36,11 @@ SOLUTION_COLORS <- c(
   "#F18F01",  # Orange (Index 3)
   "#4CAF50",  # Green (Index 4)
   "#E91E63",  # Pink (Index 5)
-  "#FF9800",  # Amber (Index 6)
-  "#9C27B0",  # Purple (Index 7)
-  "#00BCD4",  # Cyan (Index 8)
-  "#607D8B",  # Blue-grey (Index 9)
-  "#C73E1D"   # Red (Index 10)
+  "#607D8B",  # Blue-grey (Index 6)
+  "pink",   # Red (Index 7)
+  "blue",   # Red (Index 8)
+  "purple",   # Red (Index 9)
+  "brown",   # Red (Index 10)
 )
 
 #' Get color for solution by index
@@ -214,7 +214,7 @@ create_single_parameter_plots <- function(cached_results) {
         aes(x = parameter_value, y = power,
             color = solution_label,
             text = tooltip_text),
-        size = 2,
+        size = 3,
         shape = 18  # Diamond shape for optimal points
       )
     }
@@ -286,35 +286,37 @@ create_cached_cost_tradeoff_plots <- function(cached_results) {
   # SHARED SOLUTION EXTRACTION LOGIC
   # ========================================================================
 
-  # Extract solutions in the same way as create_single_parameter_plots
-  solutions_list <- list()
-
-  # Add current result if available
-  if (!is.null(cached_results$current_result)) {
-    current <- cached_results$current_result
-    solutions_list[["Current"]] <- list(
-      id = 0,
-      color = get_solution_color(1),  # Use first color for Current
-      power_data = current$power_data,    # Power data for equi-power curves
-      cost_data = current$cost_data,      # Cost data for equi-cost curves
-      optimal_point = current$optimal_design,
-      label = "Current"
-    )
-  }
-
   # Add pinned solutions if available
-  if (!is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
-    for (i in seq_along(cached_results$pinned_solutions)) {
-      solution_name <- names(cached_results$pinned_solutions)[i]
-      pinned <- cached_results$pinned_solutions[[i]]
-      solutions_list[[solution_name]] <- list(
-        id = i,
-        color = get_solution_color(i + 1),  # Skip first color (used by Current)
-        power_data = pinned$power_data,     # Power data for equi-power curves
-        cost_data = pinned$cost_data,       # Cost data for equi-cost curves
-        optimal_point = pinned$optimal_design,
-        label = solution_name
+  if (!is.null(cached_results$current_result) || !is.null(cached_results$all_results)) {
+    # Extract solutions in the same way as create_single_parameter_plots
+    solutions_list <- list()
+
+    # Add current result if available
+    if (!is.null(cached_results$current_result)) {
+      current <- cached_results$current_result
+      solutions_list[["Current"]] <- list(
+        id = 0,
+        color = get_solution_color(1),  # Use first color for Current
+        power_data = current$power_data,    # Power data for equi-power curves
+        cost_data = current$cost_data,      # Cost data for equi-cost curves
+        optimal_point = current$optimal_design,
+        label = "Current"
       )
+    }
+
+    if (!is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
+      for (i in seq_along(cached_results$pinned_solutions)) {
+        solution_name <- names(cached_results$pinned_solutions)[i]
+        pinned <- cached_results$pinned_solutions[[i]]
+        solutions_list[[solution_name]] <- list(
+          id = i,
+          color = get_solution_color(i + 1),  # Skip first color (used by Current)
+          power_data = pinned$power_data,     # Power data for equi-power curves
+          cost_data = pinned$cost_data,       # Cost data for equi-cost curves
+          optimal_point = pinned$optimal_design,
+          label = solution_name
+        )
+      }
     }
   }
 
@@ -524,7 +526,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
                                "Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"), "<br>",
                                "Power: ", scales::percent(achieved_power, accuracy = 0.1, na_default = "N/A"))),
-      size = 2,
+      size = 3,
       shape = 18
     )
   }
@@ -534,11 +536,9 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
            scale_y_log10(labels = scales::comma_format())
 
   # Set color scale
-  if (length(solutions_list) > 1) {
-    solution_colors <- sapply(solutions_list, function(sol) sol$color)
-    solution_names <- sapply(solutions_list, function(sol) sol$label)
-    p <- p + scale_color_manual(values = setNames(solution_colors, solution_names), name = "Solution")
-  }
+  p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
+                                                sapply(solutions_list, function(sol) sol$label)),
+                              name = "Solution")
 
   # Labels and theme
   p <- p + labs(
@@ -744,11 +744,9 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
 
   # Set color scale for multiple solutions
-  if (length(solutions_list) > 1) {
-    solution_colors <- sapply(solutions_list, function(sol) sol$color)
-    solution_names <- sapply(solutions_list, function(sol) sol$label)
-    p <- p + scale_color_manual(values = setNames(solution_colors, solution_names), name = "Solution")
-  }
+  p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
+                                                sapply(solutions_list, function(sol) sol$label)),
+                              name = "Solution")
 
   # ========================================================================
   # STEP 7: CONVERT TO PLOTLY AND CONFIGURE STYLING
