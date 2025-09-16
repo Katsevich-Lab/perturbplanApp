@@ -178,30 +178,3 @@ create_excel_effect_sizes <- function(effect_sizes) {
   )
 }
 
-#' Create Excel Cost Information sheet
-#'
-#' @param cost_info Cost information configuration
-#' @return Data frame for Excel export
-#' @noRd
-create_excel_cost_info <- function(cost_info) {
-  if (is.null(cost_info)) {
-    return(data.frame(Setting = "No cost information data", Value = "Not configured"))
-  }
-  
-  data.frame(
-    Setting = c(
-      "Cost per Cell",
-      "Cost per Million Reads",
-      "Fixed Costs",
-      "Budget Constraints",
-      "Cost Model"
-    ),
-    Value = c(
-      if (!is.null(cost_info$cost_per_cell)) paste0("$", cost_info$cost_per_cell) else "Default",
-      if (!is.null(cost_info$cost_per_million_reads)) paste0("$", cost_info$cost_per_million_reads) else "Default",
-      cost_info$fixed_costs %||% "None specified",
-      cost_info$budget_constraints %||% "None specified",
-      cost_info$cost_model %||% "Standard"
-    )
-  )
-}

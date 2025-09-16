@@ -313,10 +313,6 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
             )
           )
 
-          # Add cost information sheet if cost optimization is used
-          if (!is.null(results$user_config$cost_info)) {
-            excel_data[["Cost_Information"]] <- create_excel_cost_info(results$user_config$cost_info)
-          }
 
           # Write Excel file to the specified path
           write.xlsx(excel_data, file = file)
