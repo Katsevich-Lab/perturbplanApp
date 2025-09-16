@@ -163,7 +163,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
 
       tagList(
         tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
-        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("targets_slider"), "# of Targets", 50, 20000, targets_value, 50)),
+        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("targets_slider"), "# of Targets", 50, 12000, targets_value, 50)),
         tags$div(style = "margin-bottom: 5px;", create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
       )
     })

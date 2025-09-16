@@ -86,7 +86,7 @@ mod_experimental_setup_ui <- function(id) {
                       "Number of targets:",
                       value = 100,
                       min = 50,
-                      max = 20000,
+                      max = 12000,
                       step = 50),
           
           # gRNAs per target

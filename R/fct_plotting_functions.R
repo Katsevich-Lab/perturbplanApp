@@ -734,7 +734,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
                    color = solution_label, text = point_tooltip),
                size = 2, shape = 18)) +  # Diamond shape for optimal points
     scale_x_log10(labels = scales::comma_format()) +
-    scale_y_log10(labels = scales::dollar_format()) +
+    scale_y_log10(labels = scales::comma_format(accuracy = 1)) +
     labs(title = paste(param_name, "vs Cost"),
          x = x_axis_label,
          y = "Total Cost ($)",
