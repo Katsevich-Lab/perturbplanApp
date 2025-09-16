@@ -75,7 +75,7 @@ detect_workflow_scenario <- function(workflow_config) {
         plot_type = "cost_tradeoff_curves",
         category = "power_only_cost",
         minimizing_parameter = "cost",
-        title = "Minimize Total Cost",
+        title = "Power Optimization: Minimize Total Cost",
         description = "Power-only optimization with cost minimization"
       ))
     }
@@ -98,7 +98,7 @@ detect_workflow_scenario <- function(workflow_config) {
           plot_type = "cost_tradeoff_curves",
           category = "power_cost_multi",
           minimizing_parameter = "TPM_threshold",
-          title = "Minimize TPM Threshold",
+          title = "Cost + Power Optimization: Minimize TPM Threshold",
           description = "optimization over TPM, with cells and reads varying"
         ))
       } else if (length(varying_params) == 1) {
@@ -128,7 +128,7 @@ detect_workflow_scenario <- function(workflow_config) {
           plot_type = "cost_tradeoff_curves",
           category = "power_cost_multi",
           minimizing_parameter = "minimum_fold_change",
-          title = "Minimize Fold Change",
+          title = "Cost + Power Optimization: Minimize Fold Change",
           description = "optimization over fold change, with cells and reads varying"
         ))
       } else if (length(varying_params) == 1) {
