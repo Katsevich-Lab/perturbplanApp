@@ -5,7 +5,7 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny
-#' @importFrom shiny bindCache downloadHandler renderUI req
+#' @importFrom shiny bindCache renderUI req showModal modalDialog modalButton observeEvent
 #' @importFrom magrittr %>%
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
@@ -79,7 +79,7 @@ app_server <- function(input, output, session) {
 
       tags$div(
         style = "display: flex; gap: 8px; align-items: center;",
-        downloadButton(
+        actionButton(
           "header_export_excel",
           "",
           icon = icon("file-excel"),
@@ -87,7 +87,7 @@ app_server <- function(input, output, session) {
           style = "padding: 4px 8px;",
           title = "Export to Excel"
         ),
-        downloadButton(
+        actionButton(
           "header_export_plot",
           "",
           icon = icon("image"),
@@ -100,97 +100,53 @@ app_server <- function(input, output, session) {
   })
 
   # Header export handlers (reuse logic from results display module)
-  output$header_export_excel <- downloadHandler(
-    filename = function() {
-      paste0("perturbplan_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
-    },
-    content = function(file) {
-      req(analysis_results_raw(), plot_objects())
-
-      results <- analysis_results_raw()
-      plots <- plot_objects()
-
-      tryCatch({
-        # Reuse Excel export logic
-        excel_data <- list(
-          "Summary" = create_excel_summary(results, plots),
-          "Detailed_Results" = results$power_data,
-          "Design_Options" = create_excel_design_options(results$user_config$design_options),
-          "Experimental_Setup" = create_excel_experimental_setup(results$user_config$experimental_setup),
-          "Analysis_Choices" = create_excel_analysis_choices(results$user_config$analysis_choices),
-          "Effect_Sizes" = create_excel_effect_sizes(results$user_config$effect_sizes),
-          "Metadata" = data.frame(
-            Item = c("Analysis Mode", "Workflow Type", "Timestamp", "App Version"),
-            Value = c(
-              results$metadata$analysis_mode,
-              results$workflow_info$workflow_id,
-              as.character(results$metadata$analysis_timestamp),
-              results$metadata$app_version
-            )
-          )
+  # Excel Export - Under Development Dialog
+  observeEvent(input$header_export_excel, {
+    showModal(modalDialog(
+      title = tags$div(
+        icon("exclamation-triangle", style = "color: #f39c12; margin-right: 8px;"),
+        "Feature Under Development"
+      ),
+      tags$div(
+        style = "text-align: center; padding: 20px;",
+        tags$p(
+          "Excel export functionality is currently under development.",
+          style = "font-size: 16px; margin-bottom: 15px;"
+        ),
+        tags$p(
+          "This feature will be available in a future update.",
+          style = "color: #666; font-size: 14px;"
         )
+      ),
+      footer = modalButton("OK"),
+      easyClose = TRUE,
+      fade = TRUE
+    ))
+  })
 
-        if (!is.null(results$user_config$cost_info)) {
-          excel_data[["Cost_Information"]] <- create_excel_cost_info(results$user_config$cost_info)
-        }
-
-        openxlsx::write.xlsx(excel_data, file = file)
-
-      }, error = function(e) {
-        showNotification(
-          paste("Export failed:", e$message),
-          type = "error",
-          duration = 5
+  # Plot Download - Under Development Dialog
+  observeEvent(input$header_export_plot, {
+    showModal(modalDialog(
+      title = tags$div(
+        icon("exclamation-triangle", style = "color: #f39c12; margin-right: 8px;"),
+        "Feature Under Development"
+      ),
+      tags$div(
+        style = "text-align: center; padding: 20px;",
+        tags$p(
+          "Plot download functionality is currently under development.",
+          style = "font-size: 16px; margin-bottom: 15px;"
+        ),
+        tags$p(
+          "This feature will be available in a future update.",
+          style = "color: #666; font-size: 14px;"
         )
-        stop(e$message)
-      })
-    },
-    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  )
-
-  output$header_export_plot <- downloadHandler(
-    filename = function() {
-      paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
-    },
-    content = function(file) {
-      req(plot_objects())
-
-      plots <- plot_objects()
-
-      tryCatch({
-        if (!is.null(plots$plots$main_plot)) {
-          ggplot2::ggsave(
-            filename = file,
-            plot = plots$plots$main_plot,
-            width = 12,
-            height = 8,
-            dpi = 300,
-            units = "in",
-            device = "png"
-          )
-        } else {
-          stop("No plot available for download")
-        }
-
-      }, error = function(e) {
-        showNotification(
-          paste("Plot download failed:", e$message),
-          type = "error",
-          duration = 5
-        )
-        # Create error plot fallback
-        error_plot <- ggplot2::ggplot() +
-          ggplot2::annotate("text", x = 0.5, y = 0.5,
-                          label = "Plot generation failed",
-                          size = 6) +
-          ggplot2::theme_void()
-
-        ggplot2::ggsave(filename = file, plot = error_plot,
-                       width = 8, height = 6, dpi = 150, device = "png")
-      })
-    },
-    contentType = "image/png"
-  )
+      ),
+      footer = modalButton("OK"),
+      easyClose = TRUE,
+      fade = TRUE
+    ))
+  })
 
   # ========================================================================
   # APP STATE MANAGEMENT
