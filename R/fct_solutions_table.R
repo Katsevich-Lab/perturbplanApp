@@ -122,6 +122,10 @@ extract_cached_solutions_data <- function(cached_results) {
 }
 
 #' Extract Optimal Parameter Value
+#'
+#' @param optimal Optimal design results containing parameter values
+#' @param minimizing_param Name of the parameter being minimized
+#' @noRd
 extract_optimal_parameter_value <- function(optimal, minimizing_param) {
   switch(minimizing_param,
     "cells_per_target" = format_number(optimal$cells_per_target %||% NA),
@@ -135,6 +139,12 @@ extract_optimal_parameter_value <- function(optimal, minimizing_param) {
 }
 
 #' Extract Experimental Parameters
+#'
+#' @param optimal Optimal design results containing parameter values
+#' @param user_config User configuration data from sidebar
+#' @param minimizing_param Name of the parameter being minimized
+#' @param workflow_info Workflow information containing workflow details
+#' @noRd
 extract_experimental_parameters <- function(optimal, user_config, minimizing_param, workflow_info = NULL) {
 
   # Get all experimental parameter values
@@ -157,6 +167,11 @@ extract_experimental_parameters <- function(optimal, user_config, minimizing_par
 }
 
 #' Extract TPM Threshold
+#'
+#' @param optimal Optimal design results containing parameter values
+#' @param user_config User configuration data from sidebar
+#' @param minimizing_param Name of the parameter being minimized
+#' @noRd
 extract_TPM_threshold <- function(optimal, user_config, minimizing_param) {
   if (minimizing_param == "TPM_threshold") {
     # TPM is minimizing parameter - exclude from this column (will appear in optimal column)
@@ -168,6 +183,11 @@ extract_TPM_threshold <- function(optimal, user_config, minimizing_param) {
 }
 
 #' Extract Effect Sizes (Clean)
+#'
+#' @param optimal Optimal design results containing parameter values
+#' @param user_config User configuration data from sidebar
+#' @param minimizing_param Name of the parameter being minimized
+#' @noRd
 extract_effect_sizes_clean <- function(optimal, user_config, minimizing_param) {
   # Fold change - exclude if it's the minimizing parameter
   if (minimizing_param == "minimum_fold_change") {
@@ -191,6 +211,13 @@ extract_effect_sizes_clean <- function(optimal, user_config, minimizing_param) {
 # ============================================================================
 
 #' Get Parameter Value (Optimal vs User Config)
+#'
+#' @param param_name Name of parameter to extract
+#' @param optimal Optimal design results containing parameter values
+#' @param user_config User configuration data from sidebar
+#' @param minimizing_param Name of the parameter being minimized
+#' @param workflow_info Workflow information containing workflow details
+#' @noRd
 get_param_value <- function(param_name, optimal, user_config, minimizing_param, workflow_info = NULL) {
 
   # Check if this is a power+cost workflow or cost minimization workflow
@@ -274,6 +301,9 @@ get_param_value <- function(param_name, optimal, user_config, minimizing_param, 
 }
 
 #' Format Number Helper
+#'
+#' @param x Numeric value to format
+#' @noRd
 format_number <- function(x) {
   if (is.na(x) || is.null(x)) return("N/A")
   if (x >= 1000) {
@@ -288,6 +318,10 @@ format_number <- function(x) {
 # ============================================================================
 
 #' Create Clean Solutions Table UI
+#'
+#' @param solutions_data Structured solutions data extracted from analysis results
+#' @param workflow_info Workflow information containing minimizing parameter and workflow ID
+#' @noRd
 create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
 
   # Get dynamic column name for optimal parameter
@@ -331,6 +365,11 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
 }
 
 #' Create Header Row 1 (Main Categories)
+#'
+#' @param optimal_col_name Display name for the optimal parameter column
+#' @param has_cost Logical indicating if workflow includes cost calculations
+#' @param minimizing_param Name of the parameter being minimized
+#' @noRd
 create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_param = NULL) {
 
   # Base rowspan style for single columns that span both header rows
@@ -390,6 +429,10 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
 }
 
 #' Create Header Row 2 (Subcolumns)
+#'
+#' @param has_cost Logical indicating if workflow includes cost calculations
+#' @param minimizing_param Name of the parameter being minimized
+#' @noRd
 create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
   # Row 2 only contains sub-columns for multi-column headers
   # Single-row columns (with rowspan=2) don't appear in row 2
@@ -459,6 +502,10 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
 }
 
 #' Create Data Row
+#'
+#' @param solution_data Individual solution data with optimal values and parameters
+#' @param workflow_info Workflow information containing minimizing parameter and workflow ID
+#' @noRd
 create_data_row <- function(solution_data, workflow_info) {
 
   cells <- list(
@@ -546,6 +593,9 @@ create_data_row <- function(solution_data, workflow_info) {
 # ============================================================================
 
 #' Get Optimal Column Name
+#'
+#' @param minimizing_param Name of the parameter being minimized
+#' @noRd
 get_optimal_column_name <- function(minimizing_param) {
   switch(minimizing_param,
     "cells_per_target" = "Optimal Cells/Target",
