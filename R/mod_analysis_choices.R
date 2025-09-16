@@ -7,7 +7,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe updateNumericInput
+#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe updateNumericInput showModal modalDialog modalButton observeEvent updateSelectInput
 #' @importFrom shinyjs show hide
 mod_analysis_choices_ui <- function(id) {
   ns <- NS(id)
@@ -112,6 +112,35 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
       } else {
         # CONSISTENT: Use TPM_threshold_fixed_div
         shinyjs::hide("TPM_threshold_fixed_div")
+      }
+    })
+
+    # Custom gene list - Under Development Dialog
+    observeEvent(input$gene_list_mode, {
+      if (!is.null(input$gene_list_mode) && input$gene_list_mode == "custom") {
+        showModal(modalDialog(
+          title = tags$div(
+            icon("exclamation-triangle", style = "color: #f39c12; margin-right: 8px;"),
+            "Feature Under Development"
+          ),
+          tags$div(
+            style = "text-align: center; padding: 20px;",
+            tags$p(
+              "Custom gene list functionality is currently under development.",
+              style = "font-size: 16px; margin-bottom: 15px;"
+            ),
+            tags$p(
+              "Please use 'Random' mode for now. Custom gene lists will be available in a future update.",
+              style = "color: #666; font-size: 14px;"
+            )
+          ),
+          footer = modalButton("OK"),
+          easyClose = TRUE,
+          fade = TRUE
+        ))
+
+        # Reset to random mode after showing the dialog
+        updateSelectInput(session, "gene_list_mode", selected = "random")
       }
     })
 
