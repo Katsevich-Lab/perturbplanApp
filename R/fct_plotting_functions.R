@@ -236,8 +236,7 @@ create_single_parameter_plots <- function(cached_results) {
   p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", workflow_info$title, "</b><br>",
-                     "<sup>", workflow_info$description, "</sup>"),
+        text = paste0("<b>", workflow_info$title, "</b>"),
         font = list(size = 14)
       ),
       hovermode = "closest",
@@ -554,8 +553,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", workflow_info$title, "</b><br>",
-                     "<sup>", workflow_info$description, "</sup>"),
+        text = paste0("<b>", workflow_info$title, "</b>"),
         font = list(size = 14)
       ),
       xaxis = list(title = "Cells per target"),
@@ -601,7 +599,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     param_name <- "TPM"
   } else if (workflow_id == "power_cost_fc_cells_reads") {
     param_column <- "minimum_fold_change"
-    x_axis_label <- "Minimum Fold Change"
+    x_axis_label <- "Fold Change"
     param_name <- "Fold Change"
   } else {
     stop("Unsupported workflow for constrained minimization: ", workflow_id)
@@ -759,8 +757,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", workflow_info$title, "</b><br>",
-                     "<sup>", workflow_info$description, "</sup>"),
+        text = paste0("<b>", workflow_info$title, "</b>"),
         font = list(size = 14)
       ),
       xaxis = list(title = x_axis_label),
@@ -799,7 +796,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
 format_parameter_name <- function(param_name) {
   switch(param_name,
     "TPM_threshold" = "TPM Threshold",
-    "minimum_fold_change" = "Minimum Fold Change",
+    "minimum_fold_change" = "Fold Change",
     "cells_per_target" = "Cells per Target",
     "reads_per_cell" = "Reads per Cell",
     "sequenced_reads_per_cell" = "Reads per Cell",
