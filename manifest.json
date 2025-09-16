@@ -1,0 +1,343 @@
+{
+  "version": 1,
+  "locale": "en_US",
+  "platform": "4.4.0",
+  "metadata": {
+    "appmode": "static",
+    "primary_rmd": null,
+    "primary_html": "docs/PRD-PerturbPlan-v2.html",
+    "content_category": null,
+    "has_parameters": false
+  },
+  "packages": null,
+  "files": {
+    ".claude/settings.local.json": {
+      "checksum": "37f6f3f4334b18b819b0e0500c541e60"
+    },
+    ".Rbuildignore": {
+      "checksum": "6afa2008bb4d9aef319749bd1ae9a99c"
+    },
+    ".Rprofile": {
+      "checksum": "ce43819a0d7634eca2913446106ebb59"
+    },
+    "CLAUDE.md": {
+      "checksum": "9e64e6f99908854605856e2eb1151f10"
+    },
+    "DESCRIPTION": {
+      "checksum": "cff75bda02b42fdb26c20a43582a82c4"
+    },
+    "dev/01_start.R": {
+      "checksum": "9d971680fcd4c017879725fee2336ae5"
+    },
+    "dev/02_dev.R": {
+      "checksum": "9e4c7291b8cc9a740e8857befaff58e4"
+    },
+    "dev/03_deploy.R": {
+      "checksum": "8f60d232c82f906cd3b739f8180153ec"
+    },
+    "dev/config_attachment.yaml": {
+      "checksum": "a7efc9ea3e81f3b8936c1353cdbbf252"
+    },
+    "dev/run_dev.R": {
+      "checksum": "e21d8f5db5d57cd4d0f2db6d012a6109"
+    },
+    "docs/PRD-PerturbPlan-v2.html": {
+      "checksum": "844950ff8798e6bd0405357681235209"
+    },
+    "docs/PRD-PerturbPlan-v2.Rmd": {
+      "checksum": "7e761de313c1b6368b9c225f677969b3"
+    },
+    "inst/app/www/.perturbplan_styles.css.swp": {
+      "checksum": "061bb6a640c69da240863233266c1922"
+    },
+    "inst/app/www/components.css": {
+      "checksum": "018ba654a6a9b5850f816e7e3352c6bd"
+    },
+    "inst/app/www/favicon.ico": {
+      "checksum": "81560d1b906a530c87fa0acbb2f5cca4"
+    },
+    "inst/app/www/layout.css": {
+      "checksum": "886f5f910bc2c6b683ee039c8aa1a318"
+    },
+    "inst/app/www/parameter_sliders.css": {
+      "checksum": "7b288f197e97dc18d9fac1a26fa37916"
+    },
+    "inst/app/www/perturbplan_interactions.js": {
+      "checksum": "7501ccf1f4c29eafb0f78c9cabe33ee9"
+    },
+    "inst/app/www/perturbplan_styles.css": {
+      "checksum": "5e2409ad2175d04a69a9e0126d6bd466"
+    },
+    "inst/app/www/variables.css": {
+      "checksum": "816efffa5eb16eaa151576012bb5f012"
+    },
+    "inst/extdata/example_custom_pilot_data.rds": {
+      "checksum": "861b5f70f48b4e4350112cbbe2a2f1f4"
+    },
+    "inst/extdata/iPSC_10x.rda": {
+      "checksum": "963a65696761598a6b6e1e48afde3807"
+    },
+    "inst/extdata/README.md": {
+      "checksum": "9431095c5a6d674389ecb51eb0581472"
+    },
+    "inst/golem-config.yml": {
+      "checksum": "86a8d595b8cd3f95910cca9ebf9c0e2f"
+    },
+    "LICENSE": {
+      "checksum": "29531da2fb259cd21bbbccbda315a473"
+    },
+    "man/CANONICAL_PARAMETER_NAMES.Rd": {
+      "checksum": "4d2d31ffeeaee1a8ea2381c5e8646b16"
+    },
+    "man/collapsible_section.Rd": {
+      "checksum": "6bc2485e5e624bbb97f8397b70c93194"
+    },
+    "man/cost-minimization.Rd": {
+      "checksum": "0cd0abca23b15380cdc0cdb93fabea2b"
+    },
+    "man/create_empty_solutions_table.Rd": {
+      "checksum": "2b67d16aa19aefb5ec611f36d4f4f44b"
+    },
+    "man/create_enhanced_solutions_table.Rd": {
+      "checksum": "230fb1ceee0ed4882df69a092f6bffa2"
+    },
+    "man/currency_input.Rd": {
+      "checksum": "6cb4ed55f8ec53d26d641ebc9545e36b"
+    },
+    "man/ESSENTIAL_CONVERSIONS.Rd": {
+      "checksum": "546ebf043db35ceea40d36dd246405ce"
+    },
+    "man/extract_cached_solutions_data.Rd": {
+      "checksum": "70282d29facdc40106d83058e66425c2"
+    },
+    "man/extract_clean_solutions_data.Rd": {
+      "checksum": "2f31b5dcb951d64d6491cfc478f2b324"
+    },
+    "man/file_upload_zone.Rd": {
+      "checksum": "510846265c47451ed14473f2edc7be27"
+    },
+    "man/naming_standards.Rd": {
+      "checksum": "d74db7dc9bb8795c32b3fddea46b73f8"
+    },
+    "man/PARAMETER_DISPLAY_NAMES.Rd": {
+      "checksum": "4199321029e48d07a2c32b929bddccde"
+    },
+    "man/parameter_input_group.Rd": {
+      "checksum": "1473bbd164db2cc563eb1737e379683a"
+    },
+    "man/parameter_matrix.Rd": {
+      "checksum": "29d7946f8213807a7f7d4035a782c65e"
+    },
+    "man/perturbplan-integration.Rd": {
+      "checksum": "7265267d85b19cc2440278e35afbbbde"
+    },
+    "man/pilot-data-validation.Rd": {
+      "checksum": "f2ee7e4b94e02c498371e6a838e5daa2"
+    },
+    "man/run_app.Rd": {
+      "checksum": "db153f001c7c98594f4a6e64193fbf8a"
+    },
+    "man/step_container.Rd": {
+      "checksum": "3a3e6f6a6dea8b502a85deaf11fe5e52"
+    },
+    "man/ui_components.Rd": {
+      "checksum": "61218e2fca7545fdf3b7a171bbb09530"
+    },
+    "man/unified-minimization.Rd": {
+      "checksum": "74e784bc3f531125d356518221d1a2a4"
+    },
+    "man/validate_parameter_name.Rd": {
+      "checksum": "60981923b548e78c90c29b4951753fcb"
+    },
+    "NAMESPACE": {
+      "checksum": "3bcd92eafa7c6a7a0df70dc4142aac06"
+    },
+    "R/.fct_workflow_detection.R.swp": {
+      "checksum": "f60c671e27eab9a230d900fb8e228419"
+    },
+    "R/.mod_design_options.R.swp": {
+      "checksum": "63b04920f6a096bcfc1595b08e0a74b1"
+    },
+    "R/app_config.R": {
+      "checksum": "520175aef95c0f42180b271556e86c89"
+    },
+    "R/app_server.R": {
+      "checksum": "52300d7b50990942a666e12b4565f8e1"
+    },
+    "R/app_ui.R": {
+      "checksum": "88fd21473a65a75d842a889a189fbe55"
+    },
+    "R/fct_analysis_config.R": {
+      "checksum": "6f064464ce805d874910fd72b1b4ab86"
+    },
+    "R/fct_cost_minimization.R": {
+      "checksum": "6e9aba30d1eb54370e6ca2c52ed9e802"
+    },
+    "R/fct_design_validation.R": {
+      "checksum": "98635c4bb566b3413a8879e88fbff3ef"
+    },
+    "R/fct_excel_export.R": {
+      "checksum": "0b17497d2251ccfa9642823a99dd61d0"
+    },
+    "R/fct_parameter_helpers.R": {
+      "checksum": "202cb3f3ca42023098b6756b6ff52474"
+    },
+    "R/fct_perturbplan_integration.R": {
+      "checksum": "935ed524aa586744976e76e1e63a11d5"
+    },
+    "R/fct_pilot_data_validation.R": {
+      "checksum": "d74018539eb197962bf48b382beb8d49"
+    },
+    "R/fct_plotting_functions.R": {
+      "checksum": "63b0206895219b0479c84cc99ef82c40"
+    },
+    "R/fct_slider_detection.R": {
+      "checksum": "57f2208c7942cd05a63824e30b965871"
+    },
+    "R/fct_solutions_table.R": {
+      "checksum": "4a5ba6cae63f2ebfd3f6dfeffdabc9f8"
+    },
+    "R/fct_unified_minimization.R": {
+      "checksum": "3d6bd22566dac963e3adc137e66af867"
+    },
+    "R/fct_workflow_detection.R": {
+      "checksum": "229835277494af09598c8d4de0f80c50"
+    },
+    "R/globals.R": {
+      "checksum": "ab5a23722caae34d93d0e486641cccbf"
+    },
+    "R/mod_advanced_choices.R": {
+      "checksum": "46918582bf46efe41fed55cffb181417"
+    },
+    "R/mod_analysis_choices.R": {
+      "checksum": "41bb17a0327d9107461ec0cf5275f813"
+    },
+    "R/mod_analysis_engine.R": {
+      "checksum": "74a92f00e67689bbb2f8877fb322fe24"
+    },
+    "R/mod_design_options.R": {
+      "checksum": "835cb7b979a964ef014ff9b602109d60"
+    },
+    "R/mod_effect_sizes.R": {
+      "checksum": "35bc4c5ecb3014ff5e455690cf24c167"
+    },
+    "R/mod_experimental_setup.R": {
+      "checksum": "e82d64eb721efd7b3ce80cc160ce6286"
+    },
+    "R/mod_parameter_sliders.R": {
+      "checksum": "b23bd93609e6ec4bd00a7a5cd9701868"
+    },
+    "R/mod_parameter_source_manager.R": {
+      "checksum": "75df00e977eceac13f568504ff452964"
+    },
+    "R/mod_perturbation_choices.R": {
+      "checksum": "892f8452d8b69eb0f04415621c8b6f18"
+    },
+    "R/mod_plot_display.R": {
+      "checksum": "819a6e51c2a238dfbd41f95a2ffefb5a"
+    },
+    "R/mod_plotting_engine.R": {
+      "checksum": "31b59735e925bf79866a398e7c7e91b9"
+    },
+    "R/mod_results_cache.R": {
+      "checksum": "553050a29a6a415c200da76841b7d704"
+    },
+    "R/mod_results_display.R": {
+      "checksum": "3d76f6f99ccdc7af880d11d91fa85026"
+    },
+    "R/mod_sidebar.R": {
+      "checksum": "5ff954b11a7cd68d41047ca3f595f61d"
+    },
+    "R/mod_solution_table.R": {
+      "checksum": "82e7fed932ce43e64dffd144e5a17ca8"
+    },
+    "R/mod_styles.R": {
+      "checksum": "de83e386a0e2b2f277291e0678dd0b7f"
+    },
+    "R/naming_standards.R": {
+      "checksum": "98fa120913ec48138cb84077c4705350"
+    },
+    "R/run_app.R": {
+      "checksum": "476011bbc4ffefa824e5bfb8386d849b"
+    },
+    "R/utils_ui_components.R": {
+      "checksum": "e9856123cc682e90c2f80eb5e4ca13eb"
+    },
+    "R/utils_ui_helpers.R": {
+      "checksum": "65c232dd556f8b4cb2c2481fdee2b4d2"
+    },
+    "R/utils_validation.R": {
+      "checksum": "4acc90dd2eb164257623a3ba001cf26c"
+    },
+    "README.md": {
+      "checksum": "f5d8f702f3536e7b81f822414599556f"
+    },
+    "renv.lock": {
+      "checksum": "997f071b0e2690802e8157e306a2da0b"
+    },
+    "tests/testthat.R": {
+      "checksum": "a6fcc63fa5388416897b5a3f2a12bcf3"
+    },
+    "tests/testthat/test-app.R": {
+      "checksum": "225e3812b897786befc574f805c96dc2"
+    },
+    "tests/testthat/test-fct_parameter_helpers.R": {
+      "checksum": "225e3812b897786befc574f805c96dc2"
+    },
+    "tests/testthat/test-fct_workflow_detection.R": {
+      "checksum": "225e3812b897786befc574f805c96dc2"
+    },
+    "tests/testthat/test-mod_advanced_choices.R": {
+      "checksum": "fb7a8b8dba01449bb63963c4475a8419"
+    },
+    "tests/testthat/test-mod_analysis_choices.R": {
+      "checksum": "e2f06dead672c8c440668e5a5ec53f89"
+    },
+    "tests/testthat/test-mod_analysis_engine.R": {
+      "checksum": "8b52d45939fecfbc5684f4e02c4347b9"
+    },
+    "tests/testthat/test-mod_design_options.R": {
+      "checksum": "cb079f480b008c21016774733fa0045c"
+    },
+    "tests/testthat/test-mod_effect_sizes.R": {
+      "checksum": "1090f6a8f1c5cc279a4b99ef9724a55a"
+    },
+    "tests/testthat/test-mod_experimental_setup.R": {
+      "checksum": "22e98c4dc6a54691306defffafb7583f"
+    },
+    "tests/testthat/test-mod_parameter_sliders.R": {
+      "checksum": "061248452dd02dd11e882da77f427226"
+    },
+    "tests/testthat/test-mod_parameter_source_manager.R": {
+      "checksum": "205b704324b91c6324031cd60a635610"
+    },
+    "tests/testthat/test-mod_perturbation_choices.R": {
+      "checksum": "6ad61dcc800e8731a44fc597d0fdfec8"
+    },
+    "tests/testthat/test-mod_plot_display.R": {
+      "checksum": "d86c46a4a55aeea2a0fa56399cb02ffa"
+    },
+    "tests/testthat/test-mod_plotting_engine.R": {
+      "checksum": "f0b4920211e547a00117ab06287982cc"
+    },
+    "tests/testthat/test-mod_results_display.R": {
+      "checksum": "ca970f5c24d1e2075f8ae7ec19bb9a1a"
+    },
+    "tests/testthat/test-mod_sidebar.R": {
+      "checksum": "7ab2fea634ff7caa694c424d757b3d3f"
+    },
+    "tests/testthat/test-mod_solution_table.R": {
+      "checksum": "b2e82f1ecdb90c396154cb46086b5589"
+    },
+    "tests/testthat/test-utils_ui_components.R": {
+      "checksum": "cff0bbfff458f3b13aca6fae39c7a7b9"
+    },
+    "tests/testthat/test-utils_ui_helpers.R": {
+      "checksum": "225e3812b897786befc574f805c96dc2"
+    },
+    "tests/testthat/test-utils_validation.R": {
+      "checksum": "225e3812b897786befc574f805c96dc2"
+    }
+  },
+  "users": null
+}

@@ -1,7 +1,27 @@
 {
   "R": {
-    "Version": "4.4.1",
+    "Version": "4.4.0",
     "Repositories": [
+      {
+        "Name": "BioCsoft",
+        "URL": "https://bioconductor.org/packages/3.20/bioc"
+      },
+      {
+        "Name": "BioCann",
+        "URL": "https://bioconductor.org/packages/3.20/data/annotation"
+      },
+      {
+        "Name": "BioCexp",
+        "URL": "https://bioconductor.org/packages/3.20/data/experiment"
+      },
+      {
+        "Name": "BioCworkflows",
+        "URL": "https://bioconductor.org/packages/3.20/workflows"
+      },
+      {
+        "Name": "BioCbooks",
+        "URL": "https://bioconductor.org/packages/3.20/books"
+      },
       {
         "Name": "CRAN",
         "URL": "https://packagemanager.posit.co/cran/latest"
@@ -27,7 +47,8 @@
       "NeedsCompilation": "no",
       "Author": "Dirk Eddelbuettel [aut, cre] (<https://orcid.org/0000-0001-6419-907X>), John W. Emerson [aut], Michael J. Kane [aut] (<https://orcid.org/0000-0003-1899-6662>)",
       "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
-      "Repository": "CRAN"
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
     },
     "BiocManager": {
       "Package": "BiocManager",
@@ -123,11 +144,11 @@
     },
     "MASS": {
       "Package": "MASS",
-      "Version": "7.3-65",
+      "Version": "7.3-60.2",
       "Source": "Repository",
       "Priority": "recommended",
-      "Date": "2025-02-19",
-      "Revision": "$Rev: 3681 $",
+      "Date": "2024-01-12",
+      "Revision": "$Rev: 3641 $",
       "Depends": [
         "R (>= 4.4.0)",
         "grDevices",
@@ -144,7 +165,7 @@
         "nnet",
         "survival"
       ],
-      "Authors@R": "c(person(\"Brian\", \"Ripley\", role = c(\"aut\", \"cre\", \"cph\"), email = \"Brian.Ripley@R-project.org\"), person(\"Bill\", \"Venables\", role = c(\"aut\", \"cph\")), person(c(\"Douglas\", \"M.\"), \"Bates\", role = \"ctb\"), person(\"Kurt\", \"Hornik\", role = \"trl\", comment = \"partial port ca 1998\"), person(\"Albrecht\", \"Gebhardt\", role = \"trl\", comment = \"partial port ca 1998\"), person(\"David\", \"Firth\", role = \"ctb\", comment = \"support functions for polr\"))",
+      "Authors@R": "c(person(\"Brian\", \"Ripley\", role = c(\"aut\", \"cre\", \"cph\"), email = \"ripley@stats.ox.ac.uk\"), person(\"Bill\", \"Venables\", role = \"ctb\"), person(c(\"Douglas\", \"M.\"), \"Bates\", role = \"ctb\"), person(\"Kurt\", \"Hornik\", role = \"trl\", comment = \"partial port ca 1998\"), person(\"Albrecht\", \"Gebhardt\", role = \"trl\", comment = \"partial port ca 1998\"), person(\"David\", \"Firth\", role = \"ctb\"))",
       "Description": "Functions and datasets to support Venables and Ripley, \"Modern Applied Statistics with S\" (4th edition, 2002).",
       "Title": "Support Functions and Datasets for Venables and Ripley's MASS",
       "LazyData": "yes",
@@ -153,8 +174,8 @@
       "URL": "http://www.stats.ox.ac.uk/pub/MASS4/",
       "Contact": "<MASS@stats.ox.ac.uk>",
       "NeedsCompilation": "yes",
-      "Author": "Brian Ripley [aut, cre, cph], Bill Venables [aut, cph], Douglas M. Bates [ctb], Kurt Hornik [trl] (partial port ca 1998), Albrecht Gebhardt [trl] (partial port ca 1998), David Firth [ctb] (support functions for polr)",
-      "Maintainer": "Brian Ripley <Brian.Ripley@R-project.org>",
+      "Author": "Brian Ripley [aut, cre, cph], Bill Venables [ctb], Douglas M. Bates [ctb], Kurt Hornik [trl] (partial port ca 1998), Albrecht Gebhardt [trl] (partial port ca 1998), David Firth [ctb]",
+      "Maintainer": "Brian Ripley <ripley@stats.ox.ac.uk>",
       "Repository": "CRAN"
     },
     "Matrix": {
@@ -276,8 +297,7 @@
       "Description": "Provides color schemes for maps (and other graphics) designed by Cynthia Brewer as described at http://colorbrewer2.org.",
       "License": "Apache License 2.0",
       "NeedsCompilation": "no",
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     },
     "Rcpp": {
       "Package": "Rcpp",
@@ -691,13 +711,15 @@
     },
     "crosstalk": {
       "Package": "crosstalk",
-      "Version": "1.2.1",
+      "Version": "1.2.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Inter-Widget Interactivity for HTML Widgets",
-      "Authors@R": "c( person(\"Joe\", \"Cheng\", role = \"aut\", email = \"joe@posit.co\"), person(\"Carson\", \"Sievert\", role = c(\"aut\", \"cre\"), email = \"carson@posit.co\", comment = c(ORCID = \"0000-0002-4958-2844\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")), person(family = \"jQuery Foundation\", role = \"cph\", comment = \"jQuery library and jQuery UI library\"), person(family = \"jQuery contributors\", role = c(\"ctb\", \"cph\"), comment = \"jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt\"), person(\"Mark\", \"Otto\", role = \"ctb\", comment = \"Bootstrap library\"), person(\"Jacob\", \"Thornton\", role = \"ctb\", comment = \"Bootstrap library\"), person(family = \"Bootstrap contributors\", role = \"ctb\", comment = \"Bootstrap library\"), person(family = \"Twitter, Inc\", role = \"cph\", comment = \"Bootstrap library\"), person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"), comment = \"selectize.js library\"), person(\"Kristopher Michael\", \"Kowal\", role = c(\"ctb\", \"cph\"), comment = \"es5-shim library\"), person(family = \"es5-shim contributors\", role = c(\"ctb\", \"cph\"), comment = \"es5-shim library\"), person(\"Denis\", \"Ineshin\", role = c(\"ctb\", \"cph\"), comment = \"ion.rangeSlider library\"), person(\"Sami\", \"Samhuri\", role = c(\"ctb\", \"cph\"), comment = \"Javascript strftime library\") )",
+      "Authors@R": "c( person(\"Joe\", \"Cheng\", , \"joe@posit.co\", role = \"aut\"), person(\"Carson\", \"Sievert\", , \"carson@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-4958-2844\")), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")), person(, \"jQuery Foundation\", role = \"cph\", comment = \"jQuery library and jQuery UI library\"), person(, \"jQuery contributors\", role = c(\"ctb\", \"cph\"), comment = \"jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt\"), person(\"Mark\", \"Otto\", role = \"ctb\", comment = \"Bootstrap library\"), person(\"Jacob\", \"Thornton\", role = \"ctb\", comment = \"Bootstrap library\"), person(, \"Bootstrap contributors\", role = \"ctb\", comment = \"Bootstrap library\"), person(, \"Twitter, Inc\", role = \"cph\", comment = \"Bootstrap library\"), person(\"Brian\", \"Reavis\", role = c(\"ctb\", \"cph\"), comment = \"selectize.js library\"), person(\"Kristopher Michael\", \"Kowal\", role = c(\"ctb\", \"cph\"), comment = \"es5-shim library\"), person(, \"es5-shim contributors\", role = c(\"ctb\", \"cph\"), comment = \"es5-shim library\"), person(\"Denis\", \"Ineshin\", role = c(\"ctb\", \"cph\"), comment = \"ion.rangeSlider library\"), person(\"Sami\", \"Samhuri\", role = c(\"ctb\", \"cph\"), comment = \"Javascript strftime library\") )",
       "Description": "Provides building blocks for allowing HTML widgets to communicate with each other, with Shiny or without (i.e. static .html files). Currently supports linked brushing and filtering.",
       "License": "MIT + file LICENSE",
+      "URL": "https://rstudio.github.io/crosstalk/, https://github.com/rstudio/crosstalk",
+      "BugReports": "https://github.com/rstudio/crosstalk/issues",
       "Imports": [
         "htmltools (>= 0.3.6)",
         "jsonlite",
@@ -705,18 +727,17 @@
         "R6"
       ],
       "Suggests": [
-        "shiny",
+        "bslib",
         "ggplot2",
-        "testthat (>= 2.1.0)",
         "sass",
-        "bslib"
+        "shiny",
+        "testthat (>= 2.1.0)"
       ],
-      "URL": "https://rstudio.github.io/crosstalk/, https://github.com/rstudio/crosstalk",
-      "BugReports": "https://github.com/rstudio/crosstalk/issues",
-      "RoxygenNote": "7.2.3",
+      "Config/Needs/website": "jcheng5/d3scatter, DT, leaflet, rmarkdown",
       "Encoding": "UTF-8",
+      "RoxygenNote": "7.3.2",
       "NeedsCompilation": "no",
-      "Author": "Joe Cheng [aut], Carson Sievert [aut, cre] (<https://orcid.org/0000-0002-4958-2844>), Posit Software, PBC [cph, fnd], jQuery Foundation [cph] (jQuery library and jQuery UI library), jQuery contributors [ctb, cph] (jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt), Mark Otto [ctb] (Bootstrap library), Jacob Thornton [ctb] (Bootstrap library), Bootstrap contributors [ctb] (Bootstrap library), Twitter, Inc [cph] (Bootstrap library), Brian Reavis [ctb, cph] (selectize.js library), Kristopher Michael Kowal [ctb, cph] (es5-shim library), es5-shim contributors [ctb, cph] (es5-shim library), Denis Ineshin [ctb, cph] (ion.rangeSlider library), Sami Samhuri [ctb, cph] (Javascript strftime library)",
+      "Author": "Joe Cheng [aut], Carson Sievert [aut, cre] (ORCID: <https://orcid.org/0000-0002-4958-2844>), Posit Software, PBC [cph, fnd], jQuery Foundation [cph] (jQuery library and jQuery UI library), jQuery contributors [ctb, cph] (jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt), Mark Otto [ctb] (Bootstrap library), Jacob Thornton [ctb] (Bootstrap library), Bootstrap contributors [ctb] (Bootstrap library), Twitter, Inc [cph] (Bootstrap library), Brian Reavis [ctb, cph] (selectize.js library), Kristopher Michael Kowal [ctb, cph] (es5-shim library), es5-shim contributors [ctb, cph] (es5-shim library), Denis Ineshin [ctb, cph] (ion.rangeSlider library), Sami Samhuri [ctb, cph] (Javascript strftime library)",
       "Maintainer": "Carson Sievert <carson@posit.co>",
       "Repository": "CRAN"
     },
@@ -881,7 +902,7 @@
     },
     "evaluate": {
       "Package": "evaluate",
-      "Version": "1.0.4",
+      "Version": "1.0.5",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Parsing and Evaluation Tools that Provide More Details than the Default",
@@ -1678,12 +1699,11 @@
         "stats",
         "graphics"
       ],
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     },
     "later": {
       "Package": "later",
-      "Version": "1.4.3",
+      "Version": "1.4.4",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Utilities for Scheduling Functions to Execute Later with Event Loops",
@@ -1714,7 +1734,7 @@
       "NeedsCompilation": "yes",
       "Author": "Winston Chang [aut], Joe Cheng [aut], Charlie Gao [aut, cre] (ORCID: <https://orcid.org/0000-0002-0750-061X>), Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>), Marcus Geelnard [ctb, cph] (TinyCThread library, https://tinycthread.github.io/), Evan Nemerson [ctb, cph] (TinyCThread library, https://tinycthread.github.io/)",
       "Maintainer": "Charlie Gao <charlie.gao@posit.co>",
-      "Repository": "RSPM"
+      "Repository": "CRAN"
     },
     "lattice": {
       "Package": "lattice",
@@ -1753,8 +1773,7 @@
       "NeedsCompilation": "yes",
       "Author": "Deepayan Sarkar [aut, cre] (<https://orcid.org/0000-0003-4107-1553>), Felix Andrews [ctb], Kevin Wright [ctb] (documentation), Neil Klepeis [ctb], Johan Larsson [ctb] (miscellaneous improvements), Zhijian (Jason) Wen [cph] (filled contour code), Paul Murrell [ctb], Stefan Eng [ctb] (violin plot improvements), Achim Zeileis [ctb] (modern colors), Alexandre Courtiol [ctb] (generics for larrows, lpolygon, lrect and lsegments)",
       "Maintainer": "Deepayan Sarkar <deepayan.sarkar@r-project.org>",
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     },
     "lazyeval": {
       "Package": "lazyeval",
@@ -1914,8 +1933,7 @@
       "ByteCompile": "yes",
       "License": "GPL (>= 2)",
       "NeedsCompilation": "yes",
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     },
     "mime": {
       "Package": "mime",
@@ -1952,16 +1970,17 @@
       "License": "GPL-3",
       "Copyright": "inst/COPYRIGHTS",
       "NeedsCompilation": "yes",
-      "Repository": "CRAN"
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-166",
+      "Version": "3.1-168",
       "Source": "Repository",
-      "Date": "2024-08-13",
+      "Date": "2025-03-31",
       "Priority": "recommended",
       "Title": "Linear and Nonlinear Mixed Effects Models",
-      "Authors@R": "c(person(\"José\", \"Pinheiro\", role = \"aut\", comment = \"S version\"), person(\"Douglas\", \"Bates\", role = \"aut\", comment = \"up to 2007\"), person(\"Saikat\", \"DebRoy\", role = \"ctb\", comment = \"up to 2002\"), person(\"Deepayan\", \"Sarkar\", role = \"ctb\", comment = \"up to 2005\"), person(\"EISPACK authors\", role = \"ctb\", comment = \"src/rs.f\"), person(\"Siem\", \"Heisterkamp\", role = \"ctb\", comment = \"Author fixed sigma\"), person(\"Bert\", \"Van Willigen\",role = \"ctb\", comment = \"Programmer fixed sigma\"), person(\"Johannes\", \"Ranke\", role = \"ctb\", comment = \"varConstProp()\"), person(\"R Core Team\", email = \"R-core@R-project.org\", role = c(\"aut\", \"cre\")))",
+      "Authors@R": "c(person(\"José\", \"Pinheiro\", role = \"aut\", comment = \"S version\"), person(\"Douglas\", \"Bates\", role = \"aut\", comment = \"up to 2007\"), person(\"Saikat\", \"DebRoy\", role = \"ctb\", comment = \"up to 2002\"), person(\"Deepayan\", \"Sarkar\", role = \"ctb\", comment = \"up to 2005\"), person(\"EISPACK authors\", role = \"ctb\", comment = \"src/rs.f\"), person(\"Siem\", \"Heisterkamp\", role = \"ctb\", comment = \"Author fixed sigma\"), person(\"Bert\", \"Van Willigen\",role = \"ctb\", comment = \"Programmer fixed sigma\"), person(\"Johannes\", \"Ranke\", role = \"ctb\", comment = \"varConstProp()\"), person(\"R Core Team\", email = \"R-core@R-project.org\", role = c(\"aut\", \"cre\"), comment = c(ROR = \"02zz1nj61\")))",
       "Contact": "see 'MailingList'",
       "Description": "Fit and compare Gaussian linear and nonlinear mixed-effects models.",
       "Depends": [
@@ -1984,9 +2003,9 @@
       "MailingList": "R-help@r-project.org",
       "URL": "https://svn.r-project.org/R-packages/trunk/nlme/",
       "NeedsCompilation": "yes",
-      "Author": "José Pinheiro [aut] (S version), Douglas Bates [aut] (up to 2007), Saikat DebRoy [ctb] (up to 2002), Deepayan Sarkar [ctb] (up to 2005), EISPACK authors [ctb] (src/rs.f), Siem Heisterkamp [ctb] (Author fixed sigma), Bert Van Willigen [ctb] (Programmer fixed sigma), Johannes Ranke [ctb] (varConstProp()), R Core Team [aut, cre]",
+      "Author": "José Pinheiro [aut] (S version), Douglas Bates [aut] (up to 2007), Saikat DebRoy [ctb] (up to 2002), Deepayan Sarkar [ctb] (up to 2005), EISPACK authors [ctb] (src/rs.f), Siem Heisterkamp [ctb] (Author fixed sigma), Bert Van Willigen [ctb] (Programmer fixed sigma), Johannes Ranke [ctb] (varConstProp()), R Core Team [aut, cre] (02zz1nj61)",
       "Maintainer": "R Core Team <R-core@R-project.org>",
-      "Repository": "RSPM"
+      "Repository": "CRAN"
     },
     "openssl": {
       "Package": "openssl",
@@ -2069,7 +2088,7 @@
     "perturbplan": {
       "Package": "perturbplan",
       "Version": "0.0.1",
-      "Source": "Local",
+      "Source": "GitHub",
       "Title": "Experimental Design and Power Analysis for Perturb-Seq Experiments",
       "Author": "Ziang Niu [aut, cre], Yihui He [aut], Eugene Katsevich [aut]",
       "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
@@ -2110,8 +2129,12 @@
         "R (>= 3.5)"
       ],
       "LazyData": "true",
-      "RemoteType": "local",
-      "RemoteUrl": "../perturbplan"
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "Katsevich-Lab",
+      "RemoteRepo": "perturbplan",
+      "RemoteRef": "v0.0.1",
+      "RemoteSha": "b4bbbe1de6228c2b6bd7425e830aa0b792c24fbd"
     },
     "pillar": {
       "Package": "pillar",
@@ -2643,7 +2666,7 @@
     },
     "rprojroot": {
       "Package": "rprojroot",
-      "Version": "2.1.0",
+      "Version": "2.1.1",
       "Source": "Repository",
       "Title": "Finding Files in Project Subdirectories",
       "Authors@R": "person(given = \"Kirill\", family = \"M\\u00fcller\", role = c(\"aut\", \"cre\"), email = \"kirill@cynkra.com\", comment = c(ORCID = \"0000-0002-1416-3412\"))",
@@ -2824,6 +2847,45 @@
       "Author": "Winston Chang [aut, cre] (ORCID: <https://orcid.org/0000-0002-1576-2126>), Joe Cheng [aut], JJ Allaire [aut], Carson Sievert [aut] (ORCID: <https://orcid.org/0000-0002-4958-2844>), Barret Schloerke [aut] (ORCID: <https://orcid.org/0000-0001-9986-114X>), Yihui Xie [aut], Jeff Allen [aut], Jonathan McPherson [aut], Alan Dipert [aut], Barbara Borges [aut], Posit Software, PBC [cph, fnd], jQuery Foundation [cph] (jQuery library and jQuery UI library), jQuery contributors [ctb, cph] (jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt), jQuery UI contributors [ctb, cph] (jQuery UI library; authors listed in inst/www/shared/jqueryui/AUTHORS.txt), Mark Otto [ctb] (Bootstrap library), Jacob Thornton [ctb] (Bootstrap library), Bootstrap contributors [ctb] (Bootstrap library), Twitter, Inc [cph] (Bootstrap library), Prem Nawaz Khan [ctb] (Bootstrap accessibility plugin), Victor Tsaran [ctb] (Bootstrap accessibility plugin), Dennis Lembree [ctb] (Bootstrap accessibility plugin), Srinivasu Chakravarthula [ctb] (Bootstrap accessibility plugin), Cathy O'Connor [ctb] (Bootstrap accessibility plugin), PayPal, Inc [cph] (Bootstrap accessibility plugin), Stefan Petre [ctb, cph] (Bootstrap-datepicker library), Andrew Rowls [ctb, cph] (Bootstrap-datepicker library), Brian Reavis [ctb, cph] (selectize.js library), Salmen Bejaoui [ctb, cph] (selectize-plugin-a11y library), Denis Ineshin [ctb, cph] (ion.rangeSlider library), Sami Samhuri [ctb, cph] (Javascript strftime library), SpryMedia Limited [ctb, cph] (DataTables library), John Fraser [ctb, cph] (showdown.js library), John Gruber [ctb, cph] (showdown.js library), Ivan Sagalaev [ctb, cph] (highlight.js library), R Core Team [ctb, cph] (tar implementation from R)",
       "Maintainer": "Winston Chang <winston@posit.co>",
       "Repository": "CRAN"
+    },
+    "shinyWidgets": {
+      "Package": "shinyWidgets",
+      "Version": "0.9.0",
+      "Source": "Repository",
+      "Title": "Custom Inputs Widgets for Shiny",
+      "Authors@R": "c( person(\"Victor\", \"Perrier\", email = \"victor.perrier@dreamrs.fr\", role = c(\"aut\", \"cre\", \"cph\")), person(\"Fanny\", \"Meyer\", role = \"aut\"), person(\"David\", \"Granjon\", role = \"aut\"), person(\"Ian\", \"Fellows\", role = \"ctb\", comment = \"Methods for mutating vertical tabs & updateMultiInput\"), person(\"Wil\", \"Davis\", role = \"ctb\", comment = \"numericRangeInput function\"), person(\"Spencer\", \"Matthews\", role = \"ctb\", comment = \"autoNumeric methods\"), person(family = \"JavaScript and CSS libraries authors\", role = c(\"ctb\", \"cph\"), comment = \"All authors are listed in LICENSE.md\") )",
+      "Description": "Collection of custom input controls and user interface components for 'Shiny' applications.  Give your applications a unique and colorful style !",
+      "URL": "https://github.com/dreamRs/shinyWidgets, https://dreamrs.github.io/shinyWidgets/",
+      "BugReports": "https://github.com/dreamRs/shinyWidgets/issues",
+      "License": "GPL-3",
+      "Encoding": "UTF-8",
+      "LazyData": "true",
+      "RoxygenNote": "7.3.2",
+      "Depends": [
+        "R (>= 3.1.0)"
+      ],
+      "Imports": [
+        "bslib",
+        "sass",
+        "shiny (>= 1.6.0)",
+        "htmltools (>= 0.5.1)",
+        "jsonlite",
+        "grDevices",
+        "rlang"
+      ],
+      "Suggests": [
+        "testthat",
+        "covr",
+        "ggplot2",
+        "DT",
+        "scales",
+        "shinydashboard",
+        "shinydashboardPlus"
+      ],
+      "NeedsCompilation": "no",
+      "Author": "Victor Perrier [aut, cre, cph], Fanny Meyer [aut], David Granjon [aut], Ian Fellows [ctb] (Methods for mutating vertical tabs & updateMultiInput), Wil Davis [ctb] (numericRangeInput function), Spencer Matthews [ctb] (autoNumeric methods), JavaScript and CSS libraries authors [ctb, cph] (All authors are listed in LICENSE.md)",
+      "Maintainer": "Victor Perrier <victor.perrier@dreamrs.fr>",
+      "Repository": "RSPM"
     },
     "shinycssloaders": {
       "Package": "shinycssloaders",
