@@ -512,10 +512,12 @@ transform_perturbplan_to_plotting_format <- function(standardized_results, confi
   feasible_designs <- raw_data[raw_data$overall_power >= target_power, ]
 
   if (nrow(feasible_designs) > 0) {
-    # For minimum_fold_change: find MAXIMUM value (closest to 1) among feasible designs
+    # For fold change: find value closest to 1 among feasible designs
     # For other parameters: find MINIMUM value among feasible designs
     if (minimizing_param == "minimum_fold_change") {
-      optimal_idx <- which.max(feasible_designs[[param_column]])
+      # Find fold change closest to 1 (minimum absolute distance from 1)
+      distances_from_1 <- abs(feasible_designs[[param_column]] - 1)
+      optimal_idx <- which.min(distances_from_1)
     } else {
       optimal_idx <- which.min(feasible_designs[[param_column]])
     }
