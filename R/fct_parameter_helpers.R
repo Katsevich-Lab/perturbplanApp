@@ -11,8 +11,8 @@
 get_parameter_ranges <- function(biological_system = "K562", experimental_platform = "10x Chromium v3") {
   # Default ranges - can be customized based on biological system and platform
   list(
-    cells_per_target = list(min = 50, max = 5000, step = 50, default = 1000),
-    reads_per_cell = list(min = 500, max = 20000, step = 500, default = 5000),
+    cells_per_target = list(min = 20, max = 2000, step = 20, default = 1000),
+    reads_per_cell = list(min = 1000, max = 150000, step = 1000, default = 5000),
     TPM_threshold = list(min = 0, max = 100, step = 1, default = 10),
     fold_change = list(min = 1.1, max = 2, step = 0.1, default = 1.5)
   )

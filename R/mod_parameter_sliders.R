@@ -214,8 +214,8 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
 
       # Define all 4 power-determining parameters (use sidebar values)
       all_power_params <- list(
-        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 10000, value = cells_value, step = 20),
-        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 500000, value = reads_value, step = 1000),
+        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 2000, value = cells_value, step = 20),
+        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 150000, value = reads_value, step = 1000),
         TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 200, value = tpm_value, step = 1),
         minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = fc_range$min, max = fc_range$max, value = fc_value, step = 0.02)
       )

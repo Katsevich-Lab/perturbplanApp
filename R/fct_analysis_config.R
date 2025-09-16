@@ -279,8 +279,8 @@ extract_parameter_range <- function(workflow_config, parameter_name) {
 #' @noRd
 get_default_parameter_range <- function(parameter_name) {
   switch(parameter_name,
-    "cells" = seq(100, 2000, 50),
-    "reads" = seq(1000, 10000, 200),
+    "cells" = seq(20, 2000, 20),
+    "reads" = seq(1000, 150000, 1000),
     "TPM_threshold" = seq(5, 50, 1),
     "fold_change" = seq(1.2, 2.0, 0.1),
     # Fallback

@@ -458,13 +458,13 @@ mod_design_options_server <- function(id, app_state = NULL){
       # Only show parameters that are not being minimized or optimized automatically
       if (!param_configs$cells_per_target$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "cells_per_target", "Cells per target:", param_configs$cells_per_target, 1000, 50, 5000, 50)
+          create_param_ui(ns, "cells_per_target", "Cells per target:", param_configs$cells_per_target, 1000, 20, 2000, 20)
         ))
       }
 
       if (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "reads_per_cell", "Reads per cell:", param_configs$reads_per_cell, 5000, 500, 20000, 500)
+          create_param_ui(ns, "reads_per_cell", "Reads per cell:", param_configs$reads_per_cell, 5000, 1000, 150000, 1000)
         ))
       }
 

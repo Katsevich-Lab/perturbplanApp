@@ -115,16 +115,16 @@ mod_experimental_setup_ui <- function(id) {
           tags$div(
             id = ns("cells_fixed_div"),
             style = "display: none; margin-bottom: 15px;",
-            numericInput(ns("cells_fixed"), "Cells per target:", 
-                        value = 1000, min = 20, max = 10000, step = 20)
+            numericInput(ns("cells_fixed"), "Cells per target:",
+                        value = 1000, min = 20, max = 2000, step = 20)
           ),
           
           # Reads per cell fixed value (conditional)
           tags$div(
             id = ns("reads_per_cell_fixed_div"),
             style = "display: none; margin-bottom: 15px;",
-            numericInput(ns("reads_per_cell_fixed"), "Sequenced reads per cell:", 
-                        value = 5000, min = 1000, max = 500000, step = 1000)
+            numericInput(ns("reads_per_cell_fixed"), "Sequenced reads per cell:",
+                        value = 5000, min = 1000, max = 150000, step = 1000)
           )
         )
       )
