@@ -9,7 +9,9 @@ app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
-    
+    # Add Google Analytics
+    use_google_analytics("G-W43V869MN9"),
+
     # Dashboard page layout (matching original perturbplan app exactly)
     dashboardPage(
       header = dashboardHeader(
