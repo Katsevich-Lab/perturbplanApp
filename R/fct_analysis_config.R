@@ -99,7 +99,7 @@ detect_workflow_scenario <- function(workflow_config) {
           category = "power_cost_multi",
           minimizing_parameter = "TPM_threshold",
           title = "Minimize TPM Threshold",
-          description = "Power+cost optimization with TPM, cells, and reads varying"
+          description = "optimization over TPM, with cells and reads varying"
         ))
       } else if (length(varying_params) == 1) {
         # Workflows 6-7: TPM + one other parameter
@@ -129,7 +129,7 @@ detect_workflow_scenario <- function(workflow_config) {
           category = "power_cost_multi",
           minimizing_parameter = "minimum_fold_change",
           title = "Minimize Fold Change",
-          description = "Power+cost optimization with fold change, cells, and reads varying"
+          description = "optimization over fold change, with cells and reads varying"
         ))
       } else if (length(varying_params) == 1) {
         other_param_ui <- varying_params[1]

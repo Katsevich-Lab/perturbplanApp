@@ -29,7 +29,7 @@ mod_cost_info_ui <- function(id) {
       
       # Two column layout for cost inputs
       tags$div(
-        style = "display: flex; gap: 20px;",
+        style = "display: flex; gap: 10px;",
         
         # Cost per cell column
         tags$div(

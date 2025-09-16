@@ -553,7 +553,11 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   # Create interactive plotly version
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
-      title = list(text = workflow_info$title, font = list(size = 16)),
+      title = list(
+        text = paste0("<b>", workflow_info$title, "</b><br>",
+                     "<sup>", workflow_info$description, "</sup>"),
+        font = list(size = 14)
+      ),
       xaxis = list(title = "Cells per target"),
       yaxis = list(title = "Reads per cell"),
       showlegend = TRUE,
@@ -754,8 +758,11 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   # Convert to interactive plotly
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
-      title = list(text = paste("Constrained Minimization:", param_name, "vs Cost"),
-                   font = list(size = 16)),
+      title = list(
+        text = paste0("<b>", workflow_info$title, "</b><br>",
+                     "<sup>", workflow_info$description, "</sup>"),
+        font = list(size = 14)
+      ),
       xaxis = list(title = x_axis_label),
       yaxis = list(title = "Total Cost ($)"),
       showlegend = TRUE,
