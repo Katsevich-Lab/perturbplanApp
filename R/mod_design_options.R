@@ -66,44 +66,39 @@ mod_design_options_ui <- function(id) {
               style = "margin-top: 15px;",
               tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
 
-              # Two column layout for cost inputs
+              # Two row cost inputs layout
               tags$div(
-                style = "display: flex; gap: 15px;",
-
-                # Cost per cell column
+                # Cost per cell row
                 tags$div(
-                  style = "flex: 1;",
-                  tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                  style = "margin-bottom: 10px;",
+                  tags$span("Cost/cell ($): ", style = "font-weight: normal; margin-right: 5px;"),
                   tags$div(
-                    class = "cost-input-container",
-                    style = "position: relative;",
-                    tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                    style = "display: inline-block; width: 80px;",
                     numericInput(ns("cost_per_cell"),
                                 label = NULL,
                                 value = 0.086,
                                 min = 0,
-                                step = 0.001,
-                                width = "100%")
+                                step = 0.001)
                   )
                 ),
-
-                # Cost per million reads column
+                # Cost per million reads row
                 tags$div(
-                  style = "flex: 1;",
-                  tags$label("Cost per million reads:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                  tags$span("Cost/million reads ($): ", style = "font-weight: normal; margin-right: 5px;"),
                   tags$div(
-                    class = "cost-input-container",
-                    style = "position: relative;",
-                    tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                    style = "display: inline-block; width: 80px;",
                     numericInput(ns("cost_per_million_reads"),
                                 label = NULL,
                                 value = 0.374,
                                 min = 0,
-                                step = 0.001,
-                                width = "100%")
+                                step = 0.001)
                   )
                 )
-              )
+              ),
+              # CSS to override Shiny's default input width
+              tags$style(paste0(
+                "#", ns("cost_per_cell"), " { width: 80px !important; }",
+                "#", ns("cost_per_million_reads"), " { width: 80px !important; }"
+              ))
             )
           )
         ),
@@ -130,44 +125,39 @@ mod_design_options_ui <- function(id) {
             style = "display: none; margin-top: 15px;",
             tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
 
-            # Two column layout for cost inputs
+            # Two row cost inputs layout
             tags$div(
-              style = "display: flex; gap: 15px;",
-
-              # Cost per cell column
+              # Cost per cell row
               tags$div(
-                style = "flex: 1;",
-                tags$label("Cost per cell:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                style = "margin-bottom: 10px;",
+                tags$span("Cost/cell ($): ", style = "font-weight: normal; margin-right: 5px;"),
                 tags$div(
-                  class = "cost-input-container",
-                  style = "position: relative;",
-                  tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                  style = "display: inline-block; width: 80px;",
                   numericInput(ns("cost_per_cell_min"),
                               label = NULL,
                               value = 0.086,
                               min = 0,
-                              step = 0.001,
-                              width = "100%")
+                              step = 0.001)
                 )
               ),
-
-              # Cost per million reads column
+              # Cost per million reads row
               tags$div(
-                style = "flex: 1;",
-                tags$label("Cost per million reads:", style = "font-weight: normal; margin-bottom: 5px; display: block;"),
+                tags$span("Cost/million reads ($): ", style = "font-weight: normal; margin-right: 5px;"),
                 tags$div(
-                  class = "cost-input-container",
-                  style = "position: relative;",
-                  tags$span("$", style = "position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #666; z-index: 10;"),
+                  style = "display: inline-block; width: 80px;",
                   numericInput(ns("cost_per_million_reads_min"),
                               label = NULL,
                               value = 0.374,
                               min = 0,
-                              step = 0.001,
-                              width = "100%")
+                              step = 0.001)
                 )
               )
-            )
+            ),
+            # CSS to override Shiny's default input width
+            tags$style(paste0(
+              "#", ns("cost_per_cell_min"), " { width: 80px !important; }",
+              "#", ns("cost_per_million_reads_min"), " { width: 80px !important; }"
+            ))
           )
         ),
 

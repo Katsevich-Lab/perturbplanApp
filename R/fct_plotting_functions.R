@@ -663,7 +663,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     } else {
       round(combined_data$parameter_value, 2)
     }, "<br>",
-    "Cost: $", scales::comma(combined_data$total_cost), "<br>",
+    "Cost: $", scales::comma(combined_data$total_cost, accuracy = 1), "<br>",
     "Power: ", scales::percent(combined_data$power, accuracy = 0.1)
   )
 
@@ -715,7 +715,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     } else {
       round(optimal_points$parameter_value, 2)
     }, "<br>",
-    "Cost: $", scales::comma(optimal_points$total_cost), "<br>",
+    "Cost: $", scales::comma(optimal_points$total_cost, accuracy = 1), "<br>",
     "Power: ", scales::percent(optimal_points$power, accuracy = 0.1)
   )
 

@@ -29,37 +29,41 @@ mod_cost_info_ui <- function(id) {
       
       # Two column layout for cost inputs
       tags$div(
-        style = "display: flex; gap: 10px;",
+        style = "display: flex; gap: 5px;",
         
         # Cost per cell column
         tags$div(
-          style = "flex: 1;",
-          tags$label("Cost per cell:", style = "font-weight: bold; margin-bottom: 5px; display: block;"),
+          style = "flex: 0 0 auto; max-width: 120px;",
+          tags$label("Cost/cell:", style = "font-weight: bold; margin-bottom: 5px; display: block;"),
           tags$div(
             class = "cost-input-container",
             tags$span("$", class = "dollar-sign"),
-            numericInput(ns("cost_per_cell"), 
-                        label = NULL,
-                        value = 0.01, 
-                        min = 0, 
-                        step = 0.001,
-                        width = "100%")
+            tags$div(
+              numericInput(ns("cost_per_cell"),
+                          label = NULL,
+                          value = 0.01,
+                          min = 0,
+                          step = 0.001),
+              tags$style(paste0("#", ns("cost_per_cell"), " { width: 80px !important; max-width: 80px !important; }"))
+            )
           )
         ),
         
-        # Cost per million reads column  
+        # Cost per million reads column
         tags$div(
-          style = "flex: 1;",
-          tags$label("Cost per million reads:", style = "font-weight: bold; margin-bottom: 5px; display: block;"),
+          style = "flex: 0 0 auto; max-width: 150px;",
+          tags$label("Cost/million reads:", style = "font-weight: bold; margin-bottom: 5px; display: block;"),
           tags$div(
             class = "cost-input-container",
             tags$span("$", class = "dollar-sign"),
-            numericInput(ns("cost_per_million_reads"), 
-                        label = NULL,
-                        value = 1.00, 
-                        min = 0, 
-                        step = 0.01,
-                        width = "100%")
+            tags$div(
+              numericInput(ns("cost_per_million_reads"),
+                          label = NULL,
+                          value = 1.00,
+                          min = 0,
+                          step = 0.01),
+              tags$style(paste0("#", ns("cost_per_million_reads"), " { width: 80px !important; max-width: 80px !important; }"))
+            )
           )
         )
       )
