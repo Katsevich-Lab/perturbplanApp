@@ -333,3 +333,290 @@ create_cost_inputs_ui <- function(ns, id_prefix, cost_per_cell_default = 0.086, 
     ))
   )
 }
+
+# =============================================================================
+# Progressive Disclosure Helper Functions
+# =============================================================================
+#
+# These functions support the unified progressive disclosure controller
+# by extracting validation logic and UI control operations from the
+# complex observer chain in mod_design_options_server().
+
+#' Validate Step 1 Completion
+#'
+#' @description Checks if Step 1 (optimization type selection) is complete
+#'
+#' @param optimization_type Character. The selected optimization type
+#'
+#' @return Logical. TRUE if Step 1 is complete, FALSE otherwise
+#'
+#' @noRd
+is_step1_complete <- function(optimization_type) {
+  # Stub implementation
+  !is.null(optimization_type) && optimization_type != ""
+}
+
+#' Validate Power Input Readiness
+#'
+#' @description Checks if power input is ready for Step 2 visibility
+#'
+#' @param target_power Numeric. The target power value
+#'
+#' @return Logical. TRUE if power input is valid, FALSE otherwise
+#'
+#' @noRd
+is_power_input_ready <- function(target_power) {
+  # Stub implementation
+  !is.null(target_power) && is.numeric(target_power) && target_power > 0
+}
+
+#' Validate Cost Budget Readiness
+#'
+#' @description Checks if cost budget is ready when required for power+cost optimization
+#'
+#' @param cost_budget Numeric. The cost budget value
+#' @param optimization_type Character. The optimization type
+#'
+#' @return Logical. TRUE if cost budget is valid or not required, FALSE otherwise
+#'
+#' @noRd
+is_cost_budget_ready <- function(cost_budget, optimization_type) {
+  # Stub implementation
+  if (optimization_type == "power_cost") {
+    !is.null(cost_budget) && is.numeric(cost_budget) && cost_budget > 0
+  } else {
+    TRUE  # Not required for power-only optimization
+  }
+}
+
+#' Validate Step 2 Completion
+#'
+#' @description Checks if Step 2 (minimization target selection) is complete
+#'
+#' @param minimization_target Character. The selected minimization target
+#'
+#' @return Logical. TRUE if Step 2 is complete, FALSE otherwise
+#'
+#' @noRd
+is_step2_complete <- function(minimization_target) {
+  # Stub implementation
+  !is.null(minimization_target) && minimization_target != ""
+}
+
+#' Check if Workflow Has Varying Parameters
+#'
+#' @description Determines if the current workflow has any varying parameters
+#' that require Step 3 controls
+#'
+#' @param optimization_type Character. The optimization type
+#' @param minimization_target Character. The minimization target
+#'
+#' @return Logical. TRUE if workflow has varying parameters, FALSE otherwise
+#'
+#' @noRd
+workflow_has_varying_parameters <- function(optimization_type, minimization_target) {
+  # Stub implementation - will use existing get_param_configs logic
+  if (is.null(optimization_type) || optimization_type == "" ||
+      is.null(minimization_target) || minimization_target == "") {
+    return(FALSE)
+  }
+
+  param_configs <- get_param_configs(optimization_type, minimization_target)
+
+  # Check if any parameters are varying type
+  any(
+    param_configs$cells_per_target$type == "varying",
+    param_configs$reads_per_cell$type == "varying",
+    param_configs$TPM_threshold$type == "varying",
+    param_configs$minimum_fold_change$type == "varying"
+  )
+}
+
+#' Check if All Parameter Controls Are Set
+#'
+#' @description Validates that all required parameter controls have been set
+#' for summary generation
+#'
+#' @param optimization_type Character. The optimization type
+#' @param minimization_target Character. The minimization target
+#' @param parameter_controls List. The current parameter control inputs
+#'
+#' @return Logical. TRUE if all required controls are set, FALSE otherwise
+#'
+#' @noRd
+are_all_parameter_controls_set <- function(optimization_type, minimization_target, parameter_controls) {
+  # Real implementation
+  if (is.null(optimization_type) || optimization_type == "" ||
+      is.null(minimization_target) || minimization_target == "") {
+    return(FALSE)
+  }
+
+  # For workflows without varying parameters, all controls are "set" by default
+  if (!workflow_has_varying_parameters(optimization_type, minimization_target)) {
+    return(TRUE)
+  }
+
+  # For workflows with varying parameters, check that control inputs exist
+  param_configs <- get_param_configs(optimization_type, minimization_target)
+
+  # Check each varying parameter has a control input set
+  if (param_configs$cells_per_target$type == "varying" &&
+      (is.null(parameter_controls$cells_per_target_control) || parameter_controls$cells_per_target_control == "")) {
+    return(FALSE)
+  }
+
+  if (param_configs$reads_per_cell$type == "varying" &&
+      (is.null(parameter_controls$reads_per_cell_control) || parameter_controls$reads_per_cell_control == "")) {
+    return(FALSE)
+  }
+
+  if (param_configs$TPM_threshold$type == "varying" &&
+      (is.null(parameter_controls$TPM_control) || parameter_controls$TPM_control == "")) {
+    return(FALSE)
+  }
+
+  if (param_configs$minimum_fold_change$type == "varying" &&
+      (is.null(parameter_controls$fc_control) || parameter_controls$fc_control == "")) {
+    return(FALSE)
+  }
+
+  return(TRUE)
+}
+
+#' Toggle Power/Cost Inputs Section
+#'
+#' @description Shows or hides the power/cost inputs section and handles
+#' conditional cost budget visibility
+#'
+#' @param session Shiny session object
+#' @param show Logical. Whether to show the section
+#' @param optimization_type Character. The optimization type (for cost budget logic)
+#'
+#' @return NULL (side effects only)
+#'
+#' @noRd
+#'
+#' @importFrom shinyjs show hide
+toggle_power_cost_inputs <- function(session, show, optimization_type = NULL) {
+  # Real implementation
+  if (show) {
+    shinyjs::show("power_cost_inputs")
+    # Handle cost budget conditional visibility
+    if (!is.null(optimization_type) && optimization_type == "power_cost") {
+      shinyjs::show("cost_budget_div")
+    } else {
+      shinyjs::hide("cost_budget_div")
+    }
+  } else {
+    shinyjs::hide("power_cost_inputs")
+    # Cascade hide downstream sections when power/cost inputs are hidden
+    shinyjs::hide("step2")
+    shinyjs::hide("step3")
+  }
+}
+
+#' Toggle Step 2 Section
+#'
+#' @description Shows or hides Step 2 and cascades to Step 3 when hiding
+#'
+#' @param session Shiny session object
+#' @param show Logical. Whether to show Step 2
+#'
+#' @return NULL (side effects only)
+#'
+#' @noRd
+#'
+#' @importFrom shinyjs show hide
+toggle_step2_section <- function(session, show) {
+  # Real implementation
+  if (show) {
+    shinyjs::show("step2")
+  } else {
+    shinyjs::hide("step2")
+    shinyjs::hide("step3")  # Cascade hide Step 3
+    shinyjs::hide("design_summary")  # Also hide summary
+  }
+}
+
+#' Toggle Step 3 Section
+#'
+#' @description Shows or hides Step 3 based on varying parameters availability
+#'
+#' @param session Shiny session object
+#' @param show Logical. Whether to show Step 3
+#'
+#' @return NULL (side effects only)
+#'
+#' @noRd
+#'
+#' @importFrom shinyjs show hide
+toggle_step3_section <- function(session, show) {
+  # Real implementation
+  if (show) {
+    shinyjs::show("step3")
+  } else {
+    shinyjs::hide("step3")
+    shinyjs::hide("design_summary")  # Hide summary when Step 3 is hidden
+  }
+}
+
+#' Toggle Cost Minimization Parameters
+#'
+#' @description Shows or hides cost minimization parameters based on target
+#'
+#' @param session Shiny session object
+#' @param show Logical. Whether to show cost minimization parameters
+#'
+#' @return NULL (side effects only)
+#'
+#' @noRd
+#'
+#' @importFrom shinyjs show hide
+toggle_cost_minimization_params <- function(session, show) {
+  # Real implementation
+  if (show) {
+    shinyjs::show("cost_minimization_params")
+  } else {
+    shinyjs::hide("cost_minimization_params")
+  }
+}
+
+#' Toggle Design Summary Section
+#'
+#' @description Shows or hides the design problem summary and updates content
+#'
+#' @param session Shiny session object
+#' @param show Logical. Whether to show the summary
+#' @param summary_text Character. The summary text to display (if showing)
+#'
+#' @return NULL (side effects only)
+#'
+#' @noRd
+#'
+#' @importFrom shinyjs show hide html
+toggle_design_summary <- function(session, show, summary_text = NULL) {
+  # Real implementation
+  if (show && !is.null(summary_text)) {
+    shinyjs::html("summary_text", summary_text)
+    shinyjs::show("design_summary")
+  } else {
+    shinyjs::hide("design_summary")
+  }
+}
+
+#' Reset Input Values
+#'
+#' @description Resets target power and cost budget to default values
+#'
+#' @param session Shiny session object
+#'
+#' @return NULL (side effects only)
+#'
+#' @noRd
+#'
+#' @importFrom shiny updateNumericInput
+reset_input_values <- function(session) {
+  # Real implementation
+  updateNumericInput(session, "target_power", value = 0.8)
+  updateNumericInput(session, "cost_budget", value = 10000)
+}
