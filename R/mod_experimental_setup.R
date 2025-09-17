@@ -27,20 +27,17 @@ mod_experimental_setup_ui <- function(id) {
       tags$div(
         id = ns("experimental-content"),
         class = "collapsible-content",
-        selectInput(ns("biological_system"), "Biological system:", 
-                   choices = list("K562" = "K562", 
-                                "A549" = "A549", 
-                                "THP-1" = "THP-1", 
-                                "T CD8" = "T_CD8", 
-                                "iPSC" = "iPSC", 
-                                "iPSC neuron" = "iPSC_neuron", 
-                                "Other" = "Other"),
+        selectInput(ns("biological_system"), "Biological system:",
+                   choices = list("K562" = "K562",
+                                "A549" = "A549",
+                                "THP-1" = "THP-1",
+                                "T CD8" = "T_CD8",
+                                "iPSC" = "iPSC",
+                                "iPSC neuron" = "iPSC_neuron",
+                                "Custom" = "Custom"),
                    selected = "K562"),
-        selectInput(ns("pilot_data_choice"), "Reference expression data:",
-                   choices = c("Built-in" = "default", "Custom" = "custom"),
-                   selected = "default"),
         conditionalPanel(
-          condition = paste0("input['", ns("pilot_data_choice"), "'] != 'default'"),
+          condition = paste0("input['", ns("biological_system"), "'] == 'Custom'"),
           tags$div(
             class = "file-upload-info",
             tags$small(
@@ -148,28 +145,7 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
     # No parameter manager integration - sidebar operates independently
     
     
-    # Logic for "Other" biological system selection
-    observeEvent(input$biological_system, {
-      if (input$biological_system == "Other") {
-        # When "Other" is selected, automatically set to custom data
-        updateSelectInput(session, "pilot_data_choice", selected = "custom")
-      }
-    })
-    
-    # Logic for custom pilot data choice
-    observeEvent(input$pilot_data_choice, {
-      if (input$pilot_data_choice == "custom") {
-        # When custom is selected, automatically set biological system to "Other" if it's not already
-        if (input$biological_system != "Other") {
-          updateSelectInput(session, "biological_system", selected = "Other")
-        }
-      } else {
-        # When built-in is selected, revert from "Other" to a default system if needed
-        if (input$biological_system == "Other") {
-          updateSelectInput(session, "biological_system", selected = "K562")
-        }
-      }
-    })
+    # No additional logic needed - upload section automatically shows when "Custom" is selected
     
     # Track previous optimization type for mode switching
     previous_mode <- reactiveVal(NULL)
@@ -238,7 +214,7 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
     # File upload processing with validation
     observeEvent(input$pilot_data_file, {
       req(input$pilot_data_file)
-      req(input$pilot_data_choice == "custom")
+      req(input$biological_system == "Custom")
       
       # Check file size (limit to 50MB for RDS files)
       file_size_mb <- file.size(input$pilot_data_file$datapath) / (1024^2)
@@ -328,9 +304,9 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
       })
     })
     
-    # Reset pilot data when choice changes to default or file is removed
+    # Reset pilot data when biological system changes from Custom or file is removed
     observe({
-      should_reset <- is.null(input$pilot_data_file) || input$pilot_data_choice == "default"
+      should_reset <- is.null(input$pilot_data_file) || input$biological_system != "Custom"
       
       if (should_reset) {
         custom_pilot_data(NULL)
@@ -339,9 +315,9 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
       }
     })
     
-    # Pilot data reactive - updated to include custom data handling
+    # Pilot data reactive - updated to use biological_system logic
     pilot_data <- reactive({
-      if (input$pilot_data_choice == "custom" && !is.null(input$pilot_data_file)) {
+      if (input$biological_system == "Custom" && !is.null(input$pilot_data_file)) {
         list(
           type = "custom",
           file_path = input$pilot_data_file$datapath,
@@ -360,7 +336,6 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
     experimental_config <- reactive({
       list(
         biological_system = input$biological_system,
-        pilot_data_choice = input$pilot_data_choice,
         pilot_data = pilot_data(),
         # Fixed value inputs (only provide defaults if inputs are actually hidden/NULL)
         cells_fixed = input$cells_fixed,
