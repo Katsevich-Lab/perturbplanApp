@@ -47,6 +47,14 @@ mod_advanced_choices_ui <- function(id) {
                     choices = c("Complement cells" = "complement",
                                "Non-targeting cells" = "nt_cells"),
                     selected = "complement"),
+
+        # Explanatory text for MOI=1 control group restriction
+        tags$div(
+          id = ns("moi_explanation"),
+          style = "display: none; margin-top: 5px;",
+          tags$small("(automatically selected when MOI=1)",
+                    style = "color: #888; font-style: italic;")
+        ),
         
         # FDR target level (moved from analysis choices)
         numericInput(ns("fdr_target"), "FDR target level:", 0.1, 0.001, 0.5, 0.001)
@@ -77,9 +85,11 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
           # Force to non-targeting cells and disable input
           updateSelectInput(session, "control_group", selected = "nt_cells")
           shinyjs::disable("control_group")
+          shinyjs::show("moi_explanation")
         } else {
           # Enable input for user selection
           shinyjs::enable("control_group")
+          shinyjs::hide("moi_explanation")
         }
       }
     }, ignoreInit = TRUE)
