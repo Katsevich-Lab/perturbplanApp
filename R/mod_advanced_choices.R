@@ -7,7 +7,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div strong numericInput moduleServer reactive
+#' @importFrom shiny NS tagList tags div strong numericInput selectInput moduleServer reactive updateSelectInput
 mod_advanced_choices_ui <- function(id) {
   ns <- NS(id)
   
@@ -64,10 +64,26 @@ mod_advanced_choices_ui <- function(id) {
 #' @return Reactive list containing advanced parameter configuration
 #' 
 #' @noRd 
-mod_advanced_choices_server <- function(id, app_state = NULL){
+mod_advanced_choices_server <- function(id, app_state = NULL, experimental_config = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-    
+
+    # Observer to handle MOI=1 control group logic
+    observeEvent(experimental_config(), {
+      if (!is.null(experimental_config()) && !is.null(experimental_config()$MOI)) {
+        moi_value <- experimental_config()$MOI
+
+        if (moi_value == 1) {
+          # Force to non-targeting cells and disable input
+          updateSelectInput(session, "control_group", selected = "nt_cells")
+          shinyjs::disable("control_group")
+        } else {
+          # Enable input for user selection
+          shinyjs::enable("control_group")
+        }
+      }
+    }, ignoreInit = TRUE)
+
     # Return advanced choices configuration
     advanced_choices_config <- reactive({
       list(

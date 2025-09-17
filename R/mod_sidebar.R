@@ -61,7 +61,7 @@ mod_sidebar_server <- function(id, app_state = NULL){
     design_config <- mod_design_options_server("design_options", app_state)
     experimental_config <- mod_experimental_setup_server("experimental_setup", design_config, app_state)
     analysis_config <- mod_analysis_choices_server("analysis_choices", design_config, app_state)
-    advanced_config <- mod_advanced_choices_server("advanced_choices", app_state)
+    advanced_config <- mod_advanced_choices_server("advanced_choices", app_state, experimental_config)
     effect_sizes_config <- mod_effect_sizes_server("effect_sizes", design_config, app_state)
 
     # Track optimization mode changes to reset plan button
