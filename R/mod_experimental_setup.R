@@ -16,17 +16,17 @@ mod_experimental_setup_ui <- function(id) {
   # Experimental setup (collapsible) - ADAPTED FROM ORIGINAL
   tagList(
     tags$div(
-      style = "border-radius: 4px; margin-bottom: 5px;",
+      class = "collapsible-section",
       tags$div(
         id = ns("exp-header"),
-        style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
+        class = "collapsible-header",
         onclick = paste0("toggleSection('", ns("experimental-content"), "', '", ns("exp-chevron"), "')"),
-        tags$i(id = ns("exp-chevron"), class = "fa fa-chevron-right", style = "margin-right: 8px;"),
+        tags$i(id = ns("exp-chevron"), class = "fa fa-chevron-right"),
         tags$strong("Experimental choices")
       ),
       tags$div(
         id = ns("experimental-content"),
-        style = "padding: 15px;",
+        class = "collapsible-content",
         selectInput(ns("biological_system"), "Biological system:", 
                    choices = list("K562" = "K562", 
                                 "A549" = "A549", 
@@ -43,11 +43,9 @@ mod_experimental_setup_ui <- function(id) {
           condition = paste0("input['", ns("pilot_data_choice"), "'] != 'default'"),
           tags$div(
             class = "file-upload-info",
-            style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
             tags$small(
-              tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-              tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters",
-              style = "font-size: 11px;"
+              tags$i(class = "fa fa-info-circle"),
+              tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters"
             )
           ),
           fileInput(ns("pilot_data_file"), 
@@ -60,9 +58,8 @@ mod_experimental_setup_ui <- function(id) {
             condition = "output.pilot_data_uploaded",
             ns = ns,
             tags$div(
-              class = "file-upload-success",
-              style = "border-radius: 4px; padding: 8px; margin: 10px 0 15px 0; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724;",
-              tags$i(class = "fa fa-check-circle", style = "margin-right: 5px; color: #28a745;"),
+              class = "file-upload-success status-success",
+              tags$i(class = "fa fa-check-circle"),
               htmlOutput(ns("pilot_data_status"), inline = TRUE)
             )
           )
@@ -70,8 +67,8 @@ mod_experimental_setup_ui <- function(id) {
         
         # Perturbation choices section (integrated from mod_perturbation_choices)
         tags$div(
-          style = "margin-top: 20px; padding-top: 15px; border-top: 1px solid #E3E6EA;",
-          tags$h5("Perturbation Setup", style = "color: #2E4A62; margin-bottom: 15px;"),
+          class = "section-divider",
+          tags$h5("Perturbation Setup", class = "step-header"),
           
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
@@ -109,12 +106,13 @@ mod_experimental_setup_ui <- function(id) {
         # Fixed value inputs for experimental parameters (conditional)
         tags$div(
           id = ns("experimental_fixed_params"),
-          style = "margin-top: 20px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
+          class = "section-divider",
+          style = "display: none;",
           
           # Cells per target fixed value (conditional)
           tags$div(
             id = ns("cells_fixed_div"),
-            style = "display: none; margin-bottom: 15px;",
+            style = "display: none;",
             numericInput(ns("cells_fixed"), "Cells per target:",
                         value = 1000, min = 20, max = 2000, step = 20)
           ),
@@ -122,7 +120,7 @@ mod_experimental_setup_ui <- function(id) {
           # Reads per cell fixed value (conditional)
           tags$div(
             id = ns("reads_per_cell_fixed_div"),
-            style = "display: none; margin-bottom: 15px;",
+            style = "display: none;",
             numericInput(ns("reads_per_cell_fixed"), "Sequenced reads per cell:",
                         value = 5000, min = 1000, max = 150000, step = 1000)
           )
@@ -203,8 +201,8 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
       if (!is.null(config) && !is.null(config$parameter_controls)) {
         cells_type <- config$parameter_controls$cells_per_target$type
         reads_type <- config$parameter_controls$reads_per_cell$type
-        
-        # Show cells fixed input when cells parameter is set to "fixed" 
+
+        # Show cells fixed input when cells parameter is set to "fixed"
         # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode
         if (!is.null(cells_type) && cells_type == "fixed") {
           shinyjs::show("cells_fixed_div")
@@ -214,7 +212,7 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
         }
         
         # Show reads fixed input when reads parameter is set to "fixed"
-        # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode  
+        # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode
         if (!is.null(reads_type) && reads_type == "fixed") {
           shinyjs::show("reads_per_cell_fixed_div")
           shinyjs::show("experimental_fixed_params")
@@ -223,7 +221,7 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
         }
         
         # Hide the entire section if neither parameter is fixed
-        if ((is.null(cells_type) || cells_type != "fixed") && 
+        if ((is.null(cells_type) || cells_type != "fixed") &&
             (is.null(reads_type) || reads_type != "fixed")) {
           shinyjs::hide("experimental_fixed_params")
         }

@@ -66,7 +66,6 @@ mod_sidebar_server <- function(id, app_state = NULL){
 
     # Track optimization mode changes to reset plan button
     previous_mode <- reactiveVal(NULL)
-    plan_count_adjustment <- reactiveVal(0)  # Adjustment to subtract from plan button count
     actual_plan_clicks <- reactiveVal(0)     # Track actual plan clicks (not restart clicks)
     observe({
       current_mode <- design_config()$optimization_type

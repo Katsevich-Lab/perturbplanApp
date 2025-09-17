@@ -256,7 +256,7 @@ get_resolved_param_controls <- function(opt_type, target, input_vals) {
     ),
     reads_per_cell = list(
       type = reads_type,
-      fixed_value = if(!is.null(input_vals$reads_fixed)) input_vals$reads_fixed else NULL
+      fixed_value = if(!is.null(input_vals$reads_per_cell_fixed)) input_vals$reads_per_cell_fixed else NULL
     ),
     TPM_threshold = list(
       type = TPM_type,
