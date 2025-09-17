@@ -64,8 +64,6 @@ mod_experimental_setup_ui <- function(id) {
         
         # Perturbation choices section (integrated from mod_perturbation_choices)
         tags$div(
-          class = "section-divider",
-          tags$h5("Perturbation Setup", class = "step-header"),
           
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
@@ -103,7 +101,6 @@ mod_experimental_setup_ui <- function(id) {
         # Fixed value inputs for experimental parameters (conditional)
         tags$div(
           id = ns("experimental_fixed_params"),
-          class = "section-divider",
           style = "display: none;",
           
           # Cells per target fixed value (conditional)
