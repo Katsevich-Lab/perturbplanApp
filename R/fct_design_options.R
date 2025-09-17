@@ -268,3 +268,68 @@ get_resolved_param_controls <- function(opt_type, target, input_vals) {
     )
   )
 }
+
+#' Create Cost Parameters UI
+#'
+#' @description Creates a standardized cost parameters input section with
+#' cost per cell and cost per million reads inputs.
+#'
+#' @param ns Function. Namespace function from the module
+#' @param id_prefix Character. Prefix for input IDs (e.g., "cost_per_cell", "cost_per_cell_min")
+#' @param cost_per_cell_default Numeric. Default value for cost per cell input
+#' @param cost_per_million_reads_default Numeric. Default value for cost per million reads input
+#'
+#' @return Shiny UI element with cost parameter inputs
+#'
+#' @noRd
+#'
+#' @importFrom shiny tags div span numericInput
+create_cost_inputs_ui <- function(ns, id_prefix, cost_per_cell_default = 0.086, cost_per_million_reads_default = 0.374) {
+  cost_per_cell_id <- paste0(id_prefix, "_cost_per_cell")
+  cost_per_million_reads_id <- paste0(id_prefix, "_cost_per_million_reads")
+
+  # Remove prefix from cost_per_cell_id if it's redundant
+  if (id_prefix == "cost_per_cell") {
+    cost_per_cell_id <- "cost_per_cell"
+    cost_per_million_reads_id <- "cost_per_million_reads"
+  } else if (id_prefix == "cost_per_cell_min") {
+    cost_per_cell_id <- "cost_per_cell_min"
+    cost_per_million_reads_id <- "cost_per_million_reads_min"
+  }
+
+  tags$div(
+    # Two row cost inputs layout
+    tags$div(
+      # Cost per cell row
+      tags$div(
+        style = "margin-bottom: 10px;",
+        tags$span("Cost/cell ($): ", style = "font-weight: normal; margin-right: 5px;"),
+        tags$div(
+          style = "display: inline-block; width: 80px;",
+          numericInput(ns(cost_per_cell_id),
+                      label = NULL,
+                      value = cost_per_cell_default,
+                      min = 0,
+                      step = 0.001)
+        )
+      ),
+      # Cost per million reads row
+      tags$div(
+        tags$span("Cost/million reads ($): ", style = "font-weight: normal; margin-right: 5px;"),
+        tags$div(
+          style = "display: inline-block; width: 80px;",
+          numericInput(ns(cost_per_million_reads_id),
+                      label = NULL,
+                      value = cost_per_million_reads_default,
+                      min = 0,
+                      step = 0.001)
+        )
+      )
+    ),
+    # CSS to override Shiny's default input width
+    tags$style(paste0(
+      "#", ns(cost_per_cell_id), " { width: 80px !important; }",
+      "#", ns(cost_per_million_reads_id), " { width: 80px !important; }"
+    ))
+  )
+}

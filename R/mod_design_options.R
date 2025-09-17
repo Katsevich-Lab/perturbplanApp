@@ -66,39 +66,8 @@ mod_design_options_ui <- function(id) {
               style = "margin-top: 15px;",
               tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
 
-              # Two row cost inputs layout
-              tags$div(
-                # Cost per cell row
-                tags$div(
-                  style = "margin-bottom: 10px;",
-                  tags$span("Cost/cell ($): ", style = "font-weight: normal; margin-right: 5px;"),
-                  tags$div(
-                    style = "display: inline-block; width: 80px;",
-                    numericInput(ns("cost_per_cell"),
-                                label = NULL,
-                                value = 0.086,
-                                min = 0,
-                                step = 0.001)
-                  )
-                ),
-                # Cost per million reads row
-                tags$div(
-                  tags$span("Cost/million reads ($): ", style = "font-weight: normal; margin-right: 5px;"),
-                  tags$div(
-                    style = "display: inline-block; width: 80px;",
-                    numericInput(ns("cost_per_million_reads"),
-                                label = NULL,
-                                value = 0.374,
-                                min = 0,
-                                step = 0.001)
-                  )
-                )
-              ),
-              # CSS to override Shiny's default input width
-              tags$style(paste0(
-                "#", ns("cost_per_cell"), " { width: 80px !important; }",
-                "#", ns("cost_per_million_reads"), " { width: 80px !important; }"
-              ))
+              # Cost inputs using helper function
+              create_cost_inputs_ui(ns, "cost_per_cell")
             )
           )
         ),
@@ -125,39 +94,8 @@ mod_design_options_ui <- function(id) {
             style = "display: none; margin-top: 15px;",
             tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
 
-            # Two row cost inputs layout
-            tags$div(
-              # Cost per cell row
-              tags$div(
-                style = "margin-bottom: 10px;",
-                tags$span("Cost/cell ($): ", style = "font-weight: normal; margin-right: 5px;"),
-                tags$div(
-                  style = "display: inline-block; width: 80px;",
-                  numericInput(ns("cost_per_cell_min"),
-                              label = NULL,
-                              value = 0.086,
-                              min = 0,
-                              step = 0.001)
-                )
-              ),
-              # Cost per million reads row
-              tags$div(
-                tags$span("Cost/million reads ($): ", style = "font-weight: normal; margin-right: 5px;"),
-                tags$div(
-                  style = "display: inline-block; width: 80px;",
-                  numericInput(ns("cost_per_million_reads_min"),
-                              label = NULL,
-                              value = 0.374,
-                              min = 0,
-                              step = 0.001)
-                )
-              )
-            ),
-            # CSS to override Shiny's default input width
-            tags$style(paste0(
-              "#", ns("cost_per_cell_min"), " { width: 80px !important; }",
-              "#", ns("cost_per_million_reads_min"), " { width: 80px !important; }"
-            ))
+            # Cost inputs using helper function
+            create_cost_inputs_ui(ns, "cost_per_cell_min")
           )
         ),
 
@@ -350,8 +288,6 @@ mod_design_options_server <- function(id, app_state = NULL){
       }
     })
 
-    # Summary generation now handled by fct_design_options.R
-
     # Dynamic parameter controls generation
     output$dynamic_params <- renderUI({
       opt_type <- input$optimization_type
@@ -403,10 +339,6 @@ mod_design_options_server <- function(id, app_state = NULL){
         do.call(tagList, param_uis)
       )
     })
-
-    # Parameter configuration now handled by fct_design_options.R
-
-    # Parameter UI creation now handled by fct_design_options.R
 
     # Business Logic: Update cost availability and clear Step 2 when Step 1 changes
     observe({
@@ -577,8 +509,6 @@ mod_design_options_server <- function(id, app_state = NULL){
         }
       }
     })
-
-    # Parameter control resolution now handled by fct_design_options.R
 
     # Return structured design configuration
     design_config <- reactive({
