@@ -209,3 +209,74 @@
   border-color: rgba(255, 255, 255, 0.2);
   margin: var(--space-md) 0;
 }
+
+/* Design Options Module Components */
+/* Step Headers */
+.step-header {
+  color: var(--section-header);
+  margin-bottom: var(--space-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.step-header-large {
+  color: var(--section-header);
+  margin-bottom: var(--space-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Section Dividers */
+.section-divider {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* Hidden Sections with Spacing */
+.hidden-section {
+  display: none;
+}
+
+.hidden-section-with-spacing {
+  display: none;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.hidden-section-with-margin {
+  display: none;
+  margin-top: var(--space-sm);
+}
+
+.hidden-section-with-large-margin {
+  display: none;
+  margin-top: var(--space-lg);
+}
+
+/* Cost Parameter Section */
+.cost-params-section {
+  margin-top: var(--space-md);
+}
+
+/* Design Problem Summary */
+.design-summary {
+  display: none;
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  background-color: var(--light-bg);
+  border-left: 4px solid var(--section-header);
+  border-radius: var(--border-radius);
+}
+
+.design-summary-title {
+  color: var(--section-header);
+  margin-bottom: 8px;
+  display: block;
+  font-weight: var(--font-weight-bold);
+}
+
+.design-summary-text {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+}

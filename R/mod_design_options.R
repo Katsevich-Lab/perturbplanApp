@@ -15,22 +15,22 @@ mod_design_options_ui <- function(id) {
   # Design Options (collapsible) - NEW CONSTRAINT-DRIVEN SECTION
   tagList(
     tags$div(
-      style = "border-radius: 4px; margin-bottom: 5px;",
+      class = "collapsible-section",
       tags$div(
         id = ns("design-header"),
-        style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
+        class = "collapsible-header",
         onclick = paste0("toggleSection('", ns("design-content"), "', '", ns("design-chevron"), "')"),
-        tags$i(id = ns("design-chevron"), class = "fa fa-chevron-down", style = "margin-right: 8px;"),
+        tags$i(id = ns("design-chevron"), class = "fa fa-chevron-down"),
         tags$strong("Design problem")
       ),
       tags$div(
         id = ns("design-content"),
-        style = "padding: 15px;",
+        class = "collapsible-content",
 
         # Step 1: Optimization Constraints
         tags$div(
           id = ns("step1"),
-          tags$h5("Step 1: Optimization Constraints", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+          tags$h5("Step 1: Optimization Constraints", class = "step-header-large"),
           selectInput(ns("optimization_type"), NULL,
                      choices = list(
                        "Select constraint type..." = "",
@@ -38,17 +38,17 @@ mod_design_options_ui <- function(id) {
                        "Constrain power and cost" = "power_cost"
                      ),
                      selected = ""),
-          style = "margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;"
+          class = "section-divider"
         ),
 
         # Power and Cost Requirements (initially hidden)
         tags$div(
           id = ns("power_cost_inputs"),
-          style = "display: none; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;",
+          class = "hidden-section-with-spacing",
 
           # Target Power Input (always shown when constraint type is selected)
           tags$div(
-            tags$h6("Target Power:", style = "color: #4A6B82; margin-bottom: 5px; font-weight: bold;"),
+            tags$h6("Target Power:", class = "step-header"),
             numericInput(ns("target_power"), NULL,
                         value = 0.8, min = 0.1, max = 0.99, step = 0.05)
           ),
@@ -56,15 +56,15 @@ mod_design_options_ui <- function(id) {
           # Cost Budget Input (only shown for power + cost constraints)
           tags$div(
             id = ns("cost_budget_div"),
-            style = "display: none; margin-top: 10px;",
-            tags$h6("Cost Budget ($):", style = "color: #4A6B82; margin-bottom: 5px; font-weight: bold;"),
+            class = "hidden-section-with-margin",
+            tags$h6("Cost Budget ($):", class = "step-header"),
             numericInput(ns("cost_budget"), NULL,
                         value = 10000, min = 100, max = 1000000, step = 500),
 
             # Cost parameters (below cost budget)
             tags$div(
-              style = "margin-top: 15px;",
-              tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+              class = "cost-params-section",
+              tags$h6("Cost Parameters:", class = "step-header"),
 
               # Cost inputs using helper function
               create_cost_inputs_ui(ns, "cost_per_cell")
@@ -75,8 +75,8 @@ mod_design_options_ui <- function(id) {
         # Step 2: Minimization Target (initially hidden)
         tags$div(
           id = ns("step2"),
-          style = "display: none; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #E3E6EA;",
-          tags$h5("Step 2: Minimization Target", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+          class = "hidden-section-with-spacing",
+          tags$h5("Step 2: Minimization Target", class = "step-header-large"),
           selectInput(ns("minimization_target"), NULL,
                      choices = list(
                        "Select what to minimize..." = "",
@@ -91,8 +91,8 @@ mod_design_options_ui <- function(id) {
           # Cost parameters for cost minimization (only shown when minimizing total cost)
           tags$div(
             id = ns("cost_minimization_params"),
-            style = "display: none; margin-top: 15px;",
-            tags$h6("Cost Parameters:", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+            class = "hidden-section-with-large-margin",
+            tags$h6("Cost Parameters:", class = "step-header"),
 
             # Cost inputs using helper function
             create_cost_inputs_ui(ns, "cost_per_cell_min")
@@ -102,7 +102,7 @@ mod_design_options_ui <- function(id) {
         # Step 3: Parameter Control (initially hidden)
         tags$div(
           id = ns("step3"),
-          style = "display: none;",
+          class = "hidden-section",
           # Dynamic parameter controls with conditional title
           uiOutput(ns("dynamic_params"))
         ),
@@ -110,12 +110,12 @@ mod_design_options_ui <- function(id) {
         # Design Problem Summary (appears after Step 3 is completed)
         tags$div(
           id = ns("design_summary"),
-          style = "display: none; margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #4A6B82; border-radius: 4px;",
+          class = "design-summary",
           tags$div(
-            tags$strong("Your Design Problem:", style = "color: #4A6B82; margin-bottom: 8px; display: block;"),
+            tags$strong("Your Design Problem:", class = "design-summary-title"),
             tags$div(
               id = ns("summary_text"),
-              style = "font-size: 14px; line-height: 1.4; color: #333;"
+              class = "design-summary-text"
             )
           )
         )
@@ -335,7 +335,7 @@ mod_design_options_server <- function(id, app_state = NULL){
 
       # Show title only when there are parameters to display
       tagList(
-        tags$h5("Step 3: Varying parameters", style = "color: #4A6B82; margin-bottom: 10px; font-weight: bold;"),
+        tags$h5("Step 3: Varying parameters", class = "step-header-large"),
         do.call(tagList, param_uis)
       )
     })
