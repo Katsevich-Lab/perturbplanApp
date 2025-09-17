@@ -135,233 +135,64 @@ mod_experimental_setup_ui <- function(id) {
 mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-    
+
     # ========================================================================
     # SIDEBAR MODULE - INDEPENDENT FROM SLIDERS
     # ========================================================================
     # No parameter manager integration - sidebar operates independently
-    
-    
-    # No additional logic needed - upload section automatically shows when "Custom" is selected
-    
+
+    # Get default values from centralized configuration
+    defaults <- get_experimental_defaults()
+
     # Track previous optimization type for mode switching
     previous_mode <- reactiveVal(NULL)
     
-    # Conditional display logic for fixed value inputs
+    # Conditional display logic for fixed value inputs - using extracted functions
     observe({
       config <- design_config()
-      
-      # Check if optimization mode has changed - if so, refresh UI state
-      if (!is.null(config) && !is.null(config$optimization_type)) {
-        current_mode <- config$optimization_type
-        
-        # If mode switched, reset all fixed parameter inputs
-        if (!is.null(previous_mode()) && previous_mode() != current_mode) {
-          # Reset fixed value inputs when switching modes
-          updateNumericInput(session, "cells_fixed", value = 1000)
-          updateNumericInput(session, "reads_per_cell_fixed", value = 5000)
-          
-          # Hide all fixed parameter sections initially
-          shinyjs::hide("experimental_fixed_params")
-          shinyjs::hide("cells_fixed_div")
-          shinyjs::hide("reads_per_cell_fixed_div")
-        }
-        
-        # Update previous mode tracker
-        previous_mode(current_mode)
-      }
-      
-      if (!is.null(config) && !is.null(config$parameter_controls)) {
-        cells_type <- config$parameter_controls$cells_per_target$type
-        reads_type <- config$parameter_controls$reads_per_cell$type
 
-        # Show cells fixed input when cells parameter is set to "fixed"
-        # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode
-        if (!is.null(cells_type) && cells_type == "fixed") {
-          shinyjs::show("cells_fixed_div")
-          shinyjs::show("experimental_fixed_params")
-        } else {
-          shinyjs::hide("cells_fixed_div")
-        }
-        
-        # Show reads fixed input when reads parameter is set to "fixed"
-        # This includes both user-selected "fixed" and auto-determined "fixed" in power-only mode
-        if (!is.null(reads_type) && reads_type == "fixed") {
-          shinyjs::show("reads_per_cell_fixed_div")
-          shinyjs::show("experimental_fixed_params")
-        } else {
-          shinyjs::hide("reads_per_cell_fixed_div")
-        }
-        
-        # Hide the entire section if neither parameter is fixed
-        if ((is.null(cells_type) || cells_type != "fixed") &&
-            (is.null(reads_type) || reads_type != "fixed")) {
-          shinyjs::hide("experimental_fixed_params")
-        }
-      } else {
-        shinyjs::hide("experimental_fixed_params")
-        shinyjs::hide("cells_fixed_div")
-        shinyjs::hide("reads_per_cell_fixed_div")
-      }
+      # Handle optimization mode changes
+      handle_mode_change(session, config, previous_mode, defaults)
+
+      # Update fixed parameter visibility
+      parameter_controls <- if (!is.null(config)) config$parameter_controls else NULL
+      update_fixed_parameter_visibility(session, parameter_controls)
     })
     
     # Custom pilot data reactive value
     custom_pilot_data <- reactiveVal(NULL)
     
-    # File upload processing with validation
+    # File upload processing - using extracted function
     observeEvent(input$pilot_data_file, {
       req(input$pilot_data_file)
-      req(input$biological_system == "Custom")
-      
-      # Check file size (limit to 50MB for RDS files)
-      file_size_mb <- file.size(input$pilot_data_file$datapath) / (1024^2)
-      if (file_size_mb > 50) {
-        showNotification(
-          paste("File size (", round(file_size_mb, 1), "MB) exceeds the 50MB limit. Please use a smaller dataset."),
-          type = "error", duration = 10
-        )
-        custom_pilot_data(NULL)
-        output$pilot_data_uploaded <- reactive(FALSE)
-        outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
-        return()
-      }
-      
-      tryCatch({
-        # Read the uploaded RDS file
-        file_ext <- tolower(tools::file_ext(input$pilot_data_file$name))
-        
-        if (file_ext == "rds") {
-          # Read RDS file
-          uploaded_data <- readRDS(input$pilot_data_file$datapath)
-          
-          # Validate the pilot data structure
-          validation_result <- validate_custom_pilot_data(uploaded_data, input$pilot_data_file$name)
-          
-          if (validation_result$valid) {
-            # Store validated pilot data
-            custom_pilot_data(validation_result$data)
-            
-            # Create success message with summary and warnings
-            status_msg <- validation_result$summary
-            if (length(validation_result$warnings) > 0) {
-              warning_msg <- paste0("<br/><em style='color:orange;'>", 
-                                  paste(validation_result$warnings, collapse = "<br/>"), 
-                                  "</em>")
-              status_msg <- paste0(status_msg, warning_msg)
-            }
-            
-            # Update status display
-            output$pilot_data_status <- renderUI({
-              HTML(status_msg)
-            })
-            
-            output$pilot_data_uploaded <- reactive(TRUE)
-            outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
-            
-          } else {
-            # Show validation errors
-            error_msg <- paste0("Validation failed:<br/>", 
-                              paste(validation_result$errors, collapse = "<br/>"))
-            
-            output$pilot_data_status <- renderUI({
-              HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
-            })
-            
-            custom_pilot_data(NULL)
-            output$pilot_data_uploaded <- reactive(FALSE)
-            outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
-          }
-          
-        } else {
-          showNotification("Please upload an RDS file with the required pilot data structure", type = "error")
-          custom_pilot_data(NULL)
-          output$pilot_data_uploaded <- reactive(FALSE)
-          outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
-        }
-        
-      }, error = function(e) {
-        # Enhanced error handling for different types of errors
-        error_msg <- if (grepl("cannot open the connection", e$message, ignore.case = TRUE)) {
-          "Cannot read the uploaded file. Please ensure it's a valid RDS file."
-        } else if (grepl("magic number", e$message, ignore.case = TRUE) || grepl("format", e$message, ignore.case = TRUE)) {
-          "File appears to be corrupted or not a valid RDS file. Please check the file format."
-        } else if (grepl("version", e$message, ignore.case = TRUE)) {
-          "RDS file was created with a newer version of R. Please re-save the file with your current R version."
-        } else {
-          paste("Error reading pilot data file:", e$message)
-        }
-        
-        showNotification(error_msg, type = "error", duration = 10)
-        output$pilot_data_status <- renderUI({
-          HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
-        })
-        custom_pilot_data(NULL)
-        output$pilot_data_uploaded <- reactive(FALSE)
-        outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
-      })
+      handle_file_upload(session, input$pilot_data_file, input$biological_system,
+                        custom_pilot_data, output, defaults)
     })
     
     # Reset pilot data when biological system changes from Custom or file is removed
     observe({
       should_reset <- is.null(input$pilot_data_file) || input$biological_system != "Custom"
-      
+
       if (should_reset) {
-        custom_pilot_data(NULL)
-        output$pilot_data_uploaded <- reactive(FALSE)
-        outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
+        reset_pilot_data_status(session, custom_pilot_data, output)
       }
     })
     
-    # Pilot data reactive - updated to use biological_system logic
+    # Pilot data reactive - using extracted function
     pilot_data <- reactive({
-      if (input$biological_system == "Custom" && !is.null(input$pilot_data_file)) {
-        list(
-          type = "custom",
-          file_path = input$pilot_data_file$datapath,
-          file_name = input$pilot_data_file$name,
-          data = custom_pilot_data()  # Include validated data
-        )
-      } else {
-        list(
-          type = "default",
-          biological_system = input$biological_system
-        )
-      }
+      build_pilot_data_config(input$biological_system, input$pilot_data_file, custom_pilot_data())
     })
-    
-    # Return experimental setup configuration (now includes perturbation choices)
+
+    # Return experimental setup configuration - using extracted function
     experimental_config <- reactive({
-      list(
-        biological_system = input$biological_system,
-        pilot_data = pilot_data(),
-        # Fixed value inputs (only provide defaults if inputs are actually hidden/NULL)
-        cells_fixed = input$cells_fixed,
-        reads_per_cell_fixed = input$reads_per_cell_fixed,
-        # Perturbation choices (integrated from mod_perturbation_choices)
-        MOI = input$MOI %||% 10,
-        num_targets = input$num_targets %||% 100,
-        gRNAs_per_target = input$gRNAs_per_target %||% 4,
-        non_targeting_gRNAs = input$non_targeting_gRNAs %||% 10,
-        timestamp = Sys.time()
-      )
+      assemble_experimental_config(input, pilot_data(), defaults)
     })
     
-    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+    # INPUT FREEZING: Disable all inputs in Phase 2 - using extracted function
     observeEvent(app_state$phase, {
       if (!is.null(app_state)) {
         inputs_disabled <- (app_state$phase == 2)
-        
-        # Core experimental inputs that should be disabled in Phase 2
-        shinyjs::toggleState("biological_system", condition = !inputs_disabled)
-        shinyjs::toggleState("pilot_data_choice", condition = !inputs_disabled)
-        shinyjs::toggleState("pilot_data_upload", condition = !inputs_disabled)
-        shinyjs::toggleState("MOI", condition = !inputs_disabled)
-        shinyjs::toggleState("num_targets", condition = !inputs_disabled)
-        shinyjs::toggleState("gRNAs_per_target", condition = !inputs_disabled)
-        shinyjs::toggleState("non_targeting_gRNAs", condition = !inputs_disabled)
-        shinyjs::toggleState("cells_fixed", condition = !inputs_disabled)
-        shinyjs::toggleState("reads_per_cell_fixed", condition = !inputs_disabled)
-        
+        toggle_input_states(session, inputs_disabled)
         # Note: Section headers remain functional for collapse/expand
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
