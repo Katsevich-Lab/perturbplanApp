@@ -131,33 +131,6 @@ mod_design_options_server <- function(id, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    # Progressive disclosure: Show steps sequentially
-    observe({
-      # Power/cost inputs appear when optimization type is selected
-      if (!is.null(input$optimization_type) && input$optimization_type != "") {
-        shinyjs::show("power_cost_inputs")
-
-        # Show cost budget input only for power + cost constraints
-        if (input$optimization_type == "power_cost") {
-          shinyjs::show("cost_budget_div")
-        } else {
-          shinyjs::hide("cost_budget_div")
-        }
-      } else {
-        shinyjs::hide("power_cost_inputs")
-        shinyjs::hide("step2")
-        shinyjs::hide("step3")
-      }
-    })
-
-    # Reset power and cost inputs when constraint type changes
-    observe({
-      input$optimization_type
-
-      # Reset the inputs when constraint type changes
-      updateNumericInput(session, "target_power", value = 0.8)
-      updateNumericInput(session, "cost_budget", value = 10000)
-    })
 
     # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
     observeEvent(app_state$phase, {
@@ -184,109 +157,96 @@ mod_design_options_server <- function(id, app_state = NULL){
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+    # PHASE 3.1: Progressive State Reactive
+    # Centralized state calculation for unified progressive disclosure controller
+    progressive_state <- reactive({
+      # Calculate basic validations first
+      step1_complete <- is_step1_complete(input$optimization_type)
+      power_ready <- is_power_input_ready(input$target_power)
+      cost_ready <- is_cost_budget_ready(input$cost_budget, input$optimization_type)
+      step2_complete <- is_step2_complete(input$minimization_target)
+      step3_has_controls <- workflow_has_varying_parameters(input$optimization_type, input$minimization_target)
+
+      # Return complete state object
+      list(
+        # Basic validations
+        step1_complete = step1_complete,
+        power_ready = power_ready,
+        cost_ready = cost_ready,
+        step2_complete = step2_complete,
+        step3_has_controls = step3_has_controls,
+
+        # Combined conditions for step visibility
+        step2_ready = step1_complete && power_ready && cost_ready,
+        step3_ready = step2_complete && step3_has_controls,
+
+        # Special UI conditions
+        show_cost_budget = !is.null(input$optimization_type) && input$optimization_type == "power_cost",
+        show_cost_minimization = !is.null(input$minimization_target) && input$minimization_target == "cost",
+
+        # Summary readiness check
+        # Power-only workflows: show after step2 complete (no step3 needed)
+        # Power+cost workflows: show after step3 complete with all controls set
+        summary_ready = step2_complete &&
+                       (if (step3_has_controls) {
+                         are_all_parameter_controls_set(input$optimization_type, input$minimization_target, input)
+                       } else {
+                         TRUE  # No step3 needed for power-only workflows
+                       }),
+
+        # Current workflow context
+        optimization_type = input$optimization_type,
+        minimization_target = input$minimization_target
+      )
+    })
+
+    # Unified Progressive Disclosure Controller
+    # Centralized state management for all step visibility and UI updates
     observe({
-      # Step 2 appears ONLY when Step 1 is complete AND power (and cost if needed) inputs are provided
-      step1_complete <- !is.null(input$optimization_type) && input$optimization_type != ""
-      power_ready <- !is.null(input$target_power) && is.numeric(input$target_power) && input$target_power > 0
-      cost_ready <- TRUE  # Default to ready
+      state <- progressive_state()
 
-      # If power+cost is selected, also check cost budget
-      if (!is.null(input$optimization_type) && input$optimization_type == "power_cost") {
-        cost_ready <- !is.null(input$cost_budget) && is.numeric(input$cost_budget) && input$cost_budget > 0
-      }
+      # Step 1 → Power/Cost section visibility
+      toggle_power_cost_inputs(session, state$step1_complete, state$optimization_type)
 
-      # Step 2 only shows when Step 1 is complete AND inputs are ready
-      if (step1_complete && power_ready && cost_ready) {
-        shinyjs::show("step2")
+      # Step 1 + inputs ready → Step 2 visibility
+      toggle_step2_section(session, state$step2_ready)
+
+      # Step 2 + has controls → Step 3 visibility
+      toggle_step3_section(session, state$step3_ready)
+
+      # Cost minimization parameters (independent condition)
+      toggle_cost_minimization_params(session, state$show_cost_minimization)
+
+      # All conditions met → Design Summary
+      if (state$summary_ready) {
+        # Generate summary text using existing function
+        summary_text <- generate_design_summary(
+          opt_type = state$optimization_type,
+          target = state$minimization_target,
+          power = input$target_power,
+          cost_budget = input$cost_budget,
+          param_configs = if (!is.null(state$optimization_type) && !is.null(state$minimization_target)) {
+            get_param_configs(state$optimization_type, state$minimization_target)
+          } else NULL,
+          cells_per_target_control = input$cells_per_target_control,
+          reads_per_cell_control = input$reads_per_cell_control,
+          TPM_control = input$TPM_control,
+          fc_control = input$fc_control
+        )
+        toggle_design_summary(session, TRUE, summary_text)
       } else {
-        shinyjs::hide("step2")
-        shinyjs::hide("step3")
+        toggle_design_summary(session, FALSE)
       }
     })
 
+    # Input reset controller (separate concern)
     observe({
-      # Step 3 appears when minimization target is selected AND there are parameters to configure
-      if (!is.null(input$minimization_target) && input$minimization_target != "") {
-
-        # Check if there are any varying parameters to show
-        opt_type <- input$optimization_type
-        target <- input$minimization_target
-
-        if (!is.null(opt_type) && opt_type != "" && !is.null(target) && target != "") {
-          param_configs <- get_param_configs(opt_type, target)
-
-          # Count how many parameters need UI controls (only varying parameters)
-          has_controls <-
-            (param_configs$cells_per_target$type == "varying") ||
-            (param_configs$reads_per_cell$type == "varying") ||
-            (param_configs$TPM_threshold$type == "varying") ||
-            (param_configs$minimum_fold_change$type == "varying")
-
-          if (has_controls) {
-            shinyjs::show("step3")
-          } else {
-            shinyjs::hide("step3")
-          }
-        } else {
-          shinyjs::hide("step3")
-        }
-
-        # Show cost parameters if minimizing total cost
-        if (input$minimization_target == "cost") {
-          shinyjs::show("cost_minimization_params")
-        } else {
-          shinyjs::hide("cost_minimization_params")
-        }
-      } else {
-        shinyjs::hide("step3")
-        shinyjs::hide("cost_minimization_params")
-      }
+      input$optimization_type  # dependency trigger
+      reset_input_values(session)
     })
 
-    # Generate and display design problem summary (after Step 3)
-    observe({
-      # Trigger on parameter control changes
-      input$cells_per_target_control
-      input$reads_per_cell_control
-      input$TPM_control
-      input$fc_control
 
-      # Show summary only after all steps are completed and Step 3 is visible
-      if (!is.null(input$optimization_type) && input$optimization_type != "" &&
-          !is.null(input$minimization_target) && input$minimization_target != "" &&
-          !is.null(input$target_power) && input$target_power > 0) {
 
-        # Check if Step 3 has been shown (indicating parameter controls are set up)
-        step3_visible <- !is.null(input$minimization_target) && input$minimization_target != ""
-
-        if (step3_visible) {
-
-        # Get resolved parameter configurations for accurate summary
-        param_configs <- get_param_configs(input$optimization_type, input$minimization_target)
-
-          # Generate summary text based on workflow and current input states
-          summary_text <- generate_design_summary(
-            opt_type = input$optimization_type,
-            target = input$minimization_target,
-            power = input$target_power,
-            cost_budget = input$cost_budget,
-            param_configs = param_configs,
-            cells_per_target_control = input$cells_per_target_control,
-            reads_per_cell_control = input$reads_per_cell_control,
-            TPM_control = input$TPM_control,
-            fc_control = input$fc_control
-          )
-
-          # Update summary text and show the section
-          shinyjs::html("summary_text", summary_text)
-          shinyjs::show("design_summary")
-        } else {
-          shinyjs::hide("design_summary")
-        }
-      } else {
-        shinyjs::hide("design_summary")
-      }
-    })
 
     # Dynamic parameter controls generation
     output$dynamic_params <- renderUI({
