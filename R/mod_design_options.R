@@ -37,8 +37,7 @@ mod_design_options_ui <- function(id) {
                        "Constrain power only" = "power_only",
                        "Constrain power and cost" = "power_cost"
                      ),
-                     selected = ""),
-          class = "section-divider"
+                     selected = "")
         ),
 
         # Power and Cost Requirements (initially hidden)
