@@ -723,10 +723,10 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
               aes(x = parameter_value, y = total_cost,
                   color = solution_label),
               size = 0.6) +
-    suppressWarnings(geom_line(data = combined_data,
+    suppressWarnings(geom_point(data = combined_data,
               aes(x = parameter_value, y = total_cost,
                   color = solution_label, text = solution_tooltip),
-              size = 0.6)) +
+              size = 1)) +
     suppressWarnings(geom_point(data = optimal_points,
                aes(x = parameter_value, y = total_cost,
                    color = solution_label, text = point_tooltip),
