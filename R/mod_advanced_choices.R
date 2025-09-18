@@ -8,6 +8,7 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList tags div strong numericInput selectInput moduleServer reactive updateSelectInput
+#' @importFrom shinyjs show hide disable enable toggleState
 mod_advanced_choices_ui <- function(id) {
   ns <- NS(id)
   
@@ -26,23 +27,23 @@ mod_advanced_choices_ui <- function(id) {
         id = ns("advanced-content"),
         style = "padding: 15px;",
         
-        # gRNA variability (moved from effect sizes)
-        numericInput(ns("gRNA_variability"), 
-                    "gRNA variability:", 
-                    value = 0.15, 
-                    min = 0.1, 
-                    max = 5, 
+        # gRNA variability
+        numericInput(ns("gRNA_variability"),
+                    "gRNA variability:",
+                    value = 0.15,
+                    min = 0.1,
+                    max = 5,
                     step = 0.05),
-        
-        # Mapping efficiency (moved from experimental setup)
-        numericInput(ns("mapping_efficiency"), 
-                    "Mapping efficiency:", 
-                    value = 0.72, 
-                    min = 0.1, 
-                    max = 1.0, 
+
+        # Mapping efficiency
+        numericInput(ns("mapping_efficiency"),
+                    "Mapping efficiency:",
+                    value = 0.72,
+                    min = 0.1,
+                    max = 1.0,
                     step = 0.01),
-        
-        # Control group (moved from analysis choices)
+
+        # Control group
         selectInput(ns("control_group"), "Control group:",
                     choices = c("Complement cells" = "complement",
                                "Non-targeting cells" = "nt_cells"),
@@ -55,8 +56,8 @@ mod_advanced_choices_ui <- function(id) {
           tags$small("(automatically selected when MOI=1)",
                     style = "color: #888; font-style: italic;")
         ),
-        
-        # FDR target level (moved from analysis choices)
+
+        # FDR target level
         numericInput(ns("fdr_target"), "FDR target level:", 0.1, 0.001, 0.5, 0.001)
       )
     )
@@ -65,18 +66,23 @@ mod_advanced_choices_ui <- function(id) {
     
 #' advanced_choices Server Functions
 #'
-#' @description Server logic for advanced settings parameters
+#' @description Server logic for advanced settings parameters including MOI-based
+#' control group restrictions and input state management for dual-phase workflow
 #'
 #' @param id Module namespace ID
-#' 
+#' @param app_state Reactive containing application phase state for input freezing
+#' @param experimental_config Reactive containing experimental setup for MOI logic
+#'
 #' @return Reactive list containing advanced parameter configuration
-#' 
-#' @noRd 
+#'
+#' @noRd
 mod_advanced_choices_server <- function(id, app_state = NULL, experimental_config = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    # Observer to handle MOI=1 control group logic
+    # ============================================================================
+    # MOI-BASED CONTROL GROUP RESTRICTIONS
+    # ============================================================================
     observeEvent(experimental_config(), {
       if (!is.null(experimental_config()) && !is.null(experimental_config()$MOI)) {
         moi_value <- experimental_config()$MOI
@@ -94,7 +100,9 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
       }
     }, ignoreInit = TRUE)
 
-    # Return advanced choices configuration
+    # ============================================================================
+    # CONFIGURATION OUTPUT
+    # ============================================================================
     advanced_choices_config <- reactive({
       list(
         gRNA_variability = input$gRNA_variability,
@@ -104,28 +112,25 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
         timestamp = Sys.time()
       )
     })
-    
-    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+
+    # ============================================================================
+    # INPUT STATE MANAGEMENT
+    # ============================================================================
     observeEvent(app_state$phase, {
       if (!is.null(app_state)) {
         inputs_disabled <- (app_state$phase == 2)
-        
+
         # Core advanced inputs that should be disabled in Phase 2
         shinyjs::toggleState("gRNA_variability", condition = !inputs_disabled)
         shinyjs::toggleState("mapping_efficiency", condition = !inputs_disabled)
         shinyjs::toggleState("control_group", condition = !inputs_disabled)
         shinyjs::toggleState("fdr_target", condition = !inputs_disabled)
-        
+
         # Note: Section headers remain functional for collapse/expand
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
-    
+
     return(advanced_choices_config)
   })
 }
     
-## To be copied in the UI
-# mod_advanced_choices_ui("advanced_choices_1")
-    
-## To be copied in the server
-# mod_advanced_choices_server("advanced_choices_1")
