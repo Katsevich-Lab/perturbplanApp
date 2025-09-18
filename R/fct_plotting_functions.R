@@ -8,7 +8,7 @@
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline geom_area
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate geom_smooth geom_text
-#' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_linetype_discrete scale_color_viridis_c
+#' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_linetype_discrete scale_color_viridis_c coord_cartesian
 #' @importFrom plotly ggplotly layout config plot_ly
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma comma_format dollar_format
@@ -227,6 +227,7 @@ create_single_parameter_plots <- function(cached_results) {
         sapply(solutions_data, function(s) s$label)
       )
     ) +
+    coord_cartesian(ylim = c(NA, 1)) +  # Ensure y-axis shows power = 1 as maximum
     theme_bw() +
     labs(color = "Solution") +
     theme(plot.title = element_text(hjust = 0.5))
