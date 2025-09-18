@@ -51,7 +51,6 @@
   transition: width 0.3s ease-in-out;
   min-height: 100vh !important;
   height: 100vh !important;
-  position: relative;
 }
 
 .main-sidebar .sidebar {
@@ -407,9 +406,9 @@ html, body {
 
 /* Toggle button styling - positioned at right edge of sidebar */
 #simple-toggle {
-  position: absolute;
+  position: fixed;
   top: 50%;
-  right: -12px;
+  left: calc(var(--sidebar-width) - 12px);
   transform: translateY(-50%);
   background: white;
   border: 1px solid #ddd;
@@ -429,11 +428,7 @@ html, body {
 
 /* When sidebar is collapsed, position button at left edge */
 .main-sidebar.collapsed #simple-toggle {
-  position: fixed;
   left: 0px;
-  right: auto;
-  border-left: none;
-  border-radius: 0 8px 8px 0;
 }
 
 #simple-toggle:hover {
