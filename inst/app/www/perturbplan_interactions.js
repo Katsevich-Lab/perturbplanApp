@@ -64,7 +64,24 @@ window.SidebarCollapse = {
 
   init: function() {
     this.bindEvents();
+    // Ensure sidebar starts in expanded state
+    this.ensureExpandedState();
     console.log('Simple sidebar toggle initialized');
+  },
+
+  ensureExpandedState: function() {
+    var sidebar = $('.main-sidebar');
+    var contentWrapper = $('.content-wrapper');
+    var toggleButton = $('#simple-toggle');
+
+    // Remove any collapsed classes that might be applied
+    sidebar.removeClass('collapsed');
+    contentWrapper.removeClass('sidebar-collapsed');
+
+    // Ensure button shows correct direction for expanded state
+    toggleButton.text('◀');
+
+    console.log('Sidebar ensured to be in expanded state');
   },
 
   bindEvents: function() {
