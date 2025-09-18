@@ -14,9 +14,15 @@ mod_sidebar_ui <- function(id) {
   ns <- NS(id)
 
   dashboardSidebar(
+    # Sidebar toggle button (positioned at right edge)
+    tags$div(
+      id = "simple-toggle",
+      "◀"
+    ),
+
     # Parameter panels - make scrollable with collapsible sections
     tags$div(
-      style = "padding: 10px; max-height: 90vh; overflow-y: auto;",
+      style = "padding: 10px; max-height: 90vh; overflow-y: auto; position: relative;",
 
       # Design problem
       mod_design_options_ui(ns("design_options")),
