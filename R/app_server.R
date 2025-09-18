@@ -127,15 +127,24 @@ app_server <- function(input, output, session) {
 
   # Plot Download - Trigger download from results display module
   observeEvent(input$header_export_plot, {
-    # Use JavaScript to trigger the download link in the results display module
-    shinyjs::runjs("
-      var downloadLink = document.getElementById('display-export_plot');
-      if (downloadLink) {
-        downloadLink.click();
-      } else {
-        alert('No plot available for download. Please run an analysis first.');
-      }
-    ")
+    # Check if we have plot data available
+    plots <- plot_objects()
+
+    if (!is.null(plots) && !is.null(plots$plots) && !is.null(plots$plots$interactive_plot)) {
+      # Trigger the download by updating a reactive value that the download handler watches
+      shinyjs::runjs("
+        var downloadLink = document.getElementById('display-export_plot');
+        if (downloadLink) {
+          downloadLink.click();
+        }
+      ")
+    } else {
+      showNotification(
+        "No plot available for download. Please run an analysis first.",
+        type = "warning",
+        duration = 3
+      )
+    }
   })
 
   # ========================================================================

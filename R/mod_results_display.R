@@ -126,6 +126,13 @@ mod_results_display_ui <- function(id) {
             )
           )
         )
+      ),
+
+      # Download button for plot export (triggered from header)
+      tags$div(
+        id = ns("download_container"),
+        style = "position: absolute; top: -1000px; left: -1000px;",
+        downloadButton(ns("export_plot"), "Download Plot", style = "visibility: hidden;")
       )
     )
   )
@@ -146,6 +153,9 @@ mod_results_display_ui <- function(id) {
 #' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
+#' @importFrom plotly as_widget layout
+#' @importFrom htmlwidgets saveWidget
+#' @importFrom webshot webshot
 mod_results_display_server <- function(id, plot_objects, cached_results, user_config = reactive(NULL), app_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -332,7 +342,7 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     # Plot download using downloadHandler
     output$export_plot <- downloadHandler(
       filename = function() {
-        paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")
+        paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".html")
       },
       content = function(file) {
         req(plot_objects())
@@ -340,17 +350,21 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
         plots <- plot_objects()
 
         tryCatch({
-          # Get the static ggplot (not the interactive plotly version)
-          if (!is.null(plots$plots$main_plot)) {
-            # Save the ggplot as PNG with high resolution
-            ggsave(
-              filename = file,
-              plot = plots$plots$main_plot,
-              width = 12,
-              height = 8,
-              dpi = 300,
-              units = "in",
-              device = "png"
+          # Get the interactive plotly version and save as HTML
+          if (!is.null(plots$plots$interactive_plot)) {
+            # Create a taller version of the plot for download
+            taller_plot <- plots$plots$interactive_plot %>%
+              plotly::layout(
+                height = 700,  # Increase from 430 to 700 pixels
+                margin = list(t = 60, b = 80, l = 80, r = 40)  # Adjust margins for better spacing
+              )
+
+            # Save the plotly widget as interactive HTML file
+            htmlwidgets::saveWidget(
+              widget = plotly::as_widget(taller_plot),
+              file = file,
+              selfcontained = TRUE,
+              title = "PerturbPlan Interactive Plot"
             )
           } else {
             stop("No plot available for download")
@@ -362,18 +376,18 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
             type = "error",
             duration = 5
           )
-          # Create a minimal error plot if main plot fails
-          error_plot <- ggplot2::ggplot() +
-            ggplot2::annotate("text", x = 0.5, y = 0.5,
-                            label = "Plot generation failed",
-                            size = 6) +
-            ggplot2::theme_void()
-
-          ggplot2::ggsave(filename = file, plot = error_plot,
-                         width = 8, height = 6, dpi = 150, device = "png")
+          # Create a minimal error message in HTML format
+          error_html <- paste0(
+            "<!DOCTYPE html><html><head><title>Plot Error</title></head>",
+            "<body><h1>Plot Download Failed</h1>",
+            "<p>Error: ", e$message, "</p>",
+            "<p>Please try running the analysis again.</p>",
+            "</body></html>"
+          )
+          writeLines(error_html, file)
         })
       },
-      contentType = "image/png"
+      contentType = "text/html"
     )
 
     # No return needed - focused modules handle all coordination
