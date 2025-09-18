@@ -213,7 +213,7 @@ create_single_parameter_plots <- function(cached_results) {
         aes(x = parameter_value, y = power,
             color = solution_label,
             text = tooltip_text),
-        size = 3,
+        size = 2,
         shape = 18  # Diamond shape for optimal points
       ))
     }
@@ -522,7 +522,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
                                "Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"), "<br>",
                                "Power: ", scales::percent(achieved_power, accuracy = 0.1, na_default = "N/A"))),
-      size = 3,
+      size = 2,
       shape = 18
     ))
   }
@@ -731,7 +731,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     suppressWarnings(geom_point(data = optimal_points,
                aes(x = parameter_value, y = total_cost,
                    color = solution_label, text = point_tooltip),
-               size = 3, shape = 18)) +  # Diamond shape for optimal points
+               size = 2, shape = 18)) +  # Diamond shape for optimal points
     scale_x_log10(labels = scales::comma_format()) +
     scale_y_log10(labels = scales::comma_format(accuracy = 1)) +
     labs(title = paste(param_name, "vs Cost"),
