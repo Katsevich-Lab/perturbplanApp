@@ -228,7 +228,6 @@
 .section-divider {
   margin-bottom: var(--space-md);
   padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--border-light);
 }
 
 /* Hidden Sections with Spacing */
@@ -240,7 +239,6 @@
   display: none;
   margin-bottom: var(--space-md);
   padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--border-light);
 }
 
 .hidden-section-with-margin {

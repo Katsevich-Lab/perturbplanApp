@@ -26,7 +26,6 @@
 
 .section-divider {
   margin: var(--space-md) 0;
-  border-bottom: 1px solid var(--border-light);
 }
 
 /* Input Layout System */
