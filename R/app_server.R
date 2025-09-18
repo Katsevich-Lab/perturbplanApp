@@ -6,6 +6,7 @@
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @importFrom shiny bindCache renderUI req showModal modalDialog modalButton observeEvent
+#' @importFrom shinyjs runjs
 #' @importFrom magrittr %>%
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
@@ -124,28 +125,17 @@ app_server <- function(input, output, session) {
     ))
   })
 
-  # Plot Download - Under Development Dialog
+  # Plot Download - Trigger download from results display module
   observeEvent(input$header_export_plot, {
-    showModal(modalDialog(
-      title = tags$div(
-        icon("exclamation-triangle", style = "color: #f39c12; margin-right: 8px;"),
-        "Feature Under Development"
-      ),
-      tags$div(
-        style = "text-align: center; padding: 20px;",
-        tags$p(
-          "Plot download functionality is currently under development.",
-          style = "font-size: 16px; margin-bottom: 15px;"
-        ),
-        tags$p(
-          "This feature will be available in a future update.",
-          style = "color: #666; font-size: 14px;"
-        )
-      ),
-      footer = modalButton("OK"),
-      easyClose = TRUE,
-      fade = TRUE
-    ))
+    # Use JavaScript to trigger the download link in the results display module
+    shinyjs::runjs("
+      var downloadLink = document.getElementById('display-export_plot');
+      if (downloadLink) {
+        downloadLink.click();
+      } else {
+        alert('No plot available for download. Please run an analysis first.');
+      }
+    ")
   })
 
   # ========================================================================
