@@ -21,7 +21,6 @@
 .section-wrapper {
   padding: var(--section-padding);
   margin-bottom: var(--space-md);
-  border-bottom: 1px solid var(--border-light);
 }
 
 .section-divider {
@@ -134,7 +133,7 @@
 }
 
 .border-bottom-light {
-  border-bottom: 1px solid var(--border-light);
+  /* border-bottom removed for cleaner UI */
 }
 
 /* Scrollable Container */
