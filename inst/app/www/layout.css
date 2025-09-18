@@ -62,7 +62,6 @@
 .step-container {
   margin-bottom: var(--space-md);
   padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--border-light);
 }
 
 .step-header {
