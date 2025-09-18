@@ -61,7 +61,7 @@ mod_analysis_choices_ui <- function(id) {
         # CONSISTENT VARIABLE USAGE: TPM_threshold_fixed throughout
         tags$div(
           id = ns("TPM_threshold_fixed_div"),
-          style = "margin-top: 15px; padding-top: 15px; border-top: 1px solid #E3E6EA; display: none;",
+          style = "margin-top: 15px; padding-top: 15px; display: none;",
           numericInput(ns("TPM_threshold_fixed"), "TPM analysis threshold:",
                       value = 10, min = 1, max = 200, step = 1)
         )
