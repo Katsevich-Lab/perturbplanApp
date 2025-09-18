@@ -123,11 +123,23 @@ validate_gene_list_rds <- function(file_path) {
     errors <- c(errors, "Some response_id values are not valid Ensembl gene IDs")
   }
 
-  # Return validation result
+  # Create summary statistics for valid data
+  summary_stats <- if (length(errors) == 0) {
+    list(
+      total_pairs = nrow(data),
+      unique_genes = length(unique(data$response_id)),
+      unique_targets = length(unique(data$grna_target))
+    )
+  } else {
+    NULL
+  }
+
+  # Return validation result with summary
   return(list(
     is_valid = length(errors) == 0,
     errors = errors,
-    data = if(length(errors) == 0) data else NULL
+    data = if(length(errors) == 0) data else NULL,
+    summary = summary_stats
   ))
 }
 

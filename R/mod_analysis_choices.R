@@ -52,13 +52,9 @@ mod_analysis_choices_ui <- function(id) {
                    placeholder = "Choose gene pairs RDS file..."),
 
           # Gene list upload status display
-          conditionalPanel(
-            condition = paste0("output['", ns("gene_list_uploaded"), "']"),
-            ns = ns,
-            tags$div(
-              id = ns("gene_list_status_div"),
-              htmlOutput(ns("gene_list_status"))
-            )
+          tags$div(
+            id = ns("gene_list_status_div"),
+            htmlOutput(ns("gene_list_status"))
           )
         ),
         selectInput(ns("side"), "Test side:",
@@ -133,7 +129,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
         validation_result <- validate_gene_list_rds(input$gene_list_file$datapath)
 
         if (validation_result$is_valid) {
-          # Return successful validation with data
+          # Return successful validation with data and summary
           list(
             type = "custom",
             file_path = input$gene_list_file$datapath,
@@ -141,7 +137,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
             data = validation_result$data,
             is_valid = TRUE,
             errors = NULL,
-            gene_count = nrow(validation_result$data)
+            summary = validation_result$summary
           )
         } else {
           # Return validation errors
@@ -152,7 +148,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
             data = NULL,
             is_valid = FALSE,
             errors = validation_result$errors,
-            gene_count = 0
+            summary = NULL
           )
         }
       } else {
@@ -164,39 +160,36 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
       }
     })
 
-    # Gene list upload status outputs
-    output$gene_list_uploaded <- reactive({
-      !is.null(input$gene_list_file) && input$gene_list_mode == "custom"
-    })
-    outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
-
-    output$gene_list_status <- renderText({
+    # Gene list upload status output
+    output$gene_list_status <- renderUI({
       if (input$gene_list_mode == "custom" && !is.null(input$gene_list_file)) {
         gene_data <- gene_list_data()
 
         if (gene_data$is_valid) {
-          # Success message
-          paste0(
+          # Compact success message with key statistics
+          summary <- gene_data$summary
+          HTML(paste0(
             '<div class="file-upload-success">',
             '<i class="fa fa-check-circle" style="margin-right: 5px;"></i>',
-            '<strong>Gene list loaded successfully:</strong> ',
-            gene_data$gene_count, ' gene pairs from ',
-            '<em>', gene_data$file_name, '</em>',
+            '<strong>Gene list loaded:</strong> ',
+            summary$total_pairs, ' pairs, ',
+            summary$unique_genes, ' genes, ',
+            summary$unique_targets, ' targets from <em>', gene_data$file_name, '</em>',
             '</div>'
-          )
+          ))
         } else {
           # Error message
           error_list <- paste(gene_data$errors, collapse = "<br>• ")
-          paste0(
+          HTML(paste0(
             '<div class="upload-status status-error" style="background-color: rgba(200, 90, 90, 0.1); border: 1px solid #C85A5A; color: #8B3A3A; padding: 8px; border-radius: 4px; margin: 5px 0;">',
             '<i class="fa fa-exclamation-triangle" style="margin-right: 5px;"></i>',
             '<strong>Validation failed:</strong><br>• ',
             error_list,
             '</div>'
-          )
+          ))
         }
       } else {
-        ""
+        NULL
       }
     })
 
