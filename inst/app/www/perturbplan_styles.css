@@ -354,3 +354,20 @@ html, body {
   z-index: 10;
   pointer-events: none;
 }
+
+/* Force remove all horizontal lines from design problem and analysis sections */
+#sidebar-design_options .collapsible-content * {
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+#sidebar-design_options h1, #sidebar-design_options h2, #sidebar-design_options h3,
+#sidebar-design_options h4, #sidebar-design_options h5, #sidebar-design_options h6 {
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+#sidebar-design_options div, #sidebar-design_options section {
+  border-top: none !important;
+  border-bottom: none !important;
+}
