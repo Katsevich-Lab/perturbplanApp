@@ -10,16 +10,28 @@ NULL
 #'
 #' @description Extracts baseline expression stats and library parameters
 #' from the experimental setup configuration for perturbplan functions.
+#' Uses custom gene lists when provided for targeted analysis.
 #'
 #' @param experimental_config Experimental setup configuration from UI
+#' @param analysis_config Analysis configuration containing gene list data (optional)
 #' @return List with baseline_expression_stats and library_parameters, or NULL if not available
 #' @noRd
-extract_pilot_data <- function(experimental_config) {
+extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
   if (is.null(experimental_config)) {
     return(NULL)
   }
 
   pilot_data <- experimental_config$pilot_data
+
+  # Extract gene list data if available
+  gene_list_data <- if (!is.null(analysis_config) &&
+                        !is.null(analysis_config$gene_list_data) &&
+                        analysis_config$gene_list_data$type == "custom" &&
+                        analysis_config$gene_list_data$is_valid) {
+    analysis_config$gene_list_data$data$response_id
+  } else {
+    NULL  # Random sampling
+  }
 
   tryCatch({
     if (is.null(pilot_data) || pilot_data$type == "default") {
@@ -30,7 +42,7 @@ extract_pilot_data <- function(experimental_config) {
       expression_info <- perturbplan::extract_expression_info(
         biological_system = biological_system,
         B = 1000,                    # Sample 1000 genes
-        gene_list = NULL,            # Random sampling
+        gene_list = gene_list_data,  # Use custom gene list if provided
         TPM_threshold = 0,           # No TPM filtering at this stage
         custom_pilot_data = NULL     # Use built-in data
       )
@@ -62,7 +74,7 @@ extract_pilot_data <- function(experimental_config) {
       expression_info <- perturbplan::extract_expression_info(
         biological_system = "K562",           # Not used when custom_pilot_data provided
         B = 1000,                            # Sample 1000 genes
-        gene_list = NULL,                    # Random sampling
+        gene_list = gene_list_data,          # Use custom gene list if provided
         TPM_threshold = 0,                   # No TPM filtering at this stage
         custom_pilot_data = validation_result$data  # Use validated custom data
       )

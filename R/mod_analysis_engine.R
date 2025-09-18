@@ -123,8 +123,8 @@ mod_analysis_engine_server <- function(id, workflow_config) {
 #' @return List containing real analysis results (same structure as placeholder)
 #' @noRd
 generate_real_analysis <- function(config, workflow_info) {
-  # Extract pilot data for perturbplan function
-  pilot_data <- extract_pilot_data(config$experimental_setup)
+  # Extract pilot data for perturbplan function (with gene list support)
+  pilot_data <- extract_pilot_data(config$experimental_setup, config$analysis_choices)
 
   # Handle case where pilot data is not available
   if (is.null(pilot_data)) {

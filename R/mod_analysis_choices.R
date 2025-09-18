@@ -42,14 +42,24 @@ mod_analysis_choices_ui <- function(id) {
             style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
             tags$small(
               tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-              tags$strong("Format: "), "CSV with 'grna_target' and 'response_id' columns",
+              tags$strong("Format: "), "RDS with gene pairs data frame ('grna_target' and 'response_id' columns)",
               style = "font-size: 11px;"
             )
           ),
           fileInput(ns("gene_list_file"),
                    label = NULL,
-                   accept = c(".csv"),
-                   placeholder = "Choose CSV file...")
+                   accept = c(".rds", ".RDS"),
+                   placeholder = "Choose gene pairs RDS file..."),
+
+          # Gene list upload status display
+          conditionalPanel(
+            condition = paste0("output['", ns("gene_list_uploaded"), "']"),
+            ns = ns,
+            tags$div(
+              id = ns("gene_list_status_div"),
+              htmlOutput(ns("gene_list_status"))
+            )
+          )
         ),
         selectInput(ns("side"), "Test side:",
                     choices = c("Left (knockdown)" = "left",
@@ -115,49 +125,78 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
       }
     })
 
-    # Custom gene list - Under Development Dialog
-    observeEvent(input$gene_list_mode, {
-      if (!is.null(input$gene_list_mode) && input$gene_list_mode == "custom") {
-        showModal(modalDialog(
-          title = tags$div(
-            icon("exclamation-triangle", style = "color: #f39c12; margin-right: 8px;"),
-            "Feature Under Development"
-          ),
-          tags$div(
-            style = "text-align: center; padding: 20px;",
-            tags$p(
-              "Custom gene list functionality is currently under development.",
-              style = "font-size: 16px; margin-bottom: 15px;"
-            ),
-            tags$p(
-              "Please use 'Random' mode for now. Custom gene lists will be available in a future update.",
-              style = "color: #666; font-size: 14px;"
-            )
-          ),
-          footer = modalButton("OK"),
-          easyClose = TRUE,
-          fade = TRUE
-        ))
-
-        # Reset to random mode after showing the dialog
-        updateSelectInput(session, "gene_list_mode", selected = "random")
-      }
-    })
 
     # Gene list processing
     gene_list_data <- reactive({
       if (input$gene_list_mode == "custom" && !is.null(input$gene_list_file)) {
-        # TODO: Add CSV validation and loading logic
-        # For now, return placeholder structure
-        list(
-          type = "custom",
-          file_path = input$gene_list_file$datapath,
-          file_name = input$gene_list_file$name
-        )
+        # Validate and load RDS file using our validation function
+        validation_result <- validate_gene_list_rds(input$gene_list_file$datapath)
+
+        if (validation_result$is_valid) {
+          # Return successful validation with data
+          list(
+            type = "custom",
+            file_path = input$gene_list_file$datapath,
+            file_name = input$gene_list_file$name,
+            data = validation_result$data,
+            is_valid = TRUE,
+            errors = NULL,
+            gene_count = nrow(validation_result$data)
+          )
+        } else {
+          # Return validation errors
+          list(
+            type = "custom",
+            file_path = input$gene_list_file$datapath,
+            file_name = input$gene_list_file$name,
+            data = NULL,
+            is_valid = FALSE,
+            errors = validation_result$errors,
+            gene_count = 0
+          )
+        }
       } else {
         list(
-          type = "random"
+          type = "random",
+          is_valid = TRUE,
+          errors = NULL
         )
+      }
+    })
+
+    # Gene list upload status outputs
+    output$gene_list_uploaded <- reactive({
+      !is.null(input$gene_list_file) && input$gene_list_mode == "custom"
+    })
+    outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+
+    output$gene_list_status <- renderText({
+      if (input$gene_list_mode == "custom" && !is.null(input$gene_list_file)) {
+        gene_data <- gene_list_data()
+
+        if (gene_data$is_valid) {
+          # Success message
+          paste0(
+            '<div class="file-upload-success">',
+            '<i class="fa fa-check-circle" style="margin-right: 5px;"></i>',
+            '<strong>Gene list loaded successfully:</strong> ',
+            gene_data$gene_count, ' gene pairs from ',
+            '<em>', gene_data$file_name, '</em>',
+            '</div>'
+          )
+        } else {
+          # Error message
+          error_list <- paste(gene_data$errors, collapse = "<br>• ")
+          paste0(
+            '<div class="upload-status status-error" style="background-color: rgba(200, 90, 90, 0.1); border: 1px solid #C85A5A; color: #8B3A3A; padding: 8px; border-radius: 4px; margin: 5px 0;">',
+            '<i class="fa fa-exclamation-triangle" style="margin-right: 5px;"></i>',
+            '<strong>Validation failed:</strong><br>• ',
+            error_list,
+            '</div>'
+          )
+        }
+      } else {
+        ""
       }
     })
 
@@ -183,8 +222,6 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
         shinyjs::toggleState("gene_list_file", condition = !inputs_disabled)
         shinyjs::toggleState("side", condition = !inputs_disabled)
         shinyjs::toggleState("TPM_threshold_fixed", condition = !inputs_disabled)
-        shinyjs::toggleState("replicate_handling", condition = !inputs_disabled)
-        shinyjs::toggleState("analysis_method", condition = !inputs_disabled)
         
         # Note: Section headers remain functional for collapse/expand
       }
