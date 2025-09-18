@@ -39,7 +39,10 @@ mod_sidebar_ui <- function(id) {
       # Dynamic Plan/Restart button
       tags$div(
         style = "text-align: center; padding: 0 20px;",
-        uiOutput(ns("dynamic_plan_button"))
+        uiOutput(ns("dynamic_plan_button")),
+
+        # Instructional text for Phase 2 (shown below restart button)
+        uiOutput(ns("restart_instruction_text"))
       )
     )
   )
@@ -82,6 +85,18 @@ mod_sidebar_server <- function(id, app_state = NULL){
     # Static button - prevent renderUI re-creation that causes double analysis
     output$dynamic_plan_button <- renderUI({
       actionButton(ns("plan_btn"), "Plan", class = "btn-success", style = "width: 200px; max-width: 90%;")
+    })
+
+    # Instructional text for Phase 2
+    output$restart_instruction_text <- renderUI({
+      if (!is.null(app_state) && app_state$phase == 2) {
+        tags$div(
+          style = "margin-top: 10px; color: #ADB5BD; font-size: 14px; font-weight: 500;",
+          "Click Restart to update sidebar selections"
+        )
+      } else {
+        NULL
+      }
     })
 
     # Update button text without re-rendering using updateActionButton
