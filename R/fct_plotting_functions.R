@@ -194,7 +194,7 @@ create_single_parameter_plots <- function(cached_results) {
       data = combined_data,
       aes(x = parameter_value, y = power,
           color = solution_label),
-      size = 1.2
+      size = 0.6
     )
 
     # Add points for interactivity
@@ -203,8 +203,7 @@ create_single_parameter_plots <- function(cached_results) {
       aes(x = parameter_value, y = power,
           color = solution_label,
           text = tooltip_text),
-      size = 0.8,
-      alpha = 0.6
+      size = 1
     ))
 
     # Add optimal points if any
@@ -468,7 +467,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                    color = solution_label),
       se = FALSE,
-      size = 1
+      size = 0.6
     ))
 
     # Add points for better interactivity with tooltips
@@ -481,8 +480,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                   "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
                                   "Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"), "<br>",
                                   "Power: ", scales::percent(target_power, accuracy = 0.1))),
-      size = 0.8,
-      alpha = 0.7
+      size = 1
     ))
   }
 
@@ -498,9 +496,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
                                "Cost Level: $", scales::comma(cost_of_interest, accuracy = 1, na_default = "N/A"), "<br>",
                                "Actual Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"))),
-      size = 0.6,
-      alpha = 0.5,
-      shape = 16
+      size = 1
     ))
 
     # Add dashed lines for cost curves
@@ -509,7 +505,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                    color = solution_label),
       linetype = "dashed",
-      size = 1,
+      size = 0.6,
       se = FALSE
     ))
   }
@@ -726,15 +722,15 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     geom_line(data = combined_data,
               aes(x = parameter_value, y = total_cost,
                   color = solution_label),
-              size = 1.2) +
+              size = 0.6) +
     suppressWarnings(geom_line(data = combined_data,
               aes(x = parameter_value, y = total_cost,
                   color = solution_label, text = solution_tooltip),
-              size = 1.2)) +
+              size = 0.6)) +
     suppressWarnings(geom_point(data = optimal_points,
                aes(x = parameter_value, y = total_cost,
                    color = solution_label, text = point_tooltip),
-               size = 2, shape = 18)) +  # Diamond shape for optimal points
+               size = 3, shape = 18)) +  # Diamond shape for optimal points
     scale_x_log10(labels = scales::comma_format()) +
     scale_y_log10(labels = scales::comma_format(accuracy = 1)) +
     labs(title = paste(param_name, "vs Cost"),
