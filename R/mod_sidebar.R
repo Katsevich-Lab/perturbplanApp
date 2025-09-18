@@ -100,7 +100,22 @@ mod_sidebar_server <- function(id, app_state = NULL){
     observeEvent(input$plan_btn, {
       if (!is.null(app_state)) {
         if (app_state$phase == 1) {
-          # Phase 1: Plan behavior - validate configuration first
+          # Phase 1: Plan behavior - collapse all sections first
+          shinyjs::runjs("
+            // Collapse all sidebar sections
+            var contentElements = document.querySelectorAll('[id$=\"-content\"]');
+            var chevronElements = document.querySelectorAll('[id$=\"-chevron\"]');
+
+            contentElements.forEach(function(el) {
+              el.style.display = 'none';
+            });
+
+            chevronElements.forEach(function(el) {
+              el.className = 'fa fa-chevron-right';
+            });
+          ")
+
+          # Then validate configuration
           current_config <- combined_config()
           validation_result <- validate_design_configuration(current_config$design_options)
 

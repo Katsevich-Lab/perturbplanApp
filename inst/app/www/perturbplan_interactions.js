@@ -2,32 +2,32 @@
 
 function toggleSection(contentId, chevronId) {
   console.log('toggleSection called with:', contentId, chevronId);
-  
+
   // Get all sections that could be in the sidebar (handle namespaced IDs)
   var allContentElements = document.querySelectorAll('[id$="-content"]');
   var allChevronElements = document.querySelectorAll('[id$="-chevron"]');
-  
+
   var targetContent = document.getElementById(contentId);
   var targetChevron = document.getElementById(chevronId);
-  
+
   if (!targetContent || !targetChevron) {
     console.log('Target elements not found:', contentId, chevronId);
     return;
   }
-  
+
   // Close all other sections
   allContentElements.forEach(function(section) {
     if (section.id !== contentId) {
       section.style.display = 'none';
     }
   });
-  
+
   allChevronElements.forEach(function(chevron) {
     if (chevron.id !== chevronId) {
       chevron.className = 'fa fa-chevron-right';
     }
   });
-  
+
   // Toggle the clicked section
   if (targetContent.style.display === 'none' || targetContent.style.display === '') {
     targetContent.style.display = 'block';
@@ -36,6 +36,22 @@ function toggleSection(contentId, chevronId) {
     targetContent.style.display = 'none';
     targetChevron.className = 'fa fa-chevron-right';
   }
+}
+
+function collapseAllSections() {
+  // Get all content sections and chevrons
+  var allContentElements = document.querySelectorAll('[id$="-content"]');
+  var allChevronElements = document.querySelectorAll('[id$="-chevron"]');
+
+  // Close all sections
+  allContentElements.forEach(function(section) {
+    section.style.display = 'none';
+  });
+
+  // Reset all chevrons to right-pointing
+  allChevronElements.forEach(function(chevron) {
+    chevron.className = 'fa fa-chevron-right';
+  });
 }
 
 // Initialize on page load
