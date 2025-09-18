@@ -1,19 +1,14 @@
-// PerturbPlan JavaScript - Collapsible sections functionality
+// ========================================================================
+// SIDEBAR SECTION COLLAPSE FUNCTIONALITY
+// ========================================================================
 
 function toggleSection(contentId, chevronId) {
-  console.log('toggleSection called with:', contentId, chevronId);
-
-  // Get all sections that could be in the sidebar (handle namespaced IDs)
   var allContentElements = document.querySelectorAll('[id$="-content"]');
   var allChevronElements = document.querySelectorAll('[id$="-chevron"]');
-
   var targetContent = document.getElementById(contentId);
   var targetChevron = document.getElementById(chevronId);
 
-  if (!targetContent || !targetChevron) {
-    console.log('Target elements not found:', contentId, chevronId);
-    return;
-  }
+  if (!targetContent || !targetChevron) return;
 
   // Close all other sections
   allContentElements.forEach(function(section) {
@@ -39,23 +34,20 @@ function toggleSection(contentId, chevronId) {
 }
 
 function collapseAllSections() {
-  // Get all content sections and chevrons
   var allContentElements = document.querySelectorAll('[id$="-content"]');
   var allChevronElements = document.querySelectorAll('[id$="-chevron"]');
 
-  // Close all sections
   allContentElements.forEach(function(section) {
     section.style.display = 'none';
   });
 
-  // Reset all chevrons to right-pointing
   allChevronElements.forEach(function(chevron) {
     chevron.className = 'fa fa-chevron-right';
   });
 }
 
 // ========================================================================
-// SIDEBAR COLLAPSE SYSTEM - Manual Only
+// SIDEBAR COLLAPSE SYSTEM
 // ========================================================================
 
 window.SidebarCollapse = {
@@ -64,9 +56,7 @@ window.SidebarCollapse = {
 
   init: function() {
     this.bindEvents();
-    // Ensure sidebar starts in expanded state
     this.ensureExpandedState();
-    console.log('Simple sidebar toggle initialized');
   },
 
   ensureExpandedState: function() {
@@ -74,23 +64,15 @@ window.SidebarCollapse = {
     var contentWrapper = $('.content-wrapper');
     var toggleButton = $('#simple-toggle');
 
-    // Remove any collapsed classes that might be applied
     sidebar.removeClass('collapsed');
     contentWrapper.removeClass('sidebar-collapsed');
-
-    // Ensure button shows correct direction for expanded state
     toggleButton.text('◀');
-
-    console.log('Sidebar ensured to be in expanded state');
   },
 
   bindEvents: function() {
     var self = this;
-
-    // Triangle button toggles sidebar
     $(document).on('click', '#simple-toggle', function(e) {
       e.preventDefault();
-      console.log('Triangle button clicked');
       self.toggle();
     });
   },
@@ -110,25 +92,19 @@ window.SidebarCollapse = {
     var contentWrapper = $('.content-wrapper');
     var toggleButton = $('#simple-toggle');
 
-    // Add transition classes
     sidebar.addClass('collapse-transition');
     contentWrapper.addClass('collapse-transition');
 
     if (shouldCollapse) {
-      // Collapse sidebar
       sidebar.addClass('collapsed');
       contentWrapper.addClass('sidebar-collapsed');
-      toggleButton.text('▶'); // Point right when collapsed
-      console.log('Sidebar collapsed');
+      toggleButton.text('▶');
     } else {
-      // Expand sidebar
       sidebar.removeClass('collapsed');
       contentWrapper.removeClass('sidebar-collapsed');
-      toggleButton.text('◀'); // Point left when expanded
-      console.log('Sidebar expanded');
+      toggleButton.text('◀');
     }
 
-    // Clear animation state after transition completes
     setTimeout(() => {
       sidebar.removeClass('collapse-transition');
       contentWrapper.removeClass('collapse-transition');
@@ -137,27 +113,22 @@ window.SidebarCollapse = {
   }
 };
 
-// Test basic JavaScript execution
-console.log('=== BASIC TEST: JavaScript file is loading ===');
+// ========================================================================
+// INITIALIZATION
+// ========================================================================
 
-// Initialize on page load
 $(document).ready(function() {
-  console.log('=== BASIC TEST: jQuery document ready fired ===');
-  console.log('PerturbPlan JavaScript loaded');
-
-  // Set initial states after a delay to ensure Shiny is loaded
   setTimeout(function() {
-    console.log('=== BASIC TEST: setTimeout fired after 1000ms ===');
-    // Initialize sidebar collapse system after DOM is fully ready
+    // Initialize sidebar collapse system
     window.SidebarCollapse.init();
-    // Find the first section (Design Options) and open it by default
+
+    // Open Design Options section by default
     var firstContent = document.querySelector('[id*="design-content"]');
     var firstChevron = document.querySelector('[id*="design-chevron"]');
 
     if (firstContent && firstChevron) {
       firstContent.style.display = 'block';
       firstChevron.className = 'fa fa-chevron-down';
-      console.log('Opened Design Options section by default');
     }
 
     // Close all other sections
@@ -171,7 +142,5 @@ $(document).ready(function() {
     allOtherChevrons.forEach(function(chevron) {
       chevron.className = 'fa fa-chevron-right';
     });
-
-    console.log('Initial states set for PerturbPlan');
   }, 1000);
 });
