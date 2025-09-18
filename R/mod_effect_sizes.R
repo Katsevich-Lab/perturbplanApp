@@ -11,7 +11,7 @@
 mod_effect_sizes_ui <- function(id) {
   ns <- NS(id)
   
-  # Assumed effect sizes (collapsible) - FROM ORIGINAL
+  # Effect sizes section (collapsible)
   tagList(
     tags$div(
       style = "border-radius: 4px; margin-bottom: 5px;",
@@ -29,14 +29,13 @@ mod_effect_sizes_ui <- function(id) {
         # Fixed value input for fold change (conditional)
         tags$div(
           id = ns("minimum_fold_change_fixed_div"),
-          style = "display: none; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #E3E6EA;",
-          numericInput(ns("minimum_fold_change_fixed"), "Fold change:", 
+          style = "display: none; margin-bottom: 15px;",
+          numericInput(ns("minimum_fold_change_fixed"), "Fold change:",
                       value = 0.8, min = 0.3, max = 2, step = 0.1)
         ),
-        
-        # Proportion of non-null pairs (moved back from advanced settings)
-        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01),
-        
+
+        # Proportion of non-null pairs
+        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
       )
     )
   )
@@ -44,29 +43,27 @@ mod_effect_sizes_ui <- function(id) {
     
 #' effect_sizes Server Functions
 #'
-#' @description Server logic for effect size parameters
+#' @description Server logic for effect size parameters including conditional
+#' fold change input display and input state management for dual-phase workflow
 #'
 #' @param design_config Reactive containing design options configuration
-#' @param external_updates Reactive containing parameter updates from sliders (DEPRECATED)
+#' @param app_state Reactive containing application phase state for input freezing
 #'
-#' @noRd 
+#' @noRd
+#' @importFrom shinyjs toggleState
 mod_effect_sizes_server <- function(id, design_config, app_state = NULL){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-    
-    # ========================================================================
-    # SIDEBAR MODULE - INDEPENDENT FROM SLIDERS
-    # ========================================================================
-    # No parameter manager integration - sidebar operates independently
-    
-    
-    # Conditional display logic for fold change input (panel is now always visible)
+
+    # ============================================================================
+    # CONDITIONAL DISPLAY LOGIC
+    # ============================================================================
     observe({
       config <- design_config()
-      
+
       if (!is.null(config) && !is.null(config$parameter_controls)) {
         fc_type <- config$parameter_controls$minimum_fold_change$type
-        
+
         # Show FC fixed input only when FC parameter is set to "fixed"
         if (!is.null(fc_type) && fc_type == "fixed") {
           shinyjs::show("minimum_fold_change_fixed_div")
@@ -77,38 +74,36 @@ mod_effect_sizes_server <- function(id, design_config, app_state = NULL){
         shinyjs::hide("minimum_fold_change_fixed_div")
       }
     })
-    
-    # Return effect sizes configuration
+
+    # ============================================================================
+    # CONFIGURATION OUTPUT
+    # ============================================================================
     effect_sizes_config <- reactive({
       list(
-        # Fixed value input (only default if actually hidden)  
+        # Fixed value input (only default if actually hidden)
         minimum_fold_change_fixed = input$minimum_fold_change_fixed,
         # Proportion of non-null pairs
         prop_non_null = input$prop_non_null,
         timestamp = Sys.time()
       )
     })
-    
-    # INPUT FREEZING: Disable all inputs in Phase 2, keep section titles functional
+
+    # ============================================================================
+    # INPUT STATE MANAGEMENT
+    # ============================================================================
     observeEvent(app_state$phase, {
       if (!is.null(app_state)) {
         inputs_disabled <- (app_state$phase == 2)
-        
+
         # Core effect size inputs that should be disabled in Phase 2
         shinyjs::toggleState("minimum_fold_change_fixed", condition = !inputs_disabled)
-        shinyjs::toggleState("effect_size_distribution", condition = !inputs_disabled)
         shinyjs::toggleState("prop_non_null", condition = !inputs_disabled)
-        
+
         # Note: Section headers remain functional for collapse/expand
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
-    
+
     return(effect_sizes_config)
   })
 }
     
-## To be copied in the UI
-# mod_effect_sizes_ui("effect_sizes_1")
-    
-## To be copied in the server
-# mod_effect_sizes_server("effect_sizes_1")
