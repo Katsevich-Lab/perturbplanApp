@@ -153,7 +153,7 @@ mod_results_display_ui <- function(id) {
 #' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
-#' @importFrom plotly as_widget layout
+#' @importFrom plotly as_widget ggplotly
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
 mod_results_display_server <- function(id, plot_objects, cached_results, user_config = reactive(NULL), app_state = NULL) {
@@ -349,36 +349,26 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
 
         plots <- plot_objects()
 
-        tryCatch({
-          # Get the interactive plotly version and save as HTML
-          if (!is.null(plots$plots$interactive_plot)) {
-            # Save the plotly widget as interactive HTML file (use as-is to avoid deprecation warnings)
-            htmlwidgets::saveWidget(
-              widget = plotly::as_widget(plots$plots$interactive_plot),
-              file = file,
-              selfcontained = TRUE,
-              title = "PerturbPlan Interactive Plot"
-            )
-          } else {
-            stop("No plot available for download")
-          }
+        # Get the interactive plotly version and save as HTML
+        if (!is.null(plots$plots$interactive_plot)) {
+          # Create a taller version by re-creating the interactive plot with proper height
+          taller_interactive_plot <- suppressWarnings(
+            plots$plots$interactive_plot %>%
+              plotly::layout(
+                height = 750,
+                margin = list(t = 60, b = 80, l = 80, r = 40))
+          )
 
-        }, error = function(e) {
-          showNotification(
-            paste("Plot download failed:", e$message),
-            type = "error",
-            duration = 5
+          # Save the plotly widget as interactive HTML file
+          htmlwidgets::saveWidget(
+            widget = plotly::as_widget(taller_interactive_plot),
+            file = file,
+            selfcontained = TRUE,
+            title = "PerturbPlan Interactive Plot"
           )
-          # Create a minimal error message in HTML format
-          error_html <- paste0(
-            "<!DOCTYPE html><html><head><title>Plot Error</title></head>",
-            "<body><h1>Plot Download Failed</h1>",
-            "<p>Error: ", e$message, "</p>",
-            "<p>Please try running the analysis again.</p>",
-            "</body></html>"
-          )
-          writeLines(error_html, file)
-        })
+        } else {
+          stop("No plot available for download")
+        }
       },
       contentType = "text/html"
     )
