@@ -80,8 +80,8 @@ app_server <- function(input, output, session) {
 
       tags$div(
         style = "display: flex; gap: 8px; align-items: center;",
-        actionButton(
-          "header_export_excel",
+        downloadButton(
+          "header_export_excel_download",
           "",
           icon = icon("file-excel"),
           class = "btn btn-success btn-sm",
@@ -92,30 +92,57 @@ app_server <- function(input, output, session) {
     }
   })
 
-  # Header export handlers (reuse logic from results display module)
-  # Excel Export - Under Development Dialog
-  observeEvent(input$header_export_excel, {
-    showModal(modalDialog(
-      title = tags$div(
-        icon("exclamation-triangle", style = "color: #f39c12; margin-right: 8px;"),
-        "Feature Under Development"
-      ),
-      tags$div(
-        style = "text-align: center; padding: 20px;",
-        tags$p(
-          "Excel export functionality is currently under development.",
-          style = "font-size: 16px; margin-bottom: 15px;"
-        ),
-        tags$p(
-          "This feature will be available in a future update.",
-          style = "color: #666; font-size: 14px;"
+  # Header export handlers - Excel Export
+  output$header_export_excel_download <- downloadHandler(
+    filename = function() {
+      paste0("perturbplan_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
+    },
+    content = function(file) {
+      req(analysis_results_raw(), plot_objects())
+
+      results <- analysis_results_raw()
+      plots <- plot_objects()
+
+      tryCatch({
+        # Prepare Excel data using utility functions from fct_excel_export.R
+        excel_data <- list(
+          "Summary" = create_excel_summary(results, plots),
+          "Detailed_Results" = results$power_data,
+          "Design_Options" = create_excel_design_options(results$user_config$design_options),
+          "Experimental_Setup" = create_excel_experimental_setup(results$user_config$experimental_setup),
+          "Analysis_Choices" = create_excel_analysis_choices(results$user_config$analysis_choices),
+          "Effect_Sizes" = create_excel_effect_sizes(results$user_config$effect_sizes),
+          "Metadata" = data.frame(
+            Item = c("Analysis Mode", "Workflow Type", "Timestamp", "App Version"),
+            Value = c(
+              results$metadata$analysis_mode,
+              results$workflow_info$workflow_id,
+              as.character(results$metadata$analysis_timestamp),
+              results$metadata$app_version
+            )
+          )
         )
-      ),
-      footer = modalButton("OK"),
-      easyClose = TRUE,
-      fade = TRUE
-    ))
-  })
+
+        # Write Excel file to the specified path
+        write.xlsx(excel_data, file = file)
+
+        showNotification(
+          "Excel file exported successfully!",
+          type = "message",
+          duration = 3
+        )
+
+      }, error = function(e) {
+        showNotification(
+          paste("Export failed:", e$message),
+          type = "error",
+          duration = 5
+        )
+        stop(e$message)
+      })
+    },
+    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  )
 
 
   # ========================================================================
