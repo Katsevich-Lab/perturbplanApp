@@ -92,7 +92,9 @@ extract_cached_solutions_data <- function(cached_results) {
       experimental_params = extract_experimental_parameters(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter, current$workflow_info),
       TPM_threshold = extract_TPM_threshold(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter),
       effect_sizes = extract_effect_sizes_clean(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter),
-      minimizing_param = current$workflow_info$minimizing_parameter
+      minimizing_param = current$workflow_info$minimizing_parameter,
+      user_config = current$user_config,
+      workflow_info = current$workflow_info
     )
     solution_counter <- solution_counter + 1
   }
@@ -112,7 +114,9 @@ extract_cached_solutions_data <- function(cached_results) {
         experimental_params = extract_experimental_parameters(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter, pinned$workflow_info),
         TPM_threshold = extract_TPM_threshold(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter),
         effect_sizes = extract_effect_sizes_clean(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter),
-        minimizing_param = pinned$workflow_info$minimizing_parameter
+        minimizing_param = pinned$workflow_info$minimizing_parameter,
+        user_config = pinned$user_config,
+        workflow_info = pinned$workflow_info
       )
       solution_counter <- solution_counter + 1
     }
@@ -508,6 +512,43 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
 #' @noRd
 create_data_row <- function(solution_data, workflow_info) {
 
+  # Helper function to determine if a parameter should be bold (minimizing or varying)
+  is_bold_parameter <- function(param_name) {
+    # Always bold if minimizing
+    if (solution_data$minimizing_param == param_name) {
+      return(TRUE)
+    }
+
+    # Bold if varying or optimizing (check user_config parameter_controls)
+    if (!is.null(solution_data$user_config) &&
+        !is.null(solution_data$user_config$design_options) &&
+        !is.null(solution_data$user_config$design_options$parameter_controls)) {
+
+      param_controls <- solution_data$user_config$design_options$parameter_controls
+
+      # Map parameter names to their control keys
+      param_mapping <- list(
+        "moi" = "MOI",
+        "num_targets" = "num_targets",
+        "grnas_per_target" = "gRNAs_per_target",
+        "cells_per_target" = "cells_per_target",
+        "reads_per_cell" = "reads_per_cell",
+        "TPM_threshold" = "TPM_threshold",
+        "fold_change" = "minimum_fold_change",
+        "non_null_proportion" = "prop_non_null"
+      )
+
+      control_key <- param_mapping[[param_name]]
+
+      if (!is.null(control_key) && !is.null(param_controls[[control_key]])) {
+        param_type <- param_controls[[control_key]]$type
+        return(param_type %in% c("varying", "optimizing"))
+      }
+    }
+
+    return(FALSE)
+  }
+
   cells <- list(
     tags$td(
       solution_data$solution_name %||% paste("Solution", solution_data$solution_id),
@@ -546,43 +587,52 @@ create_data_row <- function(solution_data, workflow_info) {
   ))
 
   # Add experimental parameters (always include MOI, # targets, gRNAs/target)
+  moi_style <- if (is_bold_parameter("moi")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
+  targets_style <- if (is_bold_parameter("num_targets")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
+  grnas_style <- if (is_bold_parameter("grnas_per_target")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
+
   cells <- append(cells, list(
-    tags$td(exp_params$moi %||% "N/A", style = "text-align: center; padding: 8px;"),
-    tags$td(exp_params$num_targets %||% "N/A", style = "text-align: center; padding: 8px;"),
-    tags$td(exp_params$grnas_per_target %||% "N/A", style = "text-align: center; padding: 8px;")
+    tags$td(exp_params$moi %||% "N/A", style = moi_style),
+    tags$td(exp_params$num_targets %||% "N/A", style = targets_style),
+    tags$td(exp_params$grnas_per_target %||% "N/A", style = grnas_style)
   ))
 
   # Add Cells/Target column only if not being minimized
   if (solution_data$minimizing_param != "cells_per_target") {
+    cells_style <- if (is_bold_parameter("cells_per_target")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
     cells <- append(cells, list(
-      tags$td(exp_params$cells_per_target %||% "N/A", style = "text-align: center; padding: 8px;")
+      tags$td(exp_params$cells_per_target %||% "N/A", style = cells_style)
     ))
   }
 
   # Add Reads/Cell column only if not being minimized
   if (solution_data$minimizing_param != "reads_per_cell") {
+    reads_style <- if (is_bold_parameter("reads_per_cell")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
     cells <- append(cells, list(
-      tags$td(exp_params$reads_per_cell %||% "N/A", style = "text-align: center; padding: 8px;")
+      tags$td(exp_params$reads_per_cell %||% "N/A", style = reads_style)
     ))
   }
 
   # Add TPM threshold column only if not being minimized
   if (solution_data$minimizing_param != "TPM_threshold") {
+    tpm_style <- if (is_bold_parameter("TPM_threshold")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
     cells <- append(cells, list(
-      tags$td(solution_data$TPM_threshold %||% "N/A", style = "text-align: center; padding: 8px;")
+      tags$td(solution_data$TPM_threshold %||% "N/A", style = tpm_style)
     ))
   }
 
   # Add Fold Change column only if not being minimized
   if (solution_data$minimizing_param != "minimum_fold_change") {
+    fc_style <- if (is_bold_parameter("fold_change")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
     cells <- append(cells, list(
-      tags$td(effect_sizes$fold_change %||% "N/A", style = "text-align: center; padding: 8px;")
+      tags$td(effect_sizes$fold_change %||% "N/A", style = fc_style)
     ))
   }
 
   # Always add Non-null Proportion (never minimized)
+  nnp_style <- if (is_bold_parameter("non_null_proportion")) "text-align: center; padding: 8px; font-weight: bold;" else "text-align: center; padding: 8px;"
   cells <- append(cells, list(
-    tags$td(effect_sizes$non_null_proportion %||% "N/A", style = "text-align: center; padding: 8px;")
+    tags$td(effect_sizes$non_null_proportion %||% "N/A", style = nnp_style)
   ))
 
   tags$tr(cells)
