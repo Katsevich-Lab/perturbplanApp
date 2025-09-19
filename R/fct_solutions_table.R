@@ -376,7 +376,7 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
   rowspan_style <- "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 12px; background-color: #f8f9fa;"
 
   cells <- list(
-    tags$th("Solution ID", rowspan = "2", style = rowspan_style),
+    tags$th("Setting", rowspan = "2", style = rowspan_style),
     tags$th("Power", rowspan = "2", style = rowspan_style)
   )
 
