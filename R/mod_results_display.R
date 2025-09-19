@@ -21,7 +21,22 @@ mod_results_display_ui <- function(id) {
         column(
           width = 8,
           box(
-            title = "Analysis Results",
+            title = tags$div(
+              style = "display: flex; justify-content: space-between; align-items: center; width: 100%;",
+              tags$span("Analysis Results"),
+              conditionalPanel(
+                condition = "output.analysis_trigger == true && output.show_error == false",
+                ns = ns,
+                downloadButton(
+                  ns("export_plot"),
+                  "",
+                  icon = icon("download"),
+                  class = "btn btn-primary btn-sm",
+                  style = "padding: 4px 8px; margin: 0;",
+                  title = "Download Interactive Plot"
+                )
+              )
+            ),
             status = "primary",
             solidHeader = TRUE,
             width = NULL,
@@ -126,13 +141,6 @@ mod_results_display_ui <- function(id) {
             )
           )
         )
-      ),
-
-      # Download button for plot export (triggered from header)
-      tags$div(
-        id = ns("download_container"),
-        style = "position: absolute; top: -1000px; left: -1000px;",
-        downloadButton(ns("export_plot"), "Download Plot", style = "visibility: hidden;")
       )
     )
   )
