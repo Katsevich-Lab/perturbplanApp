@@ -17,27 +17,15 @@ mod_parameter_sliders_ui <- function(id) {
     tags$div(
       id = ns("slider_container"),
       class = "parameter-sliders-grid",
-      style = "padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
+      style = "padding: 10px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
 
-      # TWO-COLUMN LAYOUT: Experimental | Power-determining parameters
+      # TWO-ROW LAYOUT: Experimental parameters on top, Power-determining parameters below
       tags$div(
-        class = "slider-columns-container",
-        fluidRow(
-          # COLUMN 1: Experimental parameters (always 3 sliders)
-          column(6,
-            tags$div(
-              class = "slider-column",
-              uiOutput(ns("experimental_sliders_column"))
-            )
-          ),
-          # COLUMN 2: Power-determining parameters (dynamic - 3 out of 4 shown)
-          column(6,
-            tags$div(
-              class = "slider-column",
-              uiOutput(ns("dynamic_power_sliders_column"))
-            )
-          )
-        )
+        class = "slider-rows-container",
+        # ROW 1: Experimental parameters (always 3 sliders)
+        uiOutput(ns("experimental_sliders_column")),
+        # ROW 2: Power-determining parameters (dynamic - 3 out of 4 shown)
+        uiOutput(ns("dynamic_power_sliders_column"))
       ),
       
       # PINNING CONTROLS: Simple two-button layout at bottom
@@ -74,7 +62,7 @@ create_compact_slider <- function(inputId, label, min, max, value, step, format_
       max = max,
       value = round(value, format_decimals),
       step = step,
-      width = "100%",
+      width = "70%",
       height = "8px",
       update_on = "end",
       tooltips = TRUE,
@@ -161,10 +149,12 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         grnas_value <- experimental$gRNAs_per_target
       }
 
-      tagList(
-        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1)),
-        tags$div(style = "margin-bottom: 8px;", create_compact_slider(ns("targets_slider"), "# of Targets", 50, 12000, targets_value, 50)),
-        tags$div(style = "margin-bottom: 5px;", create_compact_slider(ns("grnas_slider"), "gRNAs per Target", 1, 20, grnas_value, 1))
+      tags$div(
+        class = "experimental-sliders-row",
+        style = "display: flex; gap: 12px; flex-wrap: nowrap; justify-content: space-between;",
+        create_compact_slider(ns("moi_slider"), "MOI", 1, 50, moi_value, 1),
+        create_compact_slider(ns("targets_slider"), "# of Targets", 50, 12000, targets_value, 50),
+        create_compact_slider(ns("grnas_slider"), "gRNAs/Target", 1, 20, grnas_value, 1)
       )
     })
 
@@ -214,8 +204,8 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
 
       # Define all 4 power-determining parameters (use sidebar values)
       all_power_params <- list(
-        cells_per_target = list(id = "cells_slider", label = "Cells per Target", min = 20, max = 2000, value = cells_value, step = 20),
-        reads_per_cell = list(id = "reads_slider", label = "Reads per Cell", min = 1000, max = 150000, value = reads_value, step = 1000),
+        cells_per_target = list(id = "cells_slider", label = "Cells/Target", min = 20, max = 2000, value = cells_value, step = 20),
+        reads_per_cell = list(id = "reads_slider", label = "Reads/Cell", min = 1000, max = 150000, value = reads_value, step = 1000),
         TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 200, value = tpm_value, step = 1),
         minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = fc_range$min, max = fc_range$max, value = fc_value, step = 0.02)
       )
@@ -284,18 +274,14 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       num_params <- length(visible_power_params)
       col_width <- if (num_params == 1) 12 else if (num_params == 2) 6 else 4
 
-      tagList(
-        lapply(seq_along(names(visible_power_params)), function(i) {
-          param_name <- names(visible_power_params)[i]
+      tags$div(
+        class = "power-sliders-row",
+        style = "display: flex; gap: 12px; flex-wrap: nowrap; justify-content: space-between;",
+        lapply(names(visible_power_params), function(param_name) {
           param <- visible_power_params[[param_name]]
-          # Add spacing between sliders
-          margin_bottom <- if (i == length(visible_power_params)) "5px" else "8px"
-          tags$div(
-            style = paste0("margin-bottom: ", margin_bottom, ";"),
-            create_compact_slider(
-              ns(param$id), param$label, param$min, param$max, param$value, param$step,
-              format_decimals = if (param_name == "minimum_fold_change") 2 else 0
-            )
+          create_compact_slider(
+            ns(param$id), param$label, param$min, param$max, param$value, param$step,
+            format_decimals = if (param_name == "minimum_fold_change") 2 else 0
           )
         })
       )

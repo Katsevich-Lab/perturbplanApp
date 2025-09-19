@@ -42,6 +42,50 @@
   min-height: 180px;
 }
 
+/* Row layout styles */
+.slider-rows-container {
+  margin-bottom: 20px;
+}
+
+.slider-rows-container .row {
+  margin-bottom: 15px;
+}
+
+.slider-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.slider-row .compact-slider-container,
+.experimental-sliders-row .compact-slider-container,
+.power-sliders-row .compact-slider-container {
+  flex: 1;
+  min-width: 120px;
+  max-width: 200px;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Make sliders more compact for horizontal layout */
+.experimental-sliders-row,
+.power-sliders-row {
+  display: flex;
+  gap: 2%;
+  flex-wrap: nowrap;
+  justify-content: space-evenly;
+  padding: 5px 5%;
+  margin-bottom: 3px;
+  width: 100%;
+}
+
 .experimental-params {
   background-color: #e8f4f8;
   border-left: 4px solid #17a2b8;
@@ -108,7 +152,7 @@
 .compact-slider-container label.slider-label {
   text-align: center !important;
   font-size: 17px !important;
-  margin-bottom: 15px !important;
+  margin-bottom: 8px !important;
   font-weight: 500 !important;
   color: #495057 !important;
   display: block !important;
@@ -119,6 +163,15 @@
   background: #e9ecef;
   border: 1px solid #adb5bd;
   margin: 15px auto 20px auto;
+}
+
+/* Center the slider track within the container */
+.compact-slider-container {
+  text-align: center;
+}
+
+.compact-slider-container .noUi-base {
+  margin: 0 auto;
 }
 
 .compact-slider-container .noUi-connect {
