@@ -229,7 +229,7 @@ create_single_parameter_plots <- function(cached_results) {
     ) +
     coord_cartesian(ylim = c(NA, 1)) +  # Ensure y-axis shows power = 1 as maximum
     theme_bw() +
-    labs(color = "Solution") +
+    labs(color = "Parameter Setting") +
     theme(plot.title = element_text(hjust = 0.5))
 
   # Convert to interactive plotly
@@ -534,14 +534,14 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   # Set color scale
   p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
                                                 sapply(solutions_list, function(sol) sol$label)),
-                              name = "Solution")
+                              name = "Parameter Setting")
 
   # Labels and theme
   p <- p + labs(
     title = workflow_info$title,
     x = "Cells per target",
     y = "Reads per cell",
-    color = "Solution"
+    color = "Parameter Setting"
   ) +
   theme_bw() +
   theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
@@ -737,14 +737,14 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     labs(title = paste(param_name, "vs Cost"),
          x = x_axis_label,
          y = "Total Cost ($)",
-         color = "Solution") +
+         color = "Parameter Setting") +
     theme_bw() +
     theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
 
   # Set color scale for multiple solutions
   p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
                                                 sapply(solutions_list, function(sol) sol$label)),
-                              name = "Solution")
+                              name = "Parameter Setting")
 
   # ========================================================================
   # STEP 7: CONVERT TO PLOTLY AND CONFIGURE STYLING
