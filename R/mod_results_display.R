@@ -14,7 +14,8 @@ mod_results_display_ui <- function(id) {
   ns <- NS(id)
   tagList(
     # Two-row layout: Row 1: Plot + Sliders, Row 2: Solutions
-    tagList(
+    tags$div(
+      style = "margin-top: -20px;",
       # Row 1: Plot and Sliders side by side
       fluidRow(
         # Plot Column (left 58%)
