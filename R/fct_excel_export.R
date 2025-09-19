@@ -37,49 +37,140 @@ create_excel_export_data <- function(cached_results) {
 #' @return Data frame for Parameter Settings sheet
 #' @noRd
 create_parameter_settings_sheet <- function(cached_results) {
-  # Use existing solution table extraction logic with error handling
+  # Use the exact same logic as the solution table in the app
   solutions_data <- safe_extract_cached_solutions_data(cached_results)
 
   if (length(solutions_data) == 0) {
     return(data.frame(Message = "No solutions available"))
   }
 
-  # Convert solutions data to clean Excel format
-  solutions_df <- data.frame(
-    Solution = character(),
-    `Achieved Power` = numeric(),
-    `Total Cost` = character(),
-    `Optimal Value` = character(),
-    `MOI` = numeric(),
-    `Targets` = numeric(),
-    `gRNAs per Target` = numeric(),
-    `Cells per Target` = character(),
-    `Reads per Cell` = character(),
-    `TPM Threshold` = character(),
-    `Fold Change` = character(),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-
-  for (solution in solutions_data) {
-    solutions_df <- rbind(solutions_df, data.frame(
-      Solution = solution$solution_name %||% paste("Solution", solution$solution_id),
-      `Achieved Power` = round(solution$achieved_power * 100, 1),
-      `Total Cost` = if (!is.null(solution$total_cost)) paste0("$", scales::comma(solution$total_cost)) else "N/A",
-      `Optimal Value` = solution$optimal_value %||% "N/A",
-      `MOI` = solution$experimental_params$MOI %||% NA,
-      `Targets` = solution$experimental_params$num_targets %||% NA,
-      `gRNAs per Target` = solution$experimental_params$gRNAs_per_target %||% NA,
-      `Cells per Target` = solution$experimental_params$cells_per_target %||% "N/A",
-      `Reads per Cell` = solution$experimental_params$reads_per_cell %||% "N/A",
-      `TPM Threshold` = solution$TPM_threshold %||% "N/A",
-      `Fold Change` = solution$effect_sizes$minimum_fold_change %||% "N/A",
-      stringsAsFactors = FALSE,
-      check.names = FALSE
-    ))
+  # Get workflow_info from cached results (same logic as create_enhanced_solutions_table)
+  workflow_info <- if (!is.null(cached_results$current_result)) {
+    cached_results$current_result$workflow_info
+  } else if (length(cached_results$pinned_solutions) > 0) {
+    cached_results$pinned_solutions[[1]]$workflow_info
+  } else {
+    return(data.frame(Message = "No workflow information available"))
   }
 
-  return(solutions_df)
+  # Convert the solution table to Excel data frame format using the same logic as the app
+  convert_solutions_table_to_excel(solutions_data, workflow_info)
+}
+
+#' Convert Solutions Table to Excel Format
+#'
+#' @description Converts solution table data to Excel data frame format,
+#' replicating the exact same structure and logic as the app's solution table
+#' @param solutions_data Structured solution data from extract_cached_solutions_data
+#' @param workflow_info Workflow information containing minimizing parameter
+#' @return Data frame for Excel export matching app's solution table
+#' @noRd
+convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
+  # Get dynamic column name for optimal parameter (same logic as app)
+  optimal_col_name <- get_optimal_column_name(workflow_info$minimizing_parameter)
+
+  # Check if workflow includes cost (same logic as app)
+  has_cost <- !is.null(workflow_info$workflow_id) &&
+              !workflow_info$workflow_id %in% c(
+                "power_single_cells_per_target", "power_single_reads_per_cell",
+                "power_single_TPM_threshold", "power_single_minimum_fold_change"
+              )
+
+  # Get minimizing parameter from first solution (same logic as app)
+  minimizing_param <- solutions_data[[1]]$minimizing_param
+
+  # Build column headers exactly like the app does
+  column_headers <- c("Setting", "Power")
+
+  # Add cost column if workflow includes cost AND cost is not being minimized
+  if (has_cost && minimizing_param != "cost") {
+    column_headers <- c(column_headers, "Cost")
+  }
+
+  # Add optimal parameter column
+  column_headers <- c(column_headers, optimal_col_name)
+
+  # Add experimental parameter columns (always show these)
+  column_headers <- c(column_headers, "MOI", "# Targets", "gRNAs/Target")
+
+  # Add experimental parameters only if not being minimized
+  if (minimizing_param != "cells_per_target") {
+    column_headers <- c(column_headers, "Cells/Target")
+  }
+  if (minimizing_param != "reads_per_cell") {
+    column_headers <- c(column_headers, "Reads/Cell")
+  }
+
+  # Add TPM Threshold if not being minimized
+  if (minimizing_param != "TPM_threshold") {
+    column_headers <- c(column_headers, "TPM Threshold")
+  }
+
+  # Add effect sizes columns
+  if (minimizing_param != "minimum_fold_change") {
+    column_headers <- c(column_headers, "Fold Change")
+  }
+
+  # Always add Non-null Prop (never minimized)
+  column_headers <- c(column_headers, "Non-null Prop")
+
+  # Create data frame with dynamic columns
+  excel_df <- data.frame(matrix(ncol = length(column_headers), nrow = 0))
+  colnames(excel_df) <- column_headers
+
+  # Fill data rows using the same logic as create_data_row
+  for (solution in solutions_data) {
+    row_data <- list()
+
+    # Setting name
+    row_data[["Setting"]] <- solution$solution_name %||% paste("Solution", solution$solution_id)
+
+    # Achieved power (convert to percentage)
+    row_data[["Power"]] <- paste0(round(solution$achieved_power * 100, 1), "%")
+
+    # Cost (if applicable)
+    if (has_cost && minimizing_param != "cost") {
+      if (!is.null(solution$total_cost)) {
+        row_data[["Cost"]] <- paste0("$", format_number(solution$total_cost))
+      } else {
+        row_data[["Cost"]] <- "N/A"
+      }
+    }
+
+    # Optimal parameter value
+    row_data[[optimal_col_name]] <- solution$optimal_value %||% "N/A"
+
+    # Experimental parameters (always show)
+    row_data[["MOI"]] <- solution$experimental_params$MOI %||% "N/A"
+    row_data[["# Targets"]] <- solution$experimental_params$num_targets %||% "N/A"
+    row_data[["gRNAs/Target"]] <- solution$experimental_params$gRNAs_per_target %||% "N/A"
+
+    # Conditional experimental parameters
+    if (minimizing_param != "cells_per_target") {
+      row_data[["Cells/Target"]] <- solution$experimental_params$cells_per_target %||% "N/A"
+    }
+    if (minimizing_param != "reads_per_cell") {
+      row_data[["Reads/Cell"]] <- solution$experimental_params$reads_per_cell %||% "N/A"
+    }
+
+    # TPM Threshold
+    if (minimizing_param != "TPM_threshold") {
+      row_data[["TPM Threshold"]] <- solution$TPM_threshold %||% "N/A"
+    }
+
+    # Effect sizes
+    if (minimizing_param != "minimum_fold_change") {
+      row_data[["Fold Change"]] <- solution$effect_sizes$minimum_fold_change %||% "N/A"
+    }
+
+    # Non-null Prop (always shown)
+    row_data[["Non-null Prop"]] <- solution$effect_sizes$non_null_prop %||% "N/A"
+
+    # Add row to data frame
+    excel_df <- rbind(excel_df, row_data, stringsAsFactors = FALSE)
+  }
+
+  return(excel_df)
 }
 
 #' Create Power Data Sheets
