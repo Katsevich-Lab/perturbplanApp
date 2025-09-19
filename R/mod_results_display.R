@@ -352,16 +352,9 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
         tryCatch({
           # Get the interactive plotly version and save as HTML
           if (!is.null(plots$plots$interactive_plot)) {
-            # Create a taller version of the plot for download
-            taller_plot <- plots$plots$interactive_plot %>%
-              plotly::layout(
-                height = 700,  # Increase from 430 to 700 pixels
-                margin = list(t = 60, b = 80, l = 80, r = 40)  # Adjust margins for better spacing
-              )
-
-            # Save the plotly widget as interactive HTML file
+            # Save the plotly widget as interactive HTML file (use as-is to avoid deprecation warnings)
             htmlwidgets::saveWidget(
-              widget = plotly::as_widget(taller_plot),
+              widget = plotly::as_widget(plots$plots$interactive_plot),
               file = file,
               selfcontained = TRUE,
               title = "PerturbPlan Interactive Plot"
