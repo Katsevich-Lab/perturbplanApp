@@ -129,7 +129,7 @@ mod_results_display_ui <- function(id) {
               tags$div(
                 style = "position: absolute; top: 8px; right: 15px; z-index: 1000;",
                 downloadButton(
-                  ns("export_excel"),
+                  ns("header_export_excel_download"),
                   "",
                   icon = icon("file-excel"),
                   class = "btn btn-success btn-sm",
@@ -320,8 +320,8 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     # EXPORT FUNCTIONALITY
     # ========================================================================
 
-    # Excel export using downloadHandler
-    output$export_excel <- downloadHandler(
+    # Excel export using downloadHandler (moved from app_server.R)
+    output$header_export_excel_download <- downloadHandler(
       filename = function() {
         paste0("perturbplan_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
       },

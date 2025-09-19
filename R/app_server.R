@@ -67,66 +67,12 @@ app_server <- function(input, output, session) {
   # HEADER EXPORT FUNCTIONALITY
   # ========================================================================
 
-  # Header export buttons UI
+  # Header export buttons UI - Excel export moved to mod_results_display.R
   output$header_export_buttons <- renderUI({
-    # Show export buttons only when cached results are available
-    req(cached_results())
-
-    results <- cached_results()
-
-    # Check if we have any valid results (current or pinned)
-    has_results <- (!is.null(results$current_result) && is.null(results$current_result$error)) ||
-                   (length(results$pinned_solutions) > 0)
-
-    if (has_results) {
-      tags$div(
-        style = "display: flex; gap: 8px; align-items: center;",
-        downloadButton(
-          "header_export_excel_download",
-          "",
-          icon = icon("file-excel"),
-          class = "btn btn-success btn-sm",
-          style = "padding: 4px 8px;",
-          title = "Export to Excel"
-        )
-      )
-    }
+    # Excel export functionality moved to Solutions panel in mod_results_display.R
+    # This placeholder ensures no UI errors but displays nothing
+    NULL
   })
-
-  # Header export handlers - Excel Export
-  output$header_export_excel_download <- downloadHandler(
-    filename = function() {
-      paste0("perturbplan_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
-    },
-    content = function(file) {
-      req(cached_results())
-
-      results <- cached_results()
-
-      tryCatch({
-        # Create Excel data using new cached_results approach
-        excel_data <- create_excel_export_data(results)
-
-        # Write Excel file to the specified path
-        write.xlsx(excel_data, file = file)
-
-        showNotification(
-          paste("Excel file exported successfully with", length(excel_data), "sheets!"),
-          type = "message",
-          duration = 3
-        )
-
-      }, error = function(e) {
-        showNotification(
-          paste("Export failed:", e$message),
-          type = "error",
-          duration = 5
-        )
-        stop(e$message)
-      })
-    },
-    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  )
 
 
   # ========================================================================
