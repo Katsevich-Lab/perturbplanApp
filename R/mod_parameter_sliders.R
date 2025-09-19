@@ -8,7 +8,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput moduleServer reactive observeEvent req renderUI observe isolate reactiveValues actionButton
+#' @importFrom shiny NS tagList tags div h5 fluidRow column uiOutput moduleServer reactive observeEvent req renderUI observe isolate reactiveValues actionButton HTML
 #' @importFrom shinyWidgets noUiSliderInput
 mod_parameter_sliders_ui <- function(id) {
   ns <- NS(id)
@@ -19,19 +19,8 @@ mod_parameter_sliders_ui <- function(id) {
       class = "parameter-sliders-grid",
       style = "padding: 10px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
 
-      # INFORMATION BOX: Design problem description
-      tags$div(
-        class = "design-problem-box",
-        style = "background-color: #e8f4f8; border: 1px solid #17a2b8; border-radius: 6px; padding: 12px; margin-bottom: 15px;",
-        tags$h5(
-          "Your Design Problem:",
-          style = "color: #17a2b8; margin-bottom: 8px; font-weight: 600; font-size: 14px;"
-        ),
-        tags$p(
-          "Find the minimum cells per target for which power is at least 80%, keeping all other parameters fixed.",
-          style = "color: #495057; margin-bottom: 0; font-size: 13px; line-height: 1.4;"
-        )
-      ),
+      # INFORMATION BOX: Dynamic design problem description
+      uiOutput(ns("design_problem_box")),
 
       # TWO-ROW LAYOUT: Experimental parameters on top, Power-determining parameters below
       tags$div(
@@ -298,6 +287,49 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
             format_decimals = if (param_name == "minimum_fold_change") 2 else 0
           )
         })
+      )
+    })
+
+    # Generate dynamic design problem box
+    output$design_problem_box <- renderUI({
+      config <- sidebar_config()
+      if (is.null(config)) return(NULL)
+
+      # Extract design options to generate summary
+      design_options <- config$design_options
+      if (is.null(design_options)) return(NULL)
+
+      # Generate summary text using the same function as sidebar
+      summary_text <- tryCatch({
+        generate_design_summary(
+          opt_type = design_options$optimization_type,
+          target = design_options$minimization_target,
+          power = 0.8, # Default power level
+          cost_budget = 10000, # Default cost budget
+          param_configs = if (!is.null(design_options$optimization_type) && !is.null(design_options$minimization_target)) {
+            get_param_configs(design_options$optimization_type, design_options$minimization_target)
+          } else NULL,
+          cells_per_target_control = design_options$parameter_controls$cells_per_target$type,
+          reads_per_cell_control = design_options$parameter_controls$reads_per_cell$type,
+          TPM_control = design_options$parameter_controls$TPM_threshold$type,
+          fc_control = design_options$parameter_controls$minimum_fold_change$type
+        )
+      }, error = function(e) {
+        "Configure your design options to see the optimization objective."
+      })
+
+      # Return styled box with dynamic content
+      tags$div(
+        class = "design-problem-box",
+        style = "background-color: #e8f4f8; border: 1px solid #17a2b8; border-radius: 6px; padding: 12px; margin-bottom: 15px;",
+        tags$h5(
+          "Your Design Problem:",
+          style = "color: #17a2b8; margin-bottom: 8px; font-weight: 600; font-size: 14px;"
+        ),
+        tags$div(
+          HTML(summary_text),
+          style = "color: #495057; margin-bottom: 0; font-size: 13px; line-height: 1.4;"
+        )
       )
     })
 
