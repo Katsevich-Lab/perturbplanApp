@@ -19,6 +19,20 @@ mod_parameter_sliders_ui <- function(id) {
       class = "parameter-sliders-grid",
       style = "padding: 10px; background-color: #f8f9fa; border-radius: 8px; margin-top: 20px;",
 
+      # INFORMATION BOX: Design problem description
+      tags$div(
+        class = "design-problem-box",
+        style = "background-color: #e8f4f8; border: 1px solid #17a2b8; border-radius: 6px; padding: 12px; margin-bottom: 15px;",
+        tags$h5(
+          "Your Design Problem:",
+          style = "color: #17a2b8; margin-bottom: 8px; font-weight: 600; font-size: 14px;"
+        ),
+        tags$p(
+          "Find the minimum cells per target for which power is at least 80%, keeping all other parameters fixed.",
+          style = "color: #495057; margin-bottom: 0; font-size: 13px; line-height: 1.4;"
+        )
+      ),
+
       # TWO-ROW LAYOUT: Experimental parameters on top, Power-determining parameters below
       tags$div(
         class = "slider-rows-container",
@@ -27,7 +41,7 @@ mod_parameter_sliders_ui <- function(id) {
         # ROW 2: Power-determining parameters (dynamic - 3 out of 4 shown)
         uiOutput(ns("dynamic_power_sliders_column"))
       ),
-      
+
       # PINNING CONTROLS: Simple two-button layout at bottom
       uiOutput(ns("pin_buttons_section"))
     )
