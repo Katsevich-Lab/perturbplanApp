@@ -21,13 +21,18 @@ mod_results_display_ui <- function(id) {
         column(
           width = 8,
           box(
-            title = tags$div(
-              style = "display: flex; align-items: center; width: 100%; position: relative;",
-              tags$span("Analysis Results"),
-              conditionalPanel(
-                condition = "output.analysis_trigger == true && output.show_error == false",
-                ns = ns,
-                style = "position: absolute; right: 0;",
+            title = "Analysis Results",
+            status = "primary",
+            solidHeader = TRUE,
+            width = NULL,
+            height = 500,
+
+            # Download button positioned in header area
+            conditionalPanel(
+              condition = "output.analysis_trigger == true && output.show_error == false",
+              ns = ns,
+              tags$div(
+                style = "position: absolute; top: 8px; right: 15px; z-index: 1000;",
                 downloadButton(
                   ns("export_plot"),
                   "",
@@ -38,10 +43,6 @@ mod_results_display_ui <- function(id) {
                 )
               )
             ),
-            status = "primary",
-            solidHeader = TRUE,
-            width = NULL,
-            height = 500,
 
             # Conditional display based on analysis state (mutually exclusive)
             conditionalPanel(

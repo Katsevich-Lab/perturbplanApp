@@ -87,14 +87,6 @@ app_server <- function(input, output, session) {
           class = "btn btn-success btn-sm",
           style = "padding: 4px 8px;",
           title = "Export to Excel"
-        ),
-        actionButton(
-          "header_export_plot",
-          "",
-          icon = icon("image"),
-          class = "btn btn-info btn-sm",
-          style = "padding: 4px 8px;",
-          title = "Download Plot"
         )
       )
     }
@@ -125,18 +117,6 @@ app_server <- function(input, output, session) {
     ))
   })
 
-  # Plot Download - Trigger download from results display module
-  observeEvent(input$header_export_plot, {
-    # Trigger the download button that's now in the Analysis Results header
-    shinyjs::runjs("
-      var downloadLink = document.getElementById('display-export_plot');
-      if (downloadLink) {
-        downloadLink.click();
-      } else {
-        alert('Download button not found. Please ensure analysis is complete.');
-      }
-    ")
-  })
 
   # ========================================================================
   # APP STATE MANAGEMENT
