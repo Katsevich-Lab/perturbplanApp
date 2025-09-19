@@ -216,8 +216,8 @@ mod_design_options_server <- function(id, app_state = NULL){
       # Cost minimization parameters (independent condition)
       toggle_cost_minimization_params(session, state$show_cost_minimization)
 
-      # All conditions met → Design Summary
-      if (state$summary_ready) {
+      # All conditions met → Design Summary (only show in Phase 1)
+      if (state$summary_ready && !is.null(app_state) && app_state$phase == 1) {
         # Generate summary text using existing function
         summary_text <- generate_design_summary(
           opt_type = state$optimization_type,
@@ -237,6 +237,13 @@ mod_design_options_server <- function(id, app_state = NULL){
         toggle_design_summary(session, FALSE)
       }
     })
+
+    # Phase-aware design summary controller - hide summary when entering Phase 2
+    observeEvent(app_state$phase, {
+      if (!is.null(app_state) && app_state$phase == 2) {
+        toggle_design_summary(session, FALSE)
+      }
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
     # Input reset controller (separate concern)
     observe({
