@@ -735,7 +735,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
                size = 2, shape = 18)) +  # Diamond shape for optimal points
     # Add horizontal line for cost budget if available
     {if (!is.null(cost_budget) && !is.na(cost_budget))
-      geom_hline(yintercept = cost_budget, linetype = "dashed", color = "red", size = 0.8)
+      geom_hline(yintercept = cost_budget, linetype = "dashed", alpha = 0.7, color = "grey")
     } +
     scale_x_log10(labels = scales::comma_format()) +
     scale_y_log10(labels = scales::comma_format(accuracy = 1)) +
