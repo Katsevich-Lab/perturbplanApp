@@ -79,7 +79,7 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
   # Get minimizing parameter from first solution (same logic as app)
   minimizing_param <- solutions_data[[1]]$minimizing_param
 
-  # Build column headers exactly like the app does
+  # Build column headers (simplified names to avoid Excel conversion issues)
   column_headers <- c("Setting", "Power")
 
   # Add cost column if workflow includes cost AND cost is not being minimized
@@ -87,87 +87,116 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
     column_headers <- c(column_headers, "Cost")
   }
 
-  # Add optimal parameter column
-  column_headers <- c(column_headers, optimal_col_name)
+  # Add optimal parameter column (simplified)
+  optimal_col_simple <- gsub("[/\\s]+", "_", optimal_col_name)
+  column_headers <- c(column_headers, optimal_col_simple)
 
-  # Add experimental parameter columns (always show these)
-  column_headers <- c(column_headers, "MOI", "# Targets", "gRNAs/Target")
+  # Add experimental parameter columns (always show these, simplified names)
+  column_headers <- c(column_headers, "MOI", "Targets", "gRNAs_per_Target")
 
   # Add experimental parameters only if not being minimized
   if (minimizing_param != "cells_per_target") {
-    column_headers <- c(column_headers, "Cells/Target")
+    column_headers <- c(column_headers, "Cells_per_Target")
   }
   if (minimizing_param != "reads_per_cell") {
-    column_headers <- c(column_headers, "Reads/Cell")
+    column_headers <- c(column_headers, "Reads_per_Cell")
   }
 
   # Add TPM Threshold if not being minimized
   if (minimizing_param != "TPM_threshold") {
-    column_headers <- c(column_headers, "TPM Threshold")
+    column_headers <- c(column_headers, "TPM_Threshold")
   }
 
   # Add effect sizes columns
   if (minimizing_param != "minimum_fold_change") {
-    column_headers <- c(column_headers, "Fold Change")
+    column_headers <- c(column_headers, "Fold_Change")
   }
 
   # Always add Non-null Prop (never minimized)
-  column_headers <- c(column_headers, "Non-null Prop")
+  column_headers <- c(column_headers, "Non_null_Prop")
 
-  # Create data frame with dynamic columns
-  excel_df <- data.frame(matrix(ncol = length(column_headers), nrow = 0))
-  colnames(excel_df) <- column_headers
+  # Initialize empty data frame with all columns
+  excel_df_rows <- list()
 
   # Fill data rows using the same logic as create_data_row
-  for (solution in solutions_data) {
-    row_data <- list()
+  for (i in seq_along(solutions_data)) {
+    solution <- solutions_data[[i]]
+    row_data <- vector("list", length(column_headers))
+    names(row_data) <- column_headers
 
-    # Setting name
+    # Initialize all columns with "N/A"
+    for (col in column_headers) {
+      row_data[[col]] <- "N/A"
+    }
+
+    # Setting name (exact same logic as create_data_row)
     row_data[["Setting"]] <- solution$solution_name %||% paste("Solution", solution$solution_id)
 
-    # Achieved power (convert to percentage)
-    row_data[["Power"]] <- paste0(round(solution$achieved_power * 100, 1), "%")
+    # Achieved power (format as percentage like in the app)
+    power_value <- solution$achieved_power
+    if (!is.null(power_value) && is.numeric(power_value)) {
+      row_data[["Power"]] <- paste0(round(power_value * 100, 1), "%")
+    }
 
-    # Cost (if applicable)
+    # Cost (if applicable) - exact same logic as create_data_row
     if (has_cost && minimizing_param != "cost") {
       if (!is.null(solution$total_cost)) {
         row_data[["Cost"]] <- paste0("$", format_number(solution$total_cost))
-      } else {
-        row_data[["Cost"]] <- "N/A"
       }
     }
 
     # Optimal parameter value
-    row_data[[optimal_col_name]] <- solution$optimal_value %||% "N/A"
-
-    # Experimental parameters (always show)
-    row_data[["MOI"]] <- solution$experimental_params$MOI %||% "N/A"
-    row_data[["# Targets"]] <- solution$experimental_params$num_targets %||% "N/A"
-    row_data[["gRNAs/Target"]] <- solution$experimental_params$gRNAs_per_target %||% "N/A"
-
-    # Conditional experimental parameters
-    if (minimizing_param != "cells_per_target") {
-      row_data[["Cells/Target"]] <- solution$experimental_params$cells_per_target %||% "N/A"
-    }
-    if (minimizing_param != "reads_per_cell") {
-      row_data[["Reads/Cell"]] <- solution$experimental_params$reads_per_cell %||% "N/A"
+    if (optimal_col_simple %in% column_headers) {
+      row_data[[optimal_col_simple]] <- solution$optimal_value %||% "N/A"
     }
 
-    # TPM Threshold
-    if (minimizing_param != "TPM_threshold") {
-      row_data[["TPM Threshold"]] <- solution$TPM_threshold %||% "N/A"
+    # Experimental parameters (exact same logic as create_data_row)
+    exp_params <- solution$experimental_params
+    if (!is.null(exp_params)) {
+      row_data[["MOI"]] <- exp_params$moi %||% "N/A"
+      row_data[["Targets"]] <- exp_params$num_targets %||% "N/A"
+      row_data[["gRNAs_per_Target"]] <- exp_params$grnas_per_target %||% "N/A"
+
+      # Conditional experimental parameters (exact same logic as create_data_row)
+      if (minimizing_param != "cells_per_target" && "Cells_per_Target" %in% column_headers) {
+        row_data[["Cells_per_Target"]] <- exp_params$cells_per_target %||% "N/A"
+      }
+      if (minimizing_param != "reads_per_cell" && "Reads_per_Cell" %in% column_headers) {
+        row_data[["Reads_per_Cell"]] <- exp_params$reads_per_cell %||% "N/A"
+      }
     }
 
-    # Effect sizes
-    if (minimizing_param != "minimum_fold_change") {
-      row_data[["Fold Change"]] <- solution$effect_sizes$minimum_fold_change %||% "N/A"
+    # TPM Threshold (exact same logic as create_data_row)
+    if (minimizing_param != "TPM_threshold" && "TPM_Threshold" %in% column_headers) {
+      row_data[["TPM_Threshold"]] <- solution$TPM_threshold %||% "N/A"
     }
 
-    # Non-null Prop (always shown)
-    row_data[["Non-null Prop"]] <- solution$effect_sizes$non_null_prop %||% "N/A"
+    # Effect sizes (exact same logic as create_data_row)
+    effect_sizes <- solution$effect_sizes
+    if (!is.null(effect_sizes)) {
+      if (minimizing_param != "minimum_fold_change" && "Fold_Change" %in% column_headers) {
+        row_data[["Fold_Change"]] <- effect_sizes$fold_change %||% "N/A"
+      }
+      # Non-null Prop (always shown, exact same logic as create_data_row)
+      if ("Non_null_Prop" %in% column_headers) {
+        row_data[["Non_null_Prop"]] <- effect_sizes$non_null_proportion %||% "N/A"
+      }
+    }
 
-    # Add row to data frame
-    excel_df <- rbind(excel_df, row_data, stringsAsFactors = FALSE)
+    # Add row to list
+    excel_df_rows[[i]] <- row_data
+  }
+
+  # Convert list of rows to data frame
+  if (length(excel_df_rows) > 0) {
+    excel_df <- do.call(rbind.data.frame, excel_df_rows)
+    # Only select columns that actually exist in the data frame
+    existing_columns <- intersect(column_headers, colnames(excel_df))
+    excel_df <- excel_df[existing_columns]
+  } else {
+    # Create empty data frame with proper columns
+    excel_df <- data.frame(matrix(ncol = length(column_headers), nrow = 0))
+    colnames(excel_df) <- column_headers
   }
 
   return(excel_df)
