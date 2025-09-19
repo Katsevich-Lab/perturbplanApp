@@ -22,11 +22,12 @@ mod_results_display_ui <- function(id) {
           width = 8,
           box(
             title = tags$div(
-              style = "display: flex; justify-content: space-between; align-items: center; width: 100%;",
+              style = "display: flex; align-items: center; width: 100%; position: relative;",
               tags$span("Analysis Results"),
               conditionalPanel(
                 condition = "output.analysis_trigger == true && output.show_error == false",
                 ns = ns,
+                style = "position: absolute; right: 0;",
                 downloadButton(
                   ns("export_plot"),
                   "",
