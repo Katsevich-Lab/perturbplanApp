@@ -137,7 +137,7 @@ create_single_parameter_plots <- function(cached_results) {
 
   for (solution in solutions_data) {
     solution_data <- solution$data
-    solution_label <- solution$label  # "Current", "Solution 1", etc.
+    solution_label <- solution$label  # "Current", "Setting 1", etc.
 
     # Create tooltip text
     formatted_values <- case_when(

@@ -37,7 +37,7 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
     # Pin-based cache structure
     results_cache <- reactiveValues(
       current_result = NULL,        # Always "Current" (dashed line in plots)
-      pinned_solutions = list(),    # Named list: "Solution 1", "Solution 2", etc.
+      pinned_solutions = list(),    # Named list: "Setting 1", "Setting 2", etc.
       next_solution_id = 1         # Counter for naming new pins
     )
 
@@ -53,7 +53,7 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
 
       if (!is.null(current) && is.null(current$error)) {
         # Create solution name
-        solution_name <- paste0("Solution ", results_cache$next_solution_id)
+        solution_name <- paste0("Setting ", results_cache$next_solution_id)
 
         # Move current result to pinned solutions (not copy)
         results_cache$pinned_solutions[[solution_name]] <- current
