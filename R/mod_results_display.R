@@ -81,7 +81,7 @@ mod_results_display_ui <- function(id) {
           width = 5,
           box(
             title = "Parameters",
-            status = "success",
+            status = "primary",
             solidHeader = TRUE,
             width = NULL,
             height = 500,
