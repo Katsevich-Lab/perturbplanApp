@@ -91,7 +91,7 @@ mod_results_display_ui <- function(id) {
               condition = "output.show_sliders == true",
               ns = ns,
               tags$div(
-                style = "max-height: 400px; overflow-y: auto;",
+                style = "max-height: 450px; overflow-y: auto;",
                 mod_parameter_sliders_ui("sliders")
               )
             ),
