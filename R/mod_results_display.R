@@ -320,42 +320,25 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     # EXPORT FUNCTIONALITY
     # ========================================================================
 
-    # Excel export using downloadHandler (moved from app_server.R)
+    # Excel export using downloadHandler (moved from app_server.R - original working version)
     output$header_export_excel_download <- downloadHandler(
       filename = function() {
         paste0("perturbplan_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
       },
       content = function(file) {
-        req(analysis_results(), plot_objects())
+        req(cached_results())
 
-        results <- analysis_results()
-        plots <- plot_objects()
+        results <- cached_results()
 
         tryCatch({
-          # Prepare Excel data using utility functions from fct_excel_export.R
-          excel_data <- list(
-            "Summary" = create_excel_summary(results, plots),
-            "Detailed_Results" = results$power_data,
-            "Design_Options" = create_excel_design_options(results$user_config$design_options),
-            "Experimental_Setup" = create_excel_experimental_setup(results$user_config$experimental_setup),
-            "Analysis_Choices" = create_excel_analysis_choices(results$user_config$analysis_choices),
-            "Effect_Sizes" = create_excel_effect_sizes(results$user_config$effect_sizes),
-            "Metadata" = data.frame(
-              Item = c("Analysis Mode", "Workflow Type", "Timestamp", "App Version"),
-              Value = c(
-                results$metadata$analysis_mode,
-                results$workflow_info$workflow_id,
-                as.character(results$metadata$analysis_timestamp),
-                results$metadata$app_version
-              )
-            )
-          )
+          # Create Excel data using new cached_results approach
+          excel_data <- create_excel_export_data(results)
 
           # Write Excel file to the specified path
           write.xlsx(excel_data, file = file)
 
           showNotification(
-            "Excel file exported successfully!",
+            paste("Excel file exported successfully with", length(excel_data), "sheets!"),
             type = "message",
             duration = 3
           )
