@@ -604,6 +604,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
 
   # Extract constraints from metadata
   target_power <- metadata_source$user_config$design_options$target_power %||% 0.8
+  cost_budget <- metadata_source$user_config$design_options$cost_budget
 
   # ========================================================================
   # STEP 2: EXTRACT DATA FROM POWER_DATA ONLY
@@ -732,6 +733,10 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
                aes(x = parameter_value, y = total_cost,
                    color = solution_label, text = point_tooltip),
                size = 2, shape = 18)) +  # Diamond shape for optimal points
+    # Add horizontal line for cost budget if available
+    {if (!is.null(cost_budget) && !is.na(cost_budget))
+      geom_hline(yintercept = cost_budget, linetype = "dashed", color = "red", size = 0.8)
+    } +
     scale_x_log10(labels = scales::comma_format()) +
     scale_y_log10(labels = scales::comma_format(accuracy = 1)) +
     labs(title = paste(param_name, "vs Cost"),
