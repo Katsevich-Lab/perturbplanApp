@@ -19,7 +19,7 @@ mod_results_display_ui <- function(id) {
       fluidRow(
         # Plot Column (left 60%)
         column(
-          width = 6,
+          width = 7,
           box(
             title = "Analysis Results",
             status = "primary",
@@ -78,7 +78,7 @@ mod_results_display_ui <- function(id) {
 
         # Sliders Column (right 40%)
         column(
-          width = 4,
+          width = 5,
           box(
             title = "Parameters",
             status = "success",

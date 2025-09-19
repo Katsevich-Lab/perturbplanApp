@@ -65,7 +65,7 @@ create_compact_slider <- function(inputId, label, min, max, value, step, format_
     tags$label(
       label,
       class = "slider-label",
-      style = "font-size: 18px; font-weight: 500; color: #495057; margin-bottom: 8px; display: block; text-align: center;"
+      style = "font-weight: 500; color: #495057; margin-bottom: 8px; display: block; text-align: center;"
     ),
     shinyWidgets::noUiSliderInput(
       inputId = inputId,

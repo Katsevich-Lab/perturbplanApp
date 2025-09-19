@@ -104,12 +104,14 @@
   border-radius: 3px !important;
 }
 
-.compact-slider-container .slider-label {
-  text-align: center;
-  font-size: 13px !important;
-  margin-bottom: 15px;
-  font-weight: 500;
-  color: #495057;
+.compact-slider-container .slider-label,
+.compact-slider-container label.slider-label {
+  text-align: center !important;
+  font-size: 17px !important;
+  margin-bottom: 15px !important;
+  font-weight: 500 !important;
+  color: #495057 !important;
+  display: block !important;
 }
 
 /* Custom slider styling for compact horizontal layout - noUiSlider */
@@ -236,11 +238,7 @@
   .column-header {
     font-size: 13px;
   }
-  
-  .compact-slider-container .slider-label {
-    font-size: 11px !important;
-  }
-  
+
   .slider-column {
     min-height: auto;
   }
