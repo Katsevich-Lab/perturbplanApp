@@ -65,7 +65,7 @@ create_compact_slider <- function(inputId, label, min, max, value, step, format_
     tags$label(
       label,
       class = "slider-label",
-      style = "font-size: 13px; font-weight: 500; color: #495057; margin-bottom: 8px; display: block; text-align: center;"
+      style = "font-size: 18px; font-weight: 500; color: #495057; margin-bottom: 8px; display: block; text-align: center;"
     ),
     shinyWidgets::noUiSliderInput(
       inputId = inputId,
@@ -311,13 +311,13 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         style = "padding: 0px 10px 0px 10px; text-align: center; margin-top: -5px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;",
         actionButton(
           ns("pin_solution"),
-          "Pin Solution",
+          "Pin Setting",
           class = "btn btn-success btn-sm",
           style = "flex: 0 1 auto; min-width: 100px; max-width: 120px; font-size: 14px; font-weight: 500;"
         ),
         actionButton(
           ns("clear_pins"),
-          "Clear All",
+          "Clear Pins",
           class = "btn btn-outline-secondary btn-sm",
           style = "flex: 0 1 auto; min-width: 80px; max-width: 100px; font-size: 14px; font-weight: 500;"
         )

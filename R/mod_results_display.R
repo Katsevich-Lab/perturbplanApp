@@ -17,9 +17,9 @@ mod_results_display_ui <- function(id) {
     tagList(
       # Row 1: Plot and Sliders side by side
       fluidRow(
-        # Plot Column (left 70%)
+        # Plot Column (left 60%)
         column(
-          width = 8,
+          width = 6,
           box(
             title = "Analysis Results",
             status = "primary",
@@ -76,7 +76,7 @@ mod_results_display_ui <- function(id) {
           )
         ),
 
-        # Sliders Column (right 30%)
+        # Sliders Column (right 40%)
         column(
           width = 4,
           box(
