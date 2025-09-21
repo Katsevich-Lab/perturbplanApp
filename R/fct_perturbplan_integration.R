@@ -139,15 +139,13 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   if (!is.null(param_controls)) {
 
     # Add fixed parameters based on their type and actual config values (including slider overrides)
-    if (!is.null(param_controls$cells_per_target) &&
-        param_controls$cells_per_target$type == "fixed") {
+    if (!is.null(param_controls$cells_per_target) && param_controls$cells_per_target$type == "fixed") {
       # Use actual config value (includes slider overrides), fallback to default
       value <- experimental_opts$cells_fixed
       fixed_variable$cells_per_target <- round(value)
     }
 
-    if (!is.null(param_controls$reads_per_cell) &&
-        param_controls$reads_per_cell$type == "fixed") {
+    if (!is.null(param_controls$reads_per_cell) && param_controls$reads_per_cell$type == "fixed") {
       # Get sequenced reads per cell value (includes slider overrides), fallback to default
       sequenced_reads_per_cell <- experimental_opts$reads_per_cell_fixed
 

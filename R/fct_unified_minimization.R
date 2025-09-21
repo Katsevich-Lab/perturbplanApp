@@ -22,10 +22,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   minimization_config <- get_minimization_config(workflow_info$workflow_id)
 
   # Step 2: Extract cost constraint from user (always use config$design_options$cost_budget for workflows 10-11)
-  cost_constraint <- config$design_options$cost_budget %||%
-                     config$cost_budget %||%
-                     10000
-
+  cost_constraint <- config$design_options$cost_budget
 
   # Step 3: Get comprehensive parameters from UI using existing mapping function
   perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
