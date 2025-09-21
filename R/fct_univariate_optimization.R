@@ -59,7 +59,7 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
   }
 
   # Create power_data in plotting format
-  target_power <- config$design_options$target_power %||% 0.8
+  target_power <- config$design_options$target_power
 
   power_data <- data.frame(
     parameter_value = results[[param_column]],

@@ -124,10 +124,6 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   # Determine minimizing variable from workflow
   minimizing_variable <- workflow_info$minimizing_parameter
 
-
-  # minimizing_variable is already standardized by centralized translation in mod_sidebar.R
-  # No additional mapping needed
-
   # Ensure we have the correct parameter name
   valid_minimizing_params <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell", "cost")
   if (!minimizing_variable %in% valid_minimizing_params) {
@@ -140,31 +136,23 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   # Get parameter controls from design options
   param_controls <- design_opts$parameter_controls
 
-
   if (!is.null(param_controls)) {
-    # Default values to use when fixed_value is NULL but type is "fixed"
-    default_values <- list(
-      cells_per_target = 1000,
-      reads_per_cell = 5000,
-      TPM_threshold = 10,
-      minimum_fold_change = 0.8
-    )
 
     # Add fixed parameters based on their type and actual config values (including slider overrides)
     if (!is.null(param_controls$cells_per_target) &&
         param_controls$cells_per_target$type == "fixed") {
       # Use actual config value (includes slider overrides), fallback to default
-      value <- experimental_opts$cells_fixed %||% default_values$cells_per_target
+      value <- experimental_opts$cells_fixed
       fixed_variable$cells_per_target <- round(value)
     }
 
     if (!is.null(param_controls$reads_per_cell) &&
         param_controls$reads_per_cell$type == "fixed") {
       # Get sequenced reads per cell value (includes slider overrides), fallback to default
-      sequenced_reads_per_cell <- experimental_opts$reads_per_cell_fixed %||% default_values$reads_per_cell
+      sequenced_reads_per_cell <- experimental_opts$reads_per_cell_fixed
 
       # Apply mapping efficiency transformation: reads_per_cell = sequenced_reads_per_cell * mapping_efficiency
-      mapping_efficiency <- advanced_opts$mapping_efficiency %||% 0.72
+      mapping_efficiency <- advanced_opts$mapping_efficiency
       reads_per_cell <- sequenced_reads_per_cell * mapping_efficiency
 
       fixed_variable$reads_per_cell <- round(reads_per_cell)
@@ -173,14 +161,14 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     if (!is.null(param_controls$TPM_threshold) &&
         param_controls$TPM_threshold$type == "fixed") {
       # Use actual config value (includes slider overrides), fallback to default
-      value <- analysis_opts$TPM_threshold_fixed %||% default_values$TPM_threshold
+      value <- analysis_opts$TPM_threshold_fixed
       fixed_variable$TPM_threshold <- value
     }
 
     if (!is.null(param_controls$minimum_fold_change) &&
         param_controls$minimum_fold_change$type == "fixed") {
       # Use actual config value (includes slider overrides), fallback to default
-      value <- effect_opts$minimum_fold_change_fixed %||% default_values$minimum_fold_change
+      value <- effect_opts$minimum_fold_change_fixed
       fixed_variable$minimum_fold_change <- value
     }
   }
@@ -198,9 +186,9 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     if ((has_cells_fixed && !has_reads_fixed) || (!has_cells_fixed && has_reads_fixed)) {
 
       # Extract cost parameters
-      cost_constraint <- design_opts$cost_budget %||% 1000  # Default budget
-      cost_per_cell <- design_opts$cost_per_cell %||% 0.086  # Default cost per cell
-      cost_per_million_reads <- design_opts$cost_per_million_reads %||% 0.374  # Default cost per million reads
+      cost_constraint <- design_opts$cost_budget
+      cost_per_cell <- design_opts$cost_per_cell
+      cost_per_million_reads <- design_opts$cost_per_million_reads
 
 
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
@@ -209,13 +197,13 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
           cost_per_captured_cell = cost_per_cell,
           cost_per_million_reads = cost_per_million_reads,
           cost_constraint = cost_constraint,
-          MOI = experimental_opts$MOI %||% 10,
-          num_targets = experimental_opts$num_targets %||% 100,
-          non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs %||% 10,
-          gRNAs_per_target = experimental_opts$gRNAs_per_target %||% 4,
+          MOI = experimental_opts$MOI,
+          num_targets = experimental_opts$num_targets,
+          non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs,
+          gRNAs_per_target = experimental_opts$gRNAs_per_target,
           reads_per_cell = if(has_reads_fixed) fixed_variable$reads_per_cell else NULL,
           cells_per_target = if(has_cells_fixed) fixed_variable$cells_per_target else NULL,
-          mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72
+          mapping_efficiency = config$experimental_setup$mapping_efficiency
         )
 
         # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
@@ -236,35 +224,28 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   side_mapping <- c("left" = "left", "right" = "right", "both" = "both")
   control_mapping <- c("complement" = "complement", "nt_cells" = "nt_cells")
 
-  # DEBUG: Log what will be passed to perturbplan
-  if (length(fixed_variable) > 0) {
-    for (name in names(fixed_variable)) {
-    }
-  } else {
-  }
-
   # Build parameter list
   params <- list(
     minimizing_variable = minimizing_variable,
     fixed_variable = fixed_variable,
 
     # Experimental parameters
-    MOI = experimental_opts$MOI %||% 10,
-    num_targets = experimental_opts$num_targets %||% 100,
-    non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs %||% 10,
-    gRNAs_per_target = experimental_opts$gRNAs_per_target %||% 4,
+    MOI = experimental_opts$MOI,
+    num_targets = experimental_opts$num_targets,
+    non_targeting_gRNAs = experimental_opts$non_targeting_gRNAs,
+    gRNAs_per_target = experimental_opts$gRNAs_per_target,
 
     # Effect size parameters
-    gRNA_variability = advanced_opts$gRNA_variability %||% 0.15,
-    prop_non_null = effect_opts$prop_non_null %||% 0.1,
+    gRNA_variability = advanced_opts$gRNA_variability,
+    prop_non_null = effect_opts$prop_non_null,
 
     # Analysis parameters
-    control_group = control_mapping[advanced_opts$control_group %||% "complement"],
-    side = side_mapping[analysis_opts$side %||% "left"],
-    multiple_testing_alpha = advanced_opts$fdr_target %||% 0.1,
+    control_group = control_mapping[advanced_opts$control_group],
+    side = side_mapping[analysis_opts$side],
+    multiple_testing_alpha = advanced_opts$fdr_target,
 
     # Power and cost parameters
-    power_target = design_opts$target_power %||% 0.8,
+    power_target = design_opts$target_power,
 
     # Cost constraint logic:
     # - For the 4 specific power+cost workflows, cost_constraint should be NULL
@@ -278,7 +259,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
     grid_size = 15,
 
     # Mapping efficiency (from advanced settings)
-    mapping_efficiency = advanced_opts$mapping_efficiency %||% 0.72,
+    mapping_efficiency = advanced_opts$mapping_efficiency,
 
     # Pilot data
     baseline_expression_stats = pilot_data$baseline_expression_stats,
