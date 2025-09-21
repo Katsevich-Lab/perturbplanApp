@@ -140,29 +140,15 @@ generate_real_analysis <- function(config, workflow_info) {
   # Check if this is cost minimization workflow (Workflow 5)
   if (workflow_info$workflow_id == "power_cost_minimization") {
     # Use specialized cost minimization analysis
-    tryCatch({
-      results <- perform_cost_minimization_analysis(config, workflow_info, pilot_data)
-
-      # Return results directly (already in plotting format)
-      return(results)
-
-    }, error = function(e) {
-      stop("Cost minimization analysis failed: ", e$message)
-    })
+    results <- perform_cost_minimization_analysis(config, workflow_info, pilot_data)
+    return(results)
   }
 
   # Check if this is TPM or FC minimization workflow (Workflows 10-11)
   if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
     # Use unified constrained minimization analysis
-    tryCatch({
-      results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data)
-
-      # Return results directly (already in plotting format)
-      return(results)
-
-    }, error = function(e) {
-      stop("Constrained minimization analysis failed: ", e$message)
-    })
+    results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data)
+    return(results)
   }
 
   # For all other workflows: Use standard cost_power_computation
@@ -170,78 +156,23 @@ generate_real_analysis <- function(config, workflow_info) {
   perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
 
   # Call perturbplan::cost_power_computation
-  tryCatch({
-    results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+  results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
 
-    # Standardize perturbplan output column names to sequenced_reads_per_cell
-    if ("raw_reads_per_cell" %in% names(results)) {
-      results$sequenced_reads_per_cell <- results$raw_reads_per_cell
-      results$raw_reads_per_cell <- NULL
-    } else if ("reads_per_cell" %in% names(results)) {
-      results$sequenced_reads_per_cell <- results$reads_per_cell
-      results$reads_per_cell <- NULL
-    }
+  # Standardize perturbplan output column names to sequenced_reads_per_cell
+  results$sequenced_reads_per_cell <- results$raw_reads_per_cell
+  results$raw_reads_per_cell <- NULL
 
-    # Convert perturbplan results to our standardized format
-    standardized_results <- standardize_perturbplan_results(results, config, workflow_info)
+  # Convert perturbplan results to our standardized format
+  standardized_results <- standardize_perturbplan_results(results, config, workflow_info)
 
-    # NEW: Transform to plotting-compatible format
-    if (!is.null(standardized_results$error)) {
-      return(standardized_results)  # Return error as-is
-    }
+  # Transform to plotting-compatible format
+  if (!is.null(standardized_results$error)) {
+    return(standardized_results)  # Return error as-is
+  }
 
-    plotting_results <- transform_perturbplan_to_plotting_format(
-      standardized_results, config, workflow_info
-    )
-
-    return(plotting_results)
-
-  }, error = function(e) {
-    # Return error object to display to user instead of falling back
-
-    return(list(
-      error = e$message,
-      metadata = list(
-        analysis_mode = get_analysis_mode(),
-        workflow_type = workflow_info$workflow_id %||% "unknown",
-        timestamp = Sys.time(),
-        error_details = as.character(e)
-      )
-    ))
-  })
-}
-
-
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
-
-#' Create configuration hash for change detection
-#'
-#' @description Creates a hash of the sidebar configuration to detect changes.
-#' Excludes plan_clicked and timestamp to focus on actual parameter changes.
-#'
-#' @param config User configuration from sidebar modules
-#' @return Character string representing configuration hash
-#' @noRd
-create_config_hash <- function(config) {
-  # Extract relevant configuration excluding plan_clicked and timestamp
-  config_for_hash <- list(
-    design_options = config$design_options,
-    perturbation_choices = config$perturbation_choices,
-    experimental_setup = config$experimental_setup,
-    analysis_choices = config$analysis_choices,
-    effect_sizes = config$effect_sizes,
-    advanced_choices = config$advanced_choices
+  plotting_results <- transform_perturbplan_to_plotting_format(
+    standardized_results, config, workflow_info
   )
 
-  # Create hash using digest (assuming digest package is available)
-  # If digest not available, use simple serialization
-  tryCatch({
-    digest::digest(config_for_hash, algo = "md5")
-  }, error = function(e) {
-    # Fallback: use serialization and simple hash
-    paste(collapse = "", as.character(serialize(config_for_hash, NULL)))
-  })
+  return(plotting_results)
 }
-
