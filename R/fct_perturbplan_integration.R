@@ -6,6 +6,161 @@
 #' @name perturbplan-integration
 NULL
 
+#' Perform standard analysis for workflows 1-4, 6-9
+#'
+#' @description Unified analysis function for 8 standard workflows that use
+#' perturbplan::cost_power_computation. Returns plotting-ready format directly.
+#'
+#' @param config User configuration from sidebar modules
+#' @param workflow_info Detected workflow information
+#' @param pilot_data Extracted pilot data for perturbplan
+#'
+#' @return List containing plotting-ready results (same structure as specialized workflows)
+#' @noRd
+perform_standard_analysis <- function(config, workflow_info, pilot_data) {
+  # Map UI configuration to perturbplan::cost_power_computation parameters
+  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
+
+  # Call perturbplan::cost_power_computation
+  results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+
+  # Standardize perturbplan output column names to sequenced_reads_per_cell
+  results$sequenced_reads_per_cell <- results$raw_reads_per_cell
+  results$raw_reads_per_cell <- NULL
+
+  # Validate results
+  if (is.null(results) || nrow(results) == 0) {
+    return(list(
+      error = "No results returned from perturbplan analysis",
+      metadata = list(
+        analysis_mode = "Real Analysis (Empty Results)",
+        timestamp = Sys.time()
+      )
+    ))
+  }
+
+  # Get the correct parameter column name
+  minimizing_param <- workflow_info$minimizing_parameter
+  param_column <- get_parameter_column_name(minimizing_param)
+
+  # Validate that required columns exist
+  required_cols <- c("overall_power", param_column)
+  missing_cols <- setdiff(required_cols, names(results))
+
+  if (length(missing_cols) > 0) {
+    return(list(
+      error = sprintf("Missing required columns in perturbplan results: %s",
+                     paste(missing_cols, collapse = ", ")),
+      metadata = list(
+        analysis_mode = "Real Analysis (Missing Columns)",
+        timestamp = Sys.time()
+      )
+    ))
+  }
+
+  # Create power_data in plotting format
+  target_power <- config$design_options$target_power %||% 0.8
+
+  power_data <- data.frame(
+    parameter_value = results[[param_column]],
+    power = results$overall_power,
+    meets_threshold = results$overall_power >= target_power,
+    stringsAsFactors = FALSE
+  )
+
+  # Add cost data if available (for power+cost workflows)
+  if ("total_cost" %in% names(results)) {
+    power_data$cost = results$total_cost
+  }
+
+  # Find optimal design based on parameter type
+  feasible_designs <- results[results$overall_power >= target_power, ]
+
+  if (nrow(feasible_designs) > 0) {
+    # For fold change: find value closest to 1 among feasible designs
+    # For other parameters: find MINIMUM value among feasible designs
+    if (minimizing_param == "minimum_fold_change") {
+      # Find fold change closest to 1 (minimum absolute distance from 1)
+      distances_from_1 <- abs(feasible_designs[[param_column]] - 1)
+      optimal_idx <- which.min(distances_from_1)
+    } else {
+      optimal_idx <- which.min(feasible_designs[[param_column]])
+    }
+    optimal_row <- feasible_designs[optimal_idx, ]
+  } else {
+    # No feasible design meets power target, return design with highest power
+    optimal_idx <- which.max(results$overall_power)
+    optimal_row <- results[optimal_idx, ]
+  }
+
+  # Create optimal design in plotting format
+  optimal_design <- list(
+    parameter_value = optimal_row[[param_column]],
+    achieved_power = optimal_row$overall_power,
+    cells_per_target = optimal_row$cells_per_target %||% NA,
+    sequenced_reads_per_cell = optimal_row$sequenced_reads_per_cell %||% NA,
+    TPM_threshold = optimal_row$TPM_threshold %||% NA,
+    minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
+    total_cost = optimal_row$total_cost %||% NA,
+    # Add mapping efficiency used in the analysis (from advanced choices)
+    mapping_efficiency = config$advanced_choices$mapping_efficiency %||% 0.72,
+    # Add cost calculation metadata for power+cost workflows
+    is_cost_optimized = !is.null(config$design_options$optimization_type) &&
+                        config$design_options$optimization_type == "power_cost",
+    cost_constraint = if (!is.null(config$design_options$optimization_type) &&
+                          config$design_options$optimization_type == "power_cost")
+                        config$design_options$cost_budget else NULL,
+    cost_per_cell = if (!is.null(config$design_options$optimization_type) &&
+                        config$design_options$optimization_type == "power_cost")
+                      config$design_options$cost_per_cell %||% 0.086 else NULL,
+    cost_per_million_reads = if (!is.null(config$design_options$optimization_type) &&
+                                 config$design_options$optimization_type == "power_cost")
+                               config$design_options$cost_per_million_reads %||% 0.374 else NULL
+  )
+
+  # Add parameter-specific field names for plotting compatibility (CRITICAL for reads_per_cell)
+  # When minimizing reads_per_cell, plotting code expects reads_per_cell field
+  if (workflow_info$minimizing_parameter == "reads_per_cell") {
+    optimal_design$reads_per_cell <- optimal_design$sequenced_reads_per_cell %||% NA
+  }
+
+  # Create enriched workflow_info for plotting
+  enriched_workflow_info <- workflow_info
+  enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter)
+
+  # Extract parameter ranges from real data
+  parameter_ranges <- list()
+  parameter_ranges[[minimizing_param]] <- range(power_data$parameter_value, na.rm = TRUE)
+
+  # Create plotting-compatible results structure (same format as specialized workflows)
+  plotting_results <- list(
+    # Core plotting data (matches existing plotting module expectations)
+    power_data = power_data,
+    optimal_design = optimal_design,
+
+    # Workflow and user configuration
+    workflow_info = enriched_workflow_info,
+    user_config = config,
+
+    # Parameter information
+    parameter_ranges = parameter_ranges,
+
+    # Raw data for detailed tables/export
+    raw_perturbplan_data = results,
+
+    # Metadata
+    metadata = list(
+      analysis_mode = "Real Analysis (perturbplan)",
+      data_source = "perturbplan::cost_power_computation",
+      n_designs_evaluated = nrow(results),
+      n_designs_meeting_target = sum(power_data$meets_threshold),
+      timestamp = Sys.time()
+    )
+  )
+
+  return(plotting_results)
+}
+
 #' Extract pilot data from experimental setup configuration
 #'
 #' @description Extracts baseline expression stats and library parameters
@@ -297,146 +452,8 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 #' @param workflow_info Detected workflow information
 #' @return Standardized results list matching placeholder format
 #' @noRd
-standardize_perturbplan_results <- function(results, config, workflow_info) {
-  if (is.null(results) || nrow(results) == 0) {
-    return(list(
-      error = "No results returned from perturbplan analysis",
-      metadata = list(
-        analysis_mode = "Real Analysis (Empty Results)",
-        timestamp = Sys.time()
-      )
-    ))
-  }
 
-  # Convert perturbplan results to our standardized format
-  standardized <- list(
-    # Raw data from perturbplan
-    data = results,
 
-    # Analysis metadata
-    metadata = list(
-      analysis_mode = "Real Analysis (perturbplan Package)",
-      workflow_scenario = workflow_info$scenario,
-      plot_type = workflow_info$plot_type,
-      minimizing_parameter = workflow_info$minimizing_parameter,
-      optimization_type = config$design_options$optimization_type,
-      cost_constraint = if (config$design_options$optimization_type == "power_cost")
-                         config$design_options$cost_budget else NULL,
-      cost_per_cell = if (config$design_options$optimization_type == "power_cost")
-                       config$design_options$cost_per_cell %||% 0.086 else NULL,
-      cost_per_million_reads = if (config$design_options$optimization_type == "power_cost")
-                                config$design_options$cost_per_million_reads %||% 0.374 else NULL,
-      timestamp = Sys.time(),
-      n_rows = nrow(results),
-      parameter_ranges = extract_parameter_ranges_from_results(results)
-    ),
-
-    # Summary statistics
-    summary = create_perturbplan_results_summary(results, workflow_info),
-
-    # Validation
-    validation = list(
-      is_valid = TRUE,
-      has_data = nrow(results) > 0,
-      has_power_curves = "overall_power" %in% names(results),
-      meets_power_target = any(results$overall_power >= (config$design_options$target_power %||% 0.8), na.rm = TRUE)
-    )
-  )
-
-  return(standardized)
-}
-
-#' Extract parameter ranges from perturbplan results
-#'
-#' @param results Data frame from perturbplan
-#' @return List of parameter ranges
-#' @noRd
-extract_parameter_ranges_from_results <- function(results) {
-  ranges <- list()
-
-  # Extract ranges for all numeric columns that represent parameters
-  param_cols <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "sequenced_reads_per_cell")
-
-  for (col in param_cols) {
-    if (col %in% names(results) && is.numeric(results[[col]])) {
-      ranges[[col]] <- range(results[[col]], na.rm = TRUE)
-    }
-  }
-
-  return(ranges)
-}
-
-#' Create summary from perturbplan results
-#'
-#' @param results Data frame from perturbplan
-#' @param workflow_info Workflow information
-#' @return Summary list
-#' @noRd
-create_perturbplan_results_summary <- function(results, workflow_info) {
-  if (nrow(results) == 0) {
-    return(list(message = "No valid results generated"))
-  }
-
-  # Find optimal design (highest power)
-  if ("overall_power" %in% names(results)) {
-    optimal_idx <- which.max(results$overall_power)
-    optimal <- results[optimal_idx, ]
-
-    # Base optimal design info
-    # Map minimizing parameter names to actual data field names
-    param_field_mapping <- list(
-      "reads_per_cell" = "sequenced_reads_per_cell",
-      "cells_per_target" = "cells_per_target",
-      "TPM_threshold" = "TPM_threshold",
-      "minimum_fold_change" = "minimum_fold_change"
-    )
-
-    actual_field <- param_field_mapping[[workflow_info$minimizing_parameter]] %||% workflow_info$minimizing_parameter
-
-    optimal_design <- list(
-      parameter_value = optimal[[actual_field]],
-      achieved_power = optimal$overall_power,
-      cells_per_target = optimal$cells_per_target %||% NA,
-      sequenced_reads_per_cell = optimal$sequenced_reads_per_cell %||% NA
-    )
-
-    # Add cost information if available
-    if ("total_cost" %in% names(optimal)) {
-      optimal_design$total_cost <- optimal$total_cost
-    }
-    if ("cost_per_cell" %in% names(optimal)) {
-      optimal_design$cost_per_cell <- optimal$cost_per_cell
-    }
-    if ("cost_per_million_reads" %in% names(optimal)) {
-      optimal_design$cost_per_million_reads <- optimal$cost_per_million_reads
-    }
-
-    # Add parameter-specific field names for plotting compatibility (FINAL STEP)
-    # When minimizing reads_per_cell, plotting code expects reads_per_cell field
-    if (workflow_info$minimizing_parameter == "reads_per_cell") {
-      optimal_design$reads_per_cell <- optimal$sequenced_reads_per_cell %||% NA
-    }
-
-    summary <- list(
-      optimal_design = optimal_design,
-      power_range = range(results$overall_power, na.rm = TRUE),
-      n_designs = nrow(results),
-      feasible_designs = sum(results$overall_power >= 0.05, na.rm = TRUE)
-    )
-
-    # Add cost range if cost column exists
-    if ("total_cost" %in% names(results)) {
-      summary$cost_range <- range(results$total_cost, na.rm = TRUE)
-    }
-  } else {
-    summary <- list(
-      message = "Power data not available in results",
-      n_designs = nrow(results)
-    )
-  }
-
-  return(summary)
-}
 
 #' Get parameter column name from perturbplan results
 #'
@@ -466,149 +483,6 @@ get_parameter_column_name <- function(minimizing_param) {
 #' @param workflow_info Detected workflow information
 #' @return List with plotting-compatible format (power_data, optimal_design, etc.)
 #' @noRd
-transform_perturbplan_to_plotting_format <- function(standardized_results, config, workflow_info) {
-
-  # Return error if standardized results contain error
-  if (!is.null(standardized_results$error)) {
-    return(standardized_results)
-  }
-
-  # Extract raw perturbplan data
-  raw_data <- standardized_results$data
-
-  if (is.null(raw_data) || nrow(raw_data) == 0) {
-    return(list(
-      error = "No data available from perturbplan analysis",
-      metadata = list(
-        analysis_mode = "Real Analysis (Empty Data)",
-        timestamp = Sys.time()
-      )
-    ))
-  }
-
-  # Get the correct parameter column name
-  minimizing_param <- workflow_info$minimizing_parameter
-  param_column <- get_parameter_column_name(minimizing_param)
-
-  # Validate that required columns exist
-  required_cols <- c("overall_power", param_column)
-  missing_cols <- setdiff(required_cols, names(raw_data))
-
-  if (length(missing_cols) > 0) {
-    return(list(
-      error = sprintf("Missing required columns in perturbplan results: %s",
-                     paste(missing_cols, collapse = ", ")),
-      metadata = list(
-        analysis_mode = "Real Analysis (Missing Columns)",
-        timestamp = Sys.time()
-      )
-    ))
-  }
-
-  # Create power_data in plotting format
-  target_power <- config$design_options$target_power %||% 0.8
-
-  power_data <- data.frame(
-    parameter_value = raw_data[[param_column]],
-    power = raw_data$overall_power,
-    meets_threshold = raw_data$overall_power >= target_power,
-    stringsAsFactors = FALSE
-  )
-
-  # Add cost data if available (for power+cost workflows)
-  if ("total_cost" %in% names(raw_data)) {
-    power_data$cost = raw_data$total_cost
-  }
-
-  # Find optimal design based on parameter type
-  feasible_designs <- raw_data[raw_data$overall_power >= target_power, ]
-
-  if (nrow(feasible_designs) > 0) {
-    # For fold change: find value closest to 1 among feasible designs
-    # For other parameters: find MINIMUM value among feasible designs
-    if (minimizing_param == "minimum_fold_change") {
-      # Find fold change closest to 1 (minimum absolute distance from 1)
-      distances_from_1 <- abs(feasible_designs[[param_column]] - 1)
-      optimal_idx <- which.min(distances_from_1)
-    } else {
-      optimal_idx <- which.min(feasible_designs[[param_column]])
-    }
-    optimal_row <- feasible_designs[optimal_idx, ]
-  } else {
-    # No feasible design meets power target, return design with highest power
-    optimal_idx <- which.max(raw_data$overall_power)
-    optimal_row <- raw_data[optimal_idx, ]
-  }
-
-  optimal_design <- list(
-    parameter_value = optimal_row[[param_column]],
-    achieved_power = optimal_row$overall_power,
-    cells_per_target = optimal_row$cells_per_target %||% NA,
-    sequenced_reads_per_cell = optimal_row$sequenced_reads_per_cell %||% NA,
-    TPM_threshold = optimal_row$TPM_threshold %||% NA,
-    minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
-    total_cost = optimal_row$total_cost %||% NA,
-    # Add mapping efficiency used in the analysis (from advanced choices)
-    mapping_efficiency = config$advanced_choices$mapping_efficiency %||% 0.72,
-    # Add cost calculation metadata for power+cost workflows
-    is_cost_optimized = !is.null(config$design_options$optimization_type) &&
-                        config$design_options$optimization_type == "power_cost",
-    cost_constraint = if (!is.null(config$design_options$optimization_type) &&
-                          config$design_options$optimization_type == "power_cost")
-                        config$design_options$cost_budget else NULL,
-    cost_per_cell = if (!is.null(config$design_options$optimization_type) &&
-                        config$design_options$optimization_type == "power_cost")
-                      config$design_options$cost_per_cell %||% 0.086 else NULL,
-    cost_per_million_reads = if (!is.null(config$design_options$optimization_type) &&
-                                 config$design_options$optimization_type == "power_cost")
-                               config$design_options$cost_per_million_reads %||% 0.374 else NULL
-  )
-
-  # Add parameter-specific field names for plotting compatibility (CRITICAL for reads_per_cell)
-  # When minimizing reads_per_cell, plotting code expects reads_per_cell field
-  if (workflow_info$minimizing_parameter == "reads_per_cell") {
-    optimal_design$reads_per_cell <- optimal_design$sequenced_reads_per_cell %||% NA
-  }
-
-  # Create enriched workflow_info for plotting
-  enriched_workflow_info <- workflow_info
-  # Preserve the original plot_type from workflow detection (don't override for power+cost workflows)
-  # enriched_workflow_info$plot_type is already set correctly by detect_workflow_scenario()
-  enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter)
-  enriched_workflow_info$description <- create_workflow_description(workflow_info$minimizing_parameter, target_power)
-
-  # Extract parameter ranges from real data
-  parameter_ranges <- list()
-  parameter_ranges[[minimizing_param]] <- range(power_data$parameter_value, na.rm = TRUE)
-
-  # Create plotting-compatible results structure
-  plotting_results <- list(
-    # Core plotting data (matches existing plotting module expectations)
-    power_data = power_data,
-    optimal_design = optimal_design,
-
-    # Workflow and user configuration
-    workflow_info = enriched_workflow_info,
-    user_config = config,
-
-    # Parameter information
-    parameter_ranges = parameter_ranges,
-
-    # Raw data for detailed tables/export
-    raw_perturbplan_data = raw_data,
-
-    # Metadata
-    metadata = list(
-      analysis_mode = "Real Analysis (perturbplan)",
-      data_source = "perturbplan::cost_power_computation",
-      n_designs_evaluated = nrow(raw_data),
-      n_designs_meeting_target = sum(power_data$meets_threshold),
-      timestamp = Sys.time()
-    )
-  )
-
-  return(plotting_results)
-}
 
 #' Create workflow title for plotting
 #'
@@ -625,20 +499,3 @@ create_workflow_title <- function(minimizing_param) {
   )
 }
 
-#' Create workflow description for plotting
-#'
-#' @param minimizing_param The parameter being minimized
-#' @param target_power Target power level (e.g., 0.8)
-#' @return Character string with plot description
-#' @noRd
-create_workflow_description <- function(minimizing_param, target_power) {
-  power_pct <- scales::percent_format()(target_power)
-
-  switch(minimizing_param,
-    "cells_per_target" = sprintf("Finding minimum cells needed to achieve %s power", power_pct),
-    "reads_per_cell" = sprintf("Finding minimum reads needed to achieve %s power", power_pct),
-    "TPM_threshold" = sprintf("Finding minimum TPM threshold to achieve %s power", power_pct),
-    "minimum_fold_change" = sprintf("Finding minimum fold change to achieve %s power", power_pct),
-    sprintf("Finding minimum %s to achieve %s power", minimizing_param, power_pct)
-  )
-}

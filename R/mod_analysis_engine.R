@@ -98,7 +98,6 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         )
       })
 
-
       return(results)
     })
 
@@ -137,42 +136,18 @@ generate_real_analysis <- function(config, workflow_info) {
     ))
   }
 
-  # Check if this is cost minimization workflow (Workflow 5)
+  # Clean 3-function architecture: Each analysis type has unified signature and return format
+
+  # Workflow 5: Cost minimization
   if (workflow_info$workflow_id == "power_cost_minimization") {
-    # Use specialized cost minimization analysis
-    results <- perform_cost_minimization_analysis(config, workflow_info, pilot_data)
-    return(results)
+    return(perform_cost_minimization_analysis(config, workflow_info, pilot_data))
   }
 
-  # Check if this is TPM or FC minimization workflow (Workflows 10-11)
+  # Workflows 10-11: Constrained minimization (TPM/FC)
   if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-    # Use unified constrained minimization analysis
-    results <- perform_constrained_minimization_analysis(config, workflow_info, pilot_data)
-    return(results)
+    return(perform_constrained_minimization_analysis(config, workflow_info, pilot_data))
   }
 
-  # For all other workflows: Use standard cost_power_computation
-  # Map UI configuration to perturbplan::cost_power_computation parameters
-  perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
-
-  # Call perturbplan::cost_power_computation
-  results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
-
-  # Standardize perturbplan output column names to sequenced_reads_per_cell
-  results$sequenced_reads_per_cell <- results$raw_reads_per_cell
-  results$raw_reads_per_cell <- NULL
-
-  # Convert perturbplan results to our standardized format
-  standardized_results <- standardize_perturbplan_results(results, config, workflow_info)
-
-  # Transform to plotting-compatible format
-  if (!is.null(standardized_results$error)) {
-    return(standardized_results)  # Return error as-is
-  }
-
-  plotting_results <- transform_perturbplan_to_plotting_format(
-    standardized_results, config, workflow_info
-  )
-
-  return(plotting_results)
+  # Workflows 1-4, 6-9: Standard analysis
+  return(perform_standard_analysis(config, workflow_info, pilot_data))
 }
