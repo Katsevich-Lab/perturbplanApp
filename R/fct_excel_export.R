@@ -204,27 +204,35 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
 
 #' Create Power Data Sheets
 #'
-#' @description Creates individual data sheets for each solution's power_data
+#' @description Creates individual data sheets for each solution's comprehensive analysis data.
+#' Prioritizes exporting_data (comprehensive) over power_data (basic) for richer export content.
 #' @param cached_results Cached results with current and pinned solutions
-#' @return Named list of data frames for power data sheets
+#' @return Named list of data frames for analysis data sheets
 #' @noRd
 create_power_data_sheets <- function(cached_results) {
   data_sheets <- list()
 
-  # Current result data sheet
-  if (!is.null(cached_results$current_result) &&
-      !is.null(cached_results$current_result$power_data)) {
-    data_sheets[["Current_Data"]] <- cached_results$current_result$power_data
+  # Current result data sheet - use exporting_data if available, fallback to power_data
+  if (!is.null(cached_results$current_result)) {
+    if (!is.null(cached_results$current_result$exporting_data)) {
+      data_sheets[["Current_Data"]] <- cached_results$current_result$exporting_data
+    } else if (!is.null(cached_results$current_result$power_data)) {
+      data_sheets[["Current_Data"]] <- cached_results$current_result$power_data
+    }
   }
 
-  # Pinned solutions data sheets
+  # Pinned solutions data sheets - use exporting_data if available, fallback to power_data
   if (!is.null(cached_results$pinned_solutions) &&
       length(cached_results$pinned_solutions) > 0) {
 
     for (solution_name in names(cached_results$pinned_solutions)) {
       solution <- cached_results$pinned_solutions[[solution_name]]
-      if (!is.null(solution$power_data)) {
+      if (!is.null(solution$exporting_data)) {
         # Create sheet name from solution name (e.g., "Setting 1" -> "Setting_1_Data")
+        sheet_name <- paste0(gsub(" ", "_", solution_name), "_Data")
+        data_sheets[[sheet_name]] <- solution$exporting_data
+      } else if (!is.null(solution$power_data)) {
+        # Fallback to power_data for backward compatibility
         sheet_name <- paste0(gsub(" ", "_", solution_name), "_Data")
         data_sheets[[sheet_name]] <- solution$power_data
       }
@@ -233,8 +241,8 @@ create_power_data_sheets <- function(cached_results) {
 
   # If no data sheets created, add placeholder
   if (length(data_sheets) == 0) {
-    data_sheets[["No_Power_Data"]] <- data.frame(
-      Message = "No power analysis data available"
+    data_sheets[["No_Export_Data"]] <- data.frame(
+      Message = "No analysis data available for export"
     )
   }
 

@@ -148,6 +148,9 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
     # Raw data for detailed tables/export
     raw_perturbplan_data = results,
 
+    # Export data with comprehensive parameters
+    exporting_data = create_exporting_data(results, config, workflow_info, pilot_data),
+
     # Metadata
     metadata = list(
       analysis_mode = "Real Analysis (perturbplan)",

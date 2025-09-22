@@ -17,7 +17,7 @@ mod_sidebar_ui <- function(id) {
     # Sidebar toggle button (positioned at right edge)
     tags$div(
       id = "simple-toggle",
-      "◀"
+      "\\u25C0"
     ),
 
     # Parameter panels - make scrollable with collapsible sections

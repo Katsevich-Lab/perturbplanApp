@@ -125,6 +125,10 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     optimal_design = optimal_design,
     user_config = config,
     workflow_info = workflow_info,
+
+    # Export data with comprehensive parameters
+    exporting_data = create_exporting_data(cost_power_grid, config, workflow_info, pilot_data),
+
     metadata = list(
       analysis_mode = get_analysis_mode(),
       workflow_type = workflow_info$workflow_id,

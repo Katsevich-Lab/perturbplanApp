@@ -266,3 +266,143 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 
   return(params)
 }
+
+#' Create Comprehensive Export Data
+#'
+#' @description Combines perturbplan results with configuration parameters
+#' to create a comprehensive dataset for export with all analysis parameters,
+#' including experimental design, analysis settings, and conditional cost information.
+#'
+#' @param perturbplan_results Data frame from perturbplan::cost_power_computation
+#' @param config User configuration from sidebar modules
+#' @param workflow_info Detected workflow information
+#' @param pilot_data Extracted pilot data (for future extensibility)
+#'
+#' @return Data frame with columns: overall_power, total_cost, MOI, num_targets,
+#' gRNAs_per_target, non_targeting_gRNAs, cells_per_target, reads_per_cell,
+#' TPM_threshold, minimum_fold_change, side, target_power, gRNA_variability,
+#' prop_non_null, mapping_efficiency, multiple_testing_alpha, control_group,
+#' biological_system, cost_constraint (conditional), cost_per_captured_cell (conditional),
+#' cost_per_million_reads (conditional)
+#' @noRd
+create_exporting_data <- function(perturbplan_results, config, workflow_info, pilot_data) {
+  # Step 1: Validation
+  if (is.null(perturbplan_results) || nrow(perturbplan_results) == 0) {
+    return(data.frame())
+  }
+
+  if (is.null(config)) {
+    warning("Config is NULL, using default values for export data")
+    return(data.frame())
+  }
+
+  # Step 2: Start with perturbplan results as base data frame
+  export_data <- perturbplan_results
+
+  # Step 3: Standardize column names
+  if ("raw_reads_per_cell" %in% names(export_data)) {
+    export_data$reads_per_cell <- export_data$raw_reads_per_cell
+    export_data$raw_reads_per_cell <- NULL
+  }
+
+  # Step 4: Extract config sections
+  design_opts <- config$design_options
+  experimental_opts <- config$experimental_setup
+  analysis_opts <- config$analysis_choices
+  advanced_opts <- config$advanced_choices
+  effect_opts <- config$effect_sizes
+
+  # Step 5: Add missing columns from config (repeated for each row)
+  n_rows <- nrow(export_data)
+
+  # Core experimental parameters
+  export_data$MOI <- rep(experimental_opts$MOI %||% NA, n_rows)
+  export_data$num_targets <- rep(experimental_opts$num_targets %||% NA, n_rows)
+  export_data$gRNAs_per_target <- rep(experimental_opts$gRNAs_per_target %||% NA, n_rows)
+  export_data$non_targeting_gRNAs <- rep(experimental_opts$non_targeting_gRNAs %||% NA, n_rows)
+
+  # Effect size and analysis parameters
+  export_data$gRNA_variability <- rep(advanced_opts$gRNA_variability %||% NA, n_rows)
+  export_data$prop_non_null <- rep(effect_opts$prop_non_null %||% NA, n_rows)
+  export_data$mapping_efficiency <- rep(advanced_opts$mapping_efficiency %||% NA, n_rows)
+  export_data$multiple_testing_alpha <- rep(advanced_opts$fdr_target %||% NA, n_rows)
+  export_data$control_group <- rep(advanced_opts$control_group %||% NA, n_rows)
+
+  # Analysis configuration parameters
+  export_data$side <- rep(analysis_opts$side %||% NA, n_rows)
+  export_data$biological_system <- rep(experimental_opts$biological_system %||% NA, n_rows)
+  export_data$target_power <- rep(design_opts$target_power %||% NA, n_rows)
+
+  # Cost information logic (corrected for cost minimization)
+  cost_minimization_workflow <- !is.null(workflow_info$workflow_id) &&
+                                workflow_info$workflow_id == "power_cost_minimization"
+  power_cost_workflows <- !is.null(workflow_info$workflow_id) &&
+                          workflow_info$workflow_id %in% c(
+                            "power_cost_TPM_cells_reads", "power_cost_fc_cells_reads",
+                            "power_cost_TPM_cells", "power_cost_TPM_reads",
+                            "power_cost_fc_cells", "power_cost_fc_reads"
+                          )
+
+  has_cost_info <- cost_minimization_workflow || power_cost_workflows
+  has_cost_constraint <- power_cost_workflows  # Only power+cost workflows have constraints
+
+  # Ensure total_cost column exists for all workflows
+  if (!"total_cost" %in% names(export_data)) {
+    if (has_cost_info) {
+      # For cost workflows: total_cost should have been calculated by perturbplan
+      # If missing, set to NA (this shouldn't happen in normal operation)
+      export_data$total_cost <- rep(NA, n_rows)
+    } else {
+      # For power-only workflows: total_cost is not applicable
+      export_data$total_cost <- rep(NA, n_rows)
+    }
+  }
+
+  if (has_cost_info) {
+    # Cost information for both cost minimization AND power+cost workflows
+    export_data$cost_per_captured_cell <- rep(design_opts$cost_per_cell %||% NA, n_rows)
+    export_data$cost_per_million_reads <- rep(design_opts$cost_per_million_reads %||% NA, n_rows)
+
+    if (has_cost_constraint) {
+      # Cost constraint only for power+cost workflows
+      export_data$cost_constraint <- rep(design_opts$cost_budget %||% NA, n_rows)
+    } else {
+      # Cost minimization has cost info but NO constraint
+      export_data$cost_constraint <- rep(NA, n_rows)
+    }
+  } else {
+    # Power-only workflows: no cost information at all
+    export_data$cost_constraint <- rep(NA, n_rows)
+    export_data$cost_per_captured_cell <- rep(NA, n_rows)
+    export_data$cost_per_million_reads <- rep(NA, n_rows)
+  }
+
+  # Step 6: Reorder columns for logical export structure
+  column_order <- c(
+    # Analysis results
+    "overall_power", "total_cost",
+
+    # Experimental design
+    "MOI", "num_targets", "gRNAs_per_target", "non_targeting_gRNAs",
+    "cells_per_target", "reads_per_cell",
+
+    # Analysis parameters
+    "TPM_threshold", "minimum_fold_change", "side", "target_power",
+
+    # Effect size parameters
+    "gRNA_variability", "prop_non_null",
+
+    # Technical parameters
+    "mapping_efficiency", "multiple_testing_alpha", "control_group",
+    "biological_system",
+
+    # Cost parameters (conditional)
+    "cost_constraint", "cost_per_captured_cell", "cost_per_million_reads"
+  )
+
+  # Only select columns that exist
+  existing_columns <- intersect(column_order, names(export_data))
+  export_data <- export_data[existing_columns]
+
+  return(export_data)
+}

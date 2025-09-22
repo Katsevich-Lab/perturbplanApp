@@ -179,11 +179,11 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
           ))
         } else {
           # Error message
-          error_list <- paste(gene_data$errors, collapse = "<br>• ")
+          error_list <- paste(gene_data$errors, collapse = "<br>\\u2022 ")
           HTML(paste0(
             '<div class="upload-status status-error" style="background-color: rgba(200, 90, 90, 0.1); border: 1px solid #C85A5A; color: #8B3A3A; padding: 8px; border-radius: 4px; margin: 5px 0;">',
             '<i class="fa fa-exclamation-triangle" style="margin-right: 5px;"></i>',
-            '<strong>Validation failed:</strong><br>• ',
+            '<strong>Validation failed:</strong><br>\\u2022 ',
             error_list,
             '</div>'
           ))
