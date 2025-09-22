@@ -126,7 +126,7 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
 
   # Create enriched workflow_info for plotting
   enriched_workflow_info <- workflow_info
-  enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter)
+  enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info)
 
   # Extract parameter ranges from real data
   parameter_ranges <- list()
@@ -188,14 +188,23 @@ get_parameter_column_name <- function(minimizing_param) {
 #' Create workflow title for plotting
 #'
 #' @param minimizing_param The parameter being minimized
+#' @param workflow_info Workflow information containing workflow_id to distinguish power vs power+cost
 #' @return Character string with plot title
 #' @noRd
-create_workflow_title <- function(minimizing_param) {
+create_workflow_title <- function(minimizing_param, workflow_info) {
+  # Check if this is a power+cost workflow
+  is_power_cost <- !is.null(workflow_info$workflow_id) &&
+                   grepl("power_cost", workflow_info$workflow_id) &&
+                   workflow_info$workflow_id != "power_cost_minimization"  # Exclude cost minimization
+
+  # Choose prefix based on workflow type
+  prefix <- if (is_power_cost) "Power + Cost Optimization" else "Power Optimization"
+
   switch(minimizing_param,
-    "cells_per_target" = "Power Optimization: Minimize Cells per Target",
-    "reads_per_cell" = "Power Optimization: Minimize Reads per Cell",
-    "TPM_threshold" = "Power Optimization: Minimize TPM Threshold",
-    "minimum_fold_change" = "Power Optimization: Minimize Fold Change",
-    paste("Power Optimization: Minimize", minimizing_param)
+    "cells_per_target" = paste0(prefix, ": Minimize Cells per Target"),
+    "reads_per_cell" = paste0(prefix, ": Minimize Reads per Cell"),
+    "TPM_threshold" = paste0(prefix, ": Minimize TPM Threshold"),
+    "minimum_fold_change" = paste0(prefix, ": Minimize Fold Change"),
+    paste0(prefix, ": Minimize ", minimizing_param)
   )
 }
