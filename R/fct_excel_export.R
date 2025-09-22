@@ -310,41 +310,38 @@ create_pilot_data_sheet <- function(cached_results) {
     # Add empty separator column
     combined_data[["  "]] <- ""  # Empty column as visual separator
 
-    # Add library parameters header
-    combined_data[["Library_Parameter"]] <- ""
-    combined_data[["Library_Value"]] <- ""
+    # Add library parameters columns - use meaningful column names
+    combined_data[["Library Parameter"]] <- ""
+    combined_data[["Value"]] <- ""
 
-    # Fill in the first few rows with library parameters
+    # Fill in library parameters starting from the first row (no separate header needed)
     for (i in seq_along(param_names)) {
       if (i <= nrow(combined_data)) {
-        combined_data[i, "Library_Parameter"] <- param_names[i]
-        combined_data[i, "Library_Value"] <- param_values[i]
+        combined_data[i, "Library Parameter"] <- param_names[i]
+        combined_data[i, "Value"] <- param_values[i]
       }
     }
 
-    # If we have more parameters than rows, add more rows
+    # If we have more parameters than available rows, add more rows
     if (length(param_names) > nrow(combined_data)) {
       extra_rows_needed <- length(param_names) - nrow(combined_data)
       for (j in 1:extra_rows_needed) {
         new_row <- combined_data[1, ]
         new_row[1, ] <- NA  # Fill baseline stats columns with NA
-        new_row[1, "Library_Parameter"] <- param_names[nrow(combined_data) + j]
-        new_row[1, "Library_Value"] <- param_values[nrow(combined_data) + j]
+        param_index <- nrow(combined_data) + j
+        new_row[1, "Library Parameter"] <- param_names[param_index]
+        new_row[1, "Value"] <- param_values[param_index]
         combined_data <- rbind(combined_data, new_row)
       }
     }
 
-    # Add headers to the first row for library parameters columns
-    combined_data[1, "Library_Parameter"] <- "Library Parameter"
-    combined_data[1, "Library_Value"] <- "Value"
-
   } else {
     # No library parameters available
     combined_data[["  "]] <- ""  # Empty separator column
-    combined_data[["Library_Parameter"]] <- ""
-    combined_data[["Library_Value"]] <- ""
-    combined_data[1, "Library_Parameter"] <- "Library Parameter"
-    combined_data[1, "Library_Value"] <- "Not available"
+    combined_data[["Library Parameter"]] <- ""
+    combined_data[["Value"]] <- ""
+    combined_data[1, "Library Parameter"] <- "Not available"
+    combined_data[1, "Value"] <- ""
   }
 
   return(combined_data)
