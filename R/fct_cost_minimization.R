@@ -148,6 +148,9 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
     # Export data with comprehensive parameters
     exporting_data = create_exporting_data(cost_power_grid, config, workflow_info, pilot_data),
 
+    # Pilot data for export
+    pilot_data = pilot_data,
+
     metadata = list(
       analysis_mode = get_analysis_mode(),
       workflow_type = workflow_info$workflow_id,

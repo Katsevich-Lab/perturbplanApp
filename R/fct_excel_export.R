@@ -23,7 +23,10 @@ create_excel_export_data <- function(cached_results) {
   # Sheet 1: Parameter Settings (Solution Table)
   excel_data[["Parameter Settings"]] <- create_parameter_settings_sheet(cached_results)
 
-  # Dynamic Data Sheets: Individual power_data for each solution
+  # Sheet 2: Pilot Data (baseline expression + library parameters)
+  excel_data[["Pilot Data"]] <- create_pilot_data_sheet(cached_results)
+
+  # Sheet 3+: Dynamic Data Sheets (Individual analysis results for each solution)
   data_sheets <- create_power_data_sheets(cached_results)
   excel_data <- c(excel_data, data_sheets)
 
@@ -247,6 +250,104 @@ create_power_data_sheets <- function(cached_results) {
   }
 
   return(data_sheets)
+}
+
+#' Create Pilot Data Sheet
+#'
+#' @description Creates pilot data sheet with both baseline expression stats and library parameters
+#' as separate sections in one sheet (Option C format)
+#' @param cached_results Cached results with pilot data information
+#' @return Data frame for pilot data sheet
+#' @noRd
+create_pilot_data_sheet <- function(cached_results) {
+  # Extract pilot data from current result, with fallback to pinned solutions
+  pilot_data <- NULL
+
+  # Try current result first
+  if (!is.null(cached_results$current_result)) {
+    pilot_data <- cached_results$current_result$pilot_data
+  }
+
+  # If not found, try first pinned solution
+  if (is.null(pilot_data) && !is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
+    first_pinned <- cached_results$pinned_solutions[[1]]
+    pilot_data <- first_pinned$pilot_data
+  }
+
+  # If pilot data still not available, return debug message
+  if (is.null(pilot_data)) {
+    debug_info <- data.frame(
+      Debug = c(
+        "No pilot data available",
+        paste("Current result exists:", !is.null(cached_results$current_result)),
+        paste("Pinned solutions count:", length(cached_results$pinned_solutions %||% list())),
+        paste("Current result fields:", paste(names(cached_results$current_result %||% list()), collapse = ", "))
+      ),
+      stringsAsFactors = FALSE
+    )
+    return(debug_info)
+  }
+
+  # Create combined sheet with baseline expression stats and library parameters as additional columns
+
+  # Start with baseline expression stats
+  baseline_stats <- pilot_data$baseline_expression_stats
+  if (is.null(baseline_stats) || nrow(baseline_stats) == 0) {
+    return(data.frame(Message = "No baseline expression stats available"))
+  }
+
+  # Start with baseline expression data
+  combined_data <- baseline_stats
+
+  # Add library parameters as additional columns on the right side
+  library_params <- pilot_data$library_parameters
+  if (!is.null(library_params) && length(library_params) > 0) {
+
+    # Create library parameters columns - we'll add them row by row
+    param_names <- names(library_params)
+    param_values <- as.character(unlist(library_params))
+
+    # Add empty separator column
+    combined_data[["  "]] <- ""  # Empty column as visual separator
+
+    # Add library parameters header
+    combined_data[["Library_Parameter"]] <- ""
+    combined_data[["Library_Value"]] <- ""
+
+    # Fill in the first few rows with library parameters
+    for (i in seq_along(param_names)) {
+      if (i <= nrow(combined_data)) {
+        combined_data[i, "Library_Parameter"] <- param_names[i]
+        combined_data[i, "Library_Value"] <- param_values[i]
+      }
+    }
+
+    # If we have more parameters than rows, add more rows
+    if (length(param_names) > nrow(combined_data)) {
+      extra_rows_needed <- length(param_names) - nrow(combined_data)
+      for (j in 1:extra_rows_needed) {
+        new_row <- combined_data[1, ]
+        new_row[1, ] <- NA  # Fill baseline stats columns with NA
+        new_row[1, "Library_Parameter"] <- param_names[nrow(combined_data) + j]
+        new_row[1, "Library_Value"] <- param_values[nrow(combined_data) + j]
+        combined_data <- rbind(combined_data, new_row)
+      }
+    }
+
+    # Add headers to the first row for library parameters columns
+    combined_data[1, "Library_Parameter"] <- "Library Parameter"
+    combined_data[1, "Library_Value"] <- "Value"
+
+  } else {
+    # No library parameters available
+    combined_data[["  "]] <- ""  # Empty separator column
+    combined_data[["Library_Parameter"]] <- ""
+    combined_data[["Library_Value"]] <- ""
+    combined_data[1, "Library_Parameter"] <- "Library Parameter"
+    combined_data[1, "Library_Value"] <- "Not available"
+  }
+
+  return(combined_data)
 }
 
 #' Safe Extract Cached Solutions Data
