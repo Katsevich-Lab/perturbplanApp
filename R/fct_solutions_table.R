@@ -356,7 +356,7 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
     style = "overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 15px;",
     tags$table(
       class = "table table-striped table-hover",
-      style = "margin-bottom: 0; font-size: 12px; width: 100%;",
+      style = "margin-bottom: 0; font-size: 16px; width: 100%;",
       tags$thead(
         header_row1,
         header_row2
@@ -444,10 +444,10 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
   cells <- list()
 
   # Sub-column style for row 2
-  subcolumn_style <- "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
+  subcolumn_style <- "text-align: center; font-size: 14px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
 
   # Last sub-column in a group style (with right border)
-  last_subcolumn_style <- "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
+  last_subcolumn_style <- "text-align: center; font-size: 14px; border-top: none; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
 
   # Add experimental parameter subcolumns (only if not being minimized)
   cells <- append(cells, list(
@@ -499,7 +499,7 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
 
   # Always add Non-null Prop (never minimized) - last column, no right border
   cells <- append(cells, list(
-    tags$th("Non-null Prop", style = "text-align: center; font-size: 11px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;")
+    tags$th("Non-null Prop", style = "text-align: center; font-size: 14px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;")
   ))
 
   tags$tr(cells)
