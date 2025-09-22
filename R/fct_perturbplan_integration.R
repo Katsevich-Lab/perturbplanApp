@@ -201,7 +201,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
           gRNAs_per_target = experimental_opts$gRNAs_per_target,
           reads_per_cell = if(has_reads_fixed) fixed_variable$reads_per_cell else NULL,
           cells_per_target = if(has_cells_fixed) fixed_variable$cells_per_target else NULL,
-          mapping_efficiency = config$experimental_setup$mapping_efficiency
+          mapping_efficiency = advanced_opts$mapping_efficiency
         )
 
         # Add the calculated parameter to fixed_variable (round to integers as required by perturbplan)
