@@ -286,33 +286,25 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 #' cost_per_million_reads (conditional)
 #' @noRd
 create_exporting_data <- function(perturbplan_results, config, workflow_info, pilot_data) {
-  # Step 1: Validation
-  if (is.null(perturbplan_results) || nrow(perturbplan_results) == 0) {
-    return(data.frame())
-  }
 
-  if (is.null(config)) {
-    warning("Config is NULL, using default values for export data")
-    return(data.frame())
-  }
-
-  # Step 2: Start with perturbplan results as base data frame
+  # Step 1: Start with perturbplan results as base data frame
   export_data <- perturbplan_results
 
-  # Step 3: Standardize column names
-  if ("raw_reads_per_cell" %in% names(export_data)) {
-    export_data$reads_per_cell <- export_data$raw_reads_per_cell
-    export_data$raw_reads_per_cell <- NULL
-  }
+  # Step 2: Standardize column names
+  export_data$fold_change <- export_data$minimum_fold_change
+  export_data$power_estimate <- export_data$overall_power
+  export_data$minimum_fold_change <- NULL
+  export_data$overall_power <- NULL
 
-  # Step 4: Extract config sections
+
+  # Step 3: Extract config sections
   design_opts <- config$design_options
   experimental_opts <- config$experimental_setup
   analysis_opts <- config$analysis_choices
   advanced_opts <- config$advanced_choices
   effect_opts <- config$effect_sizes
 
-  # Step 5: Add missing columns from config (repeated for each row)
+  # Step 4: Add missing columns from config (repeated for each row)
   n_rows <- nrow(export_data)
 
   # Core experimental parameters
@@ -346,18 +338,6 @@ create_exporting_data <- function(perturbplan_results, config, workflow_info, pi
   has_cost_info <- cost_minimization_workflow || power_cost_workflows
   has_cost_constraint <- power_cost_workflows  # Only power+cost workflows have constraints
 
-  # Ensure total_cost column exists for all workflows
-  if (!"total_cost" %in% names(export_data)) {
-    if (has_cost_info) {
-      # For cost workflows: total_cost should have been calculated by perturbplan
-      # If missing, set to NA (this shouldn't happen in normal operation)
-      export_data$total_cost <- rep(NA, n_rows)
-    } else {
-      # For power-only workflows: total_cost is not applicable
-      export_data$total_cost <- rep(NA, n_rows)
-    }
-  }
-
   if (has_cost_info) {
     # Cost information for both cost minimization AND power+cost workflows
     export_data$cost_per_captured_cell <- rep(design_opts$cost_per_cell %||% NA, n_rows)
@@ -372,22 +352,23 @@ create_exporting_data <- function(perturbplan_results, config, workflow_info, pi
     }
   } else {
     # Power-only workflows: no cost information at all
+    export_data$total_cost <- rep(NA, n_rows)
     export_data$cost_constraint <- rep(NA, n_rows)
     export_data$cost_per_captured_cell <- rep(NA, n_rows)
     export_data$cost_per_million_reads <- rep(NA, n_rows)
   }
 
-  # Step 6: Reorder columns for logical export structure
+  # Step 5: Reorder columns for logical export structure
   column_order <- c(
     # Analysis results
-    "overall_power", "total_cost",
+    "power_estimate", "target_power",
 
     # Experimental design
     "MOI", "num_targets", "gRNAs_per_target", "non_targeting_gRNAs",
-    "cells_per_target", "reads_per_cell",
+    "cells_per_target", "sequenced_reads_per_cell",
 
     # Analysis parameters
-    "TPM_threshold", "minimum_fold_change", "side", "target_power",
+    "TPM_threshold", "fold_change", "side",
 
     # Effect size parameters
     "gRNA_variability", "prop_non_null",
@@ -397,7 +378,7 @@ create_exporting_data <- function(perturbplan_results, config, workflow_info, pi
     "biological_system",
 
     # Cost parameters (conditional)
-    "cost_constraint", "cost_per_captured_cell", "cost_per_million_reads"
+    "total_cost", "cost_constraint", "cost_per_captured_cell", "cost_per_million_reads"
   )
 
   # Only select columns that exist
