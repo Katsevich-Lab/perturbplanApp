@@ -18,10 +18,8 @@ NULL
 #' @return List with baseline_expression_stats and library_parameters, or NULL if not available
 #' @noRd
 extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
-  if (is.null(experimental_config)) {
-    return(NULL)
-  }
 
+  # extract the pilot data
   pilot_data <- experimental_config$pilot_data
 
   # Extract gene list data if available
@@ -106,13 +104,6 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
 #' @return Named list of parameters for cost_power_computation
 #' @noRd
 map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) {
-  # DEBUG: Log what the UI is sending
-  if (!is.null(config$design_options$parameter_controls)) {
-    for (name in names(config$design_options$parameter_controls)) {
-    }
-  }
-
-  # Use pre-extracted pilot data (passed as parameter to avoid duplication)
 
   # Extract design options
   design_opts <- config$design_options
@@ -295,7 +286,6 @@ create_exporting_data <- function(perturbplan_results, config, workflow_info, pi
   export_data$power_estimate <- export_data$overall_power
   export_data$minimum_fold_change <- NULL
   export_data$overall_power <- NULL
-
 
   # Step 3: Extract config sections
   design_opts <- config$design_options
