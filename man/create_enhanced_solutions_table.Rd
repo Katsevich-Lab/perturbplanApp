@@ -4,12 +4,10 @@
 \alias{create_enhanced_solutions_table}
 \title{Clean Solution Table Functions}
 \usage{
-create_enhanced_solutions_table(results, user_config = NULL)
+create_enhanced_solutions_table(results)
 }
 \arguments{
 \item{results}{Analysis results object containing optimal_design, user_config, workflow_info}
-
-\item{user_config}{User configuration (unused, kept for compatibility)}
 }
 \value{
 Shiny UI tagList with clean solution table

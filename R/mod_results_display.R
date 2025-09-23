@@ -184,7 +184,7 @@ mod_results_display_ui <- function(id) {
 #' @importFrom plotly as_widget ggplotly
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
-mod_results_display_server <- function(id, plot_objects, cached_results, user_config = reactive(NULL), app_state = NULL) {
+mod_results_display_server <- function(id, plot_objects, cached_results, app_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -196,7 +196,7 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     output$show_error <- reactive({
       tryCatch({
         plots <- plot_objects()
-        results <- analysis_results()
+        results <- cached_results()
 
         # Only show error if we have actual data with errors, not when data is missing
         has_plot_error <- !is.null(plots) && !is.null(plots$error)
@@ -230,11 +230,13 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
 
     # Determine if analysis is actively running/triggered
     output$analysis_trigger <- reactive({
+      results <- cached_results()
 
-      # Analysis is triggered if we have plan clicks but no results yet
-      config <- user_config()
-      has_plan_clicks <- !is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0
-      has_plan_clicks
+      # Analysis is triggered if we have any results (current or pinned)
+      has_current <- !is.null(results$current_result)
+      has_pinned <- !is.null(results$pinned_solutions) && length(results$pinned_solutions) > 0
+
+      has_current || has_pinned
     })
     outputOptions(output, "analysis_trigger", suspendWhenHidden = FALSE)
 
@@ -247,7 +249,7 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     mod_plot_display_server("plot_display", plot_objects)
 
     # Solution table component for data summaries
-    mod_solution_table_server("solution_table", cached_results, user_config)
+    mod_solution_table_server("solution_table", cached_results)
 
     # Error message display
     output$error_message <- renderUI({
@@ -255,7 +257,7 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
 
       tryCatch({
         plots <- plot_objects()
-        results <- analysis_results()
+        results <- cached_results()
 
         # Check for plotting errors first
         if (!is.null(plots) && !is.null(plots$error)) {

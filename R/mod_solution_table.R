@@ -28,12 +28,11 @@ mod_solution_table_ui <- function(id) {
 #'
 #' @param id Module namespace ID
 #' @param cached_results Reactive containing cached results with pinned + current solutions
-#' @param user_config Reactive containing user configuration
 #'
 #' @noRd
 #'
 #' @importFrom shiny moduleServer req renderUI tags h4
-mod_solution_table_server <- function(id, cached_results, user_config) {
+mod_solution_table_server <- function(id, cached_results) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -64,7 +63,7 @@ mod_solution_table_server <- function(id, cached_results, user_config) {
 
       # Create enhanced solutions table
       tryCatch({
-        create_enhanced_solutions_table(results, user_config)
+        create_enhanced_solutions_table(results)
       }, error = function(e) {
         tags$div(
           style = "color: #C73E1D; padding: 10px;",
