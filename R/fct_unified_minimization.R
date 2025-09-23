@@ -130,20 +130,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     exporting_data = create_exporting_data(cost_power_grid, config, workflow_info, pilot_data),
 
     # Pilot data for export
-    pilot_data = pilot_data,
-
-    metadata = list(
-      analysis_mode = get_analysis_mode(),
-      workflow_type = workflow_info$workflow_id,
-      analysis_timestamp = Sys.time(),
-      minimizing_variable = minimization_config$variable,
-      cost_constraint = cost_constraint,
-      minimization_data = list(
-        cost_grid = optimal_results$cost_grid,
-        cost_power_grid = cost_power_grid,
-        grouped_data = grouped_data
-      )
-    )
+    pilot_data = pilot_data
   )
 
 

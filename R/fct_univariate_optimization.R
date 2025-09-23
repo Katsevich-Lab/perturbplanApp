@@ -128,10 +128,6 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
   enriched_workflow_info <- workflow_info
   enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info)
 
-  # Extract parameter ranges from real data
-  parameter_ranges <- list()
-  parameter_ranges[[minimizing_param]] <- range(power_data$parameter_value, na.rm = TRUE)
-
   # Create plotting-compatible results structure (same format as specialized workflows)
   plotting_results <- list(
     # Core plotting data (matches existing plotting module expectations)
@@ -142,26 +138,12 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
     workflow_info = enriched_workflow_info,
     user_config = config,
 
-    # Parameter information
-    parameter_ranges = parameter_ranges,
-
-    # Raw data for detailed tables/export
-    raw_perturbplan_data = results,
 
     # Export data with comprehensive parameters
     exporting_data = create_exporting_data(results, config, workflow_info, pilot_data),
 
     # Pilot data for export
-    pilot_data = pilot_data,
-
-    # Metadata
-    metadata = list(
-      analysis_mode = "Real Analysis (perturbplan)",
-      data_source = "perturbplan::cost_power_computation",
-      n_designs_evaluated = nrow(results),
-      n_designs_meeting_target = sum(power_data$meets_threshold),
-      timestamp = Sys.time()
-    )
+    pilot_data = pilot_data
   )
 
   return(plotting_results)
