@@ -61,7 +61,7 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # MODULE 5: RESULTS DISPLAY
   # ========================================================================
-  display_outputs <- mod_results_display_server("display", plot_objects, cached_results, app_state)
+  display_outputs <- mod_results_display_server("display", plot_objects, cached_results, unified_config, app_state)
 
   # ========================================================================
   # HEADER EXPORT FUNCTIONALITY

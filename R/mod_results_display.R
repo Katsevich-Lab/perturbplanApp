@@ -184,7 +184,7 @@ mod_results_display_ui <- function(id) {
 #' @importFrom plotly as_widget ggplotly
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
-mod_results_display_server <- function(id, plot_objects, cached_results, app_state = NULL) {
+mod_results_display_server <- function(id, plot_objects, cached_results, user_config = reactive(NULL), app_state = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -230,13 +230,12 @@ mod_results_display_server <- function(id, plot_objects, cached_results, app_sta
 
     # Determine if analysis is actively running/triggered
     output$analysis_trigger <- reactive({
-      results <- cached_results()
 
-      # Analysis is triggered if we have any results (current or pinned)
-      has_current <- !is.null(results$current_result)
-      has_pinned <- !is.null(results$pinned_solutions) && length(results$pinned_solutions) > 0
-
-      has_current || has_pinned
+      # Analysis is triggered if we have plan clicks but no results yet
+      config <- user_config()
+      has_plan_clicks <- !is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0
+      has_plan_clicks
+      print(has_plan_clicks)
     })
     outputOptions(output, "analysis_trigger", suspendWhenHidden = FALSE)
 
