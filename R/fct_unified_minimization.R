@@ -66,7 +66,6 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     cost_per_million_reads = perturbplan_params$cost_per_million_reads,
     cost_grid_size = 200
   )
-
   optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
 
   # Step 8: Apply consistent data grouping for both plotting and optimal solution
@@ -94,8 +93,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     sequenced_reads_per_cell = optimal_point$sequenced_reads_per_cell,
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,  # Map overall_power to achieved_power
-    optimal_minimized_param = optimal_point[[minimization_config$variable]],  # The minimized parameter value
-    mapping_efficiency = config$experimental_setup$mapping_efficiency %||% 0.72  # Use user input or standard default
+    optimal_minimized_param = optimal_point[[minimization_config$variable]]  # The minimized parameter value
   )
 
   # Add the minimizing parameter to the optimal design
@@ -116,7 +114,6 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     exporting_data = create_exporting_data(cost_power_grid, config, workflow_info, pilot_data),
     pilot_data = pilot_data
   )
-
   return(final_results)
 }
 
