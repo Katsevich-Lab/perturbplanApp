@@ -119,26 +119,3 @@ get_parameter_column_name <- function(minimizing_param) {
   )
 }
 
-#' Create workflow title for plotting
-#'
-#' @param minimizing_param The parameter being minimized
-#' @param workflow_info Workflow information containing workflow_id to distinguish power vs power+cost
-#' @return Character string with plot title
-#' @noRd
-create_workflow_title <- function(minimizing_param, workflow_info) {
-  # Check if this is a power+cost workflow
-  is_power_cost <- !is.null(workflow_info$workflow_id) &&
-                   grepl("power_cost", workflow_info$workflow_id) &&
-                   workflow_info$workflow_id != "power_cost_minimization"  # Exclude cost minimization
-
-  # Choose prefix based on workflow type
-  prefix <- if (is_power_cost) "Power + Cost Optimization" else "Power Optimization"
-
-  switch(minimizing_param,
-    "cells_per_target" = paste0(prefix, ": Minimize Cells per Target"),
-    "reads_per_cell" = paste0(prefix, ": Minimize Reads per Cell"),
-    "TPM_threshold" = paste0(prefix, ": Minimize TPM Threshold"),
-    "minimum_fold_change" = paste0(prefix, ": Minimize Fold Change"),
-    paste0(prefix, ": Minimize ", minimizing_param)
-  )
-}
