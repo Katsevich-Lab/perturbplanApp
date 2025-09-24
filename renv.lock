@@ -2165,28 +2165,25 @@
     },
     "perturbplan": {
       "Package": "perturbplan",
-      "Version": "0.0.1",
+      "Version": "0.1.0",
       "Source": "GitHub",
-      "Title": "Experimental Design and Power Analysis for Perturb-Seq Experiments",
-      "Author": "Ziang Niu [aut, cre], Yihui He [aut], Eugene Katsevich [aut]",
-      "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
+      "Title": "Perturbplan: Power and Design Tools for CRISPR Screens",
       "Authors@R": "c(person(\"Ziang\", \"Niu\", , \"ziangniu@wharton.upenn.edu\", role = c(\"aut\", \"cre\")), person(\"Yihui\", \"He\", , \"yihuihe@wharton.upenn.edu\", role = c(\"aut\")), person(\"Eugene\", \"Katsevich\", , \"ekatsevi@wharton.upenn.edu\", role = c(\"aut\")) )",
-      "Description": "Experimental design and power analysis for perturb-seq experiments.",
+      "Description": "Tools for pilot data preprocessing, power calculations, and design optimization for CRISPR perturbation experiments.",
       "License": "MIT + file LICENSE",
-      "Encoding": "UTF-8",
-      "Roxygen": "list(markdown = TRUE)",
-      "RoxygenNote": "7.3.2",
+      "URL": "https://katsevich-lab.github.io/perturbplan",
       "Imports": [
-        "dplyr",
-        "stats",
-        "rhdf5",
-        "minpack.lm",
+        "Matrix",
         "Rcpp",
         "data.table",
+        "dplyr",
         "methods",
-        "utils",
-        "Matrix",
-        "tidyr"
+        "minpack.lm",
+        "parallel",
+        "rhdf5",
+        "stats",
+        "tidyr",
+        "utils"
       ],
       "Suggests": [
         "knitr",
@@ -2198,21 +2195,26 @@
       ],
       "Config/testthat/edition": "3",
       "LinkingTo": [
-        "PoissonBinomial",
+        "BH",
         "Rcpp",
         "RcppEigen",
-        "BH"
+        "PoissonBinomial"
       ],
       "Depends": [
         "R (>= 3.5)"
       ],
       "LazyData": "true",
+      "Encoding": "UTF-8",
+      "Roxygen": "list(markdown = TRUE)",
+      "RoxygenNote": "7.3.2",
+      "Author": "Ziang Niu [aut, cre], Yihui He [aut], Eugene Katsevich [aut]",
+      "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteUsername": "Katsevich-Lab",
       "RemoteRepo": "perturbplan",
-      "RemoteRef": "480467045885047163de79e51f2b1e5a952bd868",
-      "RemoteSha": "480467045885047163de79e51f2b1e5a952bd868"
+      "RemoteRef": "cleanup",
+      "RemoteSha": "ff808bce87468fc00a07ef5bc903394f5764d9cf"
     },
     "pillar": {
       "Package": "pillar",
