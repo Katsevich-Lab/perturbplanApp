@@ -236,7 +236,7 @@ create_single_parameter_plots <- function(cached_results) {
   p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", create_workflow_title(workflow_info$minimizing_parameter, workflow_info), "</b>"),
+        text = paste0("<b>", plot_title, "</b>"),
         font = list(size = 14)
       ),
       hovermode = "closest",
@@ -359,6 +359,9 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
 
   # Extract target power from metadata
   target_power <- metadata_source$user_config$design_options$target_power
+
+  # Create plot title once for reuse
+  plot_title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info)
 
   # Combine all solutions into unified dataframes for consistent plotting
   combined_power_data <- data.frame()
@@ -538,7 +541,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
 
   # Labels and theme
   p <- p + labs(
-    title = create_workflow_title(workflow_info$minimizing_parameter, workflow_info),
+    title = plot_title,
     x = "Cells per target",
     y = "Reads per cell",
     color = "Parameter Setting"
@@ -550,7 +553,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", create_workflow_title(workflow_info$minimizing_parameter, workflow_info), "</b>"),
+        text = paste0("<b>", plot_title, "</b>"),
         font = list(size = 14)
       ),
       xaxis = list(title = "Cells per target"),
@@ -589,6 +592,9 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
 
   # Determine minimization parameter from workflow
   workflow_id <- workflow_info$workflow_id
+
+  # Create plot title once for reuse
+  plot_title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info)
 
   if (workflow_id == "power_cost_TPM_cells_reads") {
     param_column <- "TPM_threshold"
@@ -759,7 +765,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", create_workflow_title(workflow_info$minimizing_parameter, workflow_info), "</b>"),
+        text = paste0("<b>", plot_title, "</b>"),
         font = list(size = 14)
       ),
       xaxis = list(title = x_axis_label),
