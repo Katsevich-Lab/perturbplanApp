@@ -1860,34 +1860,35 @@
       "Repository": null,
       "description": {
         "Package": "perturbplan",
-        "Title": "Experimental Design and Power Analysis for Perturb-Seq Experiments",
-        "Version": "0.0.1",
-        "Author": "Ziang Niu [aut, cre], Yihui He [aut], Eugene Katsevich [aut]",
-        "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
+        "Title": "Perturbplan: Power and Design Tools for CRISPR Screens",
+        "Version": "0.1.0",
         "Authors@R": "\n    c(person(\"Ziang\", \"Niu\", , \"ziangniu@wharton.upenn.edu\", role = c(\"aut\", \"cre\")),\n      person(\"Yihui\", \"He\", , \"yihuihe@wharton.upenn.edu\", role = c(\"aut\")),\n      person(\"Eugene\", \"Katsevich\", , \"ekatsevi@wharton.upenn.edu\", role = c(\"aut\"))\n    )",
-        "Description": "Experimental design and power analysis for perturb-seq experiments.",
+        "Description": "Tools for pilot data preprocessing, power calculations, and design optimization for CRISPR perturbation experiments.",
         "License": "MIT + file LICENSE",
+        "URL": "https://katsevich-lab.github.io/perturbplan",
+        "Imports": "Matrix,\nRcpp,\ndata.table,\ndplyr,\nmethods,\nminpack.lm,\nparallel,\nrhdf5,\nstats,\ntidyr,\nutils",
+        "Suggests": "knitr,\nrmarkdown,\ntestthat (>= 3.0.0),\nopenxlsx,\nggplot2,\nggside",
+        "Config/testthat/edition": "3",
+        "LinkingTo": "BH,\nRcpp,\nRcppEigen,\nPoissonBinomial",
+        "Depends": "R (>= 3.5)",
+        "LazyData": "true",
         "Encoding": "UTF-8",
         "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.2",
-        "Imports": "dplyr,\nstats,\nrhdf5,\nminpack.lm,\nRcpp,\ndata.table,\nmethods,\nutils,\nMatrix,\ntidyr",
-        "Suggests": "knitr,\nrmarkdown,\ntestthat (>= 3.0.0),\nopenxlsx,\nggplot2,\nggside",
-        "Config/testthat/edition": "3",
-        "LinkingTo": "PoissonBinomial,\nRcpp,\nRcppEigen,\nBH",
-        "Depends": "R (>= 3.5)",
-        "LazyData": "true",
-        "Built": "R 4.4.1; aarch64-apple-darwin20; 2025-09-22 17:45:42 UTC; unix",
+        "Author": "Ziang Niu [aut, cre],\n  Yihui He [aut],\n  Eugene Katsevich [aut]",
+        "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
+        "Built": "R 4.4.1; aarch64-apple-darwin20; 2025-09-24 19:08:48 UTC; unix",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
         "RemoteUsername": "Katsevich-Lab",
         "RemoteRepo": "perturbplan",
-        "RemoteRef": "v0.0.1",
-        "RemoteSha": "b4bbbe1de6228c2b6bd7425e830aa0b792c24fbd",
+        "RemoteRef": "dev",
+        "RemoteSha": "a1d623e73071a14a0cb5ac508c2ece5b734290de",
         "GithubHost": "api.github.com",
         "GithubRepo": "perturbplan",
         "GithubUsername": "Katsevich-Lab",
-        "GithubRef": "v0.0.1",
-        "GithubSHA1": "b4bbbe1de6228c2b6bd7425e830aa0b792c24fbd"
+        "GithubRef": "dev",
+        "GithubSHA1": "a1d623e73071a14a0cb5ac508c2ece5b734290de"
       }
     },
     "pillar": {
@@ -3171,13 +3172,13 @@
   },
   "files": {
     ".claude/settings.local.json": {
-      "checksum": "22a0190a72f46b8abddac1f43b1d37ca"
+      "checksum": "0faa1ba3d95bbe9656d0829a5320dabd"
     },
     ".Rbuildignore": {
       "checksum": "f7ff2f83498ac2e417402eeb51e474c1"
     },
     ".Rprofile": {
-      "checksum": "5fda6c86aa86ec07b29f384a291248c7"
+      "checksum": "81d7ee3225f77108bc089fa956b7b8de"
     },
     "app.R": {
       "checksum": "0d465e15d5de2dc310d7b7f1c052333e"
@@ -3186,7 +3187,7 @@
       "checksum": "9e64e6f99908854605856e2eb1151f10"
     },
     "DESCRIPTION": {
-      "checksum": "b33fa96f485e88455572af47bacdcdca"
+      "checksum": "b566d0262de7edb647389921d7777df5"
     },
     "docs/PRD-PerturbPlan-v2.html": {
       "checksum": "844950ff8798e6bd0405357681235209"
@@ -3258,7 +3259,7 @@
       "checksum": "6f064464ce805d874910fd72b1b4ab86"
     },
     "R/fct_cost_minimization.R": {
-      "checksum": "314021196b24d66ee3c39a09b88cad8d"
+      "checksum": "f624a2a9fe865078ecd1d8a28da7da50"
     },
     "R/fct_design_options.R": {
       "checksum": "5f271bc4d93890da5997bd000e521f42"
@@ -3291,13 +3292,13 @@
       "checksum": "57f2208c7942cd05a63824e30b965871"
     },
     "R/fct_solutions_table.R": {
-      "checksum": "54e95ef6e5f27c776b4de286cfff9fc5"
+      "checksum": "6609c31172f52847c4d4853690c75160"
     },
     "R/fct_unified_minimization.R": {
-      "checksum": "90c2b876eef78421f15d1a4a6c9e84d1"
+      "checksum": "cdb86456e183580daa694b3215ddea38"
     },
     "R/fct_univariate_optimization.R": {
-      "checksum": "a4caf69a1b2709dd8517a50ec95d8099"
+      "checksum": "d097c48a744023b798f060df6b87997f"
     },
     "R/fct_workflow_detection.R": {
       "checksum": "229835277494af09598c8d4de0f80c50"
@@ -3312,7 +3313,7 @@
       "checksum": "62a64cd7caebabd1b1d08c8befe78a87"
     },
     "R/mod_analysis_engine.R": {
-      "checksum": "55f34c47c7cd67790b033505514a0e18"
+      "checksum": "95ab78389298a2043907f43f7d477841"
     },
     "R/mod_design_options.R": {
       "checksum": "338e88aad0df78fb7c6e1fcd4b1fd6db"
@@ -3342,13 +3343,13 @@
       "checksum": "ea84fbf5d3072aa1be3686bb90d04568"
     },
     "R/mod_results_display.R": {
-      "checksum": "1f657e86a1aaf24df5b1d5f371bc44dc"
+      "checksum": "1b5d0e6d13ed1f760c271f1a5c80b9fc"
     },
     "R/mod_sidebar.R": {
       "checksum": "c4f20d219e7e15b81280ae137af79c2f"
     },
     "R/mod_solution_table.R": {
-      "checksum": "82e7fed932ce43e64dffd144e5a17ca8"
+      "checksum": "37e62eeb1bf34775630667ea33b6cbb1"
     },
     "R/mod_styles.R": {
       "checksum": "de83e386a0e2b2f277291e0678dd0b7f"
@@ -3372,7 +3373,7 @@
       "checksum": "3a202ac499dd10068f14916cdf4f531b"
     },
     "renv.lock": {
-      "checksum": "81ea7c61d703c2b0911db5d04cd72d84"
+      "checksum": "420f4e711c57ea023698b653724cdf10"
     }
   },
   "users": null

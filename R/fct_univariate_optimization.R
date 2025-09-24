@@ -28,39 +28,12 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
   results$sequenced_reads_per_cell <- results$raw_reads_per_cell
   results$raw_reads_per_cell <- NULL
 
-  # Validate results
-  if (is.null(results) || nrow(results) == 0) {
-    return(list(
-      error = "No results returned from perturbplan analysis",
-      metadata = list(
-        analysis_mode = "Real Analysis (Empty Results)",
-        timestamp = Sys.time()
-      )
-    ))
-  }
-
   # Get the correct parameter column name
   minimizing_param <- workflow_info$minimizing_parameter
   param_column <- get_parameter_column_name(minimizing_param)
 
-  # Validate that required columns exist
-  required_cols <- c("overall_power", param_column)
-  missing_cols <- setdiff(required_cols, names(results))
-
-  if (length(missing_cols) > 0) {
-    return(list(
-      error = sprintf("Missing required columns in perturbplan results: %s",
-                     paste(missing_cols, collapse = ", ")),
-      metadata = list(
-        analysis_mode = "Real Analysis (Missing Columns)",
-        timestamp = Sys.time()
-      )
-    ))
-  }
-
   # Create power_data in plotting format
   target_power <- config$design_options$target_power
-
   power_data <- data.frame(
     parameter_value = results[[param_column]],
     power = results$overall_power,
@@ -101,21 +74,7 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
     sequenced_reads_per_cell = optimal_row$sequenced_reads_per_cell %||% NA,
     TPM_threshold = optimal_row$TPM_threshold %||% NA,
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
-    total_cost = optimal_row$total_cost %||% NA,
-    # Add mapping efficiency used in the analysis (from advanced choices)
-    mapping_efficiency = config$advanced_choices$mapping_efficiency %||% 0.72,
-    # Add cost calculation metadata for power+cost workflows
-    is_cost_optimized = !is.null(config$design_options$optimization_type) &&
-                        config$design_options$optimization_type == "power_cost",
-    cost_constraint = if (!is.null(config$design_options$optimization_type) &&
-                          config$design_options$optimization_type == "power_cost")
-                        config$design_options$cost_budget else NULL,
-    cost_per_cell = if (!is.null(config$design_options$optimization_type) &&
-                        config$design_options$optimization_type == "power_cost")
-                      config$design_options$cost_per_cell %||% 0.086 else NULL,
-    cost_per_million_reads = if (!is.null(config$design_options$optimization_type) &&
-                                 config$design_options$optimization_type == "power_cost")
-                               config$design_options$cost_per_million_reads %||% 0.374 else NULL
+    total_cost = optimal_row$total_cost %||% NA
   )
 
   # Add parameter-specific field names for plotting compatibility (CRITICAL for reads_per_cell)
@@ -133,16 +92,9 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
     # Core plotting data (matches existing plotting module expectations)
     power_data = power_data,
     optimal_design = optimal_design,
-
-    # Workflow and user configuration
     workflow_info = enriched_workflow_info,
     user_config = config,
-
-
-    # Export data with comprehensive parameters
     exporting_data = create_exporting_data(results, config, workflow_info, pilot_data),
-
-    # Pilot data for export
     pilot_data = pilot_data
   )
 

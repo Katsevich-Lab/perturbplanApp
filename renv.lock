@@ -2213,8 +2213,8 @@
       "RemoteHost": "api.github.com",
       "RemoteUsername": "Katsevich-Lab",
       "RemoteRepo": "perturbplan",
-      "RemoteRef": "cleanup",
-      "RemoteSha": "ff808bce87468fc00a07ef5bc903394f5764d9cf"
+      "RemoteRef": "dev",
+      "RemoteSha": "a1d623e73071a14a0cb5ac508c2ece5b734290de"
     },
     "pillar": {
       "Package": "pillar",

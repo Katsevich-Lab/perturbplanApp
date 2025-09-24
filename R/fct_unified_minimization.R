@@ -73,13 +73,8 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
   power_data <- optimal_results$optimal_cost_power_df
 
   # Standardize column names in power_data for UI compatibility
-  if ("raw_reads_per_cell" %in% names(power_data)) {
-    power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
-    power_data$raw_reads_per_cell <- NULL
-  } else if ("reads_per_cell" %in% names(power_data)) {
-    power_data$sequenced_reads_per_cell <- power_data$reads_per_cell
-    power_data$reads_per_cell <- NULL
-  }
+  power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
+  power_data$raw_reads_per_cell <- NULL
 
   # Group by minimizing variable and select minimum cost for each value
   grouped_data <- power_data %>%
@@ -108,15 +103,8 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
 
   # Standardize column names in cost_data for UI compatibility
   cost_data <- optimal_results$optimal_cost_grid
-  if (!is.null(cost_data)) {
-    if ("raw_reads_per_cell" %in% names(cost_data)) {
-      cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
-      cost_data$raw_reads_per_cell <- NULL
-    } else if ("reads_per_cell" %in% names(cost_data)) {
-      cost_data$sequenced_reads_per_cell <- cost_data$reads_per_cell
-      cost_data$reads_per_cell <- NULL
-    }
-  }
+  cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
+  cost_data$raw_reads_per_cell <- NULL
 
   # Step 10: Return unified results
   final_results <- list(
@@ -125,14 +113,9 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     optimal_design = optimal_design,
     user_config = config,
     workflow_info = workflow_info,
-
-    # Export data with comprehensive parameters
     exporting_data = create_exporting_data(cost_power_grid, config, workflow_info, pilot_data),
-
-    # Pilot data for export
     pilot_data = pilot_data
   )
-
 
   return(final_results)
 }
