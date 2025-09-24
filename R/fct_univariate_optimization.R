@@ -83,9 +83,8 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
     optimal_design$reads_per_cell <- optimal_design$sequenced_reads_per_cell %||% NA
   }
 
-  # Create enriched workflow_info for plotting
+  # workflow_info already contains all needed information for plotting
   enriched_workflow_info <- workflow_info
-  enriched_workflow_info$title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info)
 
   # Create plotting-compatible results structure (same format as specialized workflows)
   plotting_results <- list(

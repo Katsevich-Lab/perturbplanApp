@@ -111,7 +111,7 @@ create_single_parameter_plots <- function(cached_results) {
 
   varying_param <- workflow_info$minimizing_parameter
   param_label <- format_parameter_name(varying_param)
-  plot_title <- workflow_info$title
+  plot_title <- create_workflow_title(varying_param, workflow_info)
 
   # Convert to expected format
   solutions_data <- solutions_list
@@ -236,7 +236,7 @@ create_single_parameter_plots <- function(cached_results) {
   p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", workflow_info$title, "</b>"),
+        text = paste0("<b>", create_workflow_title(workflow_info$minimizing_parameter, workflow_info), "</b>"),
         font = list(size = 14)
       ),
       hovermode = "closest",
@@ -538,7 +538,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
 
   # Labels and theme
   p <- p + labs(
-    title = workflow_info$title,
+    title = create_workflow_title(workflow_info$minimizing_parameter, workflow_info),
     x = "Cells per target",
     y = "Reads per cell",
     color = "Parameter Setting"
@@ -550,7 +550,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", workflow_info$title, "</b>"),
+        text = paste0("<b>", create_workflow_title(workflow_info$minimizing_parameter, workflow_info), "</b>"),
         font = list(size = 14)
       ),
       xaxis = list(title = "Cells per target"),
@@ -759,7 +759,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
-        text = paste0("<b>", workflow_info$title, "</b>"),
+        text = paste0("<b>", create_workflow_title(workflow_info$minimizing_parameter, workflow_info), "</b>"),
         font = list(size = 14)
       ),
       xaxis = list(title = x_axis_label),
