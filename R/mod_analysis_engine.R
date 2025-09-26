@@ -57,7 +57,6 @@ mod_analysis_engine_server <- function(id, workflow_config) {
       }
 
       # Phase-based analysis triggering
-
       # Phase 1: Require plan button click
       if (is.null(config$plan_clicked) || config$plan_clicked == 0) {
         return(NULL)
@@ -87,15 +86,7 @@ mod_analysis_engine_server <- function(id, workflow_config) {
         generate_real_analysis(config, workflow_info)
       }, error = function(e) {
         # Return error object instead of crashing
-        list(
-          error = paste("Analysis Error:", e$message),
-          metadata = list(
-            analysis_mode = get_analysis_mode(),
-            workflow_type = workflow_info$workflow_id %||% "unknown",
-            timestamp = Sys.time(),
-            error_details = as.character(e)
-          )
-        )
+        list(error = paste("Analysis Error:", e$message))
       })
 
       return(results)
