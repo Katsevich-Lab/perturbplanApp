@@ -796,21 +796,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
 # UTILITY FUNCTIONS
 # ============================================================================
 
-#' Format parameter names for display
-#'
-#' @param param_name Parameter name to format
-#' @return Formatted parameter name for display
-#' @noRd
-format_parameter_name <- function(param_name) {
-  switch(param_name,
-    "TPM_threshold" = "TPM Threshold",
-    "minimum_fold_change" = "Fold Change",
-    "cells_per_target" = "Cells per Target",
-    "reads_per_cell" = "Reads per Cell",
-    "sequenced_reads_per_cell" = "Reads per Cell",
-    param_name  # fallback to original name
-  )
-}
+# format_parameter_name function moved to fct_workflow_detection.R to avoid duplication
 
 #' Create workflow title for plotting
 #'
