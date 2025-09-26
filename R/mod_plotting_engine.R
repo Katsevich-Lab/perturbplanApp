@@ -1,3 +1,20 @@
+#' Plotting Engine Module UI Function
+#'
+#' @description Backend-only module that generates plot objects.
+#' No UI components needed - this is a pure server-side module.
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#'
+#' @noRd
+#'
+#' @importFrom shiny NS tagList
+mod_plotting_engine_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    # No UI - this is a backend plotting module
+  )
+}
+
 #' Plotting Engine Server Functions
 #'
 #' @description Converts analysis results data into interactive plot objects.

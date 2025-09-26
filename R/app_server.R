@@ -62,7 +62,6 @@ app_server <- function(input, output, session) {
   # ========================================================================
   display_outputs <- mod_results_display_server("display", plot_objects, cached_results, unified_config, app_state)
 
-
   # ========================================================================
   # APP STATE MANAGEMENT
   # ========================================================================
