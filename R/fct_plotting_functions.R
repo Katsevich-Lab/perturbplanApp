@@ -162,28 +162,26 @@ create_single_parameter_plots <- function(cached_results) {
     if (!is.null(solution$optimal_point)) {
       optimal_design <- solution$optimal_point
 
-      if (!is.null(optimal_design[[varying_param]]) && !is.na(optimal_design[[varying_param]])) {
-        optimal_hover_text <- paste0(
-          solution_label, " (Optimal)<br>",
-          param_label, ": ",
-          case_when(
-            varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-            varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
-            varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
-            TRUE ~ as.character(optimal_design[[varying_param]])
-          ),
-          "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
-        )
+      optimal_hover_text <- paste0(
+        solution_label, " (Optimal)<br>",
+        param_label, ": ",
+        case_when(
+          varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
+          varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
+          varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
+          TRUE ~ as.character(optimal_design[[varying_param]])
+        ),
+        "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
+      )
 
-        # Add optimal point to dataframe
-        optimal_point_data <- data.frame(
-          parameter_value = optimal_design[[varying_param]],
-          power = optimal_design$achieved_power,
-          solution_label = solution_label,
-          tooltip_text = optimal_hover_text
-        )
-        optimal_points <- rbind(optimal_points, optimal_point_data)
-      }
+      # Add optimal point to dataframe
+      optimal_point_data <- data.frame(
+        parameter_value = optimal_design[[varying_param]],
+        power = optimal_design$achieved_power,
+        solution_label = solution_label,
+        tooltip_text = optimal_hover_text
+      )
+      optimal_points <- rbind(optimal_points, optimal_point_data)
     }
   }
 
@@ -396,36 +394,16 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     }
 
     # Add optimal point
-    if (!is.null(solution$optimal_point)) {
-      optimal_design <- solution$optimal_point
-
-      if (!is.null(optimal_design$cells_per_target) && !is.null(optimal_design[[reads_col]])) {
-        optimal_point <- data.frame(
-          cells_per_target = optimal_design$cells_per_target,
-          sequenced_reads_per_cell = optimal_design[[reads_col]],
-          total_cost = optimal_design$total_cost %||% NA,
-          achieved_power = optimal_design$achieved_power %||% target_power,
-          solution_label = solution_label,
-          solution_color = solution_color
-        )
-        optimal_points <- rbind(optimal_points, optimal_point)
-      }
-    }
-  }
-
-  # Check required columns exist
-  required_cols <- c("cells_per_target", "sequenced_reads_per_cell")
-  if (!all(required_cols %in% names(combined_power_data))) {
-    # Return error plot
-    error_plot <- ggplot(data.frame(x = 1, y = 1), aes(x, y)) +
-      geom_point() +
-      labs(title = "Cost Minimization Plot Error",
-           subtitle = "Missing required data columns")
-
-    return(list(
-      main_plot = error_plot,
-      interactive_plot = suppressWarnings(ggplotly(error_plot))
-    ))
+    optimal_design <- solution$optimal_point
+    optimal_point <- data.frame(
+      cells_per_target = optimal_design$cells_per_target,
+      sequenced_reads_per_cell = optimal_design[["sequenced_reads_per_cell"]],
+      total_cost = optimal_design$total_cost,
+      achieved_power = optimal_design$achieved_power,
+      solution_label = solution_label,
+      solution_color = solution_color
+    )
+    optimal_points <- rbind(optimal_points, optimal_point)
   }
 
   # Create base plot
@@ -747,13 +725,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
       modeBarButtonsToRemove = list("all")
     )
 
-  # ========================================================================
-  # STEP 8: RETURN STRUCTURE
-  # ========================================================================
-
-  return(list(
-    interactive_plot = interactive_plot
-  ))
+  return(list(interactive_plot = interactive_plot))
 }
 
 # ============================================================================
