@@ -1,28 +1,6 @@
 # ============================================================================
 # ANALYSIS CONFIGURATION AND UTILITIES
 # ============================================================================
-# ANALYSIS MODE CONTROL
-# ============================================================================
-
-#' Check if app should use real analysis
-#'
-#' @description Always returns FALSE - app uses real perturbplan integration exclusively.
-#'
-#' @return Logical - always FALSE (real analysis mode)
-#' @noRd
-use_placeholder_mode <- function() {
-  return(FALSE)
-}
-
-#' Get current analysis mode description
-#'
-#' @return Character string describing current mode
-#' @noRd
-get_analysis_mode <- function() {
-  return("Real Analysis (perturbplan Package)")
-}
-
-# ============================================================================
 # WORKFLOW CONFIGURATION PROCESSING
 # ============================================================================
 
@@ -170,107 +148,9 @@ detect_workflow_scenario <- function(workflow_config) {
   ))
 }
 
-#' Validate workflow configuration completeness
-#'
-#' @param workflow_config List containing user configuration
-#' @return List with is_valid flag and error messages
-#' @noRd
-validate_workflow_config <- function(workflow_config) {
-  errors <- character()
-
-  # Check design options
-  design_config <- workflow_config$design_options
-  if (is.null(design_config$optimization_type) || design_config$optimization_type == "") {
-    errors <- c(errors, "Optimization type not selected")
-  }
-
-  if (is.null(design_config$target_power) || !is.numeric(design_config$target_power)) {
-    errors <- c(errors, "Target power not specified")
-  } else if (design_config$target_power <= 0 || design_config$target_power >= 1) {
-    errors <- c(errors, "Target power must be between 0 and 1")
-  }
-
-  if (is.null(design_config$minimization_target) || design_config$minimization_target == "") {
-    errors <- c(errors, "Minimization target not selected")
-  }
-
-  # Validate minimization target compatibility with optimization type
-  if (!is.null(design_config$optimization_type) && !is.null(design_config$minimization_target) &&
-      design_config$optimization_type != "" && design_config$minimization_target != "") {
-
-    opt_type <- design_config$optimization_type
-    target <- design_config$minimization_target
-
-    # Power+cost mode can only minimize TPM_threshold or minimum_fold_change
-    if (opt_type == "power_cost" && !target %in% c("TPM_threshold", "minimum_fold_change")) {
-      errors <- c(errors, paste("Power+cost optimization can only minimize TPM threshold or fold change, not", target))
-    }
-
-    # Power-only mode supports all targets
-    if (opt_type == "power_only" && !target %in% c("cells_per_target", "reads_per_cell", "TPM_threshold", "minimum_fold_change", "cost")) {
-      errors <- c(errors, paste("Invalid minimization target for power-only optimization:", target))
-    }
-  }
-
-  # Check cost budget for power+cost optimization
-  if (!is.null(design_config$optimization_type) && design_config$optimization_type == "power_cost") {
-    if (is.null(design_config$cost_budget) || !is.numeric(design_config$cost_budget)) {
-      errors <- c(errors, "Cost budget required for power+cost optimization")
-    } else if (design_config$cost_budget <= 0) {
-      errors <- c(errors, "Cost budget must be positive")
-    }
-  }
-
-  # Check parameter controls
-  param_controls <- design_config$parameter_controls
-  if (is.null(param_controls)) {
-    errors <- c(errors, "Parameter controls not configured")
-  }
-
-  # Check for required experimental setup
-  if (is.null(workflow_config$experimental_setup)) {
-    errors <- c(errors, "Experimental setup not configured")
-  }
-
-  return(list(
-    is_valid = length(errors) == 0,
-    errors = errors,
-    validation_timestamp = Sys.time()
-  ))
-}
-
 # ============================================================================
 # PARAMETER EXTRACTION UTILITIES
 # ============================================================================
-
-#' Extract parameter ranges from workflow configuration
-#'
-#' @param workflow_config List containing user configuration
-#' @param parameter_name Character name of parameter
-#' @return Numeric vector of parameter range or single value
-#' @noRd
-extract_parameter_range <- function(workflow_config, parameter_name) {
-  param_control <- workflow_config$design_options$parameter_controls[[parameter_name]]
-
-  if (is.null(param_control)) {
-    # Return default ranges
-    return(get_default_parameter_range(parameter_name))
-  }
-
-  if (param_control$type == "fixed") {
-    # Return fixed value
-    return(param_control$fixed_value)
-  } else if (param_control$type == "varying") {
-    # Return reasonable range for varying parameter
-    return(get_default_parameter_range(parameter_name))
-  } else if (param_control$type %in% c("minimizing", "optimizing")) {
-    # Return range that will be optimized over
-    return(get_default_parameter_range(parameter_name))
-  }
-
-  # Fallback
-  return(get_default_parameter_range(parameter_name))
-}
 
 #' Get default parameter ranges
 #'
@@ -334,21 +214,3 @@ format_parameter_name <- function(parameter_name) {
   )
 }
 
-#' Create analysis metadata for results
-#'
-#' @param workflow_config User configuration
-#' @param workflow_info Detected workflow information
-#' @return List with analysis metadata
-#' @noRd
-create_analysis_metadata <- function(workflow_config, workflow_info) {
-  list(
-    analysis_mode = get_analysis_mode(),
-    workflow_type = workflow_info$workflow_id,
-    workflow_category = workflow_info$category,
-    target_power = workflow_config$design_options$target_power,
-    cost_budget = workflow_config$design_options$cost_budget,
-    analysis_timestamp = Sys.time(),
-    app_version = golem::get_golem_version(),
-    user_session_id = "placeholder_session"  # Session tracking placeholder
-  )
-}
