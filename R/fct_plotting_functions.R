@@ -252,17 +252,7 @@ create_single_parameter_plots <- function(cached_results) {
       modeBarButtonsToRemove = list("all")
     )
 
-  # Create summary stats for the current solution (last in list)
-  current_solution_data <- solutions_data[[length(solutions_data)]]$data
-  current_optimal <- solutions_data[[length(solutions_data)]]$optimal_point
-
-  return(list(
-    main_plot = p,
-    interactive_plot = p_interactive,
-    plot_data = solutions_data,
-    multi_solution = length(solutions_data) > 1,
-    solution_count = length(solutions_data)
-  ))
+  return(list(interactive_plot = p_interactive))
 }
 
 
@@ -376,13 +366,6 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     if (!is.null(solution$power_data)) {
       power_data <- solution$power_data
 
-      # Standardize column names
-      if ("raw_reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
-        power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
-      } else if ("reads_per_cell" %in% names(power_data) && !"sequenced_reads_per_cell" %in% names(power_data)) {
-        power_data$sequenced_reads_per_cell <- power_data$reads_per_cell
-      }
-
       # Add solution info
       power_data$solution_label <- solution_label
       power_data$solution_color <- solution_color
@@ -392,13 +375,6 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     # Process cost data (equi-cost curves)
     if (!is.null(solution$cost_data)) {
       cost_data <- solution$cost_data
-
-      # Standardize column names
-      if ("raw_reads_per_cell" %in% names(cost_data) && !"sequenced_reads_per_cell" %in% names(cost_data)) {
-        cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
-      } else if ("reads_per_cell" %in% names(cost_data) && !"sequenced_reads_per_cell" %in% names(cost_data)) {
-        cost_data$sequenced_reads_per_cell <- cost_data$reads_per_cell
-      }
 
       # Add solution info and cost level grouping
       cost_data$solution_label <- solution_label
@@ -422,14 +398,6 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     # Add optimal point
     if (!is.null(solution$optimal_point)) {
       optimal_design <- solution$optimal_point
-
-      # Standardize reads column name
-      reads_col <- "sequenced_reads_per_cell"
-      if ("raw_reads_per_cell" %in% names(optimal_design)) {
-        optimal_design$sequenced_reads_per_cell <- optimal_design$raw_reads_per_cell
-      } else if ("reads_per_cell" %in% names(optimal_design)) {
-        optimal_design$sequenced_reads_per_cell <- optimal_design$reads_per_cell
-      }
 
       if (!is.null(optimal_design$cells_per_target) && !is.null(optimal_design[[reads_col]])) {
         optimal_point <- data.frame(
@@ -568,7 +536,6 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     )
 
   return(list(
-    main_plot = p,
     interactive_plot = interactive_plot
   ))
 }
@@ -785,10 +752,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   # ========================================================================
 
   return(list(
-    main_plot = p,                    # Static ggplot
-    interactive_plot = interactive_plot,  # Interactive plotly
-    plot_type = "constrained_minimization",
-    workflow_id = workflow_info$workflow_id
+    interactive_plot = interactive_plot
   ))
 }
 

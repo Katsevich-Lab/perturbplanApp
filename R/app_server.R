@@ -77,5 +77,4 @@ app_server <- function(input, output, session) {
       )
     }
   }, ignoreNULL = TRUE, ignoreInit = TRUE)
-
 }

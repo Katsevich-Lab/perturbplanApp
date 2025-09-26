@@ -1,61 +1,8 @@
-test_that("collapsible_section creates proper HTML structure", {
-  ns <- function(x) paste0("test-", x)
-  
-  # Test collapsed section
-  result <- collapsible_section(ns, "section1", "Test Section", tags$div("Content"))
-  
-  expect_s3_class(result, "shiny.tag.list")
-  
-  # Check for proper CSS classes
-  expect_true(grepl("collapsible-section", as.character(result)))
-  expect_true(grepl("collapsible-header", as.character(result)))
-  expect_true(grepl("collapsible-content", as.character(result)))
-  
-  # Check for chevron icon
-  expect_true(grepl("fa-chevron-right", as.character(result)))
-  expect_true(grepl("display: none", as.character(result)))
-  
-  # Test expanded section
-  result_expanded <- collapsible_section(ns, "section2", "Test Section", tags$div("Content"), collapsed = FALSE)
-  expect_true(grepl("fa-chevron-down", as.character(result_expanded)))
-  expect_false(grepl("display: none", as.character(result_expanded)))
-})
+# Removed test for collapsible_section (function was unused and deleted)
 
-test_that("parameter_input_group creates proper structure", {
-  ns <- function(x) paste0("test-", x)
-  input_elem <- numericInput("test", NULL, value = 5)
-  
-  # Test with label and help text
-  result <- parameter_input_group(ns, "param1", "Test Label", input_elem, "Help text")
-  
-  expect_s3_class(result, "shiny.tag")
-  expect_true(grepl("input-group", as.character(result)))
-  expect_true(grepl("input-label", as.character(result)))
-  expect_true(grepl("input-help", as.character(result)))
-  expect_true(grepl("Test Label", as.character(result)))
-  expect_true(grepl("Help text", as.character(result)))
-  
-  # Test without label
-  result_no_label <- parameter_input_group(ns, "param2", NULL, input_elem)
-  expect_false(grepl("input-label", as.character(result_no_label)))
-  
-  # Test without help text  
-  result_no_help <- parameter_input_group(ns, "param3", "Label", input_elem, NULL)
-  expect_false(grepl("input-help", as.character(result_no_help)))
-})
+# Removed test for parameter_input_group (function was unused and deleted)
 
-test_that("currency_input creates proper currency structure", {
-  ns <- function(x) paste0("test-", x)
-  
-  result <- currency_input(ns, "cost", "Cost per cell:", value = 0.05, max = 10)
-  
-  expect_s3_class(result, "shiny.tag")
-  expect_true(grepl("currency-wrapper", as.character(result)))
-  expect_true(grepl("currency-symbol", as.character(result)))
-  expect_true(grepl("\\$", as.character(result)))
-  expect_true(grepl("Cost per cell:", as.character(result)))
-  expect_true(grepl("0.05", as.character(result)))
-})
+# Removed test for currency_input (function was unused and deleted)
 
 test_that("parameter_matrix creates proper matrix structure", {
   ns <- function(x) paste0("test-", x)
@@ -147,25 +94,16 @@ test_that("file_upload_zone creates proper upload structure", {
   expect_false(grepl("file-upload-info", as.character(result_no_info)))
 })
 
-test_that("all components use semantic CSS classes", {
+test_that("remaining components use semantic CSS classes", {
   ns <- function(x) paste0("test-", x)
-  
-  # Test that all components use our CSS foundation classes
-  collapsible <- collapsible_section(ns, "test", "Title", tags$div("Content"))
-  expect_true(grepl("collapsible-section|collapsible-header|collapsible-content", as.character(collapsible)))
-  
-  input_group <- parameter_input_group(ns, "test", "Label", numericInput("test", NULL, value = 1))
-  expect_true(grepl("input-group|input-label", as.character(input_group)))
-  
-  currency <- currency_input(ns, "test", "Label", value = 1, max = 10)
-  expect_true(grepl("currency-wrapper|currency-symbol|input-group", as.character(currency)))
-  
+
+  # Test that remaining components use our CSS foundation classes
   matrix <- parameter_matrix(ns, list(test_param = "varying"))
   expect_true(grepl("parameter-matrix|parameter-row|parameter-name|parameter-controls", as.character(matrix)))
-  
+
   step <- step_container(1, "Title", tags$div("Content"))
   expect_true(grepl("step-container|step-header", as.character(step)))
-  
+
   upload <- file_upload_zone(ns, "test", info_text = "Info")
   expect_true(grepl("file-upload-info", as.character(upload)))
 })

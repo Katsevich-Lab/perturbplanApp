@@ -362,28 +362,4 @@ safe_extract_cached_solutions_data <- function(cached_results) {
   })
 }
 
-# Legacy function aliases for backward compatibility (if needed)
-create_excel_summary <- function(results, plots) {
-  warning("create_excel_summary is deprecated. Use create_excel_export_data with cached_results instead.")
-  return(data.frame(Message = "Function deprecated"))
-}
-
-create_excel_design_options <- function(design_options) {
-  warning("create_excel_design_options is deprecated. Use create_excel_export_data with cached_results instead.")
-  return(data.frame(Message = "Function deprecated"))
-}
-
-create_excel_experimental_setup <- function(experimental_setup) {
-  warning("create_excel_experimental_setup is deprecated. Use create_excel_export_data with cached_results instead.")
-  return(data.frame(Message = "Function deprecated"))
-}
-
-create_excel_analysis_choices <- function(analysis_choices) {
-  warning("create_excel_analysis_choices is deprecated. Use create_excel_export_data with cached_results instead.")
-  return(data.frame(Message = "Function deprecated"))
-}
-
-create_excel_effect_sizes <- function(effect_sizes) {
-  warning("create_excel_effect_sizes is deprecated. Use create_excel_export_data with cached_results instead.")
-  return(data.frame(Message = "Function deprecated"))
-}
+# All deprecated legacy functions have been removed

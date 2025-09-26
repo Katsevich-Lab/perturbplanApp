@@ -154,34 +154,4 @@ if ("raw_reads_per_cell" %in% names(data)) {
   )
 )
 
-#' Validate Parameter Name Usage
-#'
-#' @description Helper function to validate that parameter names follow
-#' the canonical naming standards throughout the codebase.
-#'
-#' @param parameter_type One of: "reads", "tmp", "cells", "fold_change"
-#' @param layer One of: "ui_input", "config", "function_param", "perturbplan", "display"
-#' @param name The name to validate
-#' @return Logical indicating if the name matches canonical standards
-#' @export
-validate_parameter_name <- function(parameter_type, layer, name) {
-  if (!parameter_type %in% names(CANONICAL_PARAMETER_NAMES)) {
-    return(FALSE)
-  }
-  
-  param_spec <- CANONICAL_PARAMETER_NAMES[[parameter_type]]
-  layer_key <- switch(layer,
-    "ui_input" = "ui_input_id",
-    "config" = "config_key", 
-    "function_param" = "function_param",
-    "perturbplan" = "perturbplan_param",
-    "display" = "results_display_label",
-    NULL
-  )
-  
-  if (is.null(layer_key) || !layer_key %in% names(param_spec)) {
-    return(FALSE)
-  }
-  
-  return(name == param_spec[[layer_key]])
-}
+# Removed unused validate_parameter_name function
