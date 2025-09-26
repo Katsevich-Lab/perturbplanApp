@@ -91,8 +91,7 @@ perform_standard_analysis <- function(config, workflow_info, pilot_data) {
     # Core plotting data (matches existing plotting module expectations)
     power_data = power_data,
     optimal_design = optimal_design,
-    workflow_info = enriched_workflow_info,
-    user_config = config,
+    user_config = config,  # Contains workflow_info already
     exporting_data = create_exporting_data(results, config, workflow_info, pilot_data),
     pilot_data = pilot_data
   )

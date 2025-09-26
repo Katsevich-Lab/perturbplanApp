@@ -42,7 +42,7 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
         biological_system = biological_system,
         B = 1000,                    # Sample 1000 genes
         gene_list = gene_list_data,  # Use custom gene list if provided
-        TPM_threshold = 0,           # No TPM filtering at this stage
+        TPM_threshold = 1,           # TPM filtering at 1
         custom_pilot_data = NULL     # Use built-in data
       )
 
@@ -74,7 +74,7 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
         biological_system = "K562",           # Not used when custom_pilot_data provided
         B = 1000,                            # Sample 1000 genes
         gene_list = gene_list_data,          # Use custom gene list if provided
-        TPM_threshold = 0,                   # No TPM filtering at this stage
+        TPM_threshold = 1,                   # TPM filtering at 1
         custom_pilot_data = validation_result$data  # Use validated custom data
       )
 

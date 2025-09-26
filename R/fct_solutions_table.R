@@ -21,53 +21,17 @@ create_enhanced_solutions_table <- function(results) {
 
     # Get workflow_info from current result or first pinned result
     workflow_info <- if (!is.null(results$current_result)) {
-      results$current_result$workflow_info
+      results$current_result$user_config$workflow_info
     } else if (length(results$pinned_solutions) > 0) {
-      results$pinned_solutions[[1]]$workflow_info
+      results$pinned_solutions[[1]]$user_config$workflow_info
     } else {
       return(create_empty_solutions_table())
     }
 
-  } else {
-    # Legacy single result format
-    if (is.null(results$optimal_design) || is.null(results$workflow_info)) {
-      return(create_empty_solutions_table())
-    }
-
-    solutions_data <- extract_clean_solutions_data(results)
-    workflow_info <- results$workflow_info
   }
 
   # Create clean table UI with proper two-row header
   create_clean_solutions_table_ui(solutions_data, workflow_info)
-}
-
-# ============================================================================
-# DATA EXTRACTION
-# ============================================================================
-
-#' Extract Clean Solutions Data
-#'
-#' @param results Complete analysis results object
-#' @return List with structured solutions data
-extract_clean_solutions_data <- function(results) {
-  optimal <- results$optimal_design
-  user_config <- results$user_config
-  workflow_info <- results$workflow_info
-  minimizing_param <- workflow_info$minimizing_parameter
-
-  list(
-    list(
-      solution_id = 1,
-      achieved_power = round(optimal$achieved_power %||% NA, 3),
-      total_cost = if (!is.null(optimal$total_cost)) optimal$total_cost else NULL,
-      optimal_value = extract_optimal_parameter_value(optimal, minimizing_param),
-      experimental_params = extract_experimental_parameters(optimal, user_config, minimizing_param, workflow_info),
-      TPM_threshold = extract_TPM_threshold(optimal, user_config, minimizing_param),
-      effect_sizes = extract_effect_sizes_clean(optimal, user_config, minimizing_param),
-      minimizing_param = minimizing_param
-    )
-  )
 }
 
 #' Extract Cached Solutions Data
@@ -87,13 +51,12 @@ extract_cached_solutions_data <- function(cached_results) {
       solution_name = "Current",
       achieved_power = round(current$optimal_design$achieved_power %||% NA, 3),
       total_cost = if (!is.null(current$optimal_design$total_cost)) current$optimal_design$total_cost else NULL,
-      optimal_value = extract_optimal_parameter_value(current$optimal_design, current$workflow_info$minimizing_parameter),
-      experimental_params = extract_experimental_parameters(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter, current$workflow_info),
-      TPM_threshold = extract_TPM_threshold(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter),
-      effect_sizes = extract_effect_sizes_clean(current$optimal_design, current$user_config, current$workflow_info$minimizing_parameter),
-      minimizing_param = current$workflow_info$minimizing_parameter,
-      user_config = current$user_config,
-      workflow_info = current$workflow_info
+      optimal_value = extract_optimal_parameter_value(current$optimal_design, current$user_config$workflow_info$minimizing_parameter),
+      experimental_params = extract_experimental_parameters(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter, current$user_config$workflow_info),
+      TPM_threshold = extract_TPM_threshold(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter),
+      effect_sizes = extract_effect_sizes_clean(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter),
+      minimizing_param = current$user_config$workflow_info$minimizing_parameter,
+      user_config = current$user_config
     )
     solution_counter <- solution_counter + 1
   }
@@ -103,19 +66,17 @@ extract_cached_solutions_data <- function(cached_results) {
     for (i in seq_along(cached_results$pinned_solutions)) {
       solution_name <- names(cached_results$pinned_solutions)[i]
       pinned <- cached_results$pinned_solutions[[i]]
-
       solutions_list[[solution_counter]] <- list(
         solution_id = solution_counter,
         solution_name = solution_name,
         achieved_power = round(pinned$optimal_design$achieved_power %||% NA, 3),
         total_cost = if (!is.null(pinned$optimal_design$total_cost)) pinned$optimal_design$total_cost else NULL,
-        optimal_value = extract_optimal_parameter_value(pinned$optimal_design, pinned$workflow_info$minimizing_parameter),
-        experimental_params = extract_experimental_parameters(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter, pinned$workflow_info),
-        TPM_threshold = extract_TPM_threshold(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter),
-        effect_sizes = extract_effect_sizes_clean(pinned$optimal_design, pinned$user_config, pinned$workflow_info$minimizing_parameter),
-        minimizing_param = pinned$workflow_info$minimizing_parameter,
-        user_config = pinned$user_config,
-        workflow_info = pinned$workflow_info
+        optimal_value = extract_optimal_parameter_value(pinned$optimal_design, pinned$user_config$workflow_info$minimizing_parameter),
+        experimental_params = extract_experimental_parameters(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter, pinned$user_config$workflow_info),
+        TPM_threshold = extract_TPM_threshold(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter),
+        effect_sizes = extract_effect_sizes_clean(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter),
+        minimizing_param = pinned$user_config$workflow_info$minimizing_parameter,
+        user_config = pinned$user_config
       )
       solution_counter <- solution_counter + 1
     }

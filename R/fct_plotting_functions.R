@@ -105,7 +105,7 @@ create_single_parameter_plots <- function(cached_results) {
     }
 
     target_power <- metadata_source$user_config$design_options$target_power
-    workflow_info <- metadata_source$workflow_info
+    workflow_info <- metadata_source$user_config$workflow_info
 
   }
 
@@ -325,7 +325,7 @@ create_cached_cost_tradeoff_plots <- function(cached_results) {
     stop("No valid results available for cost tradeoff plotting")
   }
 
-  workflow_info <- metadata_source$workflow_info
+  workflow_info <- metadata_source$user_config$workflow_info
   workflow_id <- workflow_info$workflow_id
 
   # ========================================================================

@@ -109,8 +109,7 @@ perform_constrained_minimization_analysis <- function(config, workflow_info, pil
     power_data = grouped_data,  # Grouped data for consistent plotting
     cost_data = cost_data,  # For equi-cost curves
     optimal_design = optimal_design,
-    user_config = config,
-    workflow_info = workflow_info,
+    user_config = config,  # Contains workflow_info already
     exporting_data = create_exporting_data(cost_power_grid, config, workflow_info, pilot_data),
     pilot_data = pilot_data
   )

@@ -95,8 +95,7 @@ perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data
     power_data = power_data,  # This is optimal_cost_power_df for equi-power curves
     cost_data = cost_data,  # This is cost_grid for equi-cost curves
     optimal_design = optimal_design,
-    user_config = config,
-    workflow_info = workflow_info,
+    user_config = config,  # Contains workflow_info already
     exporting_data = create_exporting_data(cost_power_grid, config, workflow_info, pilot_data),
     pilot_data = pilot_data
   ))

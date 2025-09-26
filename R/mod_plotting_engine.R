@@ -55,9 +55,9 @@ mod_plotting_engine_server <- function(id, cached_results) {
       # Determine plot type and generate appropriate plots
       # Extract workflow_info from the correct location (cached_results structure)
       workflow_info <- if (!is.null(results$current_result)) {
-        results$current_result$workflow_info
+        results$current_result$user_config$workflow_info
       } else {
-        results$pinned_solutions[[1]]$workflow_info
+        results$pinned_solutions[[1]]$user_config$workflow_info
       }
 
 
