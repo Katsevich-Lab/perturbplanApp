@@ -12,13 +12,14 @@ NULL
 #' perturbplan::cost_power_computation. Returns plotting-ready format directly.
 #'
 #' @param config User configuration from sidebar modules
-#' @param workflow_info Detected workflow information
 #' @param pilot_data Extracted pilot data for perturbplan
 #'
 #' @return List containing plotting-ready results (same structure as specialized workflows)
 #' @noRd
-perform_standard_analysis <- function(config, workflow_info, pilot_data) {
+perform_standard_analysis <- function(config, pilot_data) {
+
   # Map UI configuration to perturbplan::cost_power_computation parameters
+  workflow_info <- config$workflow_info
   perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
 
   # Call perturbplan::cost_power_computation

@@ -13,14 +13,15 @@ NULL
 #' to generate equi-power and equi-cost curves.
 #'
 #' @param config User configuration from sidebar
-#' @param workflow_info Detected workflow information
+#' @param pilot_data Extracted pilot data for perturbplan
 #' @return List with power_data and optimal_design compatible with current plotting
 #' @noRd
-perform_cost_minimization_analysis <- function(config, workflow_info, pilot_data) {
+perform_cost_minimization_analysis <- function(config, pilot_data) {
 
   # Step 1: Get comprehensive parameters from UI using existing mapping function
   # This includes MOI, num_targets, experimental setup, pilot data, costs, etc.
   # Use pre-extracted pilot data (passed as parameter to avoid duplication)
+  workflow_info <- config$workflow_info
   perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
 
   # Override for cost minimization workflow:

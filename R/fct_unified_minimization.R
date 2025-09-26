@@ -12,13 +12,13 @@ NULL
 #' unified approach with consistent cost constraint handling and optimal solution extraction.
 #'
 #' @param config User configuration from sidebar
-#' @param workflow_info Detected workflow information
 #' @param pilot_data Pre-extracted pilot data to avoid duplication
 #' @return List with power_data and optimal_design compatible with plotting
 #' @noRd
-perform_constrained_minimization_analysis <- function(config, workflow_info, pilot_data) {
+perform_constrained_minimization_analysis <- function(config, pilot_data) {
 
   # Step 1: Detect minimization configuration
+  workflow_info <- config$workflow_info
   minimization_config <- get_minimization_config(workflow_info$workflow_id)
 
   # Step 2: Extract cost constraint from user (always use config$design_options$cost_budget for workflows 10-11)
@@ -155,38 +155,3 @@ find_optimal_point_in_grouped_data <- function(grouped_data, minimization_config
 
   return(optimal_point)
 }
-
-#' Prepare minimization data for plotting and display
-#'
-#' @param analysis_results Results from perform_constrained_minimization_analysis
-#' @return List with grouped data and optimal point
-#' @noRd
-prepare_minimization_data <- function(analysis_results) {
-  # Extract key parameters
-  minimizing_variable <- analysis_results$metadata$minimizing_variable
-  cost_constraint <- analysis_results$metadata$cost_constraint
-  target_power <- analysis_results$user_config$design_options$target_power
-
-  # The grouped data (already processed for consistency)
-  grouped_data <- analysis_results$power_data
-
-  # Get minimization config
-  minimization_config <- get_minimization_config(analysis_results$workflow_info$workflow_id)
-
-  # Find optimal point using same logic as analysis
-  optimal_point <- find_optimal_point_in_grouped_data(
-    grouped_data,
-    minimization_config,
-    cost_constraint
-  )
-
-  return(list(
-    grouped_data = grouped_data,
-    optimal_point = optimal_point,
-    minimizing_variable = minimizing_variable,
-    cost_constraint = cost_constraint,
-    target_power = target_power
-  ))
-}
-
-

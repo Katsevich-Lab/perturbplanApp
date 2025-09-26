@@ -140,14 +140,14 @@ generate_real_analysis <- function(config, workflow_info) {
 
   # Workflow 5: Cost minimization
   if (workflow_info$workflow_id == "power_cost_minimization") {
-    return(perform_cost_minimization_analysis(config, workflow_info, pilot_data))
+    return(perform_cost_minimization_analysis(config, pilot_data))
   }
 
   # Workflows 10-11: Constrained minimization (TPM/FC)
   if (workflow_info$workflow_id %in% c("power_cost_TPM_cells_reads", "power_cost_fc_cells_reads")) {
-    return(perform_constrained_minimization_analysis(config, workflow_info, pilot_data))
+    return(perform_constrained_minimization_analysis(config, pilot_data))
   }
 
   # Workflows 1-4, 6-9: Standard analysis
-  return(perform_standard_analysis(config, workflow_info, pilot_data))
+  return(perform_standard_analysis(config, pilot_data))
 }
