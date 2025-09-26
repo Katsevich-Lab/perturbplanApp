@@ -48,9 +48,7 @@ app_server <- function(input, output, session) {
   # MODULE 3.5: RESULTS CACHE MANAGEMENT
   # ========================================================================
   # Wire pin buttons to cache management - use slider_config to track changes
-  cached_results <- mod_results_cache_server("cache", analysis_results_raw,
-                                           slider_results$pin_trigger,
-                                           slider_results$clear_trigger)
+  cached_results <- mod_results_cache_server("cache", analysis_results_raw, slider_results$pin_trigger, slider_results$clear_trigger)
 
   # ========================================================================
   # MODULE 4: PLOTTING ENGINE

@@ -2211,10 +2211,10 @@
       "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "Katsevich-Lab",
+      "RemoteUsername": "katsevich-lab",
       "RemoteRepo": "perturbplan",
       "RemoteRef": "dev",
-      "RemoteSha": "a1d623e73071a14a0cb5ac508c2ece5b734290de"
+      "RemoteSha": "d5a9e5f96f2aad13e143e622b57e055aae153171"
     },
     "pillar": {
       "Package": "pillar",
