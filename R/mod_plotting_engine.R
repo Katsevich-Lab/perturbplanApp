@@ -52,30 +52,40 @@ mod_plotting_engine_server <- function(id, cached_results) {
       # Don't process if no results available (prevent initialization issues)
       req(!is.null(results$current_result) || !is.null(results$pinned_solutions))
 
-      # Determine plot type and generate appropriate plots
-      # Extract workflow_info from the correct location (cached_results structure)
-      workflow_info <- if (!is.null(results$current_result)) {
-        results$current_result$user_config$workflow_info
-      } else {
-        results$pinned_solutions[[1]]$user_config$workflow_info
+      # Depending if the current_result is available or not
+      if(!is.null(results$current_result$error)){
+        # Return plot objects with metadata (failure case)
+        final_result <- list(
+          success = FALSE,
+          error = results$current_result$error
+        )
+      }else{
+        # Determine plot type and generate appropriate plots
+        # Extract workflow_info from the correct location (cached_results structure)
+        workflow_info <- if (!is.null(results$current_result)) {
+          results$current_result$user_config$workflow_info
+        } else {
+          results$pinned_solutions[[1]]$user_config$workflow_info
+        }
+
+        if (workflow_info$plot_type == "single_parameter_curve") {
+          # Generate single parameter power curve plots (8 workflows)
+          plots <- create_single_parameter_plots(results)
+        } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
+          # Generate cost-power tradeoff plots for workflows 5, 10-11 using cached architecture
+          plots <- create_cached_cost_tradeoff_plots(results)
+        }
+
+        # Return plot objects with metadata (success case)
+        final_result <- list(
+          plots = plots,
+          workflow_info = workflow_info,
+          plot_type = workflow_info$plot_type,
+          success = TRUE,
+          error = NULL
+        )
       }
 
-      if (workflow_info$plot_type == "single_parameter_curve") {
-        # Generate single parameter power curve plots (8 workflows)
-        plots <- create_single_parameter_plots(results)
-      } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
-        # Generate cost-power tradeoff plots for workflows 5, 10-11 using cached architecture
-        plots <- create_cached_cost_tradeoff_plots(results)
-      }
-
-      # Return plot objects with metadata (success case)
-      final_result <- list(
-        plots = plots,
-        workflow_info = workflow_info,
-        plot_type = workflow_info$plot_type,
-        success = TRUE,
-        error = NULL
-      )
       return(final_result)
     }) %>% bindCache(cached_results())
 

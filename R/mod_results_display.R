@@ -191,18 +191,11 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     # ========================================================================
     # REACTIVE DISPLAY STATE
     # ========================================================================
-
     # Determine if errors should be shown
     output$show_error <- reactive({
       tryCatch({
         plots <- plot_objects()
-        results <- cached_results()
-
-        # Only show error if we have actual data with errors, not when data is missing
-        has_plot_error <- !is.null(plots) && !is.null(plots$error)
-        has_result_error <- !is.null(results) && !is.null(results$error)
-
-        has_plot_error || has_result_error
+        !is.null(plots) && !is.null(plots$error)
       }, error = function(e) {
         # If there's an error accessing plots or results, don't show error state
         # This happens on app startup when no analysis has been run yet
@@ -224,7 +217,6 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
 
     # Determine if analysis is actively running/triggered
     output$analysis_trigger <- reactive({
-
       # Analysis is triggered if we have plan clicks but no results yet
       config <- user_config()
       has_plan_clicks <- !is.null(config) && !is.null(config$plan_clicked) && config$plan_clicked > 0
@@ -245,23 +237,10 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
 
     # Error message display
     output$error_message <- renderUI({
-      error_msg <- NULL
 
-      tryCatch({
-        plots <- plot_objects()
-        results <- cached_results()
-
-        # Check for plotting errors first
-        if (!is.null(plots) && !is.null(plots$error)) {
-          error_msg <- paste("Plotting Error:", plots$error)
-        }
-        # Check for analysis errors if no plotting error
-        else if (!is.null(results) && !is.null(results$error)) {
-          error_msg <- results$error
-        }
-      }, error = function(e) {
-        error_msg <- paste("Display Error:", e$message)
-      })
+      # Check for plotting errors first
+      results <- cached_results()
+      error_msg <- results$current_result$error
 
       if (!is.null(error_msg)) {
         tags$div(
@@ -290,15 +269,8 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
         tryCatch({
           # Create Excel data using new cached_results approach
           excel_data <- create_excel_export_data(results)
-
           # Write Excel file to the specified path
           write.xlsx(excel_data, file = file)
-
-          showNotification(
-            paste("Excel file exported successfully with", length(excel_data), "sheets!"),
-            type = "message",
-            duration = 3
-          )
 
         }, error = function(e) {
           showNotification(

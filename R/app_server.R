@@ -65,21 +65,6 @@ app_server <- function(input, output, session) {
   # ========================================================================
   # APP STATE MANAGEMENT
   # ========================================================================
-
-  # Error handling observer
-  observe({
-    analysis <- analysis_results_raw()
-
-    # Handle analysis errors
-    if (!is.null(analysis) && !is.null(analysis$error)) {
-      showNotification(
-        paste("Analysis Error:", analysis$error),
-        type = "error",
-        duration = 5
-      )
-    }
-  })
-
   # Phase transition: Move to Phase 2 on successful analysis
   observeEvent(analysis_results_raw(), {
     results <- analysis_results_raw()
