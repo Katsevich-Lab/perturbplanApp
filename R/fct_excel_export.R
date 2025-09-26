@@ -49,9 +49,9 @@ create_parameter_settings_sheet <- function(cached_results) {
 
   # Get workflow_info from cached results (same logic as create_enhanced_solutions_table)
   workflow_info <- if (!is.null(cached_results$current_result)) {
-    cached_results$current_result$workflow_info
+    cached_results$current_result$user_config$workflow_info
   } else if (length(cached_results$pinned_solutions) > 0) {
-    cached_results$pinned_solutions[[1]]$workflow_info
+    cached_results$pinned_solutions[[1]]$user_config$workflow_info
   } else {
     return(data.frame(Message = "No workflow information available"))
   }
@@ -361,5 +361,3 @@ safe_extract_cached_solutions_data <- function(cached_results) {
     list()
   })
 }
-
-# All deprecated legacy functions have been removed
