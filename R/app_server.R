@@ -22,7 +22,6 @@ app_server <- function(input, output, session) {
     plan_button_text = "Plan"     # Button text: "Plan" or "Restart"
   )
 
-
   # ========================================================================
   # MODULE 1: INPUT COLLECTION (Sidebar)
   # ========================================================================
@@ -63,17 +62,6 @@ app_server <- function(input, output, session) {
   # ========================================================================
   display_outputs <- mod_results_display_server("display", plot_objects, cached_results, unified_config, app_state)
 
-  # ========================================================================
-  # HEADER EXPORT FUNCTIONALITY
-  # ========================================================================
-
-  # Header export buttons UI - Excel export moved to mod_results_display.R
-  output$header_export_buttons <- renderUI({
-    # Excel export functionality moved to Solutions panel in mod_results_display.R
-    # This placeholder ensures no UI errors but displays nothing
-    NULL
-  })
-
 
   # ========================================================================
   # APP STATE MANAGEMENT
@@ -108,11 +96,4 @@ app_server <- function(input, output, session) {
     }
   }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-  # ========================================================================
-  # RESTART HANDLER - Placeholder for restart functionality
-  # ========================================================================
-  # This will be implemented in later phases when we add reset functionality
-  # For now, the restart trigger in sidebar will show a notification
-
-  # Development debug output disabled to reduce console output
 }

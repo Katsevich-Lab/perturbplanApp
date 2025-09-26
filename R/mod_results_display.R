@@ -213,18 +213,12 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
 
     # App state-based slider visibility (Phase 3.5)
     output$show_sliders <- reactive({
-      tryCatch({
-        # Use app_state$phase to decide whether the slider is showing or not
-        if (!is.null(app_state)) {
-          return(ifelse(app_state$phase == 2, TRUE, FALSE))
-        }
-
-        # Fallback: return FALSE if app_state not available
-        return(FALSE)
-
-      }, error = function(e) {
-        FALSE
-      })
+      # Use app_state$phase to decide whether the slider is showing or not
+      if (!is.null(app_state)) {
+        return(ifelse(app_state$phase == 2, TRUE, FALSE))
+      }
+      # Fallback: return FALSE if app_state not available
+      return(FALSE)
     })
     outputOptions(output, "show_sliders", suspendWhenHidden = FALSE)
 

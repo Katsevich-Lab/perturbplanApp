@@ -1,20 +1,3 @@
-#' Plotting Engine Module UI Function
-#'
-#' @description Backend-only module that converts analysis data into plot objects.
-#' No UI components needed - this is a pure server-side plotting module.
-#'
-#' @param id,input,output,session Internal parameters for {shiny}.
-#'
-#' @noRd
-#'
-#' @importFrom shiny NS tagList
-mod_plotting_engine_ui <- function(id) {
-  ns <- NS(id)
-  tagList(
-    # No UI - this is a backend plotting module
-  )
-}
-
 #' Plotting Engine Server Functions
 #'
 #' @description Converts analysis results data into interactive plot objects.
@@ -60,19 +43,12 @@ mod_plotting_engine_server <- function(id, cached_results) {
         results$pinned_solutions[[1]]$user_config$workflow_info
       }
 
-
       if (workflow_info$plot_type == "single_parameter_curve") {
         # Generate single parameter power curve plots (8 workflows)
         plots <- create_single_parameter_plots(results)
       } else if (workflow_info$plot_type == "cost_tradeoff_curves") {
         # Generate cost-power tradeoff plots for workflows 5, 10-11 using cached architecture
         plots <- create_cached_cost_tradeoff_plots(results)
-      } else {
-        # Error case
-        return(list(
-          error = paste("Unknown plot type:", workflow_info$plot_type),
-          plots = list()
-        ))
       }
 
       # Return plot objects with metadata (success case)

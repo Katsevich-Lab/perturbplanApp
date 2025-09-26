@@ -57,7 +57,7 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
     cost_power_df = cost_power_grid,
     minimizing_variable = minimization_config$variable,
     power_target = config$design_options$target_power,
-    power_precision = 0.02,
+    power_precision = 0.01,
     MOI = perturbplan_params$MOI,
     num_targets = perturbplan_params$num_targets,
     non_targeting_gRNAs = perturbplan_params$non_targeting_gRNAs,
