@@ -444,7 +444,6 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                    text = paste0(solution_label, " (Equi-cost)<br>",
                                "Cells: ", scales::comma(cells_per_target), "<br>",
                                "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
-                               "Cost Level: $", scales::comma(cost_of_interest, accuracy = 1, na_default = "N/A"), "<br>",
                                "Actual Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"))),
       size = 1
     ))
