@@ -265,47 +265,60 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Force buttons to lose focus after click to prevent stuck state */
-.pin-buttons-section .btn {
+/* NUCLEAR OPTION: Complete override of ALL button states */
+.pin-buttons-section .btn,
+.pin-buttons-section .btn:hover,
+.pin-buttons-section .btn:focus,
+.pin-buttons-section .btn:active,
+.pin-buttons-section .btn:focus:active,
+.pin-buttons-section .btn:focus-visible,
+.pin-buttons-section .btn.focus,
+.pin-buttons-section .btn.active {
   outline: none !important;
-}
-
-.pin-buttons-section .btn:focus {
   box-shadow: none !important;
-  outline: none !important;
-  /* Override Bootstrap focus background color */
-  background-color: inherit !important;
-  border-color: inherit !important;
+  /* Reset any transforms or filters */
+  transform: none !important;
+  filter: none !important;
 }
 
-/* Prevent buttons from staying in active/pressed state */
-.pin-buttons-section .btn:active:focus {
-  box-shadow: none !important;
-  background-color: inherit !important;
-  border-color: inherit !important;
-}
-
-/* Specifically target the Pin Setting button (success variant) */
+/* Pin Setting button - force green in ALL states except hover */
+.pin-buttons-section .btn-success,
 .pin-buttons-section .btn-success:focus,
-.pin-buttons-section .btn-success:focus:not(:hover) {
+.pin-buttons-section .btn-success:active,
+.pin-buttons-section .btn-success:focus:active,
+.pin-buttons-section .btn-success:focus-visible,
+.pin-buttons-section .btn-success.focus,
+.pin-buttons-section .btn-success.active {
   background-color: #28a745 !important;
   border-color: #28a745 !important;
   color: white !important;
 }
 
-/* Specifically target the Clear Pins button (outline variant) */
+/* Pin Setting button hover state */
+.pin-buttons-section .btn-success:hover {
+  background-color: #218838 !important;
+  border-color: #1e7e34 !important;
+  color: white !important;
+}
+
+/* Clear Pins button - force outline style in ALL states except hover */
+.pin-buttons-section .btn-outline-secondary,
 .pin-buttons-section .btn-outline-secondary:focus,
-.pin-buttons-section .btn-outline-secondary:focus:not(:hover) {
+.pin-buttons-section .btn-outline-secondary:active,
+.pin-buttons-section .btn-outline-secondary:focus:active,
+.pin-buttons-section .btn-outline-secondary:focus-visible,
+.pin-buttons-section .btn-outline-secondary.focus,
+.pin-buttons-section .btn-outline-secondary.active {
   background-color: transparent !important;
   border-color: #6c757d !important;
   color: #6c757d !important;
 }
 
-/* Additional override for any other focus states */
-.pin-buttons-section .btn:focus:not(:hover),
-.pin-buttons-section .btn:active:focus:not(:hover) {
-  filter: none !important;
-  opacity: 1 !important;
+/* Clear Pins button hover state */
+.pin-buttons-section .btn-outline-secondary:hover {
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+  color: white !important;
 }
 
 

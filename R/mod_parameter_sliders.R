@@ -344,13 +344,13 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         actionButton(
           ns("pin_solution"),
           "Pin Setting",
-          class = "btn btn-success btn-sm",
+          class = "btn-success btn-sm",
           style = "flex: 0 1 auto; min-width: 100px; max-width: 120px; font-size: 14px; font-weight: 500;"
         ),
         actionButton(
           ns("clear_pins"),
           "Clear Pins",
-          class = "btn btn-outline-secondary btn-sm",
+          class = "btn-outline-secondary btn-sm",
           style = "flex: 0 1 auto; min-width: 80px; max-width: 100px; font-size: 14px; font-weight: 500;"
         )
       )
