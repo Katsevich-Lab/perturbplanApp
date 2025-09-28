@@ -441,7 +441,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       data = combined_cost_data,
       mapping = aes(x = cells_per_target, y = sequenced_reads_per_cell,
                    color = solution_label,
-                   text = paste0(solution_label, " (Equi-cost)<br>",
+                   text = paste0(solution_label, "<br>",
                                "Cells: ", scales::comma(cells_per_target), "<br>",
                                "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
                                "Actual Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"))),
@@ -470,7 +470,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                "Reads: ", scales::comma(sequenced_reads_per_cell), "<br>",
                                "Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"), "<br>",
                                "Power: ", scales::percent(achieved_power, accuracy = 0.1, na_default = "N/A"))),
-      size = 2,
+      size = 3,
       shape = 18
     ))
   }
@@ -504,7 +504,17 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       xaxis = list(title = "Cells per target"),
       yaxis = list(title = "Reads per cell"),
       showlegend = TRUE,
-      legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.25)
+      legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.25),
+      annotations = list(
+        list(
+          x = 1, y = 1,
+          xref = "paper", yref = "paper",
+          text = "◆ Optimal solution   ── Equi-power   ⋯⋯ Equi-cost",
+          xanchor = "right", yanchor = "top",
+          showarrow = FALSE,
+          font = list(size = 11, color = "black")
+        )
+      )
     )  %>%
     config(
       displayModeBar = FALSE,
