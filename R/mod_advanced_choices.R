@@ -5,13 +5,13 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
 #' @importFrom shiny NS tagList tags div strong numericInput selectInput moduleServer reactive updateSelectInput
 #' @importFrom shinyjs show hide disable enable toggleState
 mod_advanced_choices_ui <- function(id) {
   ns <- NS(id)
-  
+
   # Advanced settings (collapsible, initially collapsed)
   tagList(
     tags$div(
@@ -26,7 +26,7 @@ mod_advanced_choices_ui <- function(id) {
       tags$div(
         id = ns("advanced-content"),
         style = "padding: 15px;",
-        
+
         # gRNA variability
         numericInput(ns("gRNA_variability"),
                     "gRNA variability:",
@@ -49,11 +49,11 @@ mod_advanced_choices_ui <- function(id) {
                                "Non-targeting cells" = "nt_cells"),
                     selected = "complement"),
 
-        # Explanatory text for MOI=1 control group restriction
+        # Explanatory text for MOI>1 control group restriction
         tags$div(
           id = ns("moi_explanation"),
           style = "display: none; margin-top: 5px;",
-          tags$small("(automatically selected when MOI=1)",
+          tags$small("(automatically selected when MOI>1)",
                     style = "color: #888; font-style: italic;")
         ),
 
@@ -63,7 +63,7 @@ mod_advanced_choices_ui <- function(id) {
     )
   )
 }
-    
+
 #' advanced_choices Server Functions
 #'
 #' @description Server logic for advanced settings parameters including MOI-based
@@ -87,9 +87,9 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
       if (!is.null(experimental_config()) && !is.null(experimental_config()$MOI)) {
         moi_value <- experimental_config()$MOI
 
-        if (moi_value == 1) {
-          # Force to non-targeting cells and disable input
-          updateSelectInput(session, "control_group", selected = "nt_cells")
+        if (moi_value > 1) {
+          # Force to complement cells and disable input
+          updateSelectInput(session, "control_group", selected = "complement")
           shinyjs::disable("control_group")
           shinyjs::show("moi_explanation")
         } else {
@@ -98,7 +98,7 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
           shinyjs::hide("moi_explanation")
         }
       }
-    }, ignoreInit = TRUE)
+    }, ignoreInit = FALSE)
 
     # ============================================================================
     # CONFIGURATION OUTPUT
@@ -123,7 +123,9 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
         # Core advanced inputs that should be disabled in Phase 2
         shinyjs::toggleState("gRNA_variability", condition = !inputs_disabled)
         shinyjs::toggleState("mapping_efficiency", condition = !inputs_disabled)
+
         shinyjs::toggleState("control_group", condition = !inputs_disabled)
+
         shinyjs::toggleState("fdr_target", condition = !inputs_disabled)
 
         # Note: Section headers remain functional for collapse/expand
@@ -133,4 +135,4 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
     return(advanced_choices_config)
   })
 }
-    
+

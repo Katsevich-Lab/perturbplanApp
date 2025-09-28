@@ -81,7 +81,7 @@ mod_results_display_ui <- function(id) {
         column(
           width = 5,
           box(
-            title = "Parameters",
+            title = "Design summary and parameters",
             status = "primary",
             solidHeader = TRUE,
             width = NULL,
