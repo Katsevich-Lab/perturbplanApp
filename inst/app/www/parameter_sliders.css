@@ -266,57 +266,24 @@
 }
 
 /* ========================================================================
-   PIN BUTTONS STYLING - Clean Implementation
+   PIN BUTTONS STYLING - Simple Focus Override
    ======================================================================== */
 
-/* Remove all focus indicators that could cause gray appearance */
-.pin-buttons-section .btn {
+/* Override Bootstrap focus styling to match normal state */
+.pin-buttons-section .btn:focus {
   outline: none !important;
   box-shadow: none !important;
 }
 
-.pin-buttons-section .btn:focus,
-.pin-buttons-section .btn:active,
-.pin-buttons-section .btn:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Pin Setting Button (Green Success Style) */
-.pin-buttons-section .btn-success {
-  background-color: #28a745;
-  border-color: #28a745;
-  color: white;
-}
-
-.pin-buttons-section .btn-success:hover {
-  background-color: #218838;
-  border-color: #1e7e34;
-  color: white;
-}
-
-.pin-buttons-section .btn-success:focus,
-.pin-buttons-section .btn-success:active {
+/* Pin Setting Button - make focused state match normal green state */
+.pin-buttons-section .btn-success:focus {
   background-color: #28a745 !important;
   border-color: #28a745 !important;
   color: white !important;
 }
 
-/* Clear Pins Button (Gray Outline Style) */
-.pin-buttons-section .btn-outline-secondary {
-  background-color: transparent;
-  border-color: #6c757d;
-  color: #6c757d;
-}
-
-.pin-buttons-section .btn-outline-secondary:hover {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  color: white;
-}
-
-.pin-buttons-section .btn-outline-secondary:focus,
-.pin-buttons-section .btn-outline-secondary:active {
+/* Clear Pins Button - make focused state match normal outline state */
+.pin-buttons-section .btn-outline-secondary:focus {
   background-color: transparent !important;
   border-color: #6c757d !important;
   color: #6c757d !important;

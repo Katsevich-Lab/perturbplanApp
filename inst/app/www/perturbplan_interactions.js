@@ -118,29 +118,13 @@ window.SidebarCollapse = {
 // ========================================================================
 
 function handlePinButtonClicks() {
-  // Use more aggressive event delegation with multiple approaches
-  $(document).on('click', '[id*="pin_solution"], [id*="clear_pins"]', function() {
-    var button = this;
-    // Blur the button immediately and after delays
-    button.blur();
-    setTimeout(function() {
-      button.blur();
-      $(button).blur();
-    }, 50);
-    setTimeout(function() {
-      button.blur();
-      $(button).blur();
-    }, 200);
-  });
-
-  // Also try with direct class targeting
+  // Simple approach: blur buttons after click to simulate clicking elsewhere
   $(document).on('click', '.pin-buttons-section .btn', function() {
     var button = this;
-    button.blur();
+    // Blur immediately to remove focus (simulates clicking elsewhere)
     setTimeout(function() {
       button.blur();
-      $(button).blur();
-    }, 100);
+    }, 10); // Small delay to let Shiny process the click first
   });
 }
 
