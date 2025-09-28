@@ -118,13 +118,47 @@ window.SidebarCollapse = {
 // ========================================================================
 
 function handlePinButtonClicks() {
-  // Simple approach: blur buttons after click to simulate clicking elsewhere
-  $(document).on('click', '.pin-buttons-section .btn', function() {
+  // Multiple targeting strategies with debugging
+  console.log('Setting up pin button handlers...');
+
+  // Strategy 1: Target by button text
+  $(document).on('click', 'button:contains("Pin Setting"), button:contains("Clear Pins")', function() {
+    console.log('Pin button clicked (by text):', this);
     var button = this;
-    // Blur immediately to remove focus (simulates clicking elsewhere)
     setTimeout(function() {
       button.blur();
-    }, 10); // Small delay to let Shiny process the click first
+      console.log('Blurred button (by text)');
+    }, 10);
+  });
+
+  // Strategy 2: Target by class in pin section
+  $(document).on('click', '.pin-buttons-section button', function() {
+    console.log('Pin button clicked (by section):', this);
+    var button = this;
+    setTimeout(function() {
+      button.blur();
+      console.log('Blurred button (by section)');
+    }, 10);
+  });
+
+  // Strategy 3: Target any button with specific IDs
+  $(document).on('click', '[id*="pin_solution"], [id*="clear_pins"]', function() {
+    console.log('Pin button clicked (by ID):', this);
+    var button = this;
+    setTimeout(function() {
+      button.blur();
+      console.log('Blurred button (by ID)');
+    }, 10);
+  });
+
+  // Strategy 4: Use longer delay in case Shiny is slow
+  $(document).on('click', '.pin-buttons-section .btn', function() {
+    console.log('Pin button clicked (main handler):', this);
+    var button = this;
+    setTimeout(function() {
+      button.blur();
+      console.log('Blurred button (main handler)');
+    }, 100); // Longer delay
   });
 }
 
