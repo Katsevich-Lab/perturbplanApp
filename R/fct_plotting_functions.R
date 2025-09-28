@@ -242,6 +242,16 @@ create_single_parameter_plots <- function(cached_results) {
         orientation = "h",     # horizontal legend
         x = 0.5, xanchor = "center",
         y = -0.25, yanchor = "top"  # put it below the plot with less space
+      ),
+      annotations = list(
+        list(
+          x = 1, y = 1,
+          xref = "paper", yref = "paper",
+          text = "◆ Optimal solution",
+          xanchor = "right", yanchor = "top",
+          showarrow = FALSE,
+          font = list(size = 11, color = "black")
+        )
       )
     ) %>%
     config(
@@ -739,7 +749,17 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
       yaxis = list(title = "Total Cost ($)"),
       showlegend = TRUE,
       legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.25),
-      hovermode = "closest"
+      hovermode = "closest",
+      annotations = list(
+        list(
+          x = 1, y = 1,
+          xref = "paper", yref = "paper",
+          text = "◆ Optimal solution",
+          xanchor = "right", yanchor = "top",
+          showarrow = FALSE,
+          font = list(size = 11, color = "black")
+        )
+      )
     ) %>%
     config(
       displayModeBar = FALSE,
