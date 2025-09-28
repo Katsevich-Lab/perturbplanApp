@@ -131,7 +131,7 @@ mod_results_display_ui <- function(id) {
                 downloadButton(
                   ns("header_export_excel_download"),
                   "",
-                  icon = icon("file-excel"),
+                  icon = icon("download"),
                   class = "btn btn-success btn-sm",
                   style = "padding: 4px 8px; margin: 0;",
                   title = "Export to Excel"

@@ -8,7 +8,7 @@
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline geom_area
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate geom_smooth geom_text
-#' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_linetype_discrete scale_color_viridis_c coord_cartesian
+#' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_x_continuous scale_linetype_discrete scale_color_viridis_c coord_cartesian
 #' @importFrom plotly ggplotly layout config plot_ly
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma comma_format dollar_format
@@ -688,7 +688,20 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     {if (!is.null(cost_budget) && !is.na(cost_budget))
       geom_hline(yintercept = cost_budget, linetype = "dashed", alpha = 0.7, color = "grey")
     } +
-    scale_x_log10(labels = scales::comma_format()) +
+    {if (param_column == "TPM_threshold") {
+      scale_x_log10(labels = scales::comma_format())
+    } else if (param_column == "minimum_fold_change") {
+      # Get all unique fold change values and set specific breaks
+      all_values <- unique(combined_data$parameter_value)
+      if (length(all_values) > 0) {
+        breaks <- sort(all_values)
+        scale_x_continuous(breaks = breaks, labels = round(breaks, 2))
+      } else {
+        scale_x_continuous()
+      }
+    } else {
+      scale_x_continuous()
+    }} +
     scale_y_log10(labels = scales::comma_format(accuracy = 1)) +
     labs(title = paste(param_name, "vs Cost"),
          x = x_axis_label,
