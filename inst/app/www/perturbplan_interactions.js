@@ -118,12 +118,28 @@ window.SidebarCollapse = {
 // ========================================================================
 
 function handlePinButtonClicks() {
-  // Use event delegation to handle clicks on pin buttons
-  $(document).on('click', '[id$="pin_solution"], [id$="clear_pins"]', function() {
+  // Use more aggressive event delegation with multiple approaches
+  $(document).on('click', '[id*="pin_solution"], [id*="clear_pins"]', function() {
     var button = this;
-    // Blur the button after a brief delay to prevent stuck focus state
+    // Blur the button immediately and after delays
+    button.blur();
     setTimeout(function() {
       button.blur();
+      $(button).blur();
+    }, 50);
+    setTimeout(function() {
+      button.blur();
+      $(button).blur();
+    }, 200);
+  });
+
+  // Also try with direct class targeting
+  $(document).on('click', '.pin-buttons-section .btn', function() {
+    var button = this;
+    button.blur();
+    setTimeout(function() {
+      button.blur();
+      $(button).blur();
     }, 100);
   });
 }

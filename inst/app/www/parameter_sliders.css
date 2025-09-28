@@ -273,11 +273,39 @@
 .pin-buttons-section .btn:focus {
   box-shadow: none !important;
   outline: none !important;
+  /* Override Bootstrap focus background color */
+  background-color: inherit !important;
+  border-color: inherit !important;
 }
 
 /* Prevent buttons from staying in active/pressed state */
 .pin-buttons-section .btn:active:focus {
   box-shadow: none !important;
+  background-color: inherit !important;
+  border-color: inherit !important;
+}
+
+/* Specifically target the Pin Setting button (success variant) */
+.pin-buttons-section .btn-success:focus,
+.pin-buttons-section .btn-success:focus:not(:hover) {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+  color: white !important;
+}
+
+/* Specifically target the Clear Pins button (outline variant) */
+.pin-buttons-section .btn-outline-secondary:focus,
+.pin-buttons-section .btn-outline-secondary:focus:not(:hover) {
+  background-color: transparent !important;
+  border-color: #6c757d !important;
+  color: #6c757d !important;
+}
+
+/* Additional override for any other focus states */
+.pin-buttons-section .btn:focus:not(:hover),
+.pin-buttons-section .btn:active:focus:not(:hover) {
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 
