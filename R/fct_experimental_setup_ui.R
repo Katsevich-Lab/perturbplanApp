@@ -150,7 +150,7 @@ handle_file_upload <- function(session, file_info, biological_system, custom_pil
   # Validate file using extracted function
   validation <- validate_upload_file(file_info, defaults$max_file_size_mb)
   if (!validation$valid) {
-    showNotification(validation$error_message, type = "error", duration = defaults$error_duration_seconds)
+    # Validation failed - reset status
     reset_pilot_data_status(session, custom_pilot_data, output)
     return()
   }
@@ -195,7 +195,7 @@ handle_file_upload <- function(session, file_info, biological_system, custom_pil
     error_type <- categorize_file_error(e$message)
     error_msg <- format_error_message(error_type, e$message)
 
-    showNotification(error_msg, type = "error", duration = defaults$error_duration_seconds)
+    # Error notification removed
     output$pilot_data_status <- renderUI({
       HTML(error_msg)
     })

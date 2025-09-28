@@ -7,7 +7,7 @@
 #'
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe observeEvent req reactiveVal showNotification renderUI outputOptions htmlOutput HTML updateSelectInput updateNumericInput
+#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe observeEvent req reactiveVal renderUI outputOptions htmlOutput HTML updateSelectInput updateNumericInput
 #' @importFrom shinyjs show hide
 #' @importFrom tools file_ext
 mod_experimental_setup_ui <- function(id) {
@@ -27,7 +27,7 @@ mod_experimental_setup_ui <- function(id) {
       tags$div(
         id = ns("experimental-content"),
         class = "collapsible-content",
-        selectInput(ns("biological_system"), "Biological system:",
+        selectInput(ns("biological_system"), "Reference expression data:",
                    choices = list("K562" = "K562",
                                 "A549" = "A549",
                                 "THP-1" = "THP-1",

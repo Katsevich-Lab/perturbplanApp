@@ -7,7 +7,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList moduleServer reactive reactiveValues observe observeEvent req showNotification
+#' @importFrom shiny NS tagList moduleServer reactive reactiveValues observe observeEvent req
 mod_results_cache_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -64,12 +64,7 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
         # Increment counter for next pin
         results_cache$next_solution_id <- results_cache$next_solution_id + 1
 
-        # Show confirmation
-        showNotification(
-          paste("Pinned as", solution_name),
-          type = "message",
-          duration = 3
-        )
+        # Confirmation removed
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
@@ -79,11 +74,7 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
         results_cache$pinned_solutions <- list()
         results_cache$next_solution_id <- 1
 
-        showNotification(
-          "Cleared all pinned solutions",
-          type = "message",
-          duration = 3
-        )
+        # Confirmation removed
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 

@@ -70,11 +70,7 @@ app_server <- function(input, output, session) {
     if (!is.null(results) && is.null(results$error) && app_state$phase == 1) {
       app_state$phase <- 2
 
-      showNotification(
-        "Analysis complete! Switched to interactive mode.",
-        type = "message",
-        duration = 3
-      )
+      # Analysis complete notification removed
     }
   }, ignoreNULL = TRUE, ignoreInit = TRUE)
 }

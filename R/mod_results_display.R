@@ -178,7 +178,7 @@ mod_results_display_ui <- function(id) {
 #' @noRd
 #'
 #' @importFrom shiny moduleServer reactive observe req renderUI
-#' @importFrom shiny showNotification downloadHandler renderPlot observeEvent
+#' @importFrom shiny downloadHandler renderPlot observeEvent
 #' @importFrom openxlsx write.xlsx
 #' @importFrom ggplot2 ggsave ggplot annotate theme_void
 #' @importFrom plotly as_widget ggplotly
@@ -273,11 +273,7 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
           write.xlsx(excel_data, file = file)
 
         }, error = function(e) {
-          showNotification(
-            paste("Export failed:", e$message),
-            type = "error",
-            duration = 5
-          )
+          # Export error handling removed
           stop(e$message)
         })
       },

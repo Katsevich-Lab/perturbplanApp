@@ -7,7 +7,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div actionButton observeEvent showNotification uiOutput renderUI modalDialog showModal removeModal
+#' @importFrom shiny NS tagList tags div actionButton observeEvent uiOutput renderUI modalDialog showModal removeModal
 #' @importFrom shinydashboard dashboardSidebar
 #' @importFrom shinyjs show hide
 mod_sidebar_ui <- function(id) {
@@ -141,17 +141,11 @@ mod_sidebar_server <- function(id, app_state = NULL){
           validation_result <- validate_design_configuration(current_config$design_options)
 
           if (!validation_result$valid) {
-            # Show specific validation error
-            showNotification(
-              validation_result$message,
-              type = "error",
-              duration = 6
-            )
+            # Validation error - don't proceed
             return()  # Don't proceed with analysis
           }
 
           # Only proceed if validation passes
-          showNotification("Analysis starting...", type = "message", duration = 2)
           # Increment actual plan clicks counter
           actual_plan_clicks(actual_plan_clicks() + 1)
         } else if (app_state$phase == 2) {
