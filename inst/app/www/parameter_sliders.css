@@ -265,60 +265,61 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* NUCLEAR OPTION: Complete override of ALL button states */
-.pin-buttons-section .btn,
-.pin-buttons-section .btn:hover,
-.pin-buttons-section .btn:focus,
-.pin-buttons-section .btn:active,
-.pin-buttons-section .btn:focus:active,
-.pin-buttons-section .btn:focus-visible,
-.pin-buttons-section .btn.focus,
-.pin-buttons-section .btn.active {
+/* ========================================================================
+   PIN BUTTONS STYLING - Clean Implementation
+   ======================================================================== */
+
+/* Remove all focus indicators that could cause gray appearance */
+.pin-buttons-section .btn {
   outline: none !important;
   box-shadow: none !important;
-  /* Reset any transforms or filters */
-  transform: none !important;
-  filter: none !important;
 }
 
-/* Pin Setting button - force green in ALL states except hover */
-.pin-buttons-section .btn-success,
+.pin-buttons-section .btn:focus,
+.pin-buttons-section .btn:active,
+.pin-buttons-section .btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Pin Setting Button (Green Success Style) */
+.pin-buttons-section .btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: white;
+}
+
+.pin-buttons-section .btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  color: white;
+}
+
 .pin-buttons-section .btn-success:focus,
-.pin-buttons-section .btn-success:active,
-.pin-buttons-section .btn-success:focus:active,
-.pin-buttons-section .btn-success:focus-visible,
-.pin-buttons-section .btn-success.focus,
-.pin-buttons-section .btn-success.active {
+.pin-buttons-section .btn-success:active {
   background-color: #28a745 !important;
   border-color: #28a745 !important;
   color: white !important;
 }
 
-/* Pin Setting button hover state */
-.pin-buttons-section .btn-success:hover {
-  background-color: #218838 !important;
-  border-color: #1e7e34 !important;
-  color: white !important;
+/* Clear Pins Button (Gray Outline Style) */
+.pin-buttons-section .btn-outline-secondary {
+  background-color: transparent;
+  border-color: #6c757d;
+  color: #6c757d;
 }
 
-/* Clear Pins button - force outline style in ALL states except hover */
-.pin-buttons-section .btn-outline-secondary,
+.pin-buttons-section .btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
 .pin-buttons-section .btn-outline-secondary:focus,
-.pin-buttons-section .btn-outline-secondary:active,
-.pin-buttons-section .btn-outline-secondary:focus:active,
-.pin-buttons-section .btn-outline-secondary:focus-visible,
-.pin-buttons-section .btn-outline-secondary.focus,
-.pin-buttons-section .btn-outline-secondary.active {
+.pin-buttons-section .btn-outline-secondary:active {
   background-color: transparent !important;
   border-color: #6c757d !important;
   color: #6c757d !important;
-}
-
-/* Clear Pins button hover state */
-.pin-buttons-section .btn-outline-secondary:hover {
-  background-color: #6c757d !important;
-  border-color: #6c757d !important;
-  color: white !important;
 }
 
 
