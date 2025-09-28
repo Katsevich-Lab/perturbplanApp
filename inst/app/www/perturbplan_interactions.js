@@ -114,6 +114,21 @@ window.SidebarCollapse = {
 };
 
 // ========================================================================
+// PIN BUTTON FOCUS MANAGEMENT
+// ========================================================================
+
+function handlePinButtonClicks() {
+  // Use event delegation to handle clicks on pin buttons
+  $(document).on('click', '[id$="pin_solution"], [id$="clear_pins"]', function() {
+    var button = this;
+    // Blur the button after a brief delay to prevent stuck focus state
+    setTimeout(function() {
+      button.blur();
+    }, 100);
+  });
+}
+
+// ========================================================================
 // INITIALIZATION
 // ========================================================================
 
@@ -121,6 +136,9 @@ $(document).ready(function() {
   setTimeout(function() {
     // Initialize sidebar collapse system
     window.SidebarCollapse.init();
+
+    // Initialize pin button focus management
+    handlePinButtonClicks();
 
     // Open Design Options section by default
     var firstContent = document.querySelector('[id*="design-content"]');

@@ -265,6 +265,21 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Force buttons to lose focus after click to prevent stuck state */
+.pin-buttons-section .btn {
+  outline: none !important;
+}
+
+.pin-buttons-section .btn:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Prevent buttons from staying in active/pressed state */
+.pin-buttons-section .btn:active:focus {
+  box-shadow: none !important;
+}
+
 
 /* ========================================================================
    RESPONSIVE DESIGN
