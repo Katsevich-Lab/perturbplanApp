@@ -265,45 +265,6 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* ========================================================================
-   PIN BUTTONS STYLING - High Specificity Focus Override
-   ======================================================================== */
-
-/* Very specific selectors to override Bootstrap with maximum specificity */
-.pin-buttons-section .btn.btn-success:focus,
-.pin-buttons-section .btn.btn-success:focus:not(:hover),
-.pin-buttons-section .btn.btn-success.focus,
-.pin-buttons-section .btn.btn-success:active:focus {
-  background-color: #28a745 !important;
-  border-color: #28a745 !important;
-  color: white !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-.pin-buttons-section .btn.btn-outline-secondary:focus,
-.pin-buttons-section .btn.btn-outline-secondary:focus:not(:hover),
-.pin-buttons-section .btn.btn-outline-secondary.focus,
-.pin-buttons-section .btn.btn-outline-secondary:active:focus {
-  background-color: transparent !important;
-  border-color: #6c757d !important;
-  color: #6c757d !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Nuclear option - target any button in pin section regardless of class */
-.pin-buttons-section button:focus,
-.pin-buttons-section input[type="button"]:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Try to match Plan button styling exactly if it uses different classes */
-.pin-buttons-section .action-button:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
 
 
 /* ========================================================================

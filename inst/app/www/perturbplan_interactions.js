@@ -113,54 +113,6 @@ window.SidebarCollapse = {
   }
 };
 
-// ========================================================================
-// PIN BUTTON FOCUS MANAGEMENT
-// ========================================================================
-
-function handlePinButtonClicks() {
-  // Multiple targeting strategies with debugging
-  console.log('Setting up pin button handlers...');
-
-  // Strategy 1: Target by button text
-  $(document).on('click', 'button:contains("Pin Setting"), button:contains("Clear Pins")', function() {
-    console.log('Pin button clicked (by text):', this);
-    var button = this;
-    setTimeout(function() {
-      button.blur();
-      console.log('Blurred button (by text)');
-    }, 10);
-  });
-
-  // Strategy 2: Target by class in pin section
-  $(document).on('click', '.pin-buttons-section button', function() {
-    console.log('Pin button clicked (by section):', this);
-    var button = this;
-    setTimeout(function() {
-      button.blur();
-      console.log('Blurred button (by section)');
-    }, 10);
-  });
-
-  // Strategy 3: Target any button with specific IDs
-  $(document).on('click', '[id*="pin_solution"], [id*="clear_pins"]', function() {
-    console.log('Pin button clicked (by ID):', this);
-    var button = this;
-    setTimeout(function() {
-      button.blur();
-      console.log('Blurred button (by ID)');
-    }, 10);
-  });
-
-  // Strategy 4: Use longer delay in case Shiny is slow
-  $(document).on('click', '.pin-buttons-section .btn', function() {
-    console.log('Pin button clicked (main handler):', this);
-    var button = this;
-    setTimeout(function() {
-      button.blur();
-      console.log('Blurred button (main handler)');
-    }, 100); // Longer delay
-  });
-}
 
 // ========================================================================
 // INITIALIZATION
@@ -170,9 +122,6 @@ $(document).ready(function() {
   setTimeout(function() {
     // Initialize sidebar collapse system
     window.SidebarCollapse.init();
-
-    // Initialize pin button focus management
-    handlePinButtonClicks();
 
     // Open Design Options section by default
     var firstContent = document.querySelector('[id*="design-content"]');
