@@ -245,9 +245,7 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
       if (!is.null(error_msg)) {
         tags$div(
           style = "color: #721c24; line-height: 1.5;",
-          tags$p(error_msg),
-          tags$p("Please check your input parameters and try again.",
-                 style = "margin-top: 10px; font-style: italic;")
+          tags$p(error_msg)
         )
       }
     })
@@ -314,6 +312,5 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
       contentType = "text/html"
     )
 
-    # No return needed - focused modules handle all coordination
   })
 }
