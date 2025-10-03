@@ -27,10 +27,24 @@ mod_design_options_ui <- function(id) {
         id = ns("design-content"),
         class = "collapsible-content",
 
-        # Step 1: Optimization Constraints
+        # Step 1: Assay Type
         tags$div(
           id = ns("step1"),
-          tags$h5("Step 1: Optimization Constraints", class = "step-header-large"),
+          tags$h5("Step 1: Assay Type", class = "step-header-large"),
+          selectInput(ns("assay_type"), NULL,
+                     choices = list(
+                       "Select assay type..." = "",
+                       "Perturb-seq" = "perturb_seq",
+                       "TAP-seq" = "tap_seq"
+                     ),
+                     selected = "")
+        ),
+
+        # Step 2: Optimization Constraints (initially hidden)
+        tags$div(
+          id = ns("step2"),
+          class = "hidden-section-with-spacing",
+          tags$h5("Step 2: Optimization Constraints", class = "step-header-large"),
           selectInput(ns("optimization_type"), NULL,
                      choices = list(
                        "Select constraint type..." = "",
@@ -71,11 +85,11 @@ mod_design_options_ui <- function(id) {
           )
         ),
 
-        # Step 2: Minimization Target (initially hidden)
+        # Step 3: Minimization Target (initially hidden)
         tags$div(
-          id = ns("step2"),
+          id = ns("step3"),
           class = "hidden-section-with-spacing",
-          tags$h5("Step 2: Minimization Target", class = "step-header-large"),
+          tags$h5("Step 3: Minimization Target", class = "step-header-large"),
           selectInput(ns("minimization_target"), NULL,
                      choices = list(
                        "Select what to minimize..." = "",
@@ -98,9 +112,9 @@ mod_design_options_ui <- function(id) {
           )
         ),
 
-        # Step 3: Parameter Control (initially hidden)
+        # Step 4: Parameter Control (initially hidden)
         tags$div(
-          id = ns("step3"),
+          id = ns("step4"),
           class = "hidden-section",
           # Dynamic parameter controls with conditional title
           uiOutput(ns("dynamic_params"))
@@ -159,38 +173,41 @@ mod_design_options_server <- function(id, app_state = NULL){
     # PHASE 3.1: Progressive State Reactive
     # Centralized state calculation for unified progressive disclosure controller
     progressive_state <- reactive({
-      # Calculate basic validations first
-      step1_complete <- is_step1_complete(input$optimization_type)
+      # Calculate basic validations for new 4-step structure
+      step1_complete <- is_assay_type_complete(input$assay_type)
+      step2_complete <- is_step2_complete(input$optimization_type)
       power_ready <- is_power_input_ready(input$target_power)
       cost_ready <- is_cost_budget_ready(input$cost_budget, input$optimization_type)
-      step2_complete <- is_step2_complete(input$minimization_target)
-      step3_has_controls <- workflow_has_varying_parameters(input$optimization_type, input$minimization_target)
+      step3_complete <- is_step3_complete(input$minimization_target)
+      step4_has_controls <- workflow_has_varying_parameters(input$optimization_type, input$minimization_target)
 
       # Return complete state object
       list(
         # Basic validations
         step1_complete = step1_complete,
+        step2_complete = step2_complete,
         power_ready = power_ready,
         cost_ready = cost_ready,
-        step2_complete = step2_complete,
-        step3_has_controls = step3_has_controls,
+        step3_complete = step3_complete,
+        step4_has_controls = step4_has_controls,
 
         # Combined conditions for step visibility
-        step2_ready = step1_complete && power_ready && cost_ready,
-        step3_ready = step2_complete && step3_has_controls,
+        step2_ready = step1_complete,  # Step 2 shows after Step 1 (assay type)
+        step3_ready = step1_complete && step2_complete && power_ready && cost_ready,  # Step 3 shows after Step 2 + inputs
+        step4_ready = step3_complete && step4_has_controls,  # Step 4 shows after Step 3 + has controls
 
         # Special UI conditions
         show_cost_budget = !is.null(input$optimization_type) && input$optimization_type == "power_cost",
         show_cost_minimization = !is.null(input$minimization_target) && input$minimization_target == "cost",
 
         # Summary readiness check
-        # Power-only workflows: show after step2 complete (no step3 needed)
-        # Power+cost workflows: show after step3 complete with all controls set
-        summary_ready = step2_complete &&
-                       (if (step3_has_controls) {
+        # Power-only workflows: show after step3 complete (no step4 needed)
+        # Power+cost workflows: show after step4 complete with all controls set
+        summary_ready = step3_complete &&
+                       (if (step4_has_controls) {
                          are_all_parameter_controls_set(input$optimization_type, input$minimization_target, input)
                        } else {
-                         TRUE  # No step3 needed for power-only workflows
+                         TRUE  # No step4 needed for power-only workflows
                        }),
 
         # Current workflow context
@@ -204,14 +221,17 @@ mod_design_options_server <- function(id, app_state = NULL){
     observe({
       state <- progressive_state()
 
-      # Step 1 → Power/Cost section visibility
-      toggle_power_cost_inputs(session, state$step1_complete, state$optimization_type)
-
-      # Step 1 + inputs ready → Step 2 visibility
+      # Step 1 (assay type) → Step 2 (optimization constraints) visibility
       toggle_step2_section(session, state$step2_ready)
 
-      # Step 2 + has controls → Step 3 visibility
+      # Step 2 → Power/Cost section visibility
+      toggle_power_cost_inputs(session, state$step2_ready, state$optimization_type)
+
+      # Step 2 + inputs ready → Step 3 (minimization target) visibility
       toggle_step3_section(session, state$step3_ready)
+
+      # Step 3 + has controls → Step 4 (parameter control) visibility
+      toggle_step4_section(session, state$step4_ready)
 
       # Cost minimization parameters (independent condition)
       toggle_cost_minimization_params(session, state$show_cost_minimization)
@@ -301,7 +321,7 @@ mod_design_options_server <- function(id, app_state = NULL){
 
       # Show title only when there are parameters to display
       tagList(
-        tags$h5("Step 3: Varying parameters", class = "step-header-large"),
+        tags$h5("Step 4: Varying parameters", class = "step-header-large"),
         do.call(tagList, param_uis)
       )
     })

@@ -351,8 +351,11 @@ create_cost_inputs_ui <- function(ns, id_prefix, cost_per_cell_default = 0.086, 
 #' @return Logical. TRUE if Step 1 is complete, FALSE otherwise
 #'
 #' @noRd
-is_step1_complete <- function(optimization_type) {
-  # Stub implementation
+is_assay_type_complete <- function(assay_type) {
+  !is.null(assay_type) && assay_type != ""
+}
+
+is_step2_complete <- function(optimization_type) {
   !is.null(optimization_type) && optimization_type != ""
 }
 
@@ -398,7 +401,7 @@ is_cost_budget_ready <- function(cost_budget, optimization_type) {
 #' @return Logical. TRUE if Step 2 is complete, FALSE otherwise
 #'
 #' @noRd
-is_step2_complete <- function(minimization_target) {
+is_step3_complete <- function(minimization_target) {
   # Stub implementation
   !is.null(minimization_target) && minimization_target != ""
 }
@@ -510,8 +513,8 @@ toggle_power_cost_inputs <- function(session, show, optimization_type = NULL) {
   } else {
     shinyjs::hide("power_cost_inputs")
     # Cascade hide downstream sections when power/cost inputs are hidden
-    shinyjs::hide("step2")
     shinyjs::hide("step3")
+    shinyjs::hide("step4")
   }
 }
 
@@ -533,6 +536,7 @@ toggle_step2_section <- function(session, show) {
     shinyjs::show("step2")
   } else {
     shinyjs::hide("step2")
+    shinyjs::hide("power_cost_inputs")
     shinyjs::hide("step3")  # Cascade hide Step 3
     shinyjs::hide("design_summary")  # Also hide summary
   }
@@ -556,7 +560,17 @@ toggle_step3_section <- function(session, show) {
     shinyjs::show("step3")
   } else {
     shinyjs::hide("step3")
+    shinyjs::hide("step4")  # Cascade hide Step 4
     shinyjs::hide("design_summary")  # Hide summary when Step 3 is hidden
+  }
+}
+
+toggle_step4_section <- function(session, show) {
+  if (show) {
+    shinyjs::show("step4")
+  } else {
+    shinyjs::hide("step4")
+    shinyjs::hide("design_summary")  # Hide summary when Step 4 is hidden
   }
 }
 
