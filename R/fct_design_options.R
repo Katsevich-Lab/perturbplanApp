@@ -27,19 +27,21 @@ NULL
 #' @noRd
 generate_design_summary <- function(opt_type, target, power, cost_budget, param_configs = NULL,
                                    cells_per_target_control = NULL, reads_per_cell_control = NULL,
-                                   TPM_control = NULL, fc_control = NULL) {
+                                   TPM_control = NULL, fc_control = NULL, assay_type = NULL) {
   # Base text
   if (opt_type == "power_only") {
     if (target == "cost") {
       return(paste0(
         "Find the minimum <strong>total cost</strong> for which power is at least <strong>",
-        power * 100, "%</strong>, while varying cells per target and reads per cell, keeping TPM threshold and fold change fixed."
+        power * 100, "%</strong>, while varying cells per target and reads per cell, keeping ",
+        if (!is.null(assay_type) && assay_type == "tap_seq") "UMIs/cell at saturation" else "TPM threshold",
+        " and fold change fixed."
       ))
     } else {
       target_name <- switch(target,
         "cells_per_target" = "cells per target",
         "reads_per_cell" = "reads per cell",
-        "TPM_threshold" = "TPM threshold",
+        "TPM_threshold" = if (!is.null(assay_type) && assay_type == "tap_seq") "UMIs/cell at saturation" else "TPM threshold",
         "minimum_fold_change" = "fold change"
       )
       return(paste0(
@@ -50,7 +52,7 @@ generate_design_summary <- function(opt_type, target, power, cost_budget, param_
     }
   } else if (opt_type == "power_cost") {
     target_name <- switch(target,
-      "TPM_threshold" = "TPM threshold",
+      "TPM_threshold" = if (!is.null(assay_type) && assay_type == "tap_seq") "UMIs/cell at saturation" else "TPM threshold",
       "minimum_fold_change" = "fold change"
     )
 
@@ -89,7 +91,7 @@ generate_design_summary <- function(opt_type, target, power, cost_budget, param_
       if (target == "TPM_threshold") {
         TPM_fc_desc <- "keeping fold change fixed"
       } else if (target == "minimum_fold_change") {
-        TPM_fc_desc <- "keeping TPM threshold fixed"
+        TPM_fc_desc <- paste0("keeping ", if (!is.null(assay_type) && assay_type == "tap_seq") "UMIs/cell at saturation" else "TPM threshold", " fixed")
       }
 
       # Combine descriptions - always include TPM/FC info for power+cost

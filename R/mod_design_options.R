@@ -96,10 +96,20 @@ mod_design_options_ui <- function(id) {
                        "Cells per target" = "cells_per_target",
                        "Reads per cell" = "reads_per_cell",
                        "Total cost" = "cost",
-                       "TPM analysis threshold" = "TPM_threshold",
+                       "Expression threshold" = "TPM_threshold",
                        "Fold change" = "minimum_fold_change"
                      ),
                      selected = ""),
+
+          # Expression threshold reminder (conditional)
+          conditionalPanel(
+            condition = "input.minimization_target == 'TPM_threshold'",
+            ns = ns,
+            tags$div(
+              class = "parameter-info-note",
+              uiOutput(ns("expression_threshold_reminder"))
+            )
+          ),
 
           # Cost parameters for cost minimization (only shown when minimizing total cost)
           tags$div(
@@ -250,7 +260,8 @@ mod_design_options_server <- function(id, app_state = NULL){
           cells_per_target_control = input$cells_per_target_control,
           reads_per_cell_control = input$reads_per_cell_control,
           TPM_control = input$TPM_control,
-          fc_control = input$fc_control
+          fc_control = input$fc_control,
+          assay_type = input$assay_type
         )
         toggle_design_summary(session, TRUE, summary_text)
       } else {
@@ -269,6 +280,26 @@ mod_design_options_server <- function(id, app_state = NULL){
     observe({
       input$optimization_type  # dependency trigger
       reset_input_values(session)
+    })
+
+    # Business Logic: Clear all downstream selections when Step 1 (assay type) changes
+    observe({
+      input$assay_type  # dependency trigger
+
+      # Clear Step 2 (optimization type)
+      updateSelectInput(session, "optimization_type", selected = "")
+
+      # Clear Step 3 (minimization target)
+      updateSelectInput(session, "minimization_target", selected = "")
+
+      # Reset power/cost inputs to defaults
+      reset_input_values(session)
+
+      # Clear Step 4 parameter controls
+      updateSelectInput(session, "cells_per_target_control", selected = "")
+      updateSelectInput(session, "reads_per_cell_control", selected = "")
+      updateSelectInput(session, "TPM_control", selected = "")
+      updateSelectInput(session, "fc_control", selected = "")
     })
 
 
@@ -326,6 +357,25 @@ mod_design_options_server <- function(id, app_state = NULL){
       )
     })
 
+    # Conditional reminder for Expression threshold
+    output$expression_threshold_reminder <- renderUI({
+      if (!is.null(input$assay_type) && input$assay_type != "" &&
+          !is.null(input$minimization_target) && input$minimization_target == "TPM_threshold") {
+
+        message <- if (input$assay_type == "tap_seq") {
+          "Minimum UMI per cell for a gene at the sequencing saturation"
+        } else if (input$assay_type == "perturb_seq") {
+          "Minimum TPM analysis threshold parameter"
+        } else {
+          ""
+        }
+
+        if (message != "") {
+          tags$small(message, style = "color: #888; font-style: italic;")
+        }
+      }
+    })
+
     # Business Logic: Update cost availability and clear Step 2 when Step 1 changes
     observe({
       if (!is.null(input$optimization_type) && input$optimization_type == "power_cost") {
@@ -334,7 +384,7 @@ mod_design_options_server <- function(id, app_state = NULL){
         updateSelectInput(session, "minimization_target",
                          choices = list(
                            "Select what to minimize..." = "",
-                           "Minimize TPM analysis threshold" = "TPM_threshold",
+                           "Minimize Expression threshold" = "TPM_threshold",
                            "Minimize fold change" = "minimum_fold_change"
                          ),
                          selected = "")  # Clear selection when Step 1 changes
@@ -352,7 +402,7 @@ mod_design_options_server <- function(id, app_state = NULL){
                            "Cells per target" = "cells_per_target",
                            "Reads per cell" = "reads_per_cell",
                            "Total cost" = "cost",
-                           "TPM analysis threshold" = "TPM_threshold",
+                           "Expression threshold" = "TPM_threshold",
                            "Fold change" = "minimum_fold_change"
                          ),
                          selected = "")  # Clear selection when Step 1 changes
