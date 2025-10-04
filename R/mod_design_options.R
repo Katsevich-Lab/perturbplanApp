@@ -161,6 +161,7 @@ mod_design_options_server <- function(id, app_state = NULL){
         inputs_disabled <- (app_state$phase == 2)
 
         # Core inputs that should be disabled in Phase 2
+        shinyjs::toggleState("assay_type", condition = !inputs_disabled)
         shinyjs::toggleState("optimization_type", condition = !inputs_disabled)
         shinyjs::toggleState("target_power", condition = !inputs_disabled)
         shinyjs::toggleState("cost_budget", condition = !inputs_disabled)
