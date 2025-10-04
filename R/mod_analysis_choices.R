@@ -78,7 +78,7 @@ mod_analysis_choices_ui <- function(id) {
 
           # Perturb-seq version (default)
           conditionalPanel(
-            condition = "input['sidebar-design_options-assay_type'] != 'tap_seq'",
+            condition = "input['sidebar-design_options-assay_type'] == 'perturb_seq'",
             numericInput(ns("TPM_threshold_fixed"), "TPM analysis threshold:",
                         value = 10, min = 1, max = 200, step = 1)
           )
@@ -133,6 +133,19 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
       }
     })
 
+    # Reset TPM_threshold_fixed to correct default when assay type changes
+    # TAP-seq: 1 (UMIs/cell), Perturb-seq: 10 (TPM threshold)
+    observeEvent(design_config()$assay_type, {
+      assay_type <- design_config()$assay_type
+
+      if (!is.null(assay_type) && assay_type == "tap_seq") {
+        # TAP-seq: UMIs/cell at saturation
+        updateNumericInput(session, "TPM_threshold_fixed", value = 1)
+      } else if (!is.null(assay_type) && assay_type == "perturb_seq") {
+        # Perturb-seq: TPM analysis threshold
+        updateNumericInput(session, "TPM_threshold_fixed", value = 10)
+      }
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
     # Gene list processing
     gene_list_data <- reactive({
@@ -207,6 +220,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
 
     # Return analysis choices configuration
     analysis_config <- reactive({
+      cat(input$TPM_threshold_fixed)
       list(
         gene_list_mode = input$gene_list_mode,
         gene_list_data = gene_list_data(),
@@ -221,13 +235,13 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
     observeEvent(app_state$phase, {
       if (!is.null(app_state)) {
         inputs_disabled <- (app_state$phase == 2)
-        
+
         # Core analysis inputs that should be disabled in Phase 2
         shinyjs::toggleState("gene_list_mode", condition = !inputs_disabled)
         shinyjs::toggleState("gene_list_file", condition = !inputs_disabled)
         shinyjs::toggleState("side", condition = !inputs_disabled)
         shinyjs::toggleState("TPM_threshold_fixed", condition = !inputs_disabled)
-        
+
         # Note: Section headers remain functional for collapse/expand
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
