@@ -150,11 +150,18 @@ create_single_parameter_plots <- function(cached_results) {
       TRUE ~ as.character(solution_data$parameter_value)
     )
 
+    # Get tooltip label: short version for TPM_threshold, otherwise use param_label
+    tooltip_label <- if (varying_param == "TPM_threshold") {
+      format_expression_threshold_tooltip_label(assay_type)  # "UMIs/cell" or "TPM"
+    } else {
+      param_label
+    }
+
     # Add solution info to data
     solution_data$solution_label <- solution_label
     solution_data$tooltip_text <- paste0(
       solution_label, "<br>",
-      param_label, ": ", formatted_values, "<br>",
+      tooltip_label, ": ", formatted_values, "<br>",
       "Power: ", scales::percent(solution_data$power, accuracy = 0.1)
     )
 
@@ -172,9 +179,16 @@ create_single_parameter_plots <- function(cached_results) {
         optimal_design[[varying_param]]
       }
 
+      # Get tooltip label: short version for TPM_threshold, otherwise use param_label
+      optimal_tooltip_label <- if (varying_param == "TPM_threshold") {
+        format_expression_threshold_tooltip_label(assay_type)  # "UMIs/cell" or "TPM"
+      } else {
+        param_label
+      }
+
       optimal_hover_text <- paste0(
         solution_label, " (Optimal)<br>",
-        param_label, ": ",
+        optimal_tooltip_label, ": ",
         case_when(
           varying_param == "TPM_threshold" && !is.null(assay_type) && assay_type == "tap_seq" ~ as.character(round(display_value, 2)),  # TAP-seq: 2 decimals
           varying_param == "TPM_threshold" ~ scales::comma(round(display_value)),  # Perturb-seq: integer
@@ -577,9 +591,9 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
 
   if (workflow_id == "power_cost_TPM_cells_reads") {
     param_column <- "TPM_threshold"
-    x_axis_label <- format_parameter_name("TPM_threshold", assay_type)
-    # Use same label as x_axis for tooltips (no need for separate shorter version)
-    param_name <- x_axis_label
+    x_axis_label <- format_parameter_name("TPM_threshold", assay_type)  # "Expression threshold (UMIs/cell)" or "Expression threshold (TPM)"
+    # Use short label for tooltips
+    param_name <- format_expression_threshold_tooltip_label(assay_type)  # "UMIs/cell" or "TPM"
   } else if (workflow_id == "power_cost_fc_cells_reads") {
     param_column <- "minimum_fold_change"
     x_axis_label <- "Fold Change"
@@ -829,7 +843,7 @@ create_workflow_title <- function(minimizing_param, workflow_info, assay_type = 
   switch(minimizing_param,
     "cells_per_target" = paste0(prefix, ": Minimize Cells per Target"),
     "reads_per_cell" = paste0(prefix, ": Minimize Reads per Cell"),
-    "TPM_threshold" = paste0(prefix, ": Minimize ", format_parameter_name("TPM_threshold", assay_type)),
+    "TPM_threshold" = paste0(prefix, ": Minimize Expression threshold"),  # Plain title, no assay info
     "minimum_fold_change" = paste0(prefix, ": Minimize Fold Change"),
     paste0(prefix, ": Minimize ", format_parameter_name(minimizing_param, assay_type))
   )

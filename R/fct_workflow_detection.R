@@ -134,17 +134,31 @@ get_varying_parameters <- function(param_controls) {
   return(varying_params)
 }
 
-#' Format Expression threshold label based on assay type
+#' Format Expression threshold axis label based on assay type
 #'
-#' @description Returns assay-specific label for Expression threshold parameter
+#' @description Returns assay-specific axis label for Expression threshold parameter
 #' @param assay_type Character: "tap_seq" or "perturb_seq"
-#' @return Character formatted label for display
+#' @return Character formatted label for axis (with parenthetical unit)
 #' @noRd
-format_expression_threshold_label <- function(assay_type) {
+format_expression_threshold_axis_label <- function(assay_type) {
+  if (!is.null(assay_type) && assay_type == "tap_seq") {
+    return("Expression threshold (UMIs/cell)")
+  } else {
+    return("Expression threshold (TPM)")
+  }
+}
+
+#' Format Expression threshold tooltip label based on assay type
+#'
+#' @description Returns short assay-specific label for tooltips
+#' @param assay_type Character: "tap_seq" or "perturb_seq"
+#' @return Character formatted label for tooltips (short, no "Expression threshold" prefix)
+#' @noRd
+format_expression_threshold_tooltip_label <- function(assay_type) {
   if (!is.null(assay_type) && assay_type == "tap_seq") {
     return("UMIs/cell")
   } else {
-    return("TPM threshold")
+    return("TPM")
   }
 }
 
@@ -159,7 +173,7 @@ format_parameter_name <- function(parameter_name, assay_type = NULL) {
     # Full parameter names (preferred)
     "cells_per_target" = "Cells per Target",
     "reads_per_cell" = "Sequenced Reads per Cell",
-    "TPM_threshold" = format_expression_threshold_label(assay_type),
+    "TPM_threshold" = format_expression_threshold_axis_label(assay_type),  # Use axis label (with parenthetical)
     "minimum_fold_change" = "Fold Change",
     # Legacy abbreviated names (backward compatibility)
     "cells" = "Cells per Target",
