@@ -68,8 +68,20 @@ mod_analysis_choices_ui <- function(id) {
         tags$div(
           id = ns("TPM_threshold_fixed_div"),
           style = "margin-top: 10px; display: none;",
-          numericInput(ns("TPM_threshold_fixed"), "TPM analysis threshold:",
-                      value = 10, min = 1, max = 200, step = 1)
+
+          # TAP-seq version
+          conditionalPanel(
+            condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
+            numericInput(ns("TPM_threshold_fixed"), "UMIs/cell at saturation:",
+                        value = 1, min = 0.1, max = 200, step = 0.1)
+          ),
+
+          # Perturb-seq version (default)
+          conditionalPanel(
+            condition = "input['sidebar-design_options-assay_type'] != 'tap_seq'",
+            numericInput(ns("TPM_threshold_fixed"), "TPM analysis threshold:",
+                        value = 10, min = 1, max = 200, step = 1)
+          )
         )
       )
     )

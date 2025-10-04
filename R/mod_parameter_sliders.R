@@ -304,8 +304,8 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         generate_design_summary(
           opt_type = design_options$optimization_type,
           target = design_options$minimization_target,
-          power = design_options$target_power %||% 0.8,
-          cost_budget = design_options$cost_budget %||% 10000,
+          power = design_options$target_power,
+          cost_budget = design_options$cost_budget,
           param_configs = if (!is.null(design_options$optimization_type) && !is.null(design_options$minimization_target)) {
             get_param_configs(design_options$optimization_type, design_options$minimization_target)
           } else NULL,
