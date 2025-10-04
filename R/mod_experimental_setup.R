@@ -191,12 +191,16 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
     })
 
     # TAP-seq: Auto-select "Custom" when TAP-seq is selected
+    # Perturb-seq: Reset to "K562" when Perturb-seq is selected
     observeEvent(design_config()$assay_type, {
       assay_type <- design_config()$assay_type
 
       if (!is.null(assay_type) && assay_type == "tap_seq") {
         # Auto-select Custom for TAP-seq
         updateSelectInput(session, "biological_system", selected = "Custom")
+      } else if (!is.null(assay_type) && assay_type == "perturb_seq") {
+        # Reset to K562 for Perturb-seq
+        updateSelectInput(session, "biological_system", selected = "K562")
       }
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
