@@ -28,10 +28,20 @@ NULL
 generate_design_summary <- function(opt_type, target, power, cost_budget, param_configs = NULL,
                                    cells_per_target_control = NULL, reads_per_cell_control = NULL,
                                    TPM_control = NULL, fc_control = NULL, assay_type = NULL) {
+
+  # Assay type prefix
+  assay_prefix <- if (!is.null(assay_type) && assay_type != "") {
+    assay_display <- if (assay_type == "tap_seq") "TAP-seq" else "Perturb-seq"
+    paste0("<strong>", assay_display, ":</strong> ")
+  } else {
+    ""
+  }
+
   # Base text
   if (opt_type == "power_only") {
     if (target == "cost") {
       return(paste0(
+        assay_prefix,
         "Find the minimum <strong>total cost</strong> for which power is at least <strong>",
         power * 100, "%</strong>, while varying cells per target and reads per cell, keeping ",
         if (!is.null(assay_type) && assay_type == "tap_seq") "UMIs/cell at saturation" else "TPM threshold",
@@ -45,6 +55,7 @@ generate_design_summary <- function(opt_type, target, power, cost_budget, param_
         "minimum_fold_change" = "fold change"
       )
       return(paste0(
+        assay_prefix,
         "Find the minimum <strong>", target_name, "</strong> for which power is at least <strong>",
         power * 100,
         "%</strong>, keeping all other parameters fixed."
@@ -105,6 +116,7 @@ generate_design_summary <- function(opt_type, target, power, cost_budget, param_
     }
 
     return(paste0(
+      assay_prefix,
       "Find the minimum <strong>", target_name, "</strong> for which power is at least <strong>",
       power * 100,
       "%</strong> and cost is at most <strong>$",
