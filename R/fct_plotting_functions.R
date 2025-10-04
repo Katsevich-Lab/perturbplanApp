@@ -109,9 +109,12 @@ create_single_parameter_plots <- function(cached_results) {
 
   }
 
+  # Extract assay type for assay-aware labels
+  assay_type <- metadata_source$user_config$design_options$assay_type
+
   varying_param <- workflow_info$minimizing_parameter
-  param_label <- format_parameter_name(varying_param)
-  plot_title <- create_workflow_title(varying_param, workflow_info)
+  param_label <- format_parameter_name(varying_param, assay_type)
+  plot_title <- create_workflow_title(varying_param, workflow_info, assay_type)
 
   # Convert to expected format
   solutions_data <- solutions_list
@@ -125,10 +128,9 @@ create_single_parameter_plots <- function(cached_results) {
       y = "Power"
     )
 
-  # Add log scale for TPM_threshold
+  # Add log scale for TPM_threshold (keep dynamic label)
   if (varying_param == "TPM_threshold") {
     p <- p + scale_x_log10(labels = scales::comma_format())
-    param_label <- "TPM Threshold"
   }
 
   # Combine all solutions into a single dataframe for consistent color mapping
@@ -141,7 +143,8 @@ create_single_parameter_plots <- function(cached_results) {
 
     # Create tooltip text
     formatted_values <- case_when(
-      varying_param == "TPM_threshold" ~ scales::comma(round(solution_data$parameter_value)),
+      varying_param == "TPM_threshold" && !is.null(assay_type) && assay_type == "tap_seq" ~ as.character(round(solution_data$parameter_value, 2)),  # TAP-seq: 2 decimals
+      varying_param == "TPM_threshold" ~ scales::comma(round(solution_data$parameter_value)),  # Perturb-seq: integer
       varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(solution_data$parameter_value),
       varying_param == "minimum_fold_change" ~ as.character(round(solution_data$parameter_value, 2)),
       TRUE ~ as.character(solution_data$parameter_value)
@@ -162,21 +165,29 @@ create_single_parameter_plots <- function(cached_results) {
     if (!is.null(solution$optimal_point)) {
       optimal_design <- solution$optimal_point
 
+      # Get display value: use Expression_threshold if minimizing TPM, otherwise use varying_param
+      display_value <- if (varying_param == "TPM_threshold") {
+        optimal_design$Expression_threshold  # Use transformed value for display
+      } else {
+        optimal_design[[varying_param]]
+      }
+
       optimal_hover_text <- paste0(
         solution_label, " (Optimal)<br>",
         param_label, ": ",
         case_when(
-          varying_param == "TPM_threshold" ~ scales::comma(round(optimal_design[[varying_param]])),
-          varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(optimal_design[[varying_param]]),
-          varying_param == "minimum_fold_change" ~ as.character(round(optimal_design[[varying_param]], 2)),
-          TRUE ~ as.character(optimal_design[[varying_param]])
+          varying_param == "TPM_threshold" && !is.null(assay_type) && assay_type == "tap_seq" ~ as.character(round(display_value, 2)),  # TAP-seq: 2 decimals
+          varying_param == "TPM_threshold" ~ scales::comma(round(display_value)),  # Perturb-seq: integer
+          varying_param %in% c("cells_per_target", "reads_per_cell") ~ scales::comma(display_value),
+          varying_param == "minimum_fold_change" ~ as.character(round(display_value, 2)),
+          TRUE ~ as.character(display_value)
         ),
         "<br>Power: ", scales::percent(optimal_design$achieved_power, accuracy = 0.1)
       )
 
       # Add optimal point to dataframe
       optimal_point_data <- data.frame(
-        parameter_value = optimal_design[[varying_param]],
+        parameter_value = display_value,  # Use transformed value for plotting
         power = optimal_design$achieved_power,
         solution_label = solution_label,
         tooltip_text = optimal_hover_text
@@ -355,11 +366,12 @@ create_cached_cost_tradeoff_plots <- function(cached_results) {
 #' @noRd
 create_cost_minimization_plots <- function(solutions_list, workflow_info, metadata_source) {
 
-  # Extract target power from metadata
+  # Extract target power and assay type from metadata
   target_power <- metadata_source$user_config$design_options$target_power
+  assay_type <- metadata_source$user_config$design_options$assay_type
 
   # Create plot title once for reuse
-  plot_title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info)
+  plot_title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info, assay_type)
 
   # Combine all solutions into unified dataframes for consistent plotting
   combined_power_data <- data.frame()
@@ -554,16 +566,20 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   # STEP 1: FUNCTION SIGNATURE & PARAMETER DETECTION
   # ========================================================================
 
+  # Extract assay type for assay-aware labels
+  assay_type <- metadata_source$user_config$design_options$assay_type
+
   # Determine minimization parameter from workflow
   workflow_id <- workflow_info$workflow_id
 
   # Create plot title once for reuse
-  plot_title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info)
+  plot_title <- create_workflow_title(workflow_info$minimizing_parameter, workflow_info, assay_type)
 
   if (workflow_id == "power_cost_TPM_cells_reads") {
     param_column <- "TPM_threshold"
-    x_axis_label <- "TPM Threshold"
-    param_name <- "TPM"
+    x_axis_label <- format_parameter_name("TPM_threshold", assay_type)
+    # Use same label as x_axis for tooltips (no need for separate shorter version)
+    param_name <- x_axis_label
   } else if (workflow_id == "power_cost_fc_cells_reads") {
     param_column <- "minimum_fold_change"
     x_axis_label <- "Fold Change"
@@ -599,9 +615,16 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     # Flexible power column detection (workflows 10-11 use "overall_power", others use "power")
     power_col <- "overall_power"
 
+    # Get display value: use Expression_threshold if minimizing TPM, otherwise use param_column
+    display_values <- if (param_column == "TPM_threshold" && "Expression_threshold" %in% names(power_data)) {
+      power_data$Expression_threshold  # Use transformed values for display
+    } else {
+      power_data[[param_column]]
+    }
+
     # Extract relevant columns: parameter, cost, power
     solution_data <- data.frame(
-      parameter_value = power_data[[param_column]],     # TPM_threshold OR minimum_fold_change
+      parameter_value = display_values,                 # Use transformed values for TPM_threshold
       total_cost = power_data$total_cost,               # Cost from power_data
       power = power_data[[power_col]],                  # Statistical power (flexible column name)
       solution_label = solution$label,
@@ -620,14 +643,16 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   # ========================================================================
 
   # Create solution_tooltip for line hover functionality (consistent with other plots)
-  # Format parameter value based on type: TPM = integer, Fold Change = 2 decimals
+  # Format parameter value based on type and assay: TAP-seq TPM = 2 decimals, Perturb-seq TPM = integer, FC = 2 decimals
   combined_data$solution_tooltip <- paste0(
     combined_data$solution_label, "<br>",
     param_name, ": ",
-    if (param_column == "TPM_threshold") {
-      round(combined_data$parameter_value, 0)
+    if (param_column == "TPM_threshold" && !is.null(assay_type) && assay_type == "tap_seq") {
+      round(combined_data$parameter_value, 2)  # TAP-seq: 2 decimals
+    } else if (param_column == "TPM_threshold") {
+      round(combined_data$parameter_value, 0)  # Perturb-seq: integer
     } else {
-      round(combined_data$parameter_value, 2)
+      round(combined_data$parameter_value, 2)  # Fold Change: 2 decimals
     }, "<br>",
     "Cost: $", scales::comma(combined_data$total_cost, accuracy = 1), "<br>",
     "Power: ", scales::percent(combined_data$power, accuracy = 0.1)
@@ -647,8 +672,15 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
       stop("Missing parameter '", param_column, "' in optimal_design for solution: ", solution$label)
     }
 
+    # Get display value: use Expression_threshold if minimizing TPM, otherwise use param_column
+    display_value <- if (param_column == "TPM_threshold") {
+      optimal_design$Expression_threshold  # Use transformed value for display
+    } else {
+      optimal_design[[param_column]]
+    }
+
     optimal_point <- data.frame(
-      parameter_value = optimal_design[[param_column]],  # Extract correct parameter
+      parameter_value = display_value,  # Use transformed value for plotting
       total_cost = optimal_design$total_cost,            # Cost at optimal point
       power = optimal_design$power %||% optimal_design$achieved_power, # Power at optimal point
       solution_label = solution$label,
@@ -672,14 +704,16 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   # ========================================================================
 
   # Optimal point tooltips
-  # Format parameter value based on type: TPM = integer, Fold Change = 2 decimals
+  # Format parameter value based on type and assay: TAP-seq TPM = 2 decimals, Perturb-seq TPM = integer, FC = 2 decimals
   optimal_points$point_tooltip <- paste0(
     "Optimal Design: ", optimal_points$solution_label, "<br>",
     param_name, ": ",
-    if (param_column == "TPM_threshold") {
-      round(optimal_points$parameter_value, 0)
+    if (param_column == "TPM_threshold" && !is.null(assay_type) && assay_type == "tap_seq") {
+      round(optimal_points$parameter_value, 2)  # TAP-seq: 2 decimals
+    } else if (param_column == "TPM_threshold") {
+      round(optimal_points$parameter_value, 0)  # Perturb-seq: integer
     } else {
-      round(optimal_points$parameter_value, 2)
+      round(optimal_points$parameter_value, 2)  # Fold Change: 2 decimals
     }, "<br>",
     "Cost: $", scales::comma(optimal_points$total_cost, accuracy = 1), "<br>",
     "Power: ", scales::percent(optimal_points$power, accuracy = 0.1)
@@ -780,9 +814,10 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
 #'
 #' @param minimizing_param The parameter being minimized
 #' @param workflow_info Workflow information containing workflow_id to distinguish power vs power+cost
+#' @param assay_type Character: "tap_seq" or "perturb_seq" (optional, used for TPM_threshold labels)
 #' @return Character string with plot title
 #' @noRd
-create_workflow_title <- function(minimizing_param, workflow_info) {
+create_workflow_title <- function(minimizing_param, workflow_info, assay_type = NULL) {
   # Check if this is a power+cost workflow
   is_power_cost <- !is.null(workflow_info$workflow_id) &&
                    grepl("power_cost", workflow_info$workflow_id) &&
@@ -794,8 +829,8 @@ create_workflow_title <- function(minimizing_param, workflow_info) {
   switch(minimizing_param,
     "cells_per_target" = paste0(prefix, ": Minimize Cells per Target"),
     "reads_per_cell" = paste0(prefix, ": Minimize Reads per Cell"),
-    "TPM_threshold" = paste0(prefix, ": Minimize TPM Threshold"),
+    "TPM_threshold" = paste0(prefix, ": Minimize ", format_parameter_name("TPM_threshold", assay_type)),
     "minimum_fold_change" = paste0(prefix, ": Minimize Fold Change"),
-    paste0(prefix, ": Minimize ", minimizing_param)
+    paste0(prefix, ": Minimize ", format_parameter_name(minimizing_param, assay_type))
   )
 }

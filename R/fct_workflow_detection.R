@@ -134,17 +134,32 @@ get_varying_parameters <- function(param_controls) {
   return(varying_params)
 }
 
+#' Format Expression threshold label based on assay type
+#'
+#' @description Returns assay-specific label for Expression threshold parameter
+#' @param assay_type Character: "tap_seq" or "perturb_seq"
+#' @return Character formatted label for display
+#' @noRd
+format_expression_threshold_label <- function(assay_type) {
+  if (!is.null(assay_type) && assay_type == "tap_seq") {
+    return("UMIs/cell")
+  } else {
+    return("TPM threshold")
+  }
+}
+
 #' Format parameter names for display
 #'
 #' @param parameter_name Character parameter name from config
+#' @param assay_type Character: "tap_seq" or "perturb_seq" (optional, used for TPM_threshold)
 #' @return Character formatted name for display
 #' @noRd
-format_parameter_name <- function(parameter_name) {
+format_parameter_name <- function(parameter_name, assay_type = NULL) {
   switch(parameter_name,
     # Full parameter names (preferred)
     "cells_per_target" = "Cells per Target",
     "reads_per_cell" = "Sequenced Reads per Cell",
-    "TPM_threshold" = "TPM Threshold",
+    "TPM_threshold" = format_expression_threshold_label(assay_type),
     "minimum_fold_change" = "Fold Change",
     # Legacy abbreviated names (backward compatibility)
     "cells" = "Cells per Target",
