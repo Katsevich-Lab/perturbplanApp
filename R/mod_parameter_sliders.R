@@ -304,15 +304,16 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         generate_design_summary(
           opt_type = design_options$optimization_type,
           target = design_options$minimization_target,
-          power = 0.8, # Default power level
-          cost_budget = 10000, # Default cost budget
+          power = design_options$target_power %||% 0.8,
+          cost_budget = design_options$cost_budget %||% 10000,
           param_configs = if (!is.null(design_options$optimization_type) && !is.null(design_options$minimization_target)) {
             get_param_configs(design_options$optimization_type, design_options$minimization_target)
           } else NULL,
           cells_per_target_control = design_options$parameter_controls$cells_per_target$type,
           reads_per_cell_control = design_options$parameter_controls$reads_per_cell$type,
           TPM_control = design_options$parameter_controls$TPM_threshold$type,
-          fc_control = design_options$parameter_controls$minimum_fold_change$type
+          fc_control = design_options$parameter_controls$minimum_fold_change$type,
+          assay_type = design_options$assay_type
         )
       }, error = function(e) {
         "Configure your design options to see the optimization objective."
@@ -337,7 +338,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
     output$pin_buttons_section <- renderUI({
       config <- sidebar_config()
       if (is.null(config)) return(NULL)
-      
+
       # Show Pin buttons for all workflows (simplified approach)
       tags$div(
         style = "padding: 0px 10px 0px 10px; text-align: center; margin-top: -5px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;",
