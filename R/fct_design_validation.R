@@ -8,6 +8,14 @@
 #' @noRd
 validate_design_configuration <- function(design_config) {
 
+  # Check assay type
+  if (is.null(design_config$assay_type) || design_config$assay_type == "") {
+    return(list(
+      valid = FALSE,
+      message = "Please select an assay type (Perturb-seq or TAP-seq)"
+    ))
+  }
+
   # Check optimization type
   if (is.null(design_config$optimization_type) || design_config$optimization_type == "") {
     return(list(

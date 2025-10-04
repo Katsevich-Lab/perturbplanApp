@@ -141,7 +141,12 @@ mod_sidebar_server <- function(id, app_state = NULL){
           validation_result <- validate_design_configuration(current_config$design_options)
 
           if (!validation_result$valid) {
-            # Validation error - don't proceed
+            # Validation error - show notification to user
+            showNotification(
+              validation_result$message,
+              type = "error",
+              duration = 5
+            )
             return()  # Don't proceed with analysis
           }
 
