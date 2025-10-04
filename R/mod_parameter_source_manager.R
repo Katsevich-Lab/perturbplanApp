@@ -68,7 +68,7 @@ mod_parameter_source_manager_server <- function(id, sidebar_config, slider_confi
       # Apply slider overrides to analysis_choices
       if (!is.null(slider_overrides$analysis_choices)) {
         slider_analysis <- slider_overrides$analysis_choices
-        merged_config$analysis_choices$TPM_threshold_fixed <- slider_analysis$TPM_threshold_fixed %||% merged_config$analysis_choices$TPM_threshold_fixed
+        merged_config$analysis_choices$Expression_threshold_fixed <- slider_analysis$Expression_threshold_fixed %||% merged_config$analysis_choices$Expression_threshold_fixed
       }
       
       # Apply slider overrides to effect_sizes

@@ -127,20 +127,24 @@ generate_real_analysis <- function(config, workflow_info) {
     ))
   }
 
-  # TAP-seq parameter transformation: Convert UMIs/cell to TPM threshold
+  # Create TPM_threshold_fixed from Expression_threshold_fixed
+  # This is the value that will be passed to perturbplan functions
   assay_type <- config$design_options$assay_type
   if (!is.null(assay_type) && assay_type == "tap_seq") {
-    # For TAP-seq: Convert UMIs/cell threshold to TPM scale
+    # TAP-seq: Convert UMIs/cell to TPM scale
     # TPM_threshold = UMIs_per_cell / total_UMI_per_cell * 1e6
-    if (!is.null(config$analysis_choices$TPM_threshold_fixed) &&
+    if (!is.null(config$analysis_choices$Expression_threshold_fixed) &&
         !is.null(pilot_data$library_parameters$UMI_per_cell)) {
 
-      umis_per_cell_threshold <- config$analysis_choices$TPM_threshold_fixed
+      umis_per_cell_threshold <- config$analysis_choices$Expression_threshold_fixed
       total_umi_per_cell <- pilot_data$library_parameters$UMI_per_cell
 
-      # Transform to TPM scale
+      # Create TPM_threshold_fixed for perturbplan (calculated from Expression_threshold_fixed)
       config$analysis_choices$TPM_threshold_fixed <- (umis_per_cell_threshold / total_umi_per_cell) * 1e6
     }
+  } else {
+    # Perturb-seq: TPM_threshold_fixed = Expression_threshold_fixed (no transformation needed)
+    config$analysis_choices$TPM_threshold_fixed <- config$analysis_choices$Expression_threshold_fixed
   }
 
   # Clean 3-function architecture: Each analysis type has unified signature and return format

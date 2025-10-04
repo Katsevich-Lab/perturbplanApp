@@ -13,10 +13,10 @@ mod_analysis_choices_ui <- function(id) {
   ns <- NS(id)
 
   # VARIABLE CONSISTENCY TRACKING:
-  # - TPM input field: "TPM_threshold_fixed"
-  # - TPM div container: "TPM_threshold_fixed_div"
+  # - Expression input field: "Expression_threshold_fixed"
+  # - Expression div container: "Expression_threshold_fixed_div"
   # - Parameter control key: "TPM_threshold"
-  # - Return field: "TPM_threshold_fixed"
+  # - Return field: "Expression_threshold_fixed"
 
   # Analysis choices (collapsible) - ADAPTED FROM ORIGINAL (MINUS TPM/FC CONTROLS)
   tagList(
@@ -63,23 +63,23 @@ mod_analysis_choices_ui <- function(id) {
                                "Both (two-sided)" = "both"),
                     selected = "left"),
 
-        # Fixed value input for TPM analysis parameter (conditional)
-        # CONSISTENT VARIABLE USAGE: TPM_threshold_fixed throughout
+        # Fixed value input for Expression threshold parameter (conditional)
+        # CONSISTENT VARIABLE USAGE: Expression_threshold_fixed throughout
         tags$div(
-          id = ns("TPM_threshold_fixed_div"),
+          id = ns("Expression_threshold_fixed_div"),
           style = "margin-top: 10px; display: none;",
 
           # TAP-seq version
           conditionalPanel(
             condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
-            numericInput(ns("TPM_threshold_fixed"), "UMIs/cell at saturation:",
+            numericInput(ns("Expression_threshold_fixed"), "UMIs/cell at saturation:",
                         value = 1, min = 0.1, max = 200, step = 0.1)
           ),
 
           # Perturb-seq version (default)
           conditionalPanel(
             condition = "input['sidebar-design_options-assay_type'] == 'perturb_seq'",
-            numericInput(ns("TPM_threshold_fixed"), "TPM analysis threshold:",
+            numericInput(ns("Expression_threshold_fixed"), "TPM analysis threshold:",
                         value = 10, min = 1, max = 200, step = 1)
           )
         )
@@ -108,9 +108,9 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
 
     # VARIABLE CONSISTENCY TRACKING:
     # - Parameter control key: config$parameter_controls$TPM_threshold$type
-    # - Show/hide target: "TPM_threshold_fixed_div"
-    # - Input reference: input$TPM_threshold_fixed
-    # - Return field: TPM_threshold_fixed = input$TPM_threshold_fixed
+    # - Show/hide target: "Expression_threshold_fixed_div"
+    # - Input reference: input$Expression_threshold_fixed
+    # - Return field: Expression_threshold_fixed = input$Expression_threshold_fixed
 
     # Conditional display logic for fixed value input
     observe({
@@ -120,30 +120,30 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
         # CONSISTENT: Use TPM_threshold parameter control key
         TPM_type <- config$parameter_controls$TPM_threshold$type
 
-        # Show TPM fixed input only when TPM parameter is set to "fixed"
-        # CONSISTENT: Use TPM_threshold_fixed_div
+        # Show Expression threshold fixed input only when TPM parameter is set to "fixed"
+        # CONSISTENT: Use Expression_threshold_fixed_div
         if (!is.null(TPM_type) && TPM_type == "fixed") {
-          shinyjs::show("TPM_threshold_fixed_div")
+          shinyjs::show("Expression_threshold_fixed_div")
         } else {
-          shinyjs::hide("TPM_threshold_fixed_div")
+          shinyjs::hide("Expression_threshold_fixed_div")
         }
       } else {
-        # CONSISTENT: Use TPM_threshold_fixed_div
-        shinyjs::hide("TPM_threshold_fixed_div")
+        # CONSISTENT: Use Expression_threshold_fixed_div
+        shinyjs::hide("Expression_threshold_fixed_div")
       }
     })
 
-    # Reset TPM_threshold_fixed to correct default when assay type changes
+    # Reset Expression_threshold_fixed to correct default when assay type changes
     # TAP-seq: 1 (UMIs/cell), Perturb-seq: 10 (TPM threshold)
     observeEvent(design_config()$assay_type, {
       assay_type <- design_config()$assay_type
 
       if (!is.null(assay_type) && assay_type == "tap_seq") {
         # TAP-seq: UMIs/cell at saturation
-        updateNumericInput(session, "TPM_threshold_fixed", value = 1)
+        updateNumericInput(session, "Expression_threshold_fixed", value = 1)
       } else if (!is.null(assay_type) && assay_type == "perturb_seq") {
         # Perturb-seq: TPM analysis threshold
-        updateNumericInput(session, "TPM_threshold_fixed", value = 10)
+        updateNumericInput(session, "Expression_threshold_fixed", value = 10)
       }
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
@@ -224,8 +224,8 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
         gene_list_mode = input$gene_list_mode,
         gene_list_data = gene_list_data(),
         side = input$side,
-        # CONSISTENT: Return TPM_threshold_fixed field using input$TPM_threshold_fixed (only default if actually hidden)
-        TPM_threshold_fixed = input$TPM_threshold_fixed,
+        # CONSISTENT: Return Expression_threshold_fixed field using input$Expression_threshold_fixed (only default if actually hidden)
+        Expression_threshold_fixed = input$Expression_threshold_fixed,
         timestamp = Sys.time()
       )
     })
@@ -239,7 +239,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
         shinyjs::toggleState("gene_list_mode", condition = !inputs_disabled)
         shinyjs::toggleState("gene_list_file", condition = !inputs_disabled)
         shinyjs::toggleState("side", condition = !inputs_disabled)
-        shinyjs::toggleState("TPM_threshold_fixed", condition = !inputs_disabled)
+        shinyjs::toggleState("Expression_threshold_fixed", condition = !inputs_disabled)
 
         # Note: Section headers remain functional for collapse/expand
       }

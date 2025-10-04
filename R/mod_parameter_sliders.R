@@ -102,7 +102,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       gRNAs_per_target = NULL,
       cells_fixed = NULL,
       reads_per_cell_fixed = NULL,
-      TPM_threshold_fixed = NULL,
+      Expression_threshold_fixed = NULL,
       minimum_fold_change_fixed = NULL
     )
 
@@ -122,7 +122,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         slider_state$gRNAs_per_target <- experimental$gRNAs_per_target
         slider_state$cells_fixed <- experimental$cells_fixed
         slider_state$reads_per_cell_fixed <- experimental$reads_per_cell_fixed
-        slider_state$TPM_threshold_fixed <- analysis$TPM_threshold_fixed
+        slider_state$Expression_threshold_fixed <- analysis$Expression_threshold_fixed
         slider_state$minimum_fold_change_fixed <- effects$minimum_fold_change_fixed
 
         slider_state$initialized <- TRUE
@@ -184,12 +184,12 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       if (slider_state$initialized) {
         cells_value <- slider_state$cells_fixed
         reads_value <- slider_state$reads_per_cell_fixed
-        tpm_value <- slider_state$TPM_threshold_fixed
+        expression_threshold_value <- slider_state$Expression_threshold_fixed
         fc_value <- slider_state$minimum_fold_change_fixed
       } else {
         cells_value <- experimental$cells_fixed
         reads_value <- experimental$reads_per_cell_fixed
-        tpm_value <- analysis$TPM_threshold_fixed
+        expression_threshold_value <- analysis$Expression_threshold_fixed
         fc_value <- effects$minimum_fold_change_fixed
       }
 
@@ -205,35 +205,35 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       # Ensure fold change value is within the range for the selected test side
       fc_value <- pmax(fc_range$min, pmin(fc_range$max, fc_value))
 
-      # Extract assay type for conditional TPM/UMI threshold configuration
+      # Extract assay type for conditional Expression threshold configuration
       assay_type <- design_config$assay_type
 
-      # Conditional parameters for TPM/UMI threshold slider
+      # Conditional parameters for Expression threshold slider
       if (!is.null(assay_type) && assay_type == "tap_seq") {
         # TAP-seq: UMIs/cell at saturation
-        tpm_label <- "UMIs/cell"
-        tpm_min <- 0.1
-        tpm_max <- 200
-        tpm_step <- 0.1
-        # Ensure tpm_value is within TAP-seq range
-        if (is.null(tpm_value)) tpm_value <- 1
-        tpm_value <- pmax(tpm_min, pmin(tpm_max, tpm_value))
+        expression_label <- "UMIs/cell"
+        expression_min <- 0.1
+        expression_max <- 200
+        expression_step <- 0.1
+        # Ensure expression_threshold_value is within TAP-seq range
+        if (is.null(expression_threshold_value)) expression_threshold_value <- 1
+        expression_threshold_value <- pmax(expression_min, pmin(expression_max, expression_threshold_value))
       } else {
         # Perturb-seq: TPM threshold (default)
-        tpm_label <- "TPM Threshold"
-        tpm_min <- 1
-        tpm_max <- 200
-        tpm_step <- 1
-        # Ensure tpm_value is within Perturb-seq range
-        if (is.null(tpm_value)) tpm_value <- 10
-        tpm_value <- pmax(tpm_min, pmin(tpm_max, tpm_value))
+        expression_label <- "TPM Threshold"
+        expression_min <- 1
+        expression_max <- 200
+        expression_step <- 1
+        # Ensure expression_threshold_value is within Perturb-seq range
+        if (is.null(expression_threshold_value)) expression_threshold_value <- 10
+        expression_threshold_value <- pmax(expression_min, pmin(expression_max, expression_threshold_value))
       }
 
       # Define all 4 power-determining parameters (use sidebar values)
       all_power_params <- list(
         cells_per_target = list(id = "cells_slider", label = "Cells/Target", min = 20, max = 2000, value = cells_value, step = 20),
         reads_per_cell = list(id = "reads_slider", label = "Reads/Cell", min = 1000, max = 150000, value = reads_value, step = 1000),
-        TPM_threshold = list(id = "TPM_slider", label = tpm_label, min = tpm_min, max = tpm_max, value = tpm_value, step = tpm_step),
+        TPM_threshold = list(id = "Expression_slider", label = expression_label, min = expression_min, max = expression_max, value = expression_threshold_value, step = expression_step),
         minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = fc_range$min, max = fc_range$max, value = fc_value, step = 0.02)
       )
 
@@ -420,9 +420,9 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
-    observeEvent(input$TPM_slider, {
+    observeEvent(input$Expression_slider, {
       if (slider_state$initialized) {
-        slider_state$TPM_threshold_fixed <- input$TPM_slider
+        slider_state$Expression_threshold_fixed <- input$Expression_slider
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 
@@ -448,7 +448,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
           reads_per_cell_fixed = slider_state$reads_per_cell_fixed
         ),
         analysis_choices = list(
-          TPM_threshold_fixed = slider_state$TPM_threshold_fixed
+          Expression_threshold_fixed = slider_state$Expression_threshold_fixed
         ),
         effect_sizes = list(
           minimum_fold_change_fixed = slider_state$minimum_fold_change_fixed
