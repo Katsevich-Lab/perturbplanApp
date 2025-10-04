@@ -27,69 +27,37 @@ mod_experimental_setup_ui <- function(id) {
       tags$div(
         id = ns("experimental-content"),
         class = "collapsible-content",
-
-        # TAP-seq: Only custom upload (no selector)
+        selectInput(ns("biological_system"), "Reference expression data:",
+                   choices = list("K562" = "K562",
+                                "A549" = "A549",
+                                "THP-1" = "THP-1",
+                                "T CD8" = "T_CD8",
+                                "iPSC" = "iPSC",
+                                "iPSC neuron" = "iPSC_neuron",
+                                "Custom" = "Custom"),
+                   selected = "K562"),
         conditionalPanel(
-          condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
+          condition = paste0("input['", ns("biological_system"), "'] == 'Custom'"),
           tags$div(
-            tags$label("Reference expression data:"),
-            tags$div(
-              class = "parameter-info-note",
-              style = "margin-bottom: 10px;",
+            class = "file-upload-info",
+            tags$small(
               tags$i(class = "fa fa-info-circle"),
-              " TAP-seq requires custom reference data."
-            ),
-            fileInput(ns("pilot_data_file"),
-                     label = NULL,
-                     accept = c(".rds", ".RDS"),
-                     placeholder = "Choose reference expression data RDS file..."),
-            conditionalPanel(
-              condition = "output.pilot_data_uploaded",
-              ns = ns,
-              tags$div(
-                class = "file-upload-success status-success",
-                tags$i(class = "fa fa-check-circle"),
-                htmlOutput(ns("pilot_data_status"), inline = TRUE)
-              )
+              tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters"
             )
-          )
-        ),
-
-        # Perturb-seq: Full selector with all options
-        conditionalPanel(
-          condition = "input['sidebar-design_options-assay_type'] != 'tap_seq'",
-          selectInput(ns("biological_system"), "Reference expression data:",
-                     choices = list("K562" = "K562",
-                                  "A549" = "A549",
-                                  "THP-1" = "THP-1",
-                                  "T CD8" = "T_CD8",
-                                  "iPSC" = "iPSC",
-                                  "iPSC neuron" = "iPSC_neuron",
-                                  "Custom" = "Custom"),
-                     selected = "K562"),
+          ),
+          fileInput(ns("pilot_data_file"), 
+                   label = NULL,
+                   accept = c(".rds", ".RDS"),
+                   placeholder = "Choose reference expression data RDS file..."),
+          
+          # Upload status display (conditional)
           conditionalPanel(
-            condition = paste0("input['", ns("biological_system"), "'] == 'Custom'"),
+            condition = "output.pilot_data_uploaded",
+            ns = ns,
             tags$div(
-              class = "file-upload-info",
-              tags$small(
-                tags$i(class = "fa fa-info-circle"),
-                tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters"
-              )
-            ),
-            fileInput(ns("pilot_data_file"),
-                     label = NULL,
-                     accept = c(".rds", ".RDS"),
-                     placeholder = "Choose reference expression data RDS file..."),
-
-            # Upload status display (conditional)
-            conditionalPanel(
-              condition = "output.pilot_data_uploaded",
-              ns = ns,
-              tags$div(
-                class = "file-upload-success status-success",
-                tags$i(class = "fa fa-check-circle"),
-                htmlOutput(ns("pilot_data_status"), inline = TRUE)
-              )
+              class = "file-upload-success status-success",
+              tags$i(class = "fa fa-check-circle"),
+              htmlOutput(ns("pilot_data_status"), inline = TRUE)
             )
           )
         ),
@@ -178,20 +146,6 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
 
     # Track previous optimization type for mode switching
     previous_mode <- reactiveVal(NULL)
-
-    # Reactive for biological_system value - handles TAP-seq vs Perturb-seq
-    biological_system_value <- reactive({
-      config <- design_config()
-      assay_type <- if (!is.null(config)) config$assay_type else NULL
-
-      if (!is.null(assay_type) && assay_type == "tap_seq") {
-        # TAP-seq always uses Custom
-        return("Custom")
-      } else {
-        # Perturb-seq uses the actual input value
-        return(input$biological_system %||% "K562")
-      }
-    })
     
     # Conditional display logic for fixed value inputs - using extracted functions
     observe({
@@ -211,31 +165,27 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
     # File upload processing - using extracted function
     observeEvent(input$pilot_data_file, {
       req(input$pilot_data_file)
-      handle_file_upload(session, input$pilot_data_file, biological_system_value(),
+      handle_file_upload(session, input$pilot_data_file, input$biological_system,
                         custom_pilot_data, output, defaults)
     })
-
+    
     # Reset pilot data when biological system changes from Custom or file is removed
     observe({
-      should_reset <- is.null(input$pilot_data_file) || biological_system_value() != "Custom"
+      should_reset <- is.null(input$pilot_data_file) || input$biological_system != "Custom"
 
       if (should_reset) {
         reset_pilot_data_status(session, custom_pilot_data, output)
       }
     })
-
+    
     # Pilot data reactive - using extracted function
     pilot_data <- reactive({
-      build_pilot_data_config(biological_system_value(), input$pilot_data_file, custom_pilot_data())
+      build_pilot_data_config(input$biological_system, input$pilot_data_file, custom_pilot_data())
     })
 
     # Return experimental setup configuration - using extracted function
     experimental_config <- reactive({
-      # Create modified inputs with correct biological_system value
-      inputs_with_bio_system <- reactiveValuesToList(input)
-      inputs_with_bio_system$biological_system <- biological_system_value()
-
-      assemble_experimental_config(inputs_with_bio_system, pilot_data(), defaults)
+      assemble_experimental_config(input, pilot_data(), defaults)
     })
     
     # INPUT FREEZING: Disable all inputs in Phase 2 - using extracted function
