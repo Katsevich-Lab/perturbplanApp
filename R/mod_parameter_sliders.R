@@ -205,11 +205,35 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
       # Ensure fold change value is within the range for the selected test side
       fc_value <- pmax(fc_range$min, pmin(fc_range$max, fc_value))
 
+      # Extract assay type for conditional TPM/UMI threshold configuration
+      assay_type <- design_config$assay_type
+
+      # Conditional parameters for TPM/UMI threshold slider
+      if (!is.null(assay_type) && assay_type == "tap_seq") {
+        # TAP-seq: UMIs/cell at saturation
+        tpm_label <- "UMIs/cell"
+        tpm_min <- 0.1
+        tpm_max <- 200
+        tpm_step <- 0.1
+        # Ensure tpm_value is within TAP-seq range
+        if (is.null(tpm_value)) tpm_value <- 1
+        tpm_value <- pmax(tpm_min, pmin(tpm_max, tpm_value))
+      } else {
+        # Perturb-seq: TPM threshold (default)
+        tpm_label <- "TPM Threshold"
+        tpm_min <- 1
+        tpm_max <- 200
+        tpm_step <- 1
+        # Ensure tpm_value is within Perturb-seq range
+        if (is.null(tpm_value)) tpm_value <- 10
+        tpm_value <- pmax(tpm_min, pmin(tpm_max, tpm_value))
+      }
+
       # Define all 4 power-determining parameters (use sidebar values)
       all_power_params <- list(
         cells_per_target = list(id = "cells_slider", label = "Cells/Target", min = 20, max = 2000, value = cells_value, step = 20),
         reads_per_cell = list(id = "reads_slider", label = "Reads/Cell", min = 1000, max = 150000, value = reads_value, step = 1000),
-        TPM_threshold = list(id = "TPM_slider", label = "TPM Threshold", min = 1, max = 200, value = tpm_value, step = 1),
+        TPM_threshold = list(id = "TPM_slider", label = tpm_label, min = tpm_min, max = tpm_max, value = tpm_value, step = tpm_step),
         minimum_fold_change = list(id = "fc_slider", label = "Fold Change", min = fc_range$min, max = fc_range$max, value = fc_value, step = 0.02)
       )
 
