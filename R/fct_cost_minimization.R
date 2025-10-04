@@ -77,10 +77,22 @@ perform_cost_minimization_analysis <- function(config, pilot_data) {
   optimal_idx <- which.min(target_rows$total_cost)
   optimal_point <- target_rows[optimal_idx, ]
 
+  # Get assay type for TPM→Expression transformation
+  assay_type <- config$design_options$assay_type
+
+  # Transform TPM_threshold to Expression_threshold for display
+  expression_threshold_display <- transform_TPM_to_Expression(
+    optimal_point$TPM_threshold,
+    assay_type,
+    pilot_data
+  )
+
   # Create optimal design in expected format - standardize column names for UI
   optimal_design <- list(
     cells_per_target = optimal_point$cells_per_target,
     sequenced_reads_per_cell = optimal_point$sequenced_reads_per_cell,
+    TPM_threshold = optimal_point$TPM_threshold %||% NA,
+    Expression_threshold = expression_threshold_display,
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,   # Correct column name
     optimal_minimized_param = optimal_point$total_cost

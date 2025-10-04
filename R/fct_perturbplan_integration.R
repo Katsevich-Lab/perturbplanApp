@@ -258,6 +258,34 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
   return(params)
 }
 
+#' Transform TPM threshold to Expression threshold based on assay type
+#'
+#' @description Converts TPM_threshold from perturbplan output back to
+#' Expression_threshold for display (UMIs/cell for TAP-seq, TPM for Perturb-seq)
+#'
+#' @param TPM_threshold Numeric TPM threshold value from perturbplan
+#' @param assay_type Character: "tap_seq" or "perturb_seq"
+#' @param pilot_data Pilot data containing library_parameters$UMI_per_cell
+#' @return Numeric Expression threshold value for display
+#' @noRd
+transform_TPM_to_Expression <- function(TPM_threshold, assay_type, pilot_data) {
+  if (is.null(TPM_threshold) || is.na(TPM_threshold)) {
+    return(TPM_threshold)
+  }
+
+  if (!is.null(assay_type) && assay_type == "tap_seq") {
+    # TAP-seq: Reverse transformation
+    # Expression_threshold = TPM_threshold * UMI_per_cell / 1e6
+    if (!is.null(pilot_data$library_parameters$UMI_per_cell)) {
+      total_umi_per_cell <- pilot_data$library_parameters$UMI_per_cell
+      return((TPM_threshold * total_umi_per_cell) / 1e6)
+    }
+  }
+
+  # Perturb-seq: No transformation needed
+  return(TPM_threshold)
+}
+
 #' Create Comprehensive Export Data
 #'
 #' @description Combines perturbplan results with configuration parameters
@@ -286,6 +314,17 @@ create_exporting_data <- function(perturbplan_results, config, workflow_info, pi
   export_data$power_estimate <- export_data$overall_power
   export_data$minimum_fold_change <- NULL
   export_data$overall_power <- NULL
+
+  # Step 2b: Add Expression_threshold column (transformed from TPM_threshold)
+  # Get assay type for TPM→Expression transformation
+  assay_type <- config$design_options$assay_type
+
+  # Transform TPM_threshold to Expression_threshold for all rows
+  if ("TPM_threshold" %in% names(export_data)) {
+    export_data$Expression_threshold <- sapply(export_data$TPM_threshold, function(tpm) {
+      transform_TPM_to_Expression(tpm, assay_type, pilot_data)
+    })
+  }
 
   # Step 3: Extract config sections
   design_opts <- config$design_options

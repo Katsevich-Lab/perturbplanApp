@@ -33,10 +33,22 @@ perform_standard_analysis <- function(config, pilot_data) {
   minimizing_param <- workflow_info$minimizing_parameter
   param_column <- get_parameter_column_name(minimizing_param)
 
+  # Get assay type for TPM→Expression transformation
+  assay_type <- config$design_options$assay_type
+
+  # Transform parameter values for display if minimizing TPM_threshold
+  if (minimizing_param == "TPM_threshold") {
+    parameter_values <- sapply(results$TPM_threshold, function(tpm) {
+      transform_TPM_to_Expression(tpm, assay_type, pilot_data)
+    })
+  } else {
+    parameter_values <- results[[param_column]]
+  }
+
   # Create power_data in plotting format
   target_power <- config$design_options$target_power
   power_data <- data.frame(
-    parameter_value = results[[param_column]],
+    parameter_value = parameter_values,
     power = results$overall_power,
     meets_threshold = results$overall_power >= target_power,
     stringsAsFactors = FALSE
@@ -67,13 +79,25 @@ perform_standard_analysis <- function(config, pilot_data) {
     optimal_row <- results[optimal_idx, ]
   }
 
+  # Transform TPM_threshold to Expression_threshold for display
+  expression_threshold_display <- transform_TPM_to_Expression(
+    optimal_row$TPM_threshold,
+    assay_type,
+    pilot_data
+  )
+
   # Create optimal design in plotting format
   optimal_design <- list(
-    parameter_value = optimal_row[[param_column]],
+    parameter_value = if (minimizing_param == "TPM_threshold") {
+      expression_threshold_display
+    } else {
+      optimal_row[[param_column]]
+    },
     achieved_power = optimal_row$overall_power,
     cells_per_target = optimal_row$cells_per_target %||% NA,
     sequenced_reads_per_cell = optimal_row$sequenced_reads_per_cell %||% NA,
     TPM_threshold = optimal_row$TPM_threshold %||% NA,
+    Expression_threshold = expression_threshold_display,
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
     total_cost = optimal_row$total_cost %||% NA
   )

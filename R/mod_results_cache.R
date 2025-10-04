@@ -73,8 +73,6 @@ mod_results_cache_server <- function(id, analysis_results, pin_trigger, clear_tr
       if (length(results_cache$pinned_solutions) > 0) {
         results_cache$pinned_solutions <- list()
         results_cache$next_solution_id <- 1
-
-        # Confirmation removed
       }
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 

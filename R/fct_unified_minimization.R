@@ -75,6 +75,16 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
   power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
   power_data$raw_reads_per_cell <- NULL
 
+  # Get assay type for TPM→Expression transformation
+  assay_type <- config$design_options$assay_type
+
+  # Transform TPM_threshold to Expression_threshold if minimizing TPM
+  if (minimization_config$variable == "TPM_threshold") {
+    power_data$Expression_threshold <- sapply(power_data$TPM_threshold, function(tpm) {
+      transform_TPM_to_Expression(tpm, assay_type, pilot_data)
+    })
+  }
+
   # Group by minimizing variable and select minimum cost for each value
   grouped_data <- power_data %>%
     dplyr::group_by(.data[[minimization_config$variable]]) %>%
@@ -87,17 +97,35 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
     minimization_config,
     cost_constraint)
 
+  # Transform TPM_threshold to Expression_threshold for display in optimal design
+  expression_threshold_display <- transform_TPM_to_Expression(
+    optimal_point$TPM_threshold,
+    assay_type,
+    pilot_data
+  )
+
   # Step 9b: Create properly formatted optimal design object
   optimal_design <- list(
     cells_per_target = optimal_point$cells_per_target,
     sequenced_reads_per_cell = optimal_point$sequenced_reads_per_cell,
+    TPM_threshold = optimal_point$TPM_threshold %||% NA,
+    Expression_threshold = expression_threshold_display,
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,  # Map overall_power to achieved_power
-    optimal_minimized_param = optimal_point[[minimization_config$variable]]  # The minimized parameter value
+    optimal_minimized_param = if (minimization_config$variable == "TPM_threshold") {
+      expression_threshold_display
+    } else {
+      optimal_point[[minimization_config$variable]]
+    }
   )
 
-  # Add the minimizing parameter to the optimal design
-  optimal_design[[minimization_config$variable]] <- optimal_point[[minimization_config$variable]]
+  # Add the minimizing parameter to the optimal design (use transformed value if TPM)
+  if (minimization_config$variable == "TPM_threshold") {
+    optimal_design$TPM_threshold <- optimal_point$TPM_threshold
+    optimal_design$Expression_threshold <- expression_threshold_display
+  } else {
+    optimal_design[[minimization_config$variable]] <- optimal_point[[minimization_config$variable]]
+  }
 
   # Standardize column names in cost_data for UI compatibility
   cost_data <- optimal_results$optimal_cost_grid
