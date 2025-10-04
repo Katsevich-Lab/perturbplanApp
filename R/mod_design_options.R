@@ -561,6 +561,7 @@ mod_design_options_server <- function(id, app_state = NULL){
 
       list(
         # Design Options
+        assay_type = input$assay_type,
         optimization_type = input$optimization_type,
         minimization_target = input$minimization_target,
 
