@@ -7,7 +7,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div strong numericInput selectInput moduleServer reactive updateSelectInput
+#' @importFrom shiny NS tagList tags div strong numericInput selectInput moduleServer reactive updateSelectInput updateNumericInput req uiOutput renderUI
 #' @importFrom shinyjs show hide disable enable toggleState
 mod_advanced_choices_ui <- function(id) {
   ns <- NS(id)
@@ -42,6 +42,9 @@ mod_advanced_choices_ui <- function(id) {
                     min = 0.1,
                     max = 1.0,
                     step = 0.01),
+
+        # Mapping efficiency message (auto-fill notification)
+        uiOutput(ns("mapping_efficiency_message")),
 
         # Control group
         selectInput(ns("control_group"), "Control group:",
@@ -99,6 +102,52 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
         }
       }
     }, ignoreInit = FALSE)
+
+    # ============================================================================
+    # AUTO-FILL MAPPING EFFICIENCY FROM CUSTOM PILOT DATA
+    # ============================================================================
+    observeEvent(experimental_config(), {
+      req(experimental_config)
+      pilot_data <- experimental_config()$pilot_data
+
+      # Check if custom data with mapping efficiency is available
+      if (!is.null(pilot_data$type) && pilot_data$type == "custom" &&
+          !is.null(pilot_data$data) &&
+          !is.null(pilot_data$data$mapping_efficiency)) {
+
+        # Custom data: use uploaded mapping efficiency
+        mapping_eff <- pilot_data$data$mapping_efficiency
+        updateNumericInput(session, "mapping_efficiency", value = mapping_eff)
+
+      } else if (!is.null(pilot_data$type) && pilot_data$type == "default") {
+        # Built-in data: reset to default value (0.72)
+        updateNumericInput(session, "mapping_efficiency", value = 0.72)
+      }
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
+
+    # Render informational message when mapping efficiency is auto-filled
+    output$mapping_efficiency_message <- renderUI({
+      req(experimental_config)
+      pilot_data <- experimental_config()$pilot_data
+
+      # Only show message when custom data with mapping efficiency is loaded
+      if (!is.null(pilot_data$type) && pilot_data$type == "custom" &&
+          !is.null(pilot_data$data) &&
+          !is.null(pilot_data$data$mapping_efficiency)) {
+
+        mapping_eff <- pilot_data$data$mapping_efficiency
+
+        tags$div(
+          class = "parameter-info-note",
+          style = "margin-top: 5px;",
+          tags$i(class = "fa fa-info-circle"),
+          sprintf(" Mapping efficiency (%.2f) auto-filled from custom reference data.",
+                  mapping_eff)
+        )
+      } else {
+        NULL  # No message for built-in data
+      }
+    })
 
     # ============================================================================
     # CONFIGURATION OUTPUT

@@ -32,7 +32,7 @@ validate_custom_pilot_data <- function(data, file_name = "uploaded file") {
   }
   
   # Check for required top-level components
-  required_components <- c("baseline_expression_stats", "library_parameters")
+  required_components <- c("baseline_expression_stats", "library_parameters", "mapping_efficiency")
   missing_components <- setdiff(required_components, names(data))
   
   if (length(missing_components) > 0) {
@@ -60,22 +60,35 @@ validate_custom_pilot_data <- function(data, file_name = "uploaded file") {
     errors <- c(errors, library_validation$errors)
     warnings <- c(warnings, library_validation$warnings)
   }
-  
+
+  # Validate mapping efficiency if present
+  if ("mapping_efficiency" %in% names(data)) {
+    mapping_validation <- validate_mapping_efficiency(data$mapping_efficiency)
+    errors <- c(errors, mapping_validation$errors)
+    warnings <- c(warnings, mapping_validation$warnings)
+  }
+
   # Determine if validation passed
   valid <- length(errors) == 0
-  
+
+  # Round mapping efficiency to 2 decimal places if validation passed
+  if (valid && !is.null(data$mapping_efficiency)) {
+    data$mapping_efficiency <- round(data$mapping_efficiency, 2)
+  }
+
   # Create summary message
   if (valid) {
     n_genes <- nrow(data$baseline_expression_stats)
     umi_per_cell <- data$library_parameters$UMI_per_cell
     variation <- data$library_parameters$variation
-    
-    summary <- sprintf("Successfully loaded custom pilot data: %d genes, UMI/cell = %.0f, variation = %.3f", 
-                      n_genes, umi_per_cell, variation)
+    mapping_eff <- data$mapping_efficiency
+
+    summary <- sprintf("Successfully loaded custom pilot data: %d genes, UMI/cell = %.0f, variation = %.3f, mapping eff. = %.2f",
+                      n_genes, umi_per_cell, variation, mapping_eff)
   } else {
     summary <- paste0("<em style='color:red;'>Validation failed</em>")
   }
-  
+
   return(list(
     valid = valid,
     data = if (valid) data else NULL,
@@ -159,8 +172,6 @@ validate_baseline_expression_stats <- function(baseline_df) {
   # Check number of rows
   if (nrow(baseline_df) == 0) {
     errors <- c(errors, "baseline_expression_stats is empty")
-  } else if (nrow(baseline_df) < 1000) {
-    warnings <- c(warnings, sprintf("Only %d genes in baseline_expression_stats (recommend >1000)", nrow(baseline_df)))
   }
   
   return(list(errors = errors, warnings = warnings))
@@ -223,6 +234,37 @@ validate_library_parameters <- function(library_params) {
       }
     }
   }
-  
+
+  return(list(errors = errors, warnings = warnings))
+}
+
+#' Validate mapping efficiency value
+#'
+#' @description Validates the mapping_efficiency component
+#'
+#' @param mapping_eff Numeric value for mapping efficiency
+#' @return List with errors and warnings
+#' @noRd
+validate_mapping_efficiency <- function(mapping_eff) {
+  errors <- character(0)
+  warnings <- character(0)
+
+  # Check if it's numeric
+  if (!is.numeric(mapping_eff) || length(mapping_eff) != 1) {
+    errors <- c(errors, "mapping_efficiency must be a single numeric value")
+    return(list(errors = errors, warnings = warnings))
+  }
+
+  # Check value range (should be between 0 and 1)
+  if (is.na(mapping_eff)) {
+    errors <- c(errors, "mapping_efficiency cannot be NA")
+  } else if (mapping_eff <= 0 || mapping_eff > 1) {
+    errors <- c(errors, sprintf("mapping_efficiency (%.3f) must be between 0 and 1", mapping_eff))
+  } else if (mapping_eff < 0.3) {
+    warnings <- c(warnings, sprintf("mapping_efficiency (%.3f) is quite low (typically 0.5-0.9)", mapping_eff))
+  } else if (mapping_eff > 0.95) {
+    warnings <- c(warnings, sprintf("mapping_efficiency (%.3f) is unusually high", mapping_eff))
+  }
+
   return(list(errors = errors, warnings = warnings))
 }

@@ -220,7 +220,6 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
 
     # Return analysis choices configuration
     analysis_config <- reactive({
-      cat(input$TPM_threshold_fixed)
       list(
         gene_list_mode = input$gene_list_mode,
         gene_list_data = gene_list_data(),
