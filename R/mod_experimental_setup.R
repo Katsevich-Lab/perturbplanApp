@@ -27,6 +27,18 @@ mod_experimental_setup_ui <- function(id) {
       tags$div(
         id = ns("experimental-content"),
         class = "collapsible-content",
+
+        # TAP-seq informational note
+        conditionalPanel(
+          condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
+          tags$div(
+            class = "parameter-info-note",
+            style = "margin-bottom: 5px;",
+            tags$i(class = "fa fa-info-circle"),
+            " TAP-seq requires custom reference data."
+          )
+        ),
+
         selectInput(ns("biological_system"), "Reference expression data:",
                    choices = list("K562" = "K562",
                                 "A549" = "A549",
@@ -177,7 +189,30 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
         reset_pilot_data_status(session, custom_pilot_data, output)
       }
     })
-    
+
+    # TAP-seq: Auto-select "Custom" when TAP-seq is selected
+    observeEvent(design_config()$assay_type, {
+      assay_type <- design_config()$assay_type
+
+      if (!is.null(assay_type) && assay_type == "tap_seq") {
+        # Auto-select Custom for TAP-seq
+        updateSelectInput(session, "biological_system", selected = "Custom")
+      }
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
+
+    # TAP-seq: Freeze biological_system selector when TAP-seq is selected
+    observe({
+      config <- design_config()
+      assay_type <- if (!is.null(config)) config$assay_type else NULL
+
+      # Freeze biological_system selector when TAP-seq is selected
+      if (!is.null(assay_type) && assay_type == "tap_seq") {
+        shinyjs::disable("biological_system")
+      } else {
+        shinyjs::enable("biological_system")
+      }
+    })
+
     # Pilot data reactive - using extracted function
     pilot_data <- reactive({
       build_pilot_data_config(input$biological_system, input$pilot_data_file, custom_pilot_data())
