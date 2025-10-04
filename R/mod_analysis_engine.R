@@ -127,6 +127,22 @@ generate_real_analysis <- function(config, workflow_info) {
     ))
   }
 
+  # TAP-seq parameter transformation: Convert UMIs/cell to TPM threshold
+  assay_type <- config$design_options$assay_type
+  if (!is.null(assay_type) && assay_type == "tap_seq") {
+    # For TAP-seq: Convert UMIs/cell threshold to TPM scale
+    # TPM_threshold = UMIs_per_cell / total_UMI_per_cell * 1e6
+    if (!is.null(config$analysis_choices$TPM_threshold_fixed) &&
+        !is.null(pilot_data$library_parameters$UMI_per_cell)) {
+
+      umis_per_cell_threshold <- config$analysis_choices$TPM_threshold_fixed
+      total_umi_per_cell <- pilot_data$library_parameters$UMI_per_cell
+
+      # Transform to TPM scale
+      config$analysis_choices$TPM_threshold_fixed <- (umis_per_cell_threshold / total_umi_per_cell) * 1e6
+    }
+  }
+
   # Clean 3-function architecture: Each analysis type has unified signature and return format
 
   # Workflow 5: Cost minimization

@@ -17,10 +17,7 @@ detect_workflow_scenario <- function(workflow_config) {
     return(list(
       workflow_id = "incomplete_configuration",
       plot_type = "single_parameter_curve",
-      category = "unknown",
-      minimizing_parameter = "cells",
-      title = "Incomplete Configuration",
-      description = "Missing optimization type or minimization target"
+      minimizing_parameter = "cells"
     ))
   }
 
@@ -36,19 +33,13 @@ detect_workflow_scenario <- function(workflow_config) {
       return(list(
         workflow_id = paste0("power_single_", target),
         plot_type = "single_parameter_curve",
-        category = "power_only_single",
-        minimizing_parameter = target,
-        title = paste("Minimize", format_parameter_name(target)),
-        description = paste("Power-only optimization minimizing", format_parameter_name(target))
+        minimizing_parameter = target
       ))
     } else if (target == "cost") {
       return(list(
         workflow_id = "power_cost_minimization",
         plot_type = "cost_tradeoff_curves",
-        category = "power_only_cost",
-        minimizing_parameter = "cost",
-        title = "Power Optimization: Minimize Total Cost",
-        description = "Power-only optimization with cost minimization"
+        minimizing_parameter = "cost"
       ))
     }
   }
@@ -68,10 +59,7 @@ detect_workflow_scenario <- function(workflow_config) {
         return(list(
           workflow_id = "power_cost_TPM_cells_reads",
           plot_type = "cost_tradeoff_curves",
-          category = "power_cost_multi",
-          minimizing_parameter = "TPM_threshold",
-          title = "Cost + Power Optimization: Minimize TPM Threshold",
-          description = "optimization over TPM, with cells and reads varying"
+          minimizing_parameter = "TPM_threshold"
         ))
       } else if (length(varying_params) == 1) {
         # Workflows 6-7: TPM + one other parameter
@@ -85,11 +73,7 @@ detect_workflow_scenario <- function(workflow_config) {
         return(list(
           workflow_id = paste0("power_cost_TPM_", other_param),
           plot_type = "single_parameter_curve",
-          category = "power_cost_single",
-          minimizing_parameter = "TPM_threshold",
-          varying_parameter = other_param,  # Track which cells/reads parameter is varying
-          title = "Minimize TPM Threshold",  # Clean title without varying parameter info
-          description = paste("Power+cost optimization with TPM and", format_parameter_name(other_param), "varying")
+          minimizing_parameter = "TPM_threshold"
         ))
       }
     } else if (target %in% c("minimum_fold_change", "fold_change")) {
@@ -98,10 +82,7 @@ detect_workflow_scenario <- function(workflow_config) {
         return(list(
           workflow_id = "power_cost_fc_cells_reads",
           plot_type = "cost_tradeoff_curves",
-          category = "power_cost_multi",
-          minimizing_parameter = "minimum_fold_change",
-          title = "Cost + Power Optimization: Minimize Fold Change",
-          description = "optimization over fold change, with cells and reads varying"
+          minimizing_parameter = "minimum_fold_change"
         ))
       } else if (length(varying_params) == 1) {
         other_param_ui <- varying_params[1]
@@ -114,11 +95,7 @@ detect_workflow_scenario <- function(workflow_config) {
         return(list(
           workflow_id = paste0("power_cost_fc_", other_param),
           plot_type = "single_parameter_curve",
-          category = "power_cost_single",
-          minimizing_parameter = "minimum_fold_change",
-          varying_parameter = other_param,  # Track which cells/reads parameter is varying
-          title = "Minimize Fold Change",  # Clean title without varying parameter info
-          description = paste("Power+cost optimization with fold change and", format_parameter_name(other_param), "varying")
+          minimizing_parameter = "minimum_fold_change"
         ))
       }
     }
@@ -135,10 +112,7 @@ detect_workflow_scenario <- function(workflow_config) {
   return(list(
     workflow_id = "unknown",
     plot_type = "single_parameter_curve",  # Default to safe plot type
-    category = "unknown",
-    minimizing_parameter = safe_minimizing_param,  # Context-aware safe default
-    title = "Unknown Workflow Configuration",
-    description = "Unable to detect workflow from configuration"
+    minimizing_parameter = safe_minimizing_param  # Context-aware safe default
   ))
 }
 
