@@ -214,7 +214,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         expression_label <- "UMIs/cell"
         expression_min <- 0.1
         expression_max <- 5
-        expression_step <- 0.1
+        expression_step <- 0.02
         # Ensure expression_threshold_value is within TAP-seq range
         if (is.null(expression_threshold_value)) expression_threshold_value <- 1
         expression_threshold_value <- pmax(expression_min, pmin(expression_max, expression_threshold_value))
