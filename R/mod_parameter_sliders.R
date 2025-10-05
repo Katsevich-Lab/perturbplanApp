@@ -213,7 +213,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         # TAP-seq: UMIs/cell at saturation
         expression_label <- "UMIs/cell"
         expression_min <- 0.1
-        expression_max <- 200
+        expression_max <- 10
         expression_step <- 0.1
         # Ensure expression_threshold_value is within TAP-seq range
         if (is.null(expression_threshold_value)) expression_threshold_value <- 1
@@ -306,9 +306,19 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         style = "display: flex; gap: 12px; flex-wrap: nowrap; justify-content: space-between;",
         lapply(names(visible_power_params), function(param_name) {
           param <- visible_power_params[[param_name]]
+          # Determine decimal formatting based on parameter type
+          decimals <- if (param_name == "minimum_fold_change") {
+            2  # Fold change: 2 decimals
+          } else if (param_name == "TPM_threshold") {
+            # Expression threshold: assay-aware decimals
+            if (!is.null(assay_type) && assay_type == "tap_seq") 1 else 0
+          } else {
+            0  # All other parameters: no decimals
+          }
+
           create_compact_slider(
             ns(param$id), param$label, param$min, param$max, param$value, param$step,
-            format_decimals = if (param_name == "minimum_fold_change") 2 else 0
+            format_decimals = decimals
           )
         })
       )
