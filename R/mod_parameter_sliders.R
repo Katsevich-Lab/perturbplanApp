@@ -213,7 +213,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
         # TAP-seq: UMIs/cell at saturation
         expression_label <- "UMIs/cell"
         expression_min <- 0.1
-        expression_max <- 10
+        expression_max <- 5
         expression_step <- 0.1
         # Ensure expression_threshold_value is within TAP-seq range
         if (is.null(expression_threshold_value)) expression_threshold_value <- 1
@@ -311,7 +311,7 @@ mod_parameter_sliders_server <- function(id, sidebar_config, app_state){
             2  # Fold change: 2 decimals
           } else if (param_name == "TPM_threshold") {
             # Expression threshold: assay-aware decimals
-            if (!is.null(assay_type) && assay_type == "tap_seq") 1 else 0
+            if (!is.null(assay_type) && assay_type == "tap_seq") 2 else 0
           } else {
             0  # All other parameters: no decimals
           }
