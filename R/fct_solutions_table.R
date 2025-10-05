@@ -46,16 +46,20 @@ extract_cached_solutions_data <- function(cached_results) {
   # Add current result if available
   if (!is.null(cached_results$current_result)) {
     current <- cached_results$current_result
+    # Extract assay_type for assay-aware formatting
+    assay_type <- current$user_config$design_options$assay_type
+
     solutions_list[[solution_counter]] <- list(
       solution_id = solution_counter,
       solution_name = "Current",
       achieved_power = round(current$optimal_design$achieved_power %||% NA, 3),
       total_cost = if (!is.null(current$optimal_design$total_cost)) current$optimal_design$total_cost else NULL,
-      optimal_value = extract_optimal_parameter_value(current$optimal_design, current$user_config$workflow_info$minimizing_parameter),
+      optimal_value = extract_optimal_parameter_value(current$optimal_design, current$user_config$workflow_info$minimizing_parameter, assay_type),
       experimental_params = extract_experimental_parameters(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter, current$user_config$workflow_info),
-      TPM_threshold = extract_TPM_threshold(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter),
+      TPM_threshold = extract_TPM_threshold(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter, assay_type),
       effect_sizes = extract_effect_sizes_clean(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter),
       minimizing_param = current$user_config$workflow_info$minimizing_parameter,
+      assay_type = assay_type,
       user_config = current$user_config
     )
     solution_counter <- solution_counter + 1
@@ -66,16 +70,20 @@ extract_cached_solutions_data <- function(cached_results) {
     for (i in seq_along(cached_results$pinned_solutions)) {
       solution_name <- names(cached_results$pinned_solutions)[i]
       pinned <- cached_results$pinned_solutions[[i]]
+      # Extract assay_type for assay-aware formatting
+      assay_type <- pinned$user_config$design_options$assay_type
+
       solutions_list[[solution_counter]] <- list(
         solution_id = solution_counter,
         solution_name = solution_name,
         achieved_power = round(pinned$optimal_design$achieved_power %||% NA, 3),
         total_cost = if (!is.null(pinned$optimal_design$total_cost)) pinned$optimal_design$total_cost else NULL,
-        optimal_value = extract_optimal_parameter_value(pinned$optimal_design, pinned$user_config$workflow_info$minimizing_parameter),
+        optimal_value = extract_optimal_parameter_value(pinned$optimal_design, pinned$user_config$workflow_info$minimizing_parameter, assay_type),
         experimental_params = extract_experimental_parameters(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter, pinned$user_config$workflow_info),
-        TPM_threshold = extract_TPM_threshold(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter),
+        TPM_threshold = extract_TPM_threshold(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter, assay_type),
         effect_sizes = extract_effect_sizes_clean(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter),
         minimizing_param = pinned$user_config$workflow_info$minimizing_parameter,
+        assay_type = assay_type,
         user_config = pinned$user_config
       )
       solution_counter <- solution_counter + 1
@@ -89,13 +97,23 @@ extract_cached_solutions_data <- function(cached_results) {
 #'
 #' @param optimal Optimal design results containing parameter values
 #' @param minimizing_param Name of the parameter being minimized
+#' @param assay_type Character: "tap_seq" or "perturb_seq" (optional, for TPM_threshold rounding)
 #' @noRd
-extract_optimal_parameter_value <- function(optimal, minimizing_param) {
+extract_optimal_parameter_value <- function(optimal, minimizing_param, assay_type = NULL) {
   switch(minimizing_param,
     "cells_per_target" = format_number(optimal$cells_per_target %||% NA),
     "reads_per_cell" = format_number(optimal$sequenced_reads_per_cell %||% optimal$reads_per_cell %||% NA),
     "sequenced_reads_per_cell" = format_number(optimal$sequenced_reads_per_cell %||% NA),
-    "TPM_threshold" = round(optimal$TPM_threshold %||% NA),
+    "TPM_threshold" = {
+      # Use Expression_threshold if available (transformed value), otherwise TPM_threshold
+      value <- optimal$Expression_threshold %||% optimal$TPM_threshold %||% NA
+      # Round based on assay type
+      if (!is.null(assay_type) && assay_type == "tap_seq") {
+        round(value, 2)  # TAP-seq: 2 decimals
+      } else {
+        round(value, 0)  # Perturb-seq: integer
+      }
+    },
     "minimum_fold_change" = round(optimal$minimum_fold_change %||% NA, 2),
     "cost" = if (!is.null(optimal$total_cost)) paste0("$", format_number(optimal$total_cost)) else "N/A",
     "N/A"
@@ -135,14 +153,26 @@ extract_experimental_parameters <- function(optimal, user_config, minimizing_par
 #' @param optimal Optimal design results containing parameter values
 #' @param user_config User configuration data from sidebar
 #' @param minimizing_param Name of the parameter being minimized
+#' @param assay_type Assay type ("tap_seq" or "perturb_seq")
 #' @noRd
-extract_TPM_threshold <- function(optimal, user_config, minimizing_param) {
+extract_TPM_threshold <- function(optimal, user_config, minimizing_param, assay_type = NULL) {
   if (minimizing_param == "TPM_threshold") {
     # TPM is minimizing parameter - exclude from this column (will appear in optimal column)
     return(NULL)  # Will show "—" in table
   } else {
-    value <- user_config$analysis_choices$TPM_threshold %||% NA
-    if (!is.na(value)) round(value) else "N/A"
+    # Use Expression_threshold_fixed from user config (already transformed for display)
+    value <- user_config$analysis_choices$Expression_threshold_fixed %||%
+             user_config$analysis_choices$TPM_threshold_fixed %||% NA
+    if (!is.na(value)) {
+      # Apply assay-specific rounding
+      if (!is.null(assay_type) && assay_type == "tap_seq") {
+        round(value, 2)  # TAP-seq: 2 decimals
+      } else {
+        round(value, 0)  # Perturb-seq: integer
+      }
+    } else {
+      "N/A"
+    }
   }
 }
 
@@ -288,8 +318,11 @@ format_number <- function(x) {
 #' @noRd
 create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
 
-  # Get dynamic column name for optimal parameter
-  optimal_col_name <- get_optimal_column_name(workflow_info$minimizing_parameter)
+  # Extract assay_type from first solution (all solutions have same assay type)
+  assay_type <- solutions_data[[1]]$assay_type
+
+  # Get dynamic column name for optimal parameter (assay-aware)
+  optimal_col_name <- get_optimal_column_name(workflow_info$minimizing_parameter, assay_type)
 
   # Check if workflow includes cost (7 workflows have cost, 4 are power-only)
   has_cost <- !is.null(workflow_info$workflow_id) &&
@@ -301,9 +334,9 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
   # Get minimizing parameter from first solution (all solutions have same workflow)
   minimizing_param <- solutions_data[[1]]$minimizing_param
 
-  # Create two-row header
+  # Create two-row header (pass assay_type for assay-aware labels)
   header_row1 <- create_header_row1(optimal_col_name, has_cost, minimizing_param)
-  header_row2 <- create_header_row2(has_cost, minimizing_param)
+  header_row2 <- create_header_row2(has_cost, minimizing_param, assay_type)
 
   # Create data rows for all solutions
   data_rows <- lapply(solutions_data, function(solution) {
@@ -397,7 +430,7 @@ create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_par
 #' @param has_cost Logical indicating if workflow includes cost calculations
 #' @param minimizing_param Name of the parameter being minimized
 #' @noRd
-create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
+create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL, assay_type = NULL) {
   # Row 2 only contains sub-columns for multi-column headers
   # Single-row columns (with rowspan=2) don't appear in row 2
 
@@ -438,10 +471,16 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL) {
     ))
   }
 
-  # Add TPM Threshold sub-column if not being minimized
+  # Add Expression Threshold sub-column if not being minimized
   if (minimizing_param != "TPM_threshold") {
+    # Assay-aware header label
+    header_label <- if (!is.null(assay_type) && assay_type == "tap_seq") {
+      "UMIs/cell threshold"
+    } else {
+      "TPM threshold"
+    }
     cells <- append(cells, list(
-      tags$th("TPM Threshold", style = last_subcolumn_style)
+      tags$th(header_label, style = last_subcolumn_style)
     ))
   }
 
@@ -606,12 +645,19 @@ create_data_row <- function(solution_data, workflow_info) {
 #'
 #' @param minimizing_param Name of the parameter being minimized
 #' @noRd
-get_optimal_column_name <- function(minimizing_param) {
+get_optimal_column_name <- function(minimizing_param, assay_type = NULL) {
   switch(minimizing_param,
     "cells_per_target" = "Optimal Cells/Target",
     "reads_per_cell" = "Optimal Reads/Cell",
     "sequenced_reads_per_cell" = "Optimal Reads/Cell",
-    "TPM_threshold" = "Optimal TPM Threshold",
+    "TPM_threshold" = {
+      # Assay-aware column name
+      if (!is.null(assay_type) && assay_type == "tap_seq") {
+        "Optimal UMIs/cell threshold"
+      } else {
+        "Optimal TPM threshold"
+      }
+    },
     "minimum_fold_change" = "Optimal Fold Change",
     "cost" = "Optimal Cost",
     "Optimal Design"
