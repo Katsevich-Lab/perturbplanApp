@@ -259,8 +259,8 @@ create_power_data_sheets <- function(cached_results) {
 
 #' Create Pilot Data Sheet
 #'
-#' @description Creates pilot data sheet with both baseline expression stats and library parameters
-#' as separate sections in one sheet (Option C format)
+#' @description Creates pilot data sheet with baseline expression stats, library parameters,
+#' and mapping efficiency as separate sections in one sheet
 #' @param cached_results Cached results with pilot data information
 #' @return Data frame for pilot data sheet
 #' @noRd
@@ -293,7 +293,7 @@ create_pilot_data_sheet <- function(cached_results) {
     return(debug_info)
   }
 
-  # Create combined sheet with baseline expression stats and library parameters as additional columns
+  # Create combined sheet with baseline expression stats, library parameters, and mapping efficiency
 
   # Start with baseline expression stats
   baseline_stats <- pilot_data$baseline_expression_stats
@@ -304,13 +304,24 @@ create_pilot_data_sheet <- function(cached_results) {
   # Start with baseline expression data
   combined_data <- baseline_stats
 
-  # Add library parameters as additional columns on the right side
+  # Add library parameters and mapping efficiency as additional columns on the right side
   library_params <- pilot_data$library_parameters
-  if (!is.null(library_params) && length(library_params) > 0) {
+  mapping_efficiency <- pilot_data$mapping_efficiency
 
-    # Create library parameters columns - we'll add them row by row
-    param_names <- names(library_params)
-    param_values <- as.character(unlist(library_params))
+  # Combine library parameters and mapping efficiency into one list
+  all_params <- list()
+  if (!is.null(library_params) && length(library_params) > 0) {
+    all_params <- as.list(library_params)
+  }
+  if (!is.null(mapping_efficiency)) {
+    all_params$mapping_efficiency <- mapping_efficiency
+  }
+
+  if (length(all_params) > 0) {
+
+    # Create parameter columns - we'll add them row by row
+    param_names <- names(all_params)
+    param_values <- as.character(unlist(all_params))
 
     # Add empty separator column
     combined_data[["  "]] <- ""  # Empty column as visual separator
