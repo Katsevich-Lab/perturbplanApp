@@ -306,7 +306,15 @@ create_pilot_data_sheet <- function(cached_results) {
 
   # Add library parameters and mapping efficiency as additional columns on the right side
   library_params <- pilot_data$library_parameters
-  mapping_efficiency <- pilot_data$mapping_efficiency
+
+  # Extract mapping_efficiency from user_config (advanced_choices), not from pilot_data
+  mapping_efficiency <- if (!is.null(cached_results$current_result)) {
+    cached_results$current_result$user_config$advanced_choices$mapping_efficiency
+  } else if (!is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
+    cached_results$pinned_solutions[[1]]$user_config$advanced_choices$mapping_efficiency
+  } else {
+    NULL
+  }
 
   # Combine library parameters and mapping efficiency into one list
   all_params <- list()
