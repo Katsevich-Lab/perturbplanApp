@@ -69,8 +69,11 @@ create_parameter_settings_sheet <- function(cached_results) {
 #' @return Data frame for Excel export matching app's solution table
 #' @noRd
 convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
-  # Get dynamic column name for optimal parameter (same logic as app)
-  optimal_col_name <- get_optimal_column_name(workflow_info$minimizing_parameter)
+  # Extract assay_type from first solution (all solutions have same assay type)
+  assay_type <- solutions_data[[1]]$assay_type
+
+  # Get dynamic column name for optimal parameter (assay-aware, same logic as app)
+  optimal_col_name <- get_optimal_column_name(workflow_info$minimizing_parameter, assay_type)
 
   # Check if workflow includes cost (same logic as app)
   has_cost <- !is.null(workflow_info$workflow_id) &&
@@ -105,9 +108,15 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
     column_headers <- c(column_headers, "Reads_per_Cell")
   }
 
-  # Add TPM Threshold if not being minimized
+  # Add Expression Threshold if not being minimized (assay-aware column name)
   if (minimizing_param != "TPM_threshold") {
-    column_headers <- c(column_headers, "TPM_Threshold")
+    # Assay-aware column header
+    expression_col_name <- if (!is.null(assay_type) && assay_type == "tap_seq") {
+      "UMIs_cell_threshold"
+    } else {
+      "TPM_Threshold"
+    }
+    column_headers <- c(column_headers, expression_col_name)
   }
 
   # Add effect sizes columns
@@ -169,9 +178,17 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
       }
     }
 
-    # TPM Threshold (exact same logic as create_data_row)
-    if (minimizing_param != "TPM_threshold" && "TPM_Threshold" %in% column_headers) {
-      row_data[["TPM_Threshold"]] <- solution$TPM_threshold %||% "N/A"
+    # Expression Threshold (assay-aware column name)
+    if (minimizing_param != "TPM_threshold") {
+      # Use the assay-aware column name determined earlier
+      expr_col <- if (!is.null(assay_type) && assay_type == "tap_seq") {
+        "UMIs_cell_threshold"
+      } else {
+        "TPM_Threshold"
+      }
+      if (expr_col %in% column_headers) {
+        row_data[[expr_col]] <- solution$TPM_threshold %||% "N/A"
+      }
     }
 
     # Effect sizes (exact same logic as create_data_row)
