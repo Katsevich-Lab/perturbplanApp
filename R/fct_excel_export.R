@@ -207,19 +207,7 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
     excel_df_rows[[i]] <- row_data
   }
 
-  # Convert list of rows to data frame
-  if (length(excel_df_rows) > 0) {
-    excel_df <- do.call(rbind.data.frame, excel_df_rows)
-    # Only select columns that actually exist in the data frame
-    existing_columns <- intersect(column_headers, colnames(excel_df))
-    excel_df <- excel_df[existing_columns]
-  } else {
-    # Create empty data frame with proper columns
-    excel_df <- data.frame(matrix(ncol = length(column_headers), nrow = 0))
-    colnames(excel_df) <- column_headers
-  }
-
-  return(excel_df)
+  return(do.call(rbind.data.frame, excel_df_rows))
 }
 
 #' Create Power Data Sheets
