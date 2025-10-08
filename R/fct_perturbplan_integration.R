@@ -38,7 +38,7 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
       biological_system <- experimental_config$biological_system %||% "K562"
 
       # Use extract_expression_info to process built-in data
-      expression_info <- perturbplan::extract_expression_info(
+      expression_info <- perturbplan:::extract_expression_info(
         biological_system = biological_system,
         B = 1000,                    # Sample 1000 genes
         gene_list = gene_list_data,  # Use custom gene list if provided
@@ -70,7 +70,7 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
       }
 
       # Use extract_expression_info to process custom data
-      expression_info <- perturbplan::extract_expression_info(
+      expression_info <- perturbplan:::extract_expression_info(
         biological_system = "K562",           # Not used when custom_pilot_data provided
         B = 1000,                            # Sample 1000 genes
         gene_list = gene_list_data,          # Use custom gene list if provided
