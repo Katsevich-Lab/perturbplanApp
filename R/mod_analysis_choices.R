@@ -72,7 +72,7 @@ mod_analysis_choices_ui <- function(id) {
           # TAP-seq version
           conditionalPanel(
             condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
-            numericInput(ns("Expression_threshold_fixed"), "UMIs/cell at saturation:",
+            numericInput(ns("Expression_threshold_fixed"), "Expression threshold (UMIs/cell):",
                         value = 1, min = 0.1, max = 5, step = 0.02)
           ),
 
