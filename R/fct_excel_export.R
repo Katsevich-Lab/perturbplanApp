@@ -260,7 +260,8 @@ create_power_data_sheets <- function(cached_results) {
 #' Create Pilot Data Sheet
 #'
 #' @description Creates pilot data sheet with baseline expression stats, library parameters,
-#' and mapping efficiency as separate sections in one sheet
+#' and mapping efficiency as separate sections in one sheet. For TAP-seq assays, computes
+#' UMIs_per_cell (relative_expression * UMI_per_cell) instead of showing relative_expression.
 #' @param cached_results Cached results with pilot data information
 #' @return Data frame for pilot data sheet
 #' @noRd
@@ -293,6 +294,14 @@ create_pilot_data_sheet <- function(cached_results) {
     return(debug_info)
   }
 
+  # Extract assay_type from cached results (same pattern as convert_solutions_table_to_excel)
+  assay_type <- NULL
+  if (!is.null(cached_results$current_result)) {
+    assay_type <- cached_results$current_result$user_config$design_options$assay_type
+  } else if (!is.null(cached_results$pinned_solutions) && length(cached_results$pinned_solutions) > 0) {
+    assay_type <- cached_results$pinned_solutions[[1]]$user_config$design_options$assay_type
+  }
+
   # Create combined sheet with baseline expression stats, library parameters, and mapping efficiency
 
   # Start with baseline expression stats
@@ -301,11 +310,25 @@ create_pilot_data_sheet <- function(cached_results) {
     return(data.frame(Message = "No baseline expression stats available"))
   }
 
-  # Start with baseline expression data
+  # Extract library parameters early (needed for TAP-seq computation)
+  library_params <- pilot_data$library_parameters
+
+  # Start with baseline expression data - assay-aware column handling
   combined_data <- baseline_stats
 
-  # Add library parameters and mapping efficiency as additional columns on the right side
-  library_params <- pilot_data$library_parameters
+  # TAP-seq: Replace relative_expression with UMIs_per_cell
+  if (!is.null(assay_type) && assay_type == "tap_seq") {
+    if (!is.null(library_params$UMI_per_cell)) {
+      # Compute UMIs_per_cell = relative_expression * UMI_per_cell
+      combined_data$UMIs_per_cell <- baseline_stats$relative_expression * library_params$UMI_per_cell
+      # Remove relative_expression column
+      combined_data$relative_expression <- NULL
+    } else {
+      # Fallback: keep relative_expression if UMI_per_cell missing
+      warning("UMI_per_cell not found in library parameters for TAP-seq data")
+    }
+  }
+  # Perturb-seq: Keep relative_expression as-is (no changes needed)
 
   # Extract mapping_efficiency from user_config (advanced_choices), not from pilot_data
   mapping_efficiency <- if (!is.null(cached_results$current_result)) {
