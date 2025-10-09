@@ -87,25 +87,21 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
     # MOI-BASED CONTROL GROUP RESTRICTIONS
     # ============================================================================
     observeEvent(experimental_config(), {
-      req(experimental_config())
+      if (!is.null(experimental_config()) && !is.null(experimental_config()$MOI)) {
+        moi_value <- experimental_config()$MOI
 
-      # Get MOI value - use default if NULL (when input field is empty)
-      moi_value <- experimental_config()$MOI
-      if (is.null(moi_value)) {
-        return()  # Exit early if MOI is NULL (field cleared)
+        if (moi_value > 1) {
+          # Force to complement cells and disable input
+          updateSelectInput(session, "control_group", selected = "complement")
+          shinyjs::disable("control_group")
+          shinyjs::show("moi_explanation")
+        } else {
+          # Enable input for user selection
+          shinyjs::enable("control_group")
+          shinyjs::hide("moi_explanation")
+        }
       }
-
-      if (moi_value > 1) {
-        # Force to complement cells and disable input
-        updateSelectInput(session, "control_group", selected = "complement")
-        shinyjs::disable("control_group")
-        shinyjs::show("moi_explanation")
-      } else {
-        # Enable input for user selection
-        shinyjs::enable("control_group")
-        shinyjs::hide("moi_explanation")
-      }
-    }, ignoreInit = FALSE, ignoreNULL = TRUE)
+    }, ignoreInit = FALSE)
 
     # ============================================================================
     # AUTO-FILL MAPPING EFFICIENCY FROM CUSTOM PILOT DATA
