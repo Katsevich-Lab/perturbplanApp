@@ -90,7 +90,7 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
       if (!is.null(experimental_config()) && !is.null(experimental_config()$MOI)) {
         moi_value <- experimental_config()$MOI
 
-        if (moi_value > 1) {
+        if (moi_value > 1 && !is.na(moi_value)) {
           # Force to complement cells and disable input
           updateSelectInput(session, "control_group", selected = "complement")
           shinyjs::disable("control_group")
