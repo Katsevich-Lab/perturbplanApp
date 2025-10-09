@@ -15,13 +15,7 @@ app_ui <- function(request) {
     # Dashboard page layout (matching original perturbplan app exactly)
     dashboardPage(
       header = dashboardHeader(
-        title = "PerturbPlan",
-        tags$li(
-          class = "dropdown",
-          style = "float: right; margin-right: 20px;",
-          # Export buttons container (conditionally shown)
-          uiOutput("header_export_buttons")
-        )
+        title = "PerturbPlan"
       ),
       
       sidebar = mod_sidebar_ui("sidebar"),
