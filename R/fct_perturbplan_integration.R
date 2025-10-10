@@ -33,7 +33,7 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
   }
 
   tryCatch({
-    if (is.null(pilot_data) || pilot_data$type == "default") {
+    if (pilot_data$type == "default") {
 
       # Use extract_expression_info to process built-in data
       expression_info <- perturbplan:::extract_expression_info(
@@ -43,12 +43,6 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
         TPM_threshold = 1,           # TPM filtering at 1
         custom_pilot_data = NULL     # Use built-in data
       )
-
-      # Return pilot data with processed baseline_expression_stats
-      return(list(
-        baseline_expression_stats = expression_info$expression_df,  # Processed/sampled data
-        library_parameters = expression_info$pilot_data$library_parameters
-      ))
 
     } else if (pilot_data$type == "custom") {
 
@@ -60,13 +54,13 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
         TPM_threshold = 1,                   # TPM filtering at 1
         custom_pilot_data = pilot_data$data  # Use validated custom data
       )
-
-      # Return pilot data with processed baseline_expression_stats
-      return(list(
-        baseline_expression_stats = expression_info$expression_df,  # Processed/sampled data
-        library_parameters = expression_info$pilot_data$library_parameters
-      ))
     }
+
+    # Return pilot data with processed baseline_expression_stats
+    return(list(
+      baseline_expression_stats = expression_info$expression_df,  # Processed/sampled data
+      library_parameters = expression_info$pilot_data$library_parameters
+    ))
 
   }, error = function(e) {
     message("Error processing pilot data: ", e$message)
