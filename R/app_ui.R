@@ -18,7 +18,7 @@ app_ui <- function(request) {
         title = "PerturbPlan",
         tags$li(
           class = "dropdown",
-          create_navbar_links(show_documentation = FALSE)
+          create_navbar_links()
         )
       ),
       
