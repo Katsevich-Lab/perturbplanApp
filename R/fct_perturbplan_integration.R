@@ -33,41 +33,18 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
   }
 
   tryCatch({
-    if (is.null(pilot_data) || pilot_data$type == "default") {
-      # Use built-in data for the selected biological system
-      biological_system <- experimental_config$biological_system %||% "K562"
+    if (pilot_data$type == "default") {
 
       # Use extract_expression_info to process built-in data
       expression_info <- perturbplan:::extract_expression_info(
-        biological_system = biological_system,
+        biological_system = experimental_config$biological_system,
         B = 1000,                    # Sample 1000 genes
         gene_list = gene_list_data,  # Use custom gene list if provided
         TPM_threshold = 1,           # TPM filtering at 1
         custom_pilot_data = NULL     # Use built-in data
       )
 
-      # Return pilot data with processed baseline_expression_stats
-      return(list(
-        baseline_expression_stats = expression_info$expression_df,  # Processed/sampled data
-        library_parameters = expression_info$pilot_data$library_parameters
-      ))
-
     } else if (pilot_data$type == "custom") {
-      # Load and validate custom pilot data from uploaded file
-      if (!file.exists(pilot_data$file_path)) {
-        return(NULL)
-      }
-
-      uploaded_data <- readRDS(pilot_data$file_path)
-
-      # Validate the structure using our validation function
-      validation_result <- validate_custom_pilot_data(uploaded_data, pilot_data$file_name)
-
-      if (!validation_result$valid) {
-        message("Custom pilot data validation failed: ",
-                paste(validation_result$errors, collapse = "; "))
-        return(NULL)
-      }
 
       # Use extract_expression_info to process custom data
       expression_info <- perturbplan:::extract_expression_info(
@@ -75,15 +52,15 @@ extract_pilot_data <- function(experimental_config, analysis_config = NULL) {
         B = 1000,                            # Sample 1000 genes
         gene_list = gene_list_data,          # Use custom gene list if provided
         TPM_threshold = 1,                   # TPM filtering at 1
-        custom_pilot_data = validation_result$data  # Use validated custom data
+        custom_pilot_data = pilot_data$data  # Use validated custom data
       )
-
-      # Return pilot data with processed baseline_expression_stats
-      return(list(
-        baseline_expression_stats = expression_info$expression_df,  # Processed/sampled data
-        library_parameters = expression_info$pilot_data$library_parameters
-      ))
     }
+
+    # Return pilot data with processed baseline_expression_stats
+    return(list(
+      baseline_expression_stats = expression_info$expression_df,  # Processed/sampled data
+      library_parameters = expression_info$pilot_data$library_parameters
+    ))
 
   }, error = function(e) {
     message("Error processing pilot data: ", e$message)
