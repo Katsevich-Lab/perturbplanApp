@@ -71,10 +71,6 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
   # Step 8: Apply consistent data grouping for both plotting and optimal solution
   power_data <- optimal_results$optimal_cost_power_df
 
-  # Standardize column names in power_data for UI compatibility
-  power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
-  power_data$raw_reads_per_cell <- NULL
-
   # Get assay type for TPM→Expression transformation
   assay_type <- config$design_options$assay_type
 
@@ -129,8 +125,6 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
 
   # Standardize column names in cost_data for UI compatibility
   cost_data <- optimal_results$optimal_cost_grid
-  cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
-  cost_data$raw_reads_per_cell <- NULL
 
   # Step 10: Return unified results
   final_results <- list(

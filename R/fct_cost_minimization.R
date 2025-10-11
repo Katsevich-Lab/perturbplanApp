@@ -64,8 +64,6 @@ perform_cost_minimization_analysis <- function(config, pilot_data) {
   # Use the ACTUAL data structure returned by find_optimal_cost_design
   # Use optimal_cost_power_df as the main data (this has the correct structure)
   power_data <- optimal_results$optimal_cost_power_df
-  power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
-  power_data$raw_reads_per_cell <- NULL
 
   # Find minimum cost point for target power
   target_power <- config$design_options$target_power
@@ -100,8 +98,6 @@ perform_cost_minimization_analysis <- function(config, pilot_data) {
 
   # Standardize column names in cost_data for UI compatibility
   cost_data <- optimal_results$optimal_cost_grid
-  cost_data$sequenced_reads_per_cell <- cost_data$raw_reads_per_cell
-  cost_data$raw_reads_per_cell <- NULL
 
   # Return in format compatible with current system
   return(list(

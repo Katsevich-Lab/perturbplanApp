@@ -25,10 +25,6 @@ perform_standard_analysis <- function(config, pilot_data) {
   # Call perturbplan::cost_power_computation
   results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
 
-  # Standardize perturbplan output column names to sequenced_reads_per_cell
-  results$sequenced_reads_per_cell <- results$raw_reads_per_cell
-  results$raw_reads_per_cell <- NULL
-
   # Get the correct parameter column name
   minimizing_param <- workflow_info$minimizing_parameter
   param_column <- get_parameter_column_name(minimizing_param)
