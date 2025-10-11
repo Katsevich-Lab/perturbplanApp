@@ -50,7 +50,7 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
   perturbplan_params$fixed_variable$reads_per_cell <- NULL
 
   # Step 6: Call cost_power_computation to get power-cost grid
-  cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+  cost_power_grid <- do.call(perturbplan:::cost_power_computation, perturbplan_params)
 
   # Step 7: Call find_optimal_cost_design with all required parameters
   find_optimal_params <- list(
@@ -66,7 +66,7 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
     cost_per_million_reads = perturbplan_params$cost_per_million_reads,
     cost_grid_size = 200
   )
-  optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
+  optimal_results <- do.call(perturbplan:::find_optimal_cost_design, find_optimal_params)
 
   # Step 8: Apply consistent data grouping for both plotting and optimal solution
   power_data <- optimal_results$optimal_cost_power_df

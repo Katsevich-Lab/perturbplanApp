@@ -40,7 +40,7 @@ perform_cost_minimization_analysis <- function(config, pilot_data) {
   perturbplan_params$grid_size <- 50          # Reduced for better performance
 
   # Step 2: Call cost_power_computation to get power-cost grid
-  cost_power_grid <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+  cost_power_grid <- do.call(perturbplan:::cost_power_computation, perturbplan_params)
 
   # Step 3: Call find_optimal_cost_design with ALL required parameters
   # Use the same minimizing_variable as cost_power_computation (cost)
@@ -58,7 +58,7 @@ perform_cost_minimization_analysis <- function(config, pilot_data) {
     cost_per_million_reads = perturbplan_params$cost_per_million_reads, # From UI cost info
     cost_grid_size = 50                           # Reduced for better performance
   )
-  optimal_results <- do.call(perturbplan::find_optimal_cost_design, find_optimal_params)
+  optimal_results <- do.call(perturbplan:::find_optimal_cost_design, find_optimal_params)
 
   # Step 4: Extract key components and format for CURRENT plotting engine
   # Use the ACTUAL data structure returned by find_optimal_cost_design

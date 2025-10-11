@@ -45,6 +45,155 @@ We elaborate on steps 1-3, and 5 below.
 
 # Design problem selection
 
+Currently, we support experimental design for two assays: Perturb-seq and TAP-seq. 
+
+### Understanding Optimization Targets
+
+PerturbPlan helps you design experiments by optimizing two key objectives:
+
+
+1. **Statistical power** is the probability of detecting a true effect if it exists. In CRISPR screens, power represents your ability to confidently identify perturbed elements that truly have an effect on the gene of interest.
+
+- **Higher power** = Greater confidence in detecting true positives.
+- **Target power**: Typically set to 0.8 (80%), meaning an 80% chance of detecting a real effect.
+- **Key insight**: Power increases with more cells, more reads, or relaxed effect size thresholds.
+
+
+2. **Experimental cost** is the total financial investment required to run your screen. Cost is determined by two main factors:
+
+- **Cell capture cost**: Number of cells × cost per captured cell (cost/cell).
+- **Sequencing cost**: Number of cells × reads per cell × cost per million reads (cost/million reads).
+
+---
+
+
+### Power-Only Workflows
+
+These workflows focus solely on achieving target power by only minimizing power.
+
+#### **Workflow 1: Minimize Cells per Target**
+- **Goal**: Find the minimum number of cells per target needed to achieve target power.
+- **What varies**: Number of cells receiving CRISPR perturbations on the same target.
+- **What's fixed**: Reads per cell, expression threshold, fold change.
+
+#### **Workflow 2: Minimize Reads per Cell**
+- **Goal**: Find the minimum sequencing depth (reads per cell) needed to achieve target power.
+- **What varies**: Sequenced reads per cell.
+- **What's fixed**: Cells per target, expression threshold, fold change.
+
+#### **Workflow 3: Minimize Expression Threshold**
+- **Goal**: Find the minimum expression threshold (TPM for Perturb-seq, UMIs/cell for TAP-seq) needed to achieve target power.
+- **What varies**: Expression threshold (Details of this variable can be found in the next section). TPM when Perturb-seq is considered; UMIs per cell at sequencing saturation when TAP-seq is considered. 
+- **What's fixed**: Cells per target, reads per cell, fold change.
+- **Note**: Lower threshold = more lowly expressed genes included in analysis.
+
+#### **Workflow 4: Minimize Fold Change**
+- **Goal**: Find the minimum detectable fold change (effect size) at your target power
+- **What varies**: Minimum fold change of interest to detect.
+- **What's fixed**: Cells per target, reads per cell, expression threshold.
+
+#### **Workflow 5: Minimize Total Cost**
+- **Goal**: Find the combination of cells and reads that achieves target power at minimum cost.
+- **What varies**: Both cells per target AND reads per cell (jointly optimized).
+- **What's fixed**: Expression threshold, fold change.
+
+---
+
+### Power + Cost Workflows
+
+These workflows incorporate cost constraints into the optimization, finding the best design within your budget.
+
+#### **Workflows 6-8: Minimize Expression Threshold**
+
+**Common goal**: Achieve target power within budget while using the lowest possible expression threshold.
+
+##### **Workflow 6: Expression Threshold Minimization (Cells Varying)**
+- **What varies**: Expression threshold, cells per target.
+- **What's fixed**: Reads per cell, fold change.
+- **When to use**: You can adjust cell numbers but reads per cell is fixed.
+
+##### **Workflow 7: Expression Threshold Minimization (Reads Varying)**
+- **What varies**: Expression threshold, reads per cell.
+- **What's fixed**: Cells per target, fold change.
+- **When to use**: You can adjust reads per cell but cell numbers are fixed.
+
+##### **Workflow 8: Expression Threshold Minimization (Cells + Reads Varying)**
+- **What varies**: Expression threshold, cells per target, reads per cell.
+- **What's fixed**: Fold change only.
+- **When to use**: Maximum flexibility - you can adjust both cell numbers and reads per cell.
+
+---
+
+#### **Workflows 9-11: Minimize Fold Change**
+
+**Common goal**: Achieve target power within budget while detecting the smallest possible fold change.
+
+##### **Workflow 9: Fold Change Minimization (Cells Varying)**
+- **What varies**: Fold change, cells per target.
+- **What's fixed**: Reads per cell, expression threshold.
+- **When to use**: You want to detect small effects; reads per cell is constrained.
+
+##### **Workflow 10: Fold Change Minimization (Reads Varying)**
+- **What varies**: Fold change, reads per cell.
+- **What's fixed**: Cells per target, expression threshold.
+- **When to use**: You want to detect small effects; cell numbers are constrained.
+
+##### **Workflow 11: Fold Change Minimization (Cells + Reads Varying)**
+- **What varies**: Fold change, cells per target, reads per cell.
+- **What's fixed**: Expression threshold only.
+- **When to use**: Maximum flexibility for detecting the smallest effects possible within budget.
+
+---
+
+<!-- ### How to Choose Your Workflow -->
+
+<!-- Use this decision tree to select the appropriate workflow: -->
+
+<!-- ### Step 1: Do you have a fixed budget constraint? -->
+
+<!-- **No → Power-Only Mode (Workflows 1-5)** -->
+
+<!-- - Want to minimize cells? → **Workflow 1** -->
+<!-- - Want to minimize sequencing? → **Workflow 2** -->
+<!-- - Want to test more genes (lower threshold)? → **Workflow 3** -->
+<!-- - Want to know smallest detectable effect? → **Workflow 4** -->
+<!-- - Want to minimize cost overall? → **Workflow 5** -->
+
+<!-- **Yes → Power + Cost Mode (Workflows 6-11)** -->
+
+<!-- ### Step 2: What do you want to optimize? -->
+
+<!-- **Minimize expression threshold (test more genes):** -->
+
+<!-- - Only cells can vary → **Workflow 6** -->
+<!-- - Only reads can vary → **Workflow 7** -->
+<!-- - Both cells and reads can vary → **Workflow 8** -->
+
+<!-- **Minimize fold change (detect smaller effects):** -->
+
+<!-- - Only cells can vary → **Workflow 9** -->
+<!-- - Only reads can vary → **Workflow 10** -->
+<!-- - Both cells and reads can vary → **Workflow 11** -->
+
+<!-- --- -->
+
+### Summary Table
+
+| Workflow | Mode | Minimizing Target | Varying Parameters | Cost Constraint? |
+|--|---------|--------------|-------------|----------|
+| 1 | Power-only | Cells per target | Cells | No |
+| 2 | Power-only | Reads per cell | Reads | No |
+| 3 | Power-only | Expression threshold | Expression threshold | No |
+| 4 | Power-only | Fold change | Fold change | No |
+| 5 | Power-only | Total cost | Cells + Reads | No |
+| 6 | Power + Cost | Expression threshold | Expression + Cells | Yes |
+| 7 | Power + Cost | Expression threshold | Expression + Reads | Yes |
+| 8 | Power + Cost | Expression threshold | Expression + Cells + Reads | Yes |
+| 9 | Power + Cost | Fold change | Fold change + Cells | Yes |
+| 10 | Power + Cost | Fold change | Fold change + Reads | Yes |
+| 11 | Power + Cost | Fold change | Fold change + Cells + Reads | Yes |
+
+
 # Design parameter configuration
 
 # Analysis result interpretation

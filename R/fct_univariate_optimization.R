@@ -9,7 +9,7 @@ NULL
 #' Perform standard analysis for workflows 1-4, 6-9
 #'
 #' @description Unified analysis function for 8 standard workflows that use
-#' perturbplan::cost_power_computation. Returns plotting-ready format directly.
+#' perturbplan:::cost_power_computation. Returns plotting-ready format directly.
 #'
 #' @param config User configuration from sidebar modules
 #' @param pilot_data Extracted pilot data for perturbplan
@@ -18,12 +18,12 @@ NULL
 #' @noRd
 perform_standard_analysis <- function(config, pilot_data) {
 
-  # Map UI configuration to perturbplan::cost_power_computation parameters
+  # Map UI configuration to perturbplan:::cost_power_computation parameters
   workflow_info <- config$workflow_info
   perturbplan_params <- map_config_to_perturbplan_params(config, workflow_info, pilot_data)
 
-  # Call perturbplan::cost_power_computation
-  results <- do.call(perturbplan::cost_power_computation, perturbplan_params)
+  # Call perturbplan:::cost_power_computation
+  results <- do.call(perturbplan:::cost_power_computation, perturbplan_params)
 
   # Get the correct parameter column name
   minimizing_param <- workflow_info$minimizing_parameter
@@ -123,7 +123,7 @@ perform_standard_analysis <- function(config, pilot_data) {
 #' Get parameter column name from perturbplan results
 #'
 #' @description Maps minimizing parameter names to actual column names
-#' returned by perturbplan::cost_power_computation
+#' returned by perturbplan:::cost_power_computation
 #'
 #' @param minimizing_param The parameter being minimized
 #' @return Character string of actual column name in perturbplan results
