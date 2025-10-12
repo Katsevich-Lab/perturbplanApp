@@ -52,6 +52,12 @@ get_tooltip_text <- function(element_id) {
     # Non-targeting gRNAs
     non_targeting_grnas = "The number of control guide RNAs that do not target any genomic element.",
 
+    # Cells per Target
+    cells_per_target = "The averaged number of cells receiving gRNAs targeting the same element.",
+
+    # Sequenced Reads per Cell
+    sequenced_reads_per_cell = "The averaged number of reads per cell when sequencing.",
+
     # ==========================================================================
     # Analysis Choices Section
     # ==========================================================================
@@ -89,7 +95,10 @@ get_tooltip_text <- function(element_id) {
     mapping_efficiency = "The ratio of sequencing reads that map confidently to the genes of interest.",
 
     # Control Group
-    control_group = "The strategy used to construct control cells for baseline expression and statistical comparisons."
+    control_group = "The strategy used to construct control cells for baseline expression and statistical comparisons.",
+
+    # FDR Target Level
+    fdr_target = "Pre-specified level for false discovery rate control."
   )
 
   # Return tooltip text or empty string if not found
@@ -111,7 +120,7 @@ get_available_tooltip_ids <- function() {
 
     # Experimental Choices
     "reference_expression_data", "moi", "num_targets", "grnas_per_target",
-    "non_targeting_grnas",
+    "non_targeting_grnas", "cells_per_target", "sequenced_reads_per_cell",
 
     # Analysis Choices
     "perturbation_gene_pairs", "test_side", "tpm_threshold", "umis_per_cell",
@@ -120,7 +129,7 @@ get_available_tooltip_ids <- function() {
     "fold_change", "non_null_proportion",
 
     # Advanced Settings
-    "grna_variability", "mapping_efficiency", "control_group"
+    "grna_variability", "mapping_efficiency", "control_group", "fdr_target"
   )
 }
 

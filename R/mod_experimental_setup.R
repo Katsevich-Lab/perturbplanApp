@@ -114,7 +114,8 @@ mod_experimental_setup_ui <- function(id) {
           tags$div(
             id = ns("cells_fixed_div"),
             style = "display: none;",
-            numericInput(ns("cells_fixed"), "Cells per target:",
+            numericInput(ns("cells_fixed"),
+                        add_tooltip("Cells per target:", "cells_per_target", use_icon = TRUE),
                         value = 1000, min = 20, max = 2000, step = 20)
           ),
 
@@ -122,7 +123,8 @@ mod_experimental_setup_ui <- function(id) {
           tags$div(
             id = ns("reads_per_cell_fixed_div"),
             style = "display: none;",
-            numericInput(ns("reads_per_cell_fixed"), "Sequenced reads per cell:",
+            numericInput(ns("reads_per_cell_fixed"),
+                        add_tooltip("Sequenced reads per cell:", "sequenced_reads_per_cell", use_icon = TRUE),
                         value = 5000, min = 1000, max = 150000, step = 1000)
           )
         )

@@ -62,7 +62,9 @@ mod_advanced_choices_ui <- function(id) {
         ),
 
         # FDR target level
-        numericInput(ns("fdr_target"), "FDR target level:", 0.1, 0.001, 0.5, 0.001)
+        numericInput(ns("fdr_target"),
+                    add_tooltip("FDR target level:", "fdr_target", use_icon = TRUE),
+                    0.1, 0.001, 0.5, 0.001)
       )
     )
   )
