@@ -127,6 +127,14 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
   # Always add Non-null Prop (never minimized)
   column_headers <- c(column_headers, "Non_null_Prop")
 
+  # Add cost parameters (if workflow includes cost)
+  if (has_cost) {
+    column_headers <- c(column_headers, "Cost_per_Cell", "Cost_per_Million_Reads")
+  }
+
+  # Always add FDR target level
+  column_headers <- c(column_headers, "FDR_Target_Level")
+
   # Initialize empty data frame with all columns
   excel_df_rows <- list()
 
@@ -200,6 +208,23 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
       # Non-null Prop (always shown, exact same logic as create_data_row)
       if ("Non_null_Prop" %in% column_headers) {
         row_data[["Non_null_Prop"]] <- effect_sizes$non_null_proportion %||% "N/A"
+      }
+    }
+
+    # Cost parameters (if workflow includes cost)
+    if (has_cost && "Cost_per_Cell" %in% column_headers) {
+      cost_params <- solution$cost_params
+      if (!is.null(cost_params)) {
+        row_data[["Cost_per_Cell"]] <- paste0("$", cost_params$cost_per_cell %||% "N/A")
+        row_data[["Cost_per_Million_Reads"]] <- paste0("$", cost_params$cost_per_million_reads %||% "N/A")
+      }
+    }
+
+    # FDR target level (always shown)
+    if ("FDR_Target_Level" %in% column_headers) {
+      advanced_params <- solution$advanced_params
+      if (!is.null(advanced_params)) {
+        row_data[["FDR_Target_Level"]] <- advanced_params$fdr_target %||% "N/A"
       }
     }
 

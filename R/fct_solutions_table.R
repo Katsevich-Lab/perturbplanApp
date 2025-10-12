@@ -60,7 +60,9 @@ extract_cached_solutions_data <- function(cached_results) {
       effect_sizes = extract_effect_sizes_clean(current$optimal_design, current$user_config, current$user_config$workflow_info$minimizing_parameter),
       minimizing_param = current$user_config$workflow_info$minimizing_parameter,
       assay_type = assay_type,
-      user_config = current$user_config
+      user_config = current$user_config,
+      cost_params = extract_cost_parameters(current$user_config),
+      advanced_params = extract_advanced_parameters(current$user_config)
     )
     solution_counter <- solution_counter + 1
   }
@@ -84,13 +86,43 @@ extract_cached_solutions_data <- function(cached_results) {
         effect_sizes = extract_effect_sizes_clean(pinned$optimal_design, pinned$user_config, pinned$user_config$workflow_info$minimizing_parameter),
         minimizing_param = pinned$user_config$workflow_info$minimizing_parameter,
         assay_type = assay_type,
-        user_config = pinned$user_config
+        user_config = pinned$user_config,
+        cost_params = extract_cost_parameters(pinned$user_config),
+        advanced_params = extract_advanced_parameters(pinned$user_config)
       )
       solution_counter <- solution_counter + 1
     }
   }
 
   return(solutions_list)
+}
+
+#' Extract Cost Parameters from User Config
+#'
+#' @description Extracts cost parameters for Excel export (not shown in UI table)
+#' @param user_config User configuration data from sidebar
+#' @return List with cost_per_cell and cost_per_million_reads
+#' @noRd
+extract_cost_parameters <- function(user_config) {
+  list(
+    cost_per_cell = user_config$design_options$cost_per_cell %||% NULL,
+    cost_per_million_reads = user_config$design_options$cost_per_million_reads %||% NULL
+  )
+}
+
+#' Extract Advanced Parameters from User Config
+#'
+#' @description Extracts advanced parameters for Excel export (not shown in UI table)
+#' @param user_config User configuration data from sidebar
+#' @return List with fdr_target and other advanced settings
+#' @noRd
+extract_advanced_parameters <- function(user_config) {
+  list(
+    fdr_target = user_config$advanced_choices$fdr_target %||% NULL,
+    grna_variability = user_config$advanced_choices$gRNA_variability %||% NULL,
+    mapping_efficiency = user_config$advanced_choices$mapping_efficiency %||% NULL,
+    control_group = user_config$advanced_choices$control_group %||% NULL
+  )
 }
 
 #' Extract Optimal Parameter Value
