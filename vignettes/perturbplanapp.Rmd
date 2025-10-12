@@ -231,7 +231,7 @@ These parameters define the basic experimental setup.
     
     - **Custom**: Upload your own reference data.
     
-  - **Custom data format**: The input must be an RDS file with the same structure as the output from [reference_data_preprocessing_10x( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_preprocessing_10x.html) or [reference_data_preprocessing( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_preprocessing.html) functions in the PerturbPlan package. The RDS file must contain:
+  - **Custom data format**: The input must be an RDS file with the same structure as the output from [reference_data_preprocessing_10x( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_preprocessing_10x.html) or [reference_data_preprocessing( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_processing.html) functions in the PerturbPlan package. The RDS file must contain:
 
     - `baseline_expression_stats`: Data frame with columns:
     
