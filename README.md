@@ -29,11 +29,3 @@ devtools::install_github("Katsevich-Lab/perturbplanApp")
 library(perturbplanApp)
 run_app()
 ```
-
-## Documentation
-
-For complete documentation on design problems, parameter configuration, and result interpretation, please visit the [PerturbPlan App documentation](https://katsevich-lab.github.io/perturbplanApp/).
-
-## Development
-
-See [CLAUDE.md](CLAUDE.md) for comprehensive development guidelines and Golem best practices.
