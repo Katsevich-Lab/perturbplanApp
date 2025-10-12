@@ -235,7 +235,7 @@ These parameters define the basic experimental setup.
 
     - `baseline_expression_stats`: Data frame with columns:
     
-      - `response_id`: Ensembl Gene ID.
+      - `response_id`: Ensembl gene ID.
       
       - `relative_expression`: Relative gene expression.
       

@@ -7,7 +7,7 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe observeEvent req reactiveVal renderUI outputOptions htmlOutput HTML updateSelectInput updateNumericInput
+#' @importFrom shiny NS tagList tags div strong selectInput fileInput conditionalPanel numericInput moduleServer reactive observe observeEvent req reactiveVal renderUI outputOptions htmlOutput HTML updateSelectInput updateNumericInput downloadLink downloadHandler
 #' @importFrom shinyjs show hide
 #' @importFrom tools file_ext
 mod_experimental_setup_ui <- function(id) {
@@ -52,6 +52,21 @@ mod_experimental_setup_ui <- function(id) {
               tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters"
             )
           ),
+
+          # TAP-seq example data download link
+          conditionalPanel(
+            condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
+            tags$div(
+              class = "file-upload-info",
+              style = "margin-top: 5px; margin-bottom: 10px;",
+              tags$small(
+                tags$i(class = "fa fa-download"),
+                " Need example data? ",
+                downloadLink(ns("download_example_data"), "Download K562_Ray.rds")
+              )
+            )
+          ),
+
           fileInput(ns("pilot_data_file"),
                    label = NULL,
                    accept = c(".rds", ".RDS"),
@@ -186,6 +201,25 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
         reset_pilot_data_status(session, custom_pilot_data, output)
       }
     })
+
+    # Download handler for example K562_Ray.rds data
+    output$download_example_data <- downloadHandler(
+      filename = function() {
+        "K562_Ray.rds"
+      },
+      content = function(file) {
+        # Get the example file from inst/extdata
+        example_file <- system.file("extdata", "K562_Ray.rds", package = "perturbplanApp")
+
+        # Check if file exists
+        if (!file.exists(example_file) || example_file == "") {
+          stop("Example data file K562_Ray.rds not found in package")
+        }
+
+        # Copy to download location
+        file.copy(example_file, file)
+      }
+    )
 
     # TAP-seq: Auto-select "Custom" when TAP-seq is selected
     # Perturb-seq: Reset to "K562" when Perturb-seq is selected
