@@ -62,7 +62,8 @@ mod_experimental_setup_ui <- function(id) {
               tags$small(
                 tags$i(class = "fa fa-download"),
                 " Need example data? ",
-                downloadLink(ns("download_example_data"), "Download K562_Ray.rds")
+                downloadLink(ns("download_example_data"), "Download K562_Ray.rds",
+                            style = "text-decoration: underline;")
               )
             )
           ),
