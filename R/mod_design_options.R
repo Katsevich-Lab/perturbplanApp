@@ -61,7 +61,7 @@ mod_design_options_ui <- function(id) {
 
           # Target Power Input (always shown when constraint type is selected)
           tags$div(
-            tags$h6("Target Power:", class = "step-header"),
+            add_tooltip_header("Target Power:", "target_power", header_level = "h6", class = "step-header"),
             numericInput(ns("target_power"), NULL,
                         value = 0.8, min = 0.1, max = 0.99, step = 0.05)
           ),
@@ -80,7 +80,7 @@ mod_design_options_ui <- function(id) {
               tags$h6("Cost Parameters:", class = "step-header"),
 
               # Cost inputs using helper function
-              create_cost_inputs_ui(ns, "cost_per_cell")
+              create_cost_inputs_ui(ns, "cost_per_cell", use_tooltips = TRUE)
             )
           )
         ),
@@ -118,7 +118,7 @@ mod_design_options_ui <- function(id) {
             tags$h6("Cost Parameters:", class = "step-header"),
 
             # Cost inputs using helper function
-            create_cost_inputs_ui(ns, "cost_per_cell_min")
+            create_cost_inputs_ui(ns, "cost_per_cell_min", use_tooltips = TRUE)
           )
         ),
 

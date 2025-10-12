@@ -298,7 +298,7 @@ get_resolved_param_controls <- function(opt_type, target, input_vals) {
 #' @noRd
 #'
 #' @importFrom shiny tags div span numericInput
-create_cost_inputs_ui <- function(ns, id_prefix, cost_per_cell_default = 0.086, cost_per_million_reads_default = 0.374) {
+create_cost_inputs_ui <- function(ns, id_prefix, cost_per_cell_default = 0.086, cost_per_million_reads_default = 0.374, use_tooltips = FALSE) {
   cost_per_cell_id <- paste0(id_prefix, "_cost_per_cell")
   cost_per_million_reads_id <- paste0(id_prefix, "_cost_per_million_reads")
 
@@ -311,13 +311,26 @@ create_cost_inputs_ui <- function(ns, id_prefix, cost_per_cell_default = 0.086, 
     cost_per_million_reads_id <- "cost_per_million_reads_min"
   }
 
+  # Create labels with or without tooltips
+  cost_per_cell_label <- if (use_tooltips) {
+    add_tooltip_span("Cost/cell ($): ", "cost_per_cell", style = "font-weight: normal; margin-right: 5px;")
+  } else {
+    tags$span("Cost/cell ($): ", style = "font-weight: normal; margin-right: 5px;")
+  }
+
+  cost_per_million_reads_label <- if (use_tooltips) {
+    add_tooltip_span("Cost/million reads ($): ", "cost_per_million_reads", style = "font-weight: normal; margin-right: 5px;")
+  } else {
+    tags$span("Cost/million reads ($): ", style = "font-weight: normal; margin-right: 5px;")
+  }
+
   tags$div(
     # Two row cost inputs layout
     tags$div(
       # Cost per cell row
       tags$div(
         style = "margin-bottom: 10px;",
-        tags$span("Cost/cell ($): ", style = "font-weight: normal; margin-right: 5px;"),
+        cost_per_cell_label,
         tags$div(
           style = "display: inline-block; width: 80px;",
           numericInput(ns(cost_per_cell_id),
@@ -329,7 +342,7 @@ create_cost_inputs_ui <- function(ns, id_prefix, cost_per_cell_default = 0.086, 
       ),
       # Cost per million reads row
       tags$div(
-        tags$span("Cost/million reads ($): ", style = "font-weight: normal; margin-right: 5px;"),
+        cost_per_million_reads_label,
         tags$div(
           style = "display: inline-block; width: 80px;",
           numericInput(ns(cost_per_million_reads_id),

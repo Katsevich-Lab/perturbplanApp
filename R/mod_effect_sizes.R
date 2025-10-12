@@ -30,12 +30,15 @@ mod_effect_sizes_ui <- function(id) {
         tags$div(
           id = ns("minimum_fold_change_fixed_div"),
           style = "display: none; margin-bottom: 15px;",
-          numericInput(ns("minimum_fold_change_fixed"), "Fold change:",
+          numericInput(ns("minimum_fold_change_fixed"),
+                      add_tooltip("Fold change:", "fold_change", use_icon = TRUE),
                       value = 0.8, min = 0.3, max = 2, step = 0.1)
         ),
 
         # Proportion of non-null pairs
-        numericInput(ns("prop_non_null"), "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
+        numericInput(ns("prop_non_null"),
+                    add_tooltip("Proportion of non-null pairs:", "non_null_proportion", use_icon = TRUE),
+                    0.1, 0, 1, 0.01)
       )
     )
   )

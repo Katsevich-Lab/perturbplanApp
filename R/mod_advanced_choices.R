@@ -29,7 +29,7 @@ mod_advanced_choices_ui <- function(id) {
 
         # gRNA variability
         numericInput(ns("gRNA_variability"),
-                    "gRNA variability:",
+                    add_tooltip("gRNA variability:", "grna_variability", use_icon = TRUE),
                     value = 0.15,
                     min = 0.1,
                     max = 5,
@@ -37,7 +37,7 @@ mod_advanced_choices_ui <- function(id) {
 
         # Mapping efficiency
         numericInput(ns("mapping_efficiency"),
-                    "Mapping efficiency:",
+                    add_tooltip("Mapping efficiency:", "mapping_efficiency", use_icon = TRUE),
                     value = 0.72,
                     min = 0.1,
                     max = 1.0,
@@ -47,7 +47,8 @@ mod_advanced_choices_ui <- function(id) {
         uiOutput(ns("mapping_efficiency_message")),
 
         # Control group
-        selectInput(ns("control_group"), "Control group:",
+        selectInput(ns("control_group"),
+                    add_tooltip("Control group:", "control_group", use_icon = TRUE),
                     choices = c("Complement cells" = "complement",
                                "Non-targeting cells" = "nt_cells"),
                     selected = "complement"),

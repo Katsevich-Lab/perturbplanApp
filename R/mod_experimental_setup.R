@@ -39,7 +39,8 @@ mod_experimental_setup_ui <- function(id) {
           )
         ),
 
-        selectInput(ns("biological_system"), "Reference expression data:",
+        selectInput(ns("biological_system"),
+                   add_tooltip("Reference expression data:", "reference_expression_data", use_icon = TRUE),
                    choices = get_biological_system_choices(),
                    selected = "K562"),
         conditionalPanel(
@@ -73,7 +74,7 @@ mod_experimental_setup_ui <- function(id) {
 
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
-                      "Multiplicity of infection (MOI):",
+                      add_tooltip("Multiplicity of infection (MOI):", "moi", use_icon = TRUE),
                       value = 10,
                       min = 1,
                       max = 30,
@@ -81,7 +82,7 @@ mod_experimental_setup_ui <- function(id) {
 
           # Number of targets
           numericInput(ns("num_targets"),
-                      "Number of targets:",
+                      add_tooltip("Number of targets:", "num_targets", use_icon = TRUE),
                       value = 100,
                       min = 50,
                       max = 12000,
@@ -89,7 +90,7 @@ mod_experimental_setup_ui <- function(id) {
 
           # gRNAs per target
           numericInput(ns("gRNAs_per_target"),
-                      "gRNAs per target:",
+                      add_tooltip("gRNAs per target:", "grnas_per_target", use_icon = TRUE),
                       value = 4,
                       min = 1,
                       max = 20,
@@ -97,7 +98,7 @@ mod_experimental_setup_ui <- function(id) {
 
           # Non-targeting gRNAs
           numericInput(ns("non_targeting_gRNAs"),
-                      "Non-targeting gRNAs:",
+                      add_tooltip("Non-targeting gRNAs:", "non_targeting_grnas", use_icon = TRUE),
                       value = 10,
                       min = 0,
                       max = 100,

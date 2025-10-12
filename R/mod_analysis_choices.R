@@ -32,7 +32,8 @@ mod_analysis_choices_ui <- function(id) {
       tags$div(
         id = ns("analysis-content"),
         style = "padding: 15px;",
-        selectInput(ns("gene_list_mode"), "Perturbation-gene pairs to analyze:",
+        selectInput(ns("gene_list_mode"),
+                   add_tooltip("Perturbation-gene pairs to analyze:", "perturbation_gene_pairs", use_icon = TRUE),
                    choices = c("Random" = "random", "Custom" = "custom"),
                    selected = "random"),
         conditionalPanel(
@@ -57,7 +58,8 @@ mod_analysis_choices_ui <- function(id) {
             htmlOutput(ns("gene_list_status"))
           )
         ),
-        selectInput(ns("side"), "Test side:",
+        selectInput(ns("side"),
+                    add_tooltip("Test side:", "test_side", use_icon = TRUE),
                     choices = c("Left (knockdown)" = "left",
                                "Right (overexpression)" = "right",
                                "Both (two-sided)" = "both"),
@@ -72,14 +74,16 @@ mod_analysis_choices_ui <- function(id) {
           # TAP-seq version
           conditionalPanel(
             condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
-            numericInput(ns("Expression_threshold_fixed"), "Expression threshold (UMIs/cell):",
+            numericInput(ns("Expression_threshold_fixed"),
+                        add_tooltip("Expression threshold (UMIs/cell):", "umis_per_cell", use_icon = TRUE),
                         value = 1, min = 0.1, max = 5, step = 0.02)
           ),
 
           # Perturb-seq version (default)
           conditionalPanel(
             condition = "input['sidebar-design_options-assay_type'] == 'perturb_seq'",
-            numericInput(ns("Expression_threshold_fixed"), "TPM analysis threshold:",
+            numericInput(ns("Expression_threshold_fixed"),
+                        add_tooltip("TPM analysis threshold:", "tpm_threshold", use_icon = TRUE),
                         value = 10, min = 1, max = 200, step = 1)
           )
         )
