@@ -65,7 +65,7 @@ PerturbPlan helps you design experiments by optimizing two key objectives:
 
   - **Cell capture cost**: Number of cells × cost per captured cell (cost/cell).
   
-  - **Sequencing cost**: Number of cells × reads per cell × cost per million reads (cost/million reads).
+  - **Sequencing cost**: Number of cells × sequenced reads per cell × cost per million reads (cost/million reads).
 
 ---
 
@@ -80,11 +80,11 @@ These workflows focus solely on achieving target power by only minimizing power.
 
 - **What varies**: Number of cells receiving CRISPR perturbations on the same target.
 
-- **What's fixed**: Reads per cell, expression threshold, fold change.
+- **What's fixed**: Sequenced reads per cell, expression threshold, fold change.
 
 #### **Workflow 2: Minimize Reads per Cell**
 
-- **Goal**: Find the minimum sequencing depth (reads per cell) needed to achieve target power.
+- **Goal**: Find the minimum sequencing depth (sequenced reads per cell) needed to achieve target power.
 
 - **What varies**: Sequenced reads per cell.
 
@@ -96,7 +96,7 @@ These workflows focus solely on achieving target power by only minimizing power.
 
 - **What varies**: Expression threshold (Details of this variable can be found in the next section). 
 
-- **What's fixed**: Cells per target, reads per cell, fold change.
+- **What's fixed**: Cells per target, sequenced reads per cell, fold change.
 
 - **Note**: Lower threshold = more lowly expressed genes included in analysis.
 
@@ -106,13 +106,13 @@ These workflows focus solely on achieving target power by only minimizing power.
 
 - **What varies**: Minimum fold change of interest to detect.
 
-- **What's fixed**: Cells per target, reads per cell, expression threshold.
+- **What's fixed**: Cells per target, sequenced reads per cell, expression threshold.
 
 #### **Workflow 5: Minimize Total Cost**
 
 - **Goal**: Find the combination of cells and reads that achieves target power at minimum cost.
 
-- **What varies**: Both cells per target AND reads per cell (jointly optimized).
+- **What varies**: Both cells per target AND sequenced reads per cell (jointly optimized).
 
 - **What's fixed**: Expression threshold, fold change.
 
@@ -128,18 +128,18 @@ These workflows incorporate cost constraints into the optimization, finding the 
 
 ##### **Workflow 6: Expression Threshold Minimization (Cells Varying)**
 - **What varies**: Expression threshold, cells per target.
-- **What's fixed**: Reads per cell, fold change.
-- **When to use**: You can adjust cell numbers but reads per cell is fixed.
+- **What's fixed**: Sequenced reads per cell, fold change.
+- **When to use**: You can adjust cell numbers but sequenced reads per cell is fixed.
 
 ##### **Workflow 7: Expression Threshold Minimization (Reads Varying)**
-- **What varies**: Expression threshold, reads per cell.
+- **What varies**: Expression threshold, sequenced reads per cell.
 - **What's fixed**: Cells per target, fold change.
-- **When to use**: You can adjust reads per cell but cell numbers are fixed.
+- **When to use**: You can adjust sequenced reads per cell but cells per target is fixed.
 
 ##### **Workflow 8: Expression Threshold Minimization (Cells + Reads Varying)**
-- **What varies**: Expression threshold, cells per target, reads per cell.
+- **What varies**: Expression threshold, cells per target, sequenced reads per cell.
 - **What's fixed**: Fold change only.
-- **When to use**: Maximum flexibility - you can adjust both cell numbers and reads per cell.
+- **When to use**: Maximum flexibility - you can adjust both cells per target and sequenced reads per cell.
 
 ---
 
@@ -149,16 +149,16 @@ These workflows incorporate cost constraints into the optimization, finding the 
 
 ##### **Workflow 9: Fold Change Minimization (Cells Varying)**
 - **What varies**: Fold change, cells per target.
-- **What's fixed**: Reads per cell, expression threshold.
-- **When to use**: You want to detect small effects; reads per cell is constrained.
+- **What's fixed**: Sequenced reads per cell, expression threshold.
+- **When to use**: You want to detect small effects; sequenced reads per cell is constrained.
 
 ##### **Workflow 10: Fold Change Minimization (Reads Varying)**
-- **What varies**: Fold change, reads per cell.
+- **What varies**: Fold change, sequenced reads per cell.
 - **What's fixed**: Cells per target, expression threshold.
-- **When to use**: You want to detect small effects; cell numbers are constrained.
+- **When to use**: You want to detect small effects; cells per target is constrained.
 
 ##### **Workflow 11: Fold Change Minimization (Cells + Reads Varying)**
-- **What varies**: Fold change, cells per target, reads per cell.
+- **What varies**: Fold change, cells per target, sequenced reads per cell.
 - **What's fixed**: Expression threshold only.
 - **When to use**: Maximum flexibility for detecting the smallest effects possible within budget.
 
@@ -261,6 +261,10 @@ These parameters define the basic experimental setup.
 
 - **Non-targeting gRNAs**: The number of control guide RNAs that do not target any genomic element. 
 
+- **Cells per target**: The averaged number of cells receiving gRNAs targeting the same element.
+
+- **Sequenced reads per cell**: The averaged number of reads per cell when sequencing.
+
 ---
 
 ### Analysis Choices
@@ -328,7 +332,7 @@ These advanced parameters provide fine-grained control over technical aspects of
 
 - **Mapping efficiency**: The ratio of sequencing reads that map confidently to the genes of interest. 
 
-  - **Why it matters**: Lower mapping efficiency effectively reduces your sequencing depth, requiring more total reads to achieve the same power.
+  - **Why it matters**: Lower mapping efficiency reduces confidently mapped reads, requiring more total raw reads to achieve the same power.
   
   - **Definition varies by assay**:
   
@@ -340,7 +344,7 @@ These advanced parameters provide fine-grained control over technical aspects of
   
     - **0.65-0.75**: Standard for Perturb-seq with genome-wide profiling.
     
-    - **0.7-0.9**: High-quality libraries or TAP-seq with optimized probes.
+    - **0.7-0.9**: High-quality TAP-seq libraries.
     
     - **< 0.5**: Poor library quality or high off-target mapping.
 

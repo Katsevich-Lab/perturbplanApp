@@ -1541,8 +1541,8 @@ factors:</p>
 <ul>
 <li><p><strong>Cell capture cost</strong>: Number of cells × cost per
 captured cell (cost/cell).</p></li>
-<li><p><strong>Sequencing cost</strong>: Number of cells × reads per
-cell × cost per million reads (cost/million reads).</p></li>
+<li><p><strong>Sequencing cost</strong>: Number of cells × sequenced
+reads per cell × cost per million reads (cost/million reads).</p></li>
 </ul></li>
 </ul>
 <hr />
@@ -1558,15 +1558,15 @@ minimizing power.</p>
 target needed to achieve target power.</p></li>
 <li><p><strong>What varies</strong>: Number of cells receiving CRISPR
 perturbations on the same target.</p></li>
-<li><p><strong>What’s fixed</strong>: Reads per cell, expression
-threshold, fold change.</p></li>
+<li><p><strong>What’s fixed</strong>: Sequenced reads per cell,
+expression threshold, fold change.</p></li>
 </ul>
 </div>
 <div id="workflow-2-minimize-reads-per-cell" class="section level4">
 <h4><strong>Workflow 2: Minimize Reads per Cell</strong></h4>
 <ul>
-<li><p><strong>Goal</strong>: Find the minimum sequencing depth (reads
-per cell) needed to achieve target power.</p></li>
+<li><p><strong>Goal</strong>: Find the minimum sequencing depth
+(sequenced reads per cell) needed to achieve target power.</p></li>
 <li><p><strong>What varies</strong>: Sequenced reads per cell.</p></li>
 <li><p><strong>What’s fixed</strong>: Cells per target, expression
 threshold, fold change.</p></li>
@@ -1579,8 +1579,8 @@ threshold, fold change.</p></li>
 needed to achieve target power.</p></li>
 <li><p><strong>What varies</strong>: Expression threshold (Details of
 this variable can be found in the next section).</p></li>
-<li><p><strong>What’s fixed</strong>: Cells per target, reads per cell,
-fold change.</p></li>
+<li><p><strong>What’s fixed</strong>: Cells per target, sequenced reads
+per cell, fold change.</p></li>
 <li><p><strong>Note</strong>: Lower threshold = more lowly expressed
 genes included in analysis.</p></li>
 </ul>
@@ -1592,8 +1592,8 @@ genes included in analysis.</p></li>
 (effect size) at your target power.</p></li>
 <li><p><strong>What varies</strong>: Minimum fold change of interest to
 detect.</p></li>
-<li><p><strong>What’s fixed</strong>: Cells per target, reads per cell,
-expression threshold.</p></li>
+<li><p><strong>What’s fixed</strong>: Cells per target, sequenced reads
+per cell, expression threshold.</p></li>
 </ul>
 </div>
 <div id="workflow-5-minimize-total-cost" class="section level4">
@@ -1601,8 +1601,8 @@ expression threshold.</p></li>
 <ul>
 <li><p><strong>Goal</strong>: Find the combination of cells and reads
 that achieves target power at minimum cost.</p></li>
-<li><p><strong>What varies</strong>: Both cells per target AND reads per
-cell (jointly optimized).</p></li>
+<li><p><strong>What varies</strong>: Both cells per target AND sequenced
+reads per cell (jointly optimized).</p></li>
 <li><p><strong>What’s fixed</strong>: Expression threshold, fold
 change.</p></li>
 </ul>
@@ -1623,20 +1623,21 @@ Varying)</strong></h5>
 <ul>
 <li><strong>What varies</strong>: Expression threshold, cells per
 target.</li>
-<li><strong>What’s fixed</strong>: Reads per cell, fold change.</li>
-<li><strong>When to use</strong>: You can adjust cell numbers but reads
-per cell is fixed.</li>
+<li><strong>What’s fixed</strong>: Sequenced reads per cell, fold
+change.</li>
+<li><strong>When to use</strong>: You can adjust cell numbers but
+sequenced reads per cell is fixed.</li>
 </ul>
 </div>
 <div id="workflow-7-expression-threshold-minimization-reads-varying" class="section level5">
 <h5><strong>Workflow 7: Expression Threshold Minimization (Reads
 Varying)</strong></h5>
 <ul>
-<li><strong>What varies</strong>: Expression threshold, reads per
-cell.</li>
+<li><strong>What varies</strong>: Expression threshold, sequenced reads
+per cell.</li>
 <li><strong>What’s fixed</strong>: Cells per target, fold change.</li>
-<li><strong>When to use</strong>: You can adjust reads per cell but cell
-numbers are fixed.</li>
+<li><strong>When to use</strong>: You can adjust sequenced reads per
+cell but cells per target is fixed.</li>
 </ul>
 </div>
 <div id="workflow-8-expression-threshold-minimization-cells-reads-varying" class="section level5">
@@ -1644,10 +1645,10 @@ numbers are fixed.</li>
 Varying)</strong></h5>
 <ul>
 <li><strong>What varies</strong>: Expression threshold, cells per
-target, reads per cell.</li>
+target, sequenced reads per cell.</li>
 <li><strong>What’s fixed</strong>: Fold change only.</li>
 <li><strong>When to use</strong>: Maximum flexibility - you can adjust
-both cell numbers and reads per cell.</li>
+both cells per target and sequenced reads per cell.</li>
 </ul>
 <hr />
 </div>
@@ -1661,29 +1662,30 @@ while detecting the smallest possible fold change.</p>
 Varying)</strong></h5>
 <ul>
 <li><strong>What varies</strong>: Fold change, cells per target.</li>
-<li><strong>What’s fixed</strong>: Reads per cell, expression
+<li><strong>What’s fixed</strong>: Sequenced reads per cell, expression
 threshold.</li>
 <li><strong>When to use</strong>: You want to detect small effects;
-reads per cell is constrained.</li>
+sequenced reads per cell is constrained.</li>
 </ul>
 </div>
 <div id="workflow-10-fold-change-minimization-reads-varying" class="section level5">
 <h5><strong>Workflow 10: Fold Change Minimization (Reads
 Varying)</strong></h5>
 <ul>
-<li><strong>What varies</strong>: Fold change, reads per cell.</li>
+<li><strong>What varies</strong>: Fold change, sequenced reads per
+cell.</li>
 <li><strong>What’s fixed</strong>: Cells per target, expression
 threshold.</li>
-<li><strong>When to use</strong>: You want to detect small effects; cell
-numbers are constrained.</li>
+<li><strong>When to use</strong>: You want to detect small effects;
+cells per target is constrained.</li>
 </ul>
 </div>
 <div id="workflow-11-fold-change-minimization-cells-reads-varying" class="section level5">
 <h5><strong>Workflow 11: Fold Change Minimization (Cells + Reads
 Varying)</strong></h5>
 <ul>
-<li><strong>What varies</strong>: Fold change, cells per target, reads
-per cell.</li>
+<li><strong>What varies</strong>: Fold change, cells per target,
+sequenced reads per cell.</li>
 <li><strong>What’s fixed</strong>: Expression threshold only.</li>
 <li><strong>When to use</strong>: Maximum flexibility for detecting the
 smallest effects possible within budget.</li>
@@ -1879,6 +1881,10 @@ through replication.</li>
 </ul></li>
 <li><p><strong>Non-targeting gRNAs</strong>: The number of control guide
 RNAs that do not target any genomic element.</p></li>
+<li><p><strong>Cells per target</strong>: The averaged number of cells
+receiving gRNAs targeting the same element.</p></li>
+<li><p><strong>Sequenced reads per cell</strong>: The averaged number of
+reads per cell when sequencing.</p></li>
 </ul>
 <hr />
 </div>
@@ -1981,9 +1987,9 @@ thought of as a draw from the normal distribution <span class="math inline">\(N(
 <li><p><strong>Mapping efficiency</strong>: The ratio of sequencing
 reads that map confidently to the genes of interest.</p>
 <ul>
-<li><p><strong>Why it matters</strong>: Lower mapping efficiency
-effectively reduces your sequencing depth, requiring more total reads to
-achieve the same power.</p></li>
+<li><p><strong>Why it matters</strong>: Lower mapping efficiency reduces
+confidently mapped reads, requiring more total raw reads to achieve the
+same power.</p></li>
 <li><p><strong>Definition varies by assay</strong>:</p>
 <ul>
 <li><p><strong>Perturb-seq</strong>: Fraction of reads mapping to all
@@ -1995,8 +2001,8 @@ pre-specified target genes.</p></li>
 <ul>
 <li><p><strong>0.65-0.75</strong>: Standard for Perturb-seq with
 genome-wide profiling.</p></li>
-<li><p><strong>0.7-0.9</strong>: High-quality libraries or TAP-seq with
-optimized probes.</p></li>
+<li><p><strong>0.7-0.9</strong>: High-quality TAP-seq
+libraries.</p></li>
 <li><p><strong>&lt; 0.5</strong>: Poor library quality or high
 off-target mapping.</p></li>
 </ul></li>
