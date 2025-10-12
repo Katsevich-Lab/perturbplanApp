@@ -24,7 +24,7 @@ get_tooltip_text <- function(element_id) {
     # ==========================================================================
 
     # Target Power
-    target_power = "The desired probability of detecting a true effect if it exists.",
+    target_power = "The expected proportion of non-null pairs that are rejected.",
 
     # Cost Budget (Power + Cost workflows only)
     cost_budget = "Maximum budget constraint for your experiment (in dollars).",
