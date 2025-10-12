@@ -362,6 +362,8 @@ These advanced parameters provide fine-grained control over technical aspects of
       
   - **Automatic behavior**: When MOI > 1, the app automatically selects "Complement cells" as the control group, since most cells will have multiple perturbations.
 
+- **FDR target level**: pre-specified level for false discovery rate control. 
+
 ---
 
 # Analysis result interpretation
