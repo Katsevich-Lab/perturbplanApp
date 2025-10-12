@@ -52,7 +52,7 @@ Currently, we support experimental design for two assays: Perturb-seq and TAP-se
 PerturbPlan helps you design experiments by optimizing two key objectives:
 
 
-- **Statistical power** is the probability of detecting a true effect if it exists. In CRISPR screens, power represents your ability to confidently identify perturbed elements that truly have an effect on the gene of interest.
+- **Statistical power** is the expected proportion of non-null pairs that are rejected. In CRISPR screens, power represents your ability to confidently identify perturbed elements that truly have an effect on the gene of interest.
 
   - **Higher power** = Greater confidence in detecting true positives.
   
@@ -231,7 +231,7 @@ These parameters define the basic experimental setup.
     
     - **Custom**: Upload your own reference data.
     
-  - **Custom data format**: The input must be an RDS file with the same structure as the output from [reference_data_preprocessing_10x( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_preprocessing_10x.html) or [reference_data_preprocessing( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_processing.html) functions in the PerturbPlan package. The RDS file must contain:
+  - **Custom data format**: The input must be an RDS file with the same structure as the output from [reference_data_preprocessing( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_processing.html) function in the PerturbPlan package. The RDS file must contain:
 
     - `baseline_expression_stats`: Data frame with columns:
     
@@ -344,7 +344,7 @@ These advanced parameters provide fine-grained control over technical aspects of
   
     - **0.65-0.75**: Standard for Perturb-seq with genome-wide profiling.
     
-    - **0.7-0.9**: High-quality TAP-seq libraries.
+    - **0.5-0.7**: High-quality TAP-seq libraries.
     
     - **< 0.5**: Poor library quality or high off-target mapping.
 
