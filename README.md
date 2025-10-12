@@ -14,4 +14,4 @@ PerturbPlan is a Shiny app for perturb-seq and TAP-seq experimental design. It i
 
 6. **Start over.** Click the "Restart" button to start from scratch.
 
-We elaborate on steps 1-3, and 5 in the [full documentation](https://katsevich-lab.github.io/perturbplanApp/).
+We elaborate on steps 1-3, and 5 in the [full documentation](https://katsevich-lab.github.io/perturbplanApp/articles/perturbplanapp.html).
