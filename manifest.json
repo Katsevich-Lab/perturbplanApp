@@ -225,6 +225,97 @@
         "RemoteSha": "1.2.7"
       }
     },
+    "R.methodsS3": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "R.methodsS3",
+        "Version": "1.8.2",
+        "Depends": "R (>= 2.13.0)",
+        "Imports": "utils",
+        "Suggests": "codetools",
+        "Title": "S3 Methods Simplified",
+        "Authors@R": "c(person(\"Henrik\", \"Bengtsson\", role=c(\"aut\", \"cre\", \"cph\"),\n                                          email = \"henrikb@braju.com\"))",
+        "Author": "Henrik Bengtsson [aut, cre, cph]",
+        "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+        "Description": "Methods that simplify the setup of S3 generic functions and S3 methods.  Major effort has been made in making definition of methods as simple as possible with a minimum of maintenance for package developers.  For example, generic functions are created automatically, if missing, and naming conflict are automatically solved, if possible.  The method setMethodS3() is a good start for those who in the future may want to migrate to S4.  This is a cross-platform package implemented in pure R that generates standard S3 methods.",
+        "License": "LGPL (>= 2.1)",
+        "LazyLoad": "TRUE",
+        "URL": "https://github.com/HenrikBengtsson/R.methodsS3",
+        "BugReports": "https://github.com/HenrikBengtsson/R.methodsS3/issues",
+        "NeedsCompilation": "no",
+        "Packaged": "2022-06-13 18:23:35 UTC; hb",
+        "Repository": "CRAN",
+        "Date/Publication": "2022-06-13 22:00:14 UTC",
+        "Built": "R 4.4.0; ; 2024-04-05 15:12:18 UTC; unix"
+      }
+    },
+    "R.oo": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "R.oo",
+        "Version": "1.27.1",
+        "Depends": "R (>= 2.13.0), R.methodsS3 (>= 1.8.2)",
+        "Imports": "methods, utils",
+        "Suggests": "tools",
+        "Title": "R Object-Oriented Programming with or without References",
+        "Authors@R": "c(person(\"Henrik\", \"Bengtsson\", role=c(\"aut\", \"cre\", \"cph\"),\n                                          email = \"henrikb@braju.com\"))",
+        "Author": "Henrik Bengtsson [aut, cre, cph]",
+        "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+        "Description": "Methods and classes for object-oriented programming in R with or without references.  Large effort has been made on making definition of methods as simple as possible with a minimum of maintenance for package developers.  The package has been developed since 2001 and is now considered very stable.  This is a cross-platform package implemented in pure R that defines standard S3 classes without any tricks.",
+        "License": "LGPL (>= 2.1)",
+        "LazyLoad": "TRUE",
+        "URL": "https://henrikbengtsson.github.io/R.oo/,\nhttps://github.com/HenrikBengtsson/R.oo",
+        "BugReports": "https://github.com/HenrikBengtsson/R.oo/issues",
+        "NeedsCompilation": "no",
+        "Packaged": "2025-05-02 20:29:15 UTC; henrik",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-05-02 21:00:05 UTC",
+        "Encoding": "UTF-8",
+        "Built": "R 4.4.0; ; 2025-05-03 04:46:45 UTC; unix",
+        "RemoteType": "standard",
+        "RemoteRef": "R.oo",
+        "RemotePkgRef": "R.oo",
+        "RemoteRepos": "https://packagemanager.posit.co/cran/latest",
+        "RemoteReposName": "CRAN",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "1.27.1"
+      }
+    },
+    "R.utils": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "R.utils",
+        "Version": "2.13.0",
+        "Depends": "R (>= 2.14.0), R.oo",
+        "Imports": "methods, utils, tools, R.methodsS3",
+        "Suggests": "datasets, digest (>= 0.6.10)",
+        "Title": "Various Programming Utilities",
+        "Authors@R": "c(person(\"Henrik\", \"Bengtsson\", role=c(\"aut\", \"cre\", \"cph\"),\n                                          email = \"henrikb@braju.com\"))",
+        "Author": "Henrik Bengtsson [aut, cre, cph]",
+        "Maintainer": "Henrik Bengtsson <henrikb@braju.com>",
+        "Description": "Utility functions useful when programming and developing R packages.",
+        "License": "LGPL (>= 2.1)",
+        "LazyLoad": "TRUE",
+        "URL": "https://henrikbengtsson.github.io/R.utils/,\nhttps://github.com/HenrikBengtsson/R.utils",
+        "BugReports": "https://github.com/HenrikBengtsson/R.utils/issues",
+        "NeedsCompilation": "no",
+        "Packaged": "2025-02-24 19:44:20 UTC; henrik",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-02-24 21:20:02 UTC",
+        "Encoding": "UTF-8",
+        "Built": "R 4.4.0; ; 2025-02-25 04:43:27 UTC; unix",
+        "RemoteType": "standard",
+        "RemoteRef": "R.utils",
+        "RemotePkgRef": "R.utils",
+        "RemoteRepos": "https://packagemanager.posit.co/cran/latest",
+        "RemoteReposName": "CRAN",
+        "RemotePkgPlatform": "aarch64-apple-darwin20",
+        "RemoteSha": "2.13.0"
+      }
+    },
     "R6": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -1861,13 +1952,14 @@
       "description": {
         "Package": "perturbplan",
         "Title": "Perturbplan: Power and Design Tools for CRISPR Screens",
-        "Version": "0.1.0",
+        "Version": "0.2.0",
         "Authors@R": "\n    c(person(\"Ziang\", \"Niu\", , \"ziangniu@wharton.upenn.edu\", role = c(\"aut\", \"cre\")),\n      person(\"Yihui\", \"He\", , \"yihuihe@wharton.upenn.edu\", role = c(\"aut\")),\n      person(\"Eugene\", \"Katsevich\", , \"ekatsevi@wharton.upenn.edu\", role = c(\"aut\"))\n    )",
         "Description": "Tools for pilot data preprocessing, power calculations, and design optimization for CRISPR perturbation experiments.",
         "License": "MIT + file LICENSE",
         "URL": "https://katsevich-lab.github.io/perturbplan",
-        "Imports": "Matrix,\nRcpp,\ndata.table,\ndplyr,\nmethods,\nminpack.lm,\nparallel,\nrhdf5,\nstats,\ntidyr,\nutils",
-        "Suggests": "knitr,\nrmarkdown,\ntestthat (>= 3.0.0),\nopenxlsx,\nggplot2,\nggside",
+        "Imports": "Matrix,\nR.utils,\nRcpp,\ndata.table,\ndplyr,\nmethods,\nminpack.lm,\nparallel,\nrhdf5,\nstats,\ntidyr,\nutils",
+        "Suggests": "knitr,\nrmarkdown,\npkgdown,\ntestthat (>= 3.0.0),\nopenxlsx,\nggplot2,\nggside,\nscales",
+        "VignetteBuilder": "knitr",
         "Config/testthat/edition": "3",
         "LinkingTo": "BH,\nRcpp,\nRcppEigen,\nPoissonBinomial",
         "Depends": "R (>= 3.5)",
@@ -1877,18 +1969,18 @@
         "RoxygenNote": "7.3.2",
         "Author": "Ziang Niu [aut, cre],\n  Yihui He [aut],\n  Eugene Katsevich [aut]",
         "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
-        "Built": "R 4.4.1; aarch64-apple-darwin20; 2025-09-24 19:08:48 UTC; unix",
+        "Built": "R 4.4.1; aarch64-apple-darwin20; 2025-10-13 20:57:05 UTC; unix",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
-        "RemoteUsername": "Katsevich-Lab",
+        "RemoteUsername": "katsevich-lab",
         "RemoteRepo": "perturbplan",
-        "RemoteRef": "dev",
-        "RemoteSha": "a1d623e73071a14a0cb5ac508c2ece5b734290de",
+        "RemoteRef": "main",
+        "RemoteSha": "99e1b06fb540aac94f21a2ca2c04736f8eec24d8",
         "GithubHost": "api.github.com",
         "GithubRepo": "perturbplan",
-        "GithubUsername": "Katsevich-Lab",
-        "GithubRef": "dev",
-        "GithubSHA1": "a1d623e73071a14a0cb5ac508c2ece5b734290de"
+        "GithubUsername": "katsevich-lab",
+        "GithubRef": "main",
+        "GithubSHA1": "99e1b06fb540aac94f21a2ca2c04736f8eec24d8"
       }
     },
     "pillar": {
@@ -3172,13 +3264,13 @@
   },
   "files": {
     ".claude/settings.local.json": {
-      "checksum": "0faa1ba3d95bbe9656d0829a5320dabd"
+      "checksum": "f016ef6268569fdd48f75a2aadebbb79"
     },
     ".Rbuildignore": {
       "checksum": "f7ff2f83498ac2e417402eeb51e474c1"
     },
     ".Rprofile": {
-      "checksum": "81d7ee3225f77108bc089fa956b7b8de"
+      "checksum": "67c617f599c674c3710fc0c748a8b921"
     },
     "app.R": {
       "checksum": "0d465e15d5de2dc310d7b7f1c052333e"
@@ -3187,7 +3279,7 @@
       "checksum": "9e64e6f99908854605856e2eb1151f10"
     },
     "DESCRIPTION": {
-      "checksum": "b566d0262de7edb647389921d7777df5"
+      "checksum": "b6910d3425610f62be6fd01d9a97a91c"
     },
     "docs/PRD-PerturbPlan-v2.html": {
       "checksum": "844950ff8798e6bd0405357681235209"
@@ -3195,11 +3287,14 @@
     "docs/PRD-PerturbPlan-v2.Rmd": {
       "checksum": "7e761de313c1b6368b9c225f677969b3"
     },
+    "inst/app/www/.navbar.css.swp": {
+      "checksum": "2d592b7044bcd7d20ec94b0e6b886527"
+    },
     "inst/app/www/.perturbplan_styles.css.swp": {
       "checksum": "061bb6a640c69da240863233266c1922"
     },
     "inst/app/www/components.css": {
-      "checksum": "46fb2a753f7f17bfe7e0bed036196830"
+      "checksum": "d8edfc8f1da1cf6076bca750b6a87946"
     },
     "inst/app/www/favicon.ico": {
       "checksum": "81560d1b906a530c87fa0acbb2f5cca4"
@@ -3207,14 +3302,20 @@
     "inst/app/www/layout.css": {
       "checksum": "8df0e6c99de27107c281d3bc7de83f16"
     },
+    "inst/app/www/navbar.css": {
+      "checksum": "59f4b324c6b357ebb60248deb509dcf0"
+    },
     "inst/app/www/parameter_sliders.css": {
-      "checksum": "248ac8c4a3f737b0c866f2af6ef47c60"
+      "checksum": "2abcf0bcad115a639813e099346487fb"
     },
     "inst/app/www/perturbplan_interactions.js": {
-      "checksum": "29ce501ab42c763b32c8372c0d8705ae"
+      "checksum": "178736dc546b5ff8c72fb9c586718017"
     },
     "inst/app/www/perturbplan_styles.css": {
       "checksum": "3c9993adfcb55856072bbda06bf1cace"
+    },
+    "inst/app/www/perturbplanapp.html": {
+      "checksum": "c442a34f736c97970a1fbd55bd236ba8"
     },
     "inst/app/www/variables.css": {
       "checksum": "816efffa5eb16eaa151576012bb5f012"
@@ -3223,10 +3324,13 @@
       "checksum": "acbf8d2186970f6bec33264ecc1b9c6b"
     },
     "inst/extdata/example_custom_pilot_data.rds": {
-      "checksum": "861b5f70f48b4e4350112cbbe2a2f1f4"
+      "checksum": "66cdd236244caa6bdf588901d29572bc"
     },
     "inst/extdata/iPSC_10x.rda": {
-      "checksum": "963a65696761598a6b6e1e48afde3807"
+      "checksum": "73f5afce11c2b0367e10c9ac6463a483"
+    },
+    "inst/extdata/K562_Ray.rds": {
+      "checksum": "beb4bae01bcbf4f1a60b81a7a040f72c"
     },
     "inst/extdata/README.md": {
       "checksum": "9431095c5a6d674389ecb51eb0581472"
@@ -3235,10 +3339,10 @@
       "checksum": "86a8d595b8cd3f95910cca9ebf9c0e2f"
     },
     "NAMESPACE": {
-      "checksum": "562cbb4800e71def4fd026b8ef930c50"
+      "checksum": "5424edb1e16876bf5d66a75b3ecfc4f6"
     },
-    "R/_disable_autoload.R": {
-      "checksum": "1178c335d6c11555fd1c4ec6098dfee6"
+    "perturbplanapp.md": {
+      "checksum": "a690197e242694c1f1a5d783da2d2156"
     },
     "R/.fct_workflow_detection.R.swp": {
       "checksum": "f60c671e27eab9a230d900fb8e228419"
@@ -3250,103 +3354,97 @@
       "checksum": "520175aef95c0f42180b271556e86c89"
     },
     "R/app_server.R": {
-      "checksum": "8d9c983fb5f4dd8cf74165645dd778a0"
+      "checksum": "1236eb36e60228077cd0d5d6aa2430b0"
     },
     "R/app_ui.R": {
-      "checksum": "1131891e18bc8a3b52d45738d22440bc"
+      "checksum": "fd26aee13a19b3569e29a4ca26fb31e4"
     },
-    "R/fct_analysis_config.R": {
-      "checksum": "6f064464ce805d874910fd72b1b4ab86"
+    "R/fct_biological_system_config.R": {
+      "checksum": "cd92167141f5ee290eb2dc77a1491fab"
     },
     "R/fct_cost_minimization.R": {
-      "checksum": "f624a2a9fe865078ecd1d8a28da7da50"
+      "checksum": "697e9d4dffbd017cdfd34fc89078c429"
     },
     "R/fct_design_options.R": {
-      "checksum": "5f271bc4d93890da5997bd000e521f42"
+      "checksum": "b379169d75232874253a84ad5340ea09"
     },
     "R/fct_design_validation.R": {
-      "checksum": "98635c4bb566b3413a8879e88fbff3ef"
+      "checksum": "e34bb4554e64d8b321237e0022ee3b28"
     },
     "R/fct_excel_export.R": {
-      "checksum": "cc2d048755e5bf03d9f9f1d404c0f7d1"
+      "checksum": "fb92e9e40b2aac6df69b087280290412"
     },
     "R/fct_experimental_setup_ui.R": {
-      "checksum": "9d53e16880509d2119f41672f7675f6a"
+      "checksum": "2c15f93096cdcd8a98b97cc7174360b3"
     },
     "R/fct_experimental_setup.R": {
       "checksum": "5676588b9d9079b01b9312e3712cde07"
     },
-    "R/fct_parameter_helpers.R": {
-      "checksum": "202cb3f3ca42023098b6756b6ff52474"
+    "R/fct_navbar.R": {
+      "checksum": "33aead08507f88d5da8066d2c536febf"
     },
     "R/fct_perturbplan_integration.R": {
-      "checksum": "20aae8b328c59df8c65ddd7ed6c5e6ab"
+      "checksum": "d66e0b6a02bbb1e153be5292f0f07a96"
     },
     "R/fct_pilot_data_validation.R": {
-      "checksum": "d74018539eb197962bf48b382beb8d49"
+      "checksum": "399cc284a62068f9c9b41ac1981ae46f"
     },
     "R/fct_plotting_functions.R": {
-      "checksum": "83f8b4e4a3a876bd7a1f823ab75110d4"
-    },
-    "R/fct_slider_detection.R": {
-      "checksum": "57f2208c7942cd05a63824e30b965871"
+      "checksum": "8430f645bcdb9db7f3401498868921b5"
     },
     "R/fct_solutions_table.R": {
-      "checksum": "6609c31172f52847c4d4853690c75160"
+      "checksum": "eb6db17692b0ae39d308a9eb797566e1"
     },
     "R/fct_unified_minimization.R": {
-      "checksum": "cdb86456e183580daa694b3215ddea38"
+      "checksum": "5ceda2e3a796ef0b1c354732d7a034ae"
     },
     "R/fct_univariate_optimization.R": {
-      "checksum": "d097c48a744023b798f060df6b87997f"
+      "checksum": "8a09930b159f4eebb4ab9d2d2d324f3b"
     },
     "R/fct_workflow_detection.R": {
-      "checksum": "229835277494af09598c8d4de0f80c50"
+      "checksum": "69470daaff503ae323e48e261e656c68"
     },
     "R/globals.R": {
       "checksum": "ab5a23722caae34d93d0e486641cccbf"
     },
     "R/mod_advanced_choices.R": {
-      "checksum": "9a7d0ce0be2b38c2e9b685dc4fde6efb"
+      "checksum": "6c840aee695e6ec37ebfdbebd08adf08"
     },
     "R/mod_analysis_choices.R": {
-      "checksum": "62a64cd7caebabd1b1d08c8befe78a87"
+      "checksum": "bb0df97806c8db0d2a66cfd30bb5a8e6"
     },
     "R/mod_analysis_engine.R": {
-      "checksum": "95ab78389298a2043907f43f7d477841"
+      "checksum": "9b1868ac0d339c38cf9cf13f477c2c2a"
     },
     "R/mod_design_options.R": {
-      "checksum": "338e88aad0df78fb7c6e1fcd4b1fd6db"
+      "checksum": "8f0d282ad1219d26ee9ad440dfa5c852"
     },
     "R/mod_effect_sizes.R": {
-      "checksum": "cf9057f4d70c55d086bdbf7113227cf5"
+      "checksum": "c1aa2d96563a1cd23ca048f746812382"
     },
     "R/mod_experimental_setup.R": {
-      "checksum": "f6c07a56ce7e90eddcbfe9a0279ece80"
+      "checksum": "ee534bdc03e5913fb28288b87bb8f1d1"
     },
     "R/mod_parameter_sliders.R": {
-      "checksum": "1db68a0e17affd0c2798d5ca6dfe3b3a"
+      "checksum": "7b546357916845da430827b69b859e32"
     },
     "R/mod_parameter_source_manager.R": {
-      "checksum": "75df00e977eceac13f568504ff452964"
-    },
-    "R/mod_perturbation_choices.R": {
-      "checksum": "892f8452d8b69eb0f04415621c8b6f18"
+      "checksum": "0f88a81d1add73caef14ea5215dc8112"
     },
     "R/mod_plot_display.R": {
       "checksum": "819a6e51c2a238dfbd41f95a2ffefb5a"
     },
     "R/mod_plotting_engine.R": {
-      "checksum": "31b59735e925bf79866a398e7c7e91b9"
+      "checksum": "3c689aea86c7738230d24a817254084b"
     },
     "R/mod_results_cache.R": {
-      "checksum": "ea84fbf5d3072aa1be3686bb90d04568"
+      "checksum": "e4d702721724876e7e1e50906bf28a8f"
     },
     "R/mod_results_display.R": {
-      "checksum": "1b5d0e6d13ed1f760c271f1a5c80b9fc"
+      "checksum": "3126fababf7a9a008facd085200dda63"
     },
     "R/mod_sidebar.R": {
-      "checksum": "c4f20d219e7e15b81280ae137af79c2f"
+      "checksum": "8aafe2edcb016e17e0c3241ae2a55c5b"
     },
     "R/mod_solution_table.R": {
       "checksum": "37e62eeb1bf34775630667ea33b6cbb1"
@@ -3355,25 +3453,28 @@
       "checksum": "de83e386a0e2b2f277291e0678dd0b7f"
     },
     "R/naming_standards.R": {
-      "checksum": "98fa120913ec48138cb84077c4705350"
+      "checksum": "6e9d93f571cdb563b9ff01e2023683a9"
     },
     "R/run_app.R": {
       "checksum": "476011bbc4ffefa824e5bfb8386d849b"
+    },
+    "R/tooltip_content.R": {
+      "checksum": "bdda4fe7233e069a36c486b3bdb57192"
     },
     "R/utils_analytics.R": {
       "checksum": "87142c12ab4776ccfe4c5b79e9620547"
     },
     "R/utils_ui_components.R": {
-      "checksum": "e9856123cc682e90c2f80eb5e4ca13eb"
+      "checksum": "71fb10fd3b8be7634d96eebf0f7cb105"
     },
-    "R/utils_ui_helpers.R": {
-      "checksum": "65c232dd556f8b4cb2c2481fdee2b4d2"
+    "R/utils_ui_tooltips.R": {
+      "checksum": "94af8d43fb63cce084802cb3bc6f9bcf"
     },
     "R/utils_validation.R": {
-      "checksum": "3a202ac499dd10068f14916cdf4f531b"
+      "checksum": "5c66fa4c6d1b9cb23ef3791a74b2d924"
     },
     "renv.lock": {
-      "checksum": "420f4e711c57ea023698b653724cdf10"
+      "checksum": "9e167471f6106f6e92d4f8e754c2250c"
     }
   },
   "users": null
