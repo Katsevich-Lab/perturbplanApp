@@ -20,14 +20,16 @@ knitr::opts_chunk$set(
 )
 ```
 
-<div style="display: flex; align-items: center; margin-bottom: 30px;">
-  <img src="logo.png" alt="PerturbPlan Logo" style="height: 120px; margin-right: 20px;">
-  <h1 style="margin: 0; font-size: 2.5em;">PerturbPlan App</h1>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 30px; margin-bottom: 5px;">
+  <h1 style="margin: 0; font-size: 3em; text-align: left; flex: 1; text-align-last: left;">PerturbPlan App</h1>
+  <img src="logo.png" alt="PerturbPlan Logo" style="height: 120px; margin-left: 20px;">
 </div>
 
 # Overview 
 
-PerturbPlan is a Shiny app for perturb-seq and TAP-seq experimental design. It is structured around solving 11 commonly encountered design problems, balancing power and cost of the planned experiment. The workflow of the app proceeds as follows:
+PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. In both types of experiments, many genetic perturbations are introduced into a population of cells, and the transcriptomes of the perturbed cells are profiled using single-cell RNA-sequencing (for TAP-seq, only a set of pre-selected genes is sequenced). A key task for Perturb-seq and TAP-seq data analysis is to identify among a set of perturbation-gene pairs those where the perturbation has a significant effect on the expression of the gene.
+
+The key metrics for experimental design are **power** (the expected proportion of true perturbation-gene effects that are detected as significant) and **cost** (the total cost of the experiment, equal to the sum of library preparation and sequencing costs). There are a number of concrete design problems that arise when balancing power and cost. The PerturbPlan is structured around solving 11 commonly encountered design problems. The workflow of the app is as follows:
 
 1. **Select a design problem**: Choose one of 11 predefined design problems that best matches your experimental goals.
 
@@ -41,337 +43,175 @@ PerturbPlan is a Shiny app for perturb-seq and TAP-seq experimental design. It i
 
 6. **Start over.** Click the "Restart" button to start from scratch.
 
-We elaborate on steps 1-3, and 5 below. 
+We elaborate on steps 1 and 2 below. 
 
-# Design problem selection
+# Design problems
 
-Currently, we support experimental design for two assays: Perturb-seq and TAP-seq. 
+## Steps to specify a design problem
 
-### Understanding Optimization Targets
+### 1. Assay type
 
-PerturbPlan helps you design experiments by optimizing two key objectives:
+The first step is to choose the assay type: Perturb-seq or TAP-seq. PerturbPlan currently supports the same set of design problems for Perturb-seq and TAP-seq. In particular, PerturbPlan does not currently support TAP-seq-specific design problems, such as choosing which set of genes to target. The choice of assay type primarily impacts the choice of reference expression data and the quantification of gene expression (see below).
 
+### 2. Optimization constraints
 
-- **Statistical power** is the expected proportion of non-null pairs that are rejected. In CRISPR screens, power represents your ability to confidently identify perturbed elements that truly have an effect on the gene of interest.
+PerturbPlan facilitates constraining the power and cost of an experiment.  
 
-  - **Higher power** = Greater confidence in detecting true positives.
-  
-  - **Target power**: Typically set to 0.8 (80%), meaning an 80% chance of detecting a real effect.
-  
-  - **Key insight**: Power increases with more cells, more reads, or relaxed effect size thresholds.
+- **Power.** The target power for an experiment is often set at 80% (the PerturbPlan default), which means that one expects to detect at least 80% of the true perturbation-gene pairs. Power is impacted by several choices; for example, power grows when profiling a larger number of cells or sequencing a larger number of reads per cell. 
 
+- **Cost.** The total cost is computed as the sum of the library preparation cost and the sequencing cost. How these costs are determined depends on the library preparation and sequencing platforms used. To maintain flexibility across platforms, PerturbPlan quantifies library preparation cost in terms of cost/cell and sequencing cost in terms of cost/million reads. The defaults built into PerturbPlan are based on the cost in 2025 of 10X Genomics v4 3' library preparation and Novaseq X 25B. 
 
-- **Experimental cost** is the total financial investment required to run your screen. Cost is determined by two main factors:
+### 3. Minimization targets
 
-  - **Cell capture cost**: Number of cells × cost per captured cell (cost/cell).
-  
-  - **Sequencing cost**: Number of cells × sequenced reads per cell × cost per million reads (cost/million reads).
+Given power and/or cost constraints, PerturbPlan supports the minimization of five parameters:
 
----
+- **Cells per target**: The average number of cells receiving CRISPR perturbations of a given target. Increasing the number of cells per target increases power, but also increases cost. Minimizing this parameter can be used as a proxy for minimizing cost (often while constraining power).
 
+- **Reads per cell**: The average number of sequenced reads per cell. Increasing the number of reads per cell increases power, but also increases cost. Minimizing this parameter can be used as a proxy for minimizing cost (often while constraining power).
 
-### Power-Only Workflows
+- **Expression threshold**: Even if the experimentalist has in mind a concrete set of perturbation-gene pairs to test for association, pairs involving lowly expressed genes can drag down the power of the analysis. For this reason, a minimum gene expression threshold can be applied to filter the set of pairs prior to testing. Minimizing this threshold is a means to include as many genes as possible in the analysis, while still achieving the target power. 
 
-These workflows focus solely on achieving target power by only minimizing power.
+- **Fold change**: The fold change measures the size of the effect of a perturbation on a gene's expression (see below for a more precise definition). Minimizing the fold change is a means to be able to detect more subtle effects, while still achieving the target power.
 
-#### **Workflow 1: Minimize Cells per Target**
+- **Total cost**: Note that cost can be a constraint (as above) or a variable to be minimized over experimental parameters, subject to a power constraint. 
 
-- **Goal**: Find the minimum number of cells per target needed to achieve target power.
+### 4. Other varying parameters
 
-- **What varies**: Number of cells receiving CRISPR perturbations on the same target.
+In some of the design problems, parameters in addition to that being minimized are allowed to vary. These include cells/target and reads/cell; see below for more detail.
 
-- **What's fixed**: Sequenced reads per cell, expression threshold, fold change.
+## Supported design problems
 
-#### **Workflow 2: Minimize Reads per Cell**
+PerturbPlan requires a power constraint for all design problems, and allows choosing whether to include a cost constraint as well. All supported combinations for optimization constraints, minimization targets, and other varying parameters are presented in the table below. 
 
-- **Goal**: Find the minimum sequencing depth (sequenced reads per cell) needed to achieve target power.
+|  | **Constraints** | **Minimization target** | **Other varying parameters** |
+|--|------------------|--------------------------|-------------------------------|
+| 1 | Power | Cells/Target | – |
+| 2 | Power | Reads/Cell | – |
+| 3 | Power | Expression threshold | – |
+| 4 | Power | Fold change | – |
+| 5 | Power | Total cost | Cells/Target + Reads/Cell |
+| 6 | Power + Cost | Expression threshold | Cells/Target |
+| 7 | Power + Cost | Expression threshold | Reads/Cell |
+| 8 | Power + Cost | Expression threshold | Cells/Target + Reads/Cell |
+| 9 | Power + Cost | Fold change | Cells/Target |
+| 10 | Power + Cost | Fold change | Reads/Cell |
+| 11 | Power + Cost | Fold change | Cells/Target + Reads/Cell
 
-- **What varies**: Sequenced reads per cell.
+Design problems 1-4 are the simplest: they determine the minimum value of one parameter required to attain the desired power, while holding all other parameters fixed. Design problem 5 allows cells/target and reads/cell to vary, finding the lowest-cost combination to achieve a target power. The remainder of the design problems involve constraining both cost and power, allowing the minimization of either expression threshold or fold change, while allowing one or both of cells/target and reads/cell to vary.
 
-- **What's fixed**: Cells per target, expression threshold, fold change.
+# Design parameters
 
-#### **Workflow 3: Minimize Expression Threshold**
-
-- **Goal**: Find the minimum expression threshold needed to achieve target power.
-
-- **What varies**: Expression threshold (Details of this variable can be found in the next section). 
-
-- **What's fixed**: Cells per target, sequenced reads per cell, fold change.
-
-- **Note**: Lower threshold = more lowly expressed genes included in analysis.
-
-#### **Workflow 4: Minimize Fold Change**
-
-- **Goal**: Find the minimum detectable fold change (effect size) at your target power.
-
-- **What varies**: Minimum fold change of interest to detect.
-
-- **What's fixed**: Cells per target, sequenced reads per cell, expression threshold.
-
-#### **Workflow 5: Minimize Total Cost**
-
-- **Goal**: Find the combination of cells and reads that achieves target power at minimum cost.
-
-- **What varies**: Both cells per target AND sequenced reads per cell (jointly optimized).
-
-- **What's fixed**: Expression threshold, fold change.
+Once you have selected your design problem, you need to specify the design parameters that define your screen. These parameters are grouped into four collapsible sections: **experimental choices** (how the data will be collected), **analysis choices** (how the data will be analyzed), **effect sizes** (the strength of the biological effects you wish you detect), and **advanced settings** (optional additional settings).
 
 ---
 
-### Power + Cost Workflows
+### Experimental choices
 
-These workflows incorporate cost constraints into the optimization, finding the best design within your budget.
+#### Reference expression data
 
-#### **Workflows 6-8: Minimize Expression Threshold**
+Reference expression data for the biological system of interest is needed to compute power. These data include baseline mean expressions for all expressed genes (Perturb-seq) or targeted genes (TAP-seq), a fitted sequencing saturation curve, and a mapping efficiency (defined below). Reference expression data can be either built-in or custom:
 
-**Common goal**: Achieve target power within budget while using the lowest possible expression threshold.
+- **Built-in**: PerturbPlan ships with reference expression data from six cell types commonly used in perturbation screens (K562, A549, THP1, CD8+ T, iPSC, iPSC-derived neurons), documented [here](https://katsevich-lab.github.io/perturbplan/reference/index.html#example-data). Consider using these if you are planning a Perturb-seq experiment and your cell type falls into one of these categories.
 
-##### **Workflow 6: Expression Threshold Minimization (Cells Varying)**
-- **What varies**: Expression threshold, cells per target.
-- **What's fixed**: Sequenced reads per cell, fold change.
-- **When to use**: You can adjust cell numbers but sequenced reads per cell is fixed.
+- **Custom**: Custom reference data can be uploaded to the PerturbPlan app. The required format and the means to process your data into this format are documented [here](https://katsevich-lab.github.io/perturbplan/reference/reference_data_processing.html#value) and [here](https://katsevich-lab.github.io/perturbplan/articles/preprocess-reference.html). Use custom reference data if you are planning a Perturb-seq experiment in a cell type not covered by the built-in data, or if you are planning a TAP-seq experiment. Since each TAP-seq experiment comes with a unique set of targeted genes, PerturbPlan does not include built-in TAP-seq reference data. If you wish to try out the TAP-seq functionality of the app, you may [download](https://katsevich-lab.github.io/perturbplan/reference/K562_Ray.html) a sample reference expression dataset, documented [here](https://katsevich-lab.github.io/perturbplan/reference/K562_Ray.html).
 
-##### **Workflow 7: Expression Threshold Minimization (Reads Varying)**
-- **What varies**: Expression threshold, sequenced reads per cell.
-- **What's fixed**: Cells per target, fold change.
-- **When to use**: You can adjust sequenced reads per cell but cells per target is fixed.
+#### Multiplicity of infection (MOI) 
 
-##### **Workflow 8: Expression Threshold Minimization (Cells + Reads Varying)**
-- **What varies**: Expression threshold, cells per target, sequenced reads per cell.
-- **What's fixed**: Fold change only.
-- **When to use**: Maximum flexibility - you can adjust both cells per target and sequenced reads per cell.
+The average number of gRNA-carrying lentiviral particles that infect a single cell.
 
----
+#### Number of perturbation targets
 
-#### **Workflows 9-11: Minimize Fold Change**
+The number of genomic elements (commonly, genes or enhancers) you plan to perturb in your screen. Not to be confused with the number of gene targeted for sequencing in a TAP-seq experiment.
 
-**Common goal**: Achieve target power within budget while detecting the smallest possible fold change.
+#### gRNAs per target
 
-##### **Workflow 9: Fold Change Minimization (Cells Varying)**
-- **What varies**: Fold change, cells per target.
-- **What's fixed**: Sequenced reads per cell, expression threshold.
-- **When to use**: You want to detect small effects; sequenced reads per cell is constrained.
+The number of gRNAs designed to perturb each target. Having multiple gRNAs per target improves robustness against ineffective guides and improves power by averaging noisy gRNA effects. 
 
-##### **Workflow 10: Fold Change Minimization (Reads Varying)**
-- **What varies**: Fold change, sequenced reads per cell.
-- **What's fixed**: Cells per target, expression threshold.
-- **When to use**: You want to detect small effects; cells per target is constrained.
+#### Number of non-targeting gRNAs 
 
-##### **Workflow 11: Fold Change Minimization (Cells + Reads Varying)**
-- **What varies**: Fold change, cells per target, sequenced reads per cell.
-- **What's fixed**: Expression threshold only.
-- **When to use**: Maximum flexibility for detecting the smallest effects possible within budget.
+Non-targeting gRNAs are control gRNAs that do not target any genomic element. They are used to form a control group of cells (in low-MOI screens) and to check for calibration (in all screens). While the effect of the number of non-targeting gRNAs on power is usually small, their utility is for other purposes. It is recommended to include tens or even hundreds of non-targeting gRNAs in perturbation screens.
 
----
+#### Cells per target
 
-<!-- ### How to Choose Your Workflow -->
+The average number of cells receiving CRISPR perturbations of a given target, equal to the total number of cells profiled divided by the number of perturbation targets.
 
-<!-- Use this decision tree to select the appropriate workflow: -->
+#### Reads per cell: 
 
-<!-- ### Step 1: Do you have a fixed budget constraint? -->
-
-<!-- **No → Power-Only Mode (Workflows 1-5)** -->
-
-<!-- - Want to minimize cells? → **Workflow 1** -->
-<!-- - Want to minimize sequencing? → **Workflow 2** -->
-<!-- - Want to test more genes (lower threshold)? → **Workflow 3** -->
-<!-- - Want to know smallest detectable effect? → **Workflow 4** -->
-<!-- - Want to minimize cost overall? → **Workflow 5** -->
-
-<!-- **Yes → Power + Cost Mode (Workflows 6-11)** -->
-
-<!-- ### Step 2: What do you want to optimize? -->
-
-<!-- **Minimize expression threshold (test more genes):** -->
-
-<!-- - Only cells can vary → **Workflow 6** -->
-<!-- - Only reads can vary → **Workflow 7** -->
-<!-- - Both cells and reads can vary → **Workflow 8** -->
-
-<!-- **Minimize fold change (detect smaller effects):** -->
-
-<!-- - Only cells can vary → **Workflow 9** -->
-<!-- - Only reads can vary → **Workflow 10** -->
-<!-- - Both cells and reads can vary → **Workflow 11** -->
-
-<!-- --- -->
-
-### Summary Table
-
-| Workflow | Mode | Minimizing Target | Varying Parameters | Cost Constraint? |
-|--|---------|--------------|-------------|----------|
-| 1 | Power-only | Cells per target | Cells | No |
-| 2 | Power-only | Reads per cell | Reads | No |
-| 3 | Power-only | Expression threshold | Expression threshold | No |
-| 4 | Power-only | Fold change | Fold change | No |
-| 5 | Power-only | Total cost | Cells + Reads | No |
-| 6 | Power + Cost | Expression threshold | Expression + Cells | Yes |
-| 7 | Power + Cost | Expression threshold | Expression + Reads | Yes |
-| 8 | Power + Cost | Expression threshold | Expression + Cells + Reads | Yes |
-| 9 | Power + Cost | Fold change | Fold change + Cells | Yes |
-| 10 | Power + Cost | Fold change | Fold change + Reads | Yes |
-| 11 | Power + Cost | Fold change | Fold change + Cells + Reads | Yes |
-
-
-# Design parameter configuration
-
-Once you've selected your design problem, you need to configure the experimental parameters that define your screen. The sidebar is organized into four collapsible sections:
-
----
-
-### Experimental Choices
-
-These parameters define the basic experimental setup.
-
-- **Reference expression data**: Expression data used to calculate statistical power. This data provides baseline gene expression statistics, library parameters and mapping efficiency that inform power calculations.
-
-  - **Options**:
-  
-    - **Built-in**: Preprocessed data provided in [PerturbPlan package](https://katsevich-lab.github.io/perturbplan/reference/index.html#example-data).
-    
-    - **Custom**: Upload your own reference data.
-    
-  - **Custom data format**: The input must be an RDS file with the same structure as the output from [reference_data_preprocessing( )](https://katsevich-lab.github.io/perturbplan/reference/reference_data_processing.html) function in the PerturbPlan package. The RDS file must contain:
-
-    - `baseline_expression_stats`: Data frame with columns:
-    
-      - `response_id`: Ensembl gene ID.
-      
-      - `relative_expression`: Relative gene expression.
-      
-      - `expression_size`: Expression variability parameter.
-
-    - `library_parameters`: List with:
-    
-      - `UMI_per_cell`: Estimated total UMI counts per cell.
-      
-      - `variation`: Technical variation parameter.
-
-    - `mapping_efficiency`: Ratio of sequenced reads confidently mapped to genes of interest.
-
-  > **⚠️ TAP-seq Requirement**: TAP-seq assays require custom reference data. The built-in datasets are only available for Perturb-seq. A preprocessed [TAP-seq reference dataset](https://katsevich-lab.github.io/perturbplan/reference/K562_Ray.html) can be used for illustration.
-
-- **Multiplicity of infection (MOI)**: The average number of sgRNA-carrying lentiviral particles that infect a single cell.
-
-- **Number of targets**: The total number of genomic elements you plan to perturb in your screen.
-
-- **gRNAs per target**: The number of different guide RNAs designed to perturb each target. 
-
-  - **Why it matters**: Multiple gRNAs per target improve: (1) robustness against ineffective guides and (2) statistical power through replication.
-
-- **Non-targeting gRNAs**: The number of control guide RNAs that do not target any genomic element. 
-
-- **Cells per target**: The averaged number of cells receiving gRNAs targeting the same element.
-
-- **Sequenced reads per cell**: The averaged number of reads per cell when sequencing.
-
----
+The average number of sequenced reads per cell. More sequenced reads gives rise to more unique molecular identifiers (UMIs) per cell, which leads to less noisy gene expressions and therefore higher power. 
 
 ### Analysis Choices
 
-These parameters define how power will be calculated and which perturbation-gene pairs will be analyzed.
+#### Perturbation-gene pairs to analyze
 
-- **Perturbation-gene pairs to analyze**: Method to construct the analysis set of perturbation-gene pairs for power calculation.
-
-  - **Options**:
+The set of perturbation-gene pairs you plan to test for association. These pairs can be specified in one of two ways:
   
-    - **Random pairing**: Genes surviving expression threshold filtering are paired with randomly sampled perturbations. Appropriate when you don't have prior knowledge about which genes respond to which perturbations.
+- **Random pairing**: If you have not yet decided which perturbation-gene pairs to analyze, you can choose to pair perturbations to genes at random, subject to the constraint that the genes involved survive the expression threshold.
     
-    - **Custom pairing**: Upload a specific set of (perturbation, gene) pairs for analysis. Appropriate when you have prior knowledge or hypotheses about specific interactions.
-    
-      - **Required format**: RDS file containing a data frame with two columns:
-      
-        - `grna_target`: Perturbation identifier (genomic element being targeted)
-        
-        - `response_id`: Gene identifier (gene whose expression is being measured)
+- **Custom pairing**: If you have decided which perturbation-gene pairs to analyze, you can upload this set of pairs to PerturbPlan as an RDS file containing a data frame with two columns named `grna_target` (an identifier of the genomic element being targeted) and `response_id` (the ENSG ID of the gene).
 
-- **Test side**: Sideness of the hypothesis test when inferring the perturbation effect. Three options are provided:
+#### Test sidedness 
 
-  - **Left**: Left-sided test will be considered. Appropriate for testing knockout or knockdown effect.
+The expected direction of the perturbation effect. The options are 
+
+  - **Left**: If perturbing the genomic element is expected to down-regulate the gene it is tested against.
   
-  - **Right**: Right-sided test will be considered. Appropriate for testing activation effect.
+  - **Right**: If perturbing the genomic element is expected to up-regulate the gene it is tested against.
   
-  - **Both**: Both-sided test will be considered. Appropriate when effect direction is unknown.
+  - **Both**: If the direction of the effect is unknown.
 
-- **TPM analysis threshold**: Transcripts per million, scale for expression threshold when Perturb-seq experiment is planned.
+#### Expression threshold
 
-- **UMIs/cell at saturation**: UMIs per cell when sequencing is saturated, scale for expression threshold when TAP-seq experiment is planned.
+The relevant quantification of gene expression depends on whether a Perturb-seq or TAP-seq is being planned:
 
----
+- **Perturb-seq**: Expressions obtained from transcriptome-wide RNA-seq are commonly measured in the units of **transcripts per million (TPM)**, the expected number of UMIs coming from a given gene among a million UMIs captured in a cell.
 
-### Effect Sizes
+- **TAP-seq**: Measuring expression in terms of TPMs is less meaningful in a TAP-seq experiment, where expression is measured for a smaller number of genes. As an interpretable substitute for TPM, we quantify TAP-seq gene expression in terms of the **UMIs/cell at saturation**, the expected number of UMIs coming from a given gene in a cell if sequenced to saturation.
 
-These parameters define the biological effects you want to detect.
+### Effect sizes
 
-- **Fold change**: The minimum effect size of interest, expressed as a multiplicative fold change in gene expression.
+The following two parameters are relevant for defining the biological effects you wish to detect.
 
-  - **Interpretation**:
+#### Fold change
+
+The fold change is the multiplicative change in mean gene expression induced by the perturbation:
+
+  - **Fold change = 1.0**: No effect (null hypothesis).
   
-    - **Fold change = 1.0**: No effect (null hypothesis).
-    
-    - **Fold change < 1.0**: Negative/inhibitory effect (e.g., 0.8 = 20% decrease in expression).
-    
-    - **Fold change > 1.0**: Positive/activating effect (e.g., 1.5 = 50% increase in expression).
-
-- **Proportion of non-null pairs**: The fraction of perturbation-gene pairs expected to have signal greater than the minimum effect size of interest. 
-
-  - **Why it matters**: Higher proportions of non-null pairs increase statistical power by reducing the impact of multiple testing corrections.
-
-
----
-
-### Advanced Settings
-
-These advanced parameters provide fine-grained control over technical aspects of the analysis.
-
-- **gRNA variability**: Effect size variability of multiple gRNAs targeting the same genomic element.
-
-  - **Why it matters**: Higher gRNA variability reduces power because multiple gRNAs targeting the same element may have different effect and such variability increases noise in the data, which requires more cells to achieve the same power.
+  - **Fold change < 1.0**: Negative/inhibitory effect (e.g., 0.8 = 20% decrease in expression).
   
-  - **Technical details**: The effect size of each gRNA, given the fold change $\beta$ and gRNA variability $\sigma$, can be thought of as a draw from the normal distribution $N(\beta, \sigma^2)$.
+  - **Fold change > 1.0**: Positive/activating effect (e.g., 1.5 = 50% increase in expression).
 
-- **Mapping efficiency**: The ratio of sequencing reads that map confidently to the genes of interest. 
+For a conservative power estimate, specify the **weakest effect size of interest.**
 
-  - **Why it matters**: Lower mapping efficiency reduces confidently mapped reads, requiring more total raw reads to achieve the same power.
+#### Proportion of non-null pairs 
+
+The fraction of tested perturbation-gene pairs expected to have signal at least a strong as the weakest effect size of interest. Higher proportions of non-null pairs increase power by reducing the impact of multiple testing corrections. Estimating this parameter for perturbation screens remains an open question, but the default value of 0.01 is a reasonable starting point.
+
+### Advanced settings
+
+#### gRNA variability
+
+The variance of the per-gRNA fold changes for each target. If the fold change for a given perturbation-gene pair is $\beta$ and the gRNA variability is $\sigma^2$, then the fold change induced by a gRNA is modeled as $N(\beta, \sigma^2)$.
+
+#### Mapping efficiency
+
+The fraction of sequencing reads that map confidently to the genes of interest. This quantity is derived from the reference expression data, but may be changed manually if desired. The mapping efficiency depends on the type of experiment being planned:
+
+- **Perturb-seq**: In Perturb-seq, all genes are of interest, so mapping efficiency is the proportion of reads mapping to any gene. Perturb-seq mapping efficiencies often fall in the range 0.65-0.75.
   
-  - **Definition varies by assay**:
+- **TAP-seq**: Imperfect gene-specific primers can hybridize to transcripts coming from genes other than those targeted. Therefore, a proportion of reads confidently mapped to the genome do not map to the target genes, making TAP-seq mapping efficiencies generally lower than those of Perturb-seq. For example, the mapping efficiency of the recent Ray et al. (2025) TAP-seq dataset was 0.35.
+
+#### Control group
+
+The strategy used to construct control cells for testing perturbation effects.
   
-    - **Perturb-seq**: Fraction of reads mapping to all expressed genes in the cell type.
-    
-    - **TAP-seq**: Fraction of reads mapping to pre-specified target genes.
-    
-  - **Typical values**: 
+- **Non-targeting cells**: Cells that receive only non-targeting gRNAs. This is the default choice for low-MOI screens (MOI > 1).
   
-    - **0.65-0.75**: Standard for Perturb-seq with genome-wide profiling.
-    
-    - **0.5-0.7**: High-quality TAP-seq libraries.
-    
-    - **< 0.5**: Poor library quality or high off-target mapping.
-
-- **Control group**: The strategy used to construct control cells for baseline expression and statistical comparisons.
-
-  - **Options**:
+- **Complement cells**: Cells that do not receive the perturbation being tested, but may receive other perturbations. This is the required choice for high-MOI experiments (MOI > 1), since few cells will have exclusively non-targeting gRNAs.
   
-    - **Complement cells**: cells that do not receive the perturbation being tested, but may receive other perturbations.
-    
-      - **When required**: MOI > 1 (high MOI experiments).
-      
-      - **Use case**: High-throughput screens where each cell receives multiple perturbations.
-      
-    - **Non-targeting cells**: cells that receive only non-targeting control gRNAs.
-    
-      - **When available**: MOI = 1 (low MOI experiments).
-      
-      - **Use case**: Clean control group with no intended perturbations.
-      
-  - **Automatic behavior**: When MOI > 1, the app automatically selects "Complement cells" as the control group, since most cells will have multiple perturbations.
+For more on this choice, see the [sceptre documentation](https://timothy-barry.github.io/sceptre-book/set-analysis-parameters.html#sec-set-analysis-parameters_control_group).
 
-- **FDR target level**: pre-specified level for false discovery rate control. 
+#### FDR target level 
 
----
-
-# Analysis result interpretation
-
-# Exported table format
-
+The maximum tolerated expected proportion of discovered associations that are false positives. The FDR target level of 0.1 is the most common choice.
 
