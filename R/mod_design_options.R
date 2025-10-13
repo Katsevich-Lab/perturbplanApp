@@ -28,24 +28,19 @@ mod_design_options_ui <- function(id) {
         class = "collapsible-content",
 
         # Step 1: Assay Type
-        tags$div(
-          id = ns("step1"),
-          tags$h5("Step 1: Assay Type", class = "step-header-large"),
-          selectInput(ns("assay_type"), NULL,
-                     choices = list(
-                       "Select assay type..." = "",
-                       "Perturb-seq" = "perturb_seq",
-                       "TAP-seq" = "tap_seq"
-                     ),
-                     selected = "")
-        ),
+        selectInput(ns("assay_type"), tags$strong("Step 1: Assay Type"),
+                   choices = list(
+                     "Select assay type..." = "",
+                     "Perturb-seq" = "perturb_seq",
+                     "TAP-seq" = "tap_seq"
+                   ),
+                   selected = ""),
 
         # Step 2: Optimization Constraints (initially hidden)
         tags$div(
           id = ns("step2"),
-          class = "hidden-section-with-spacing",
-          tags$h5("Step 2: Optimization Constraints", class = "step-header-large"),
-          selectInput(ns("optimization_type"), NULL,
+          style = "display: none;",
+          selectInput(ns("optimization_type"), tags$strong("Step 2: Optimization Constraints"),
                      choices = list(
                        "Select constraint type..." = "",
                        "Constrain power only" = "power_only",
@@ -57,40 +52,30 @@ mod_design_options_ui <- function(id) {
         # Power and Cost Requirements (initially hidden)
         tags$div(
           id = ns("power_cost_inputs"),
-          class = "hidden-section-with-spacing",
+          style = "display: none;",
 
           # Target Power Input (always shown when constraint type is selected)
-          tags$div(
-            add_tooltip_header("Target Power:", "target_power", header_level = "h6", class = "step-header"),
-            numericInput(ns("target_power"), NULL,
-                        value = 0.8, min = 0.1, max = 0.99, step = 0.05)
-          ),
+          numericInput(ns("target_power"), add_tooltip("Target Power:", "target_power", use_icon = TRUE),
+                      value = 0.8, min = 0.1, max = 0.99, step = 0.05),
 
           # Cost Budget Input (only shown for power + cost constraints)
           tags$div(
             id = ns("cost_budget_div"),
-            class = "hidden-section-with-margin",
-            tags$h6("Cost Budget ($):", class = "step-header"),
-            numericInput(ns("cost_budget"), NULL,
+            style = "display: none;",
+            numericInput(ns("cost_budget"), "Cost Budget ($):",
                         value = 10000, min = 100, max = 1000000, step = 500),
-
-            # Cost parameters (below cost budget)
-            tags$div(
-              class = "cost-params-section",
-              tags$h6("Cost Parameters:", class = "step-header"),
-
-              # Cost inputs using helper function
-              create_cost_inputs_ui(ns, "cost_per_cell", use_tooltips = TRUE)
-            )
+            numericInput(ns("cost_per_cell"), add_tooltip("Cost/cell ($):", "cost_per_cell", use_icon = TRUE),
+                        value = 0.086, min = 0, step = 0.001),
+            numericInput(ns("cost_per_million_reads"), add_tooltip("Cost/million reads ($):", "cost_per_million_reads", use_icon = TRUE),
+                        value = 0.374, min = 0, step = 0.001)
           )
         ),
 
         # Step 3: Minimization Target (initially hidden)
         tags$div(
           id = ns("step3"),
-          class = "hidden-section-with-spacing",
-          tags$h5("Step 3: Minimization Target", class = "step-header-large"),
-          selectInput(ns("minimization_target"), NULL,
+          style = "display: none;",
+          selectInput(ns("minimization_target"), tags$strong("Step 3: Minimization Target"),
                      choices = list(
                        "Select what to minimize..." = "",
                        "Cells per target" = "cells_per_target",
@@ -101,24 +86,14 @@ mod_design_options_ui <- function(id) {
                      ),
                      selected = ""),
 
-          # Expression threshold reminder (conditional)
-          conditionalPanel(
-            condition = "input.minimization_target == 'TPM_threshold'",
-            ns = ns,
-            tags$div(
-              class = "parameter-info-note",
-              uiOutput(ns("expression_threshold_reminder"))
-            )
-          ),
-
           # Cost parameters for cost minimization (only shown when minimizing total cost)
           tags$div(
             id = ns("cost_minimization_params"),
-            class = "hidden-section-with-large-margin",
-            tags$h6("Cost Parameters:", class = "step-header"),
-
-            # Cost inputs using helper function
-            create_cost_inputs_ui(ns, "cost_per_cell_min", use_tooltips = TRUE)
+            style = "display: none;",
+            numericInput(ns("cost_per_cell_min"), add_tooltip("Cost/cell ($):", "cost_per_cell", use_icon = TRUE),
+                        value = 0.086, min = 0, step = 0.001),
+            numericInput(ns("cost_per_million_reads_min"), add_tooltip("Cost/million reads ($):", "cost_per_million_reads", use_icon = TRUE),
+                        value = 0.374, min = 0, step = 0.001)
           )
         ),
 
@@ -347,34 +322,19 @@ mod_design_options_server <- function(id, app_state = NULL){
       }
 
       if (length(param_uis) == 0) {
-        # No varying parameters to show - hide Step 3 entirely
+        # No varying parameters to show - hide Step 4 entirely
         return(NULL)
       }
 
-      # Show title only when there are parameters to display
+      # Show Step 4 label in form-group structure with reduced bottom margin
       tagList(
-        tags$h5("Step 4: Varying parameters", class = "step-header-large"),
+        tags$div(
+          class = "form-group shiny-input-container",
+          style = "margin-bottom: 5px;",
+          tags$label(tags$strong("Step 4: Varying parameters"), class = "control-label")
+        ),
         do.call(tagList, param_uis)
       )
-    })
-
-    # Conditional reminder for Expression threshold
-    output$expression_threshold_reminder <- renderUI({
-      if (!is.null(input$assay_type) && input$assay_type != "" &&
-          !is.null(input$minimization_target) && input$minimization_target == "TPM_threshold") {
-
-        message <- if (input$assay_type == "tap_seq") {
-          "Minimum UMI per cell for a gene at the sequencing saturation"
-        } else if (input$assay_type == "perturb_seq") {
-          "Minimum TPM analysis threshold parameter"
-        } else {
-          ""
-        }
-
-        if (message != "") {
-          tags$small(message, style = "color: #888; font-style: italic;")
-        }
-      }
     })
 
     # Business Logic: Update cost availability and clear Step 2 when Step 1 changes
