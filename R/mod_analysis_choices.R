@@ -61,7 +61,7 @@ mod_analysis_choices_ui <- function(id) {
         ),
 
         tags$div(
-          style = "margin-top: 30px;",
+          style = "margin-top: 35px;",
           selectInput(ns("side"),
                         add_tooltip("Test sidedness:", "test_side", use_icon = TRUE),
                       choices = c("Left (expression decrease)" = "left",
