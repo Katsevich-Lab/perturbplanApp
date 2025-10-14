@@ -47,7 +47,7 @@ add_tooltip <- function(label, tooltip_id, use_icon = TRUE) {
       label,
       tags$sup(
         class = "tooltip-icon",
-        "ⓘ",
+        "\u24d8",  # Unicode for circled letter i (ⓘ)
         tags$span(
           class = "tooltip-text",
           tooltip_text
@@ -197,7 +197,7 @@ add_tooltip_span <- function(label, tooltip_id, style = NULL) {
     tags$span(label),
     tags$sup(
       class = "tooltip-icon",
-      "ⓘ",
+      "\u24d8",  # Unicode for circled letter i (ⓘ)
       tags$span(
         class = "tooltip-text",
         tooltip_text
