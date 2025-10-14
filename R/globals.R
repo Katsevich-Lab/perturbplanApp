@@ -1,9 +1,10 @@
 #' Global variables
-#' 
+#'
 #' @description Defines global variables used by various functions to avoid R CMD check NOTEs
 #' about "no visible binding for global variable"
-#' 
+#'
 #' @noRd
+#' @importFrom utils globalVariables
 utils::globalVariables(c(
   # Variables from data manipulation (dplyr/ggplot2)
   "cells_per_target",

@@ -14,11 +14,10 @@ License: MIT + file LICENSE
 URL: https://katsevich-lab.github.io/perturbplanapp
 Imports:
     config (>= 0.3.1),
-    digest,
     dplyr,
-    DT,
     ggplot2,
     golem (>= 0.3.5),
+    htmlwidgets,
     magrittr,
     openxlsx,
     perturbplan,
@@ -26,16 +25,14 @@ Imports:
     rlang,
     scales,
     shiny (>= 1.7.4),
-    shinyWidgets,
     shinycssloaders,
     shinydashboard,
     shinyjs,
+    shinyWidgets,
     stringr,
     tools,
     utils,
-    pkgload,
-    webshot,
-    htmlwidgets
+    webshot
 Suggests:
     knitr,
     pkgdown,

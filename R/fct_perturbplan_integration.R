@@ -159,7 +159,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 
       # Call obtain_fixed_variable_constraining_cost to calculate the missing parameter
       tryCatch({
-        cost_result <- perturbplan::obtain_fixed_variable_constraining_cost(
+        cost_result <- perturbplan:::obtain_fixed_variable_constraining_cost(
           cost_per_captured_cell = cost_per_cell,
           cost_per_million_reads = cost_per_million_reads,
           cost_constraint = cost_constraint,

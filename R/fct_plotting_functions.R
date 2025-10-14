@@ -15,6 +15,7 @@
 #' @importFrom stats rnorm median power complete.cases setNames
 #' @importFrom rlang .data
 #' @importFrom dplyr group_by slice_max slice_min ungroup arrange case_when
+#' @importFrom utils globalVariables
 NULL
 
 # Declare global variables to avoid R CMD check notes
@@ -272,7 +273,7 @@ create_single_parameter_plots <- function(cached_results) {
         list(
           x = 1, y = 1,
           xref = "paper", yref = "paper",
-          text = "◆ Optimal solution",
+          text = "\u25c6 Optimal solution",  # Unicode for black diamond (◆)
           xanchor = "right", yanchor = "top",
           showarrow = FALSE,
           font = list(size = 11, color = "black")
@@ -545,7 +546,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
         list(
           x = 1, y = 1,
           xref = "paper", yref = "paper",
-          text = "◆ Optimal solution   ── Equi-power   ⋯⋯ Equi-cost",
+          text = "\u25c6 Optimal solution   \u2500\u2500 Equi-power   \u22ef\u22ef Equi-cost",  # Unicode: ◆ ── ⋯⋯
           xanchor = "right", yanchor = "top",
           showarrow = FALSE,
           font = list(size = 11, color = "black")
@@ -802,7 +803,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
         list(
           x = 1, y = 1,
           xref = "paper", yref = "paper",
-          text = "◆ Optimal solution",
+          text = "\u25c6 Optimal solution",  # Unicode for black diamond (◆)
           xanchor = "right", yanchor = "top",
           showarrow = FALSE,
           font = list(size = 11, color = "black")
