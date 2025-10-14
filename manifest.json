@@ -11,7 +11,7 @@
   },
   "environment": {
     "r": {
-      "requires": "~=4.4.0"
+      "requires": ">= 3.5.0"
     }
   },
   "packages": {
@@ -3355,7 +3355,7 @@
       "checksum": "6c658b63160d19f7f1a5053a5a96fe8f"
     },
     ".Rprofile": {
-      "checksum": "d8c253c64dd5702947f7ff0828eae13a"
+      "checksum": "b82622ee65493630a4497d060619d8e1"
     },
     "app.R": {
       "checksum": "e60c73a238489da1691af5f2e3700561"
@@ -3364,7 +3364,7 @@
       "checksum": "9e64e6f99908854605856e2eb1151f10"
     },
     "DESCRIPTION": {
-      "checksum": "031d4aad95a2adf02a596effdd81373d"
+      "checksum": "22cd831ae3f27ab48aae8ea699d19532"
     },
     "docs/404.html": {
       "checksum": "c8725d9dffa51238b599b101f0a2609f"

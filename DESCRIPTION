@@ -12,6 +12,7 @@ Description: Golem-based Shiny application for constraint-driven
     parameter constraints, and workflow-specific analysis.
 License: MIT + file LICENSE
 URL: https://katsevich-lab.github.io/perturbplanapp
+Depends: R (>= 3.5.0)
 Imports:
     config (>= 0.3.1),
     dplyr,
@@ -21,7 +22,6 @@ Imports:
     magrittr,
     openxlsx,
     perturbplan,
-    pkgload,
     plotly,
     rlang,
     scales,
@@ -37,6 +37,7 @@ Imports:
 Suggests:
     knitr,
     pkgdown,
+    pkgload,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
