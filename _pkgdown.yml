@@ -1,0 +1,23 @@
+# Site-level options
+url: https://katsevich-lab.github.io/perturbplanapp
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, articles, news]
+    right: [github]
+  components:
+    articles:
+      text: Documentation
+      href: articles/perturbplanapp.html
+
+# Exclude function reference
+reference: []
+
+articles:
+- title: Get started
+  navbar: Get started
+  contents:
+  - perturbplanapp

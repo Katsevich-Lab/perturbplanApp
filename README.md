@@ -16,4 +16,4 @@ The key metrics for experimental design are **power** (the expected proportion o
 
 6. **Start over.** Click the "Restart" button to start from scratch.
 
-We elaborate on steps 1 and 2 in the [full documentation](https://katsevich-lab-perturbplanappdev.share.connect.posit.cloud/_w_29fe7fc525454dc3948529f065cec6b5/www/perturbplanapp.html). 
+We elaborate on steps 1 and 2 in the [full documentation](articles/perturbplanapp.html). 

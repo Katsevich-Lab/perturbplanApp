@@ -1,13 +1,17 @@
 Package: perturbplanApp
 Title: Constraint-Driven Experimental Design for CRISPR Perturb-seq
-Version: 0.0.0.9000
-Authors@R: 
-    person("Ziang", "Niu", , "zniu@wharton.upenn.edu", role = c("aut", "cre"))
+Version: 0.1.0
+Authors@R:
+    c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
+      person("Yihui", "He", , "yihuihe@wharton.upenn.edu", role = c("aut")),
+      person("Eugene", "Katsevich", , "ekatsevi@wharton.upenn.edu", role = c("aut"))
+    )
 Description: Golem-based Shiny application for constraint-driven
     experimental design and power analysis in CRISPR perturb-seq
     experiments. Provides intuitive interface for optimization objectives,
     parameter constraints, and workflow-specific analysis.
 License: MIT + file LICENSE
+URL: https://katsevich-lab.github.io/perturbplanapp
 Imports:
     config (>= 0.3.1),
     digest,
@@ -34,6 +38,7 @@ Imports:
     htmlwidgets
 Suggests:
     knitr,
+    pkgdown,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
