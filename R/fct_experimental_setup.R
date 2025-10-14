@@ -19,16 +19,16 @@ get_experimental_defaults <- function() {
   list(
     # Fixed parameter defaults
     cells_fixed_default = 1000,
-    reads_per_cell_fixed_default = 5000,
+    reads_per_cell_fixed_default = 20000,
 
     # File upload limits
     max_file_size_mb = 50,
 
     # Perturbation parameter defaults
     MOI_default = 10,
-    num_targets_default = 100,
+    num_targets_default = 500,
     gRNAs_per_target_default = 4,
-    non_targeting_gRNAs_default = 10,
+    non_targeting_gRNAs_default = 50,
 
     # Error display duration
     error_duration_seconds = 10

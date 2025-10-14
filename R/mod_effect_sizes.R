@@ -38,7 +38,7 @@ mod_effect_sizes_ui <- function(id) {
         # Proportion of non-null pairs
         numericInput(ns("prop_non_null"),
                     add_tooltip("Proportion of non-null pairs:", "non_null_proportion", use_icon = TRUE),
-                    0.1, 0, 1, 0.01)
+                    0.01, 0.001, 1, 0.001)
       )
     )
   )

@@ -21,7 +21,7 @@ mod_advanced_choices_ui <- function(id) {
         style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
         onclick = paste0("toggleSection('", ns("advanced-content"), "', '", ns("advanced-chevron"), "')"),
         tags$i(id = ns("advanced-chevron"), class = "fa fa-chevron-right", style = "margin-right: 8px;"),
-        tags$strong("Advanced settings")
+        tags$strong("Advanced settings (optional)")
       ),
       tags$div(
         id = ns("advanced-content"),

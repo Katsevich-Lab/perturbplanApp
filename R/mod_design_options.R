@@ -75,7 +75,7 @@ mod_design_options_ui <- function(id) {
         tags$div(
           id = ns("step3"),
           style = "display: none;",
-          selectInput(ns("minimization_target"), tags$strong("Step 3: Minimization Target"),
+          selectInput(ns("minimization_target"), add_tooltip(tags$strong("Step 3: Minimization Target"), "minimization_target", use_icon = TRUE),
                      choices = list(
                        "Select what to minimize..." = "",
                        "Cells per target" = "cells_per_target",
@@ -305,7 +305,7 @@ mod_design_options_server <- function(id, app_state = NULL){
 
       if (!param_configs$reads_per_cell$type %in% c("minimizing", "optimizing")) {
         param_uis <- append(param_uis, list(
-          create_param_ui(ns, "reads_per_cell", "Reads per cell:", param_configs$reads_per_cell, 5000, 1000, 150000, 1000)
+          create_param_ui(ns, "reads_per_cell", "Reads per cell:", param_configs$reads_per_cell, 20000, 1000, 150000, 1000)
         ))
       }
 
@@ -331,7 +331,7 @@ mod_design_options_server <- function(id, app_state = NULL){
         tags$div(
           class = "form-group shiny-input-container",
           style = "margin-bottom: 5px;",
-          tags$label(tags$strong("Step 4: Varying parameters"), class = "control-label")
+          tags$label(tags$strong("Step 4: Other varying parameters"), class = "control-label")
         ),
         do.call(tagList, param_uis)
       )
@@ -345,8 +345,8 @@ mod_design_options_server <- function(id, app_state = NULL){
         updateSelectInput(session, "minimization_target",
                          choices = list(
                            "Select what to minimize..." = "",
-                           "Minimize Expression threshold" = "TPM_threshold",
-                           "Minimize fold change" = "minimum_fold_change"
+                           "Expression threshold" = "TPM_threshold",
+                           "Fold change" = "minimum_fold_change"
                          ),
                          selected = "")  # Clear selection when Step 1 changes
 

@@ -28,28 +28,18 @@ mod_experimental_setup_ui <- function(id) {
         id = ns("experimental-content"),
         class = "collapsible-content",
 
-        # TAP-seq informational note
-        conditionalPanel(
-          condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
-          tags$div(
-            class = "parameter-info-note",
-            style = "margin-bottom: 5px;",
-            tags$i(class = "fa fa-info-circle"),
-            " TAP-seq requires custom reference data."
-          )
-        ),
-
         selectInput(ns("biological_system"),
                    add_tooltip("Reference expression data:", "reference_expression_data", use_icon = TRUE),
                    choices = get_biological_system_choices(),
                    selected = "K562"),
         conditionalPanel(
           condition = paste0("input['", ns("biological_system"), "'] == 'Custom'"),
+          style = "margin-bottom: -40px;",
           tags$div(
             class = "file-upload-info",
             tags$small(
               tags$i(class = "fa fa-info-circle"),
-              tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters"
+              tags$strong("Format: "), "RDS file with baseline expression, saturation curve, and mapping efficiency."
             )
           ),
 
@@ -60,8 +50,8 @@ mod_experimental_setup_ui <- function(id) {
               class = "file-upload-info",
               style = "margin-top: 5px; margin-bottom: 10px;",
               tags$small(
-                tags$i(class = "fa fa-download"),
-                " Need example data? ",
+                tags$i(class = "fa fa-exclamation-triangle"),
+                " TAP-seq requires custom reference data. Need example data? ",
                 downloadLink(ns("download_example_data"), "Download K562_Ray.rds",
                             style = "text-decoration: underline;")
               )
@@ -71,7 +61,7 @@ mod_experimental_setup_ui <- function(id) {
           fileInput(ns("pilot_data_file"),
                    label = NULL,
                    accept = c(".rds", ".RDS"),
-                   placeholder = "Choose reference expression data RDS file..."),
+                   placeholder = "No file selected"),
 
           # Upload status display (conditional)
           conditionalPanel(
@@ -87,7 +77,6 @@ mod_experimental_setup_ui <- function(id) {
 
         # Perturbation choices section (integrated from mod_perturbation_choices)
         tags$div(
-
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
                       add_tooltip("Multiplicity of infection (MOI):", "moi", use_icon = TRUE),
@@ -96,10 +85,10 @@ mod_experimental_setup_ui <- function(id) {
                       max = 30,
                       step = 1),
 
-          # Number of targets
+          # Number of perturbation targets
           numericInput(ns("num_targets"),
-                      add_tooltip("Number of targets:", "num_targets", use_icon = TRUE),
-                      value = 100,
+                      add_tooltip("Number of perturbation targets:", "num_targets", use_icon = TRUE),
+                      value = 500,
                       min = 50,
                       max = 12000,
                       step = 50),
@@ -115,7 +104,7 @@ mod_experimental_setup_ui <- function(id) {
           # Non-targeting gRNAs
           numericInput(ns("non_targeting_gRNAs"),
                       add_tooltip("Non-targeting gRNAs:", "non_targeting_grnas", use_icon = TRUE),
-                      value = 10,
+                      value = 50,
                       min = 0,
                       max = 100,
                       step = 1)
@@ -141,7 +130,7 @@ mod_experimental_setup_ui <- function(id) {
             style = "display: none;",
             numericInput(ns("reads_per_cell_fixed"),
                         add_tooltip("Sequenced reads per cell:", "sequenced_reads_per_cell", use_icon = TRUE),
-                        value = 5000, min = 1000, max = 150000, step = 1000)
+                        value = 20000, min = 1000, max = 150000, step = 1000)
           )
         )
       )

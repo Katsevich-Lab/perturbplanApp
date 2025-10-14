@@ -33,24 +33,25 @@ mod_analysis_choices_ui <- function(id) {
         id = ns("analysis-content"),
         style = "padding: 15px;",
         selectInput(ns("gene_list_mode"),
-                   add_tooltip("Perturbation-gene pairs to analyze:", "perturbation_gene_pairs", use_icon = TRUE),
+                   "Perturbation-gene pairs to test:",
                    choices = c("Random" = "random", "Custom" = "custom"),
                    selected = "random"),
         conditionalPanel(
           condition = paste0("input['", ns("gene_list_mode"), "'] == 'custom'"),
+          style = "margin-bottom: -40px;",
           tags$div(
             class = "file-upload-info",
             style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
             tags$small(
               tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-              tags$strong("Format: "), "RDS with gene pairs data frame ('grna_target' and 'response_id' columns)",
+              "Data frame with columns grna_target and response_id (RDS format)",
               style = "font-size: 11px;"
             )
           ),
           fileInput(ns("gene_list_file"),
                    label = NULL,
                    accept = c(".rds", ".RDS"),
-                   placeholder = "Choose gene pairs RDS file..."),
+                   placeholder = "No file selected"),
 
           # Gene list upload status display
           tags$div(
@@ -59,10 +60,10 @@ mod_analysis_choices_ui <- function(id) {
           )
         ),
         selectInput(ns("side"),
-                    add_tooltip("Test side:", "test_side", use_icon = TRUE),
-                    choices = c("Left (knockdown)" = "left",
-                               "Right (overexpression)" = "right",
-                               "Both (two-sided)" = "both"),
+                      add_tooltip("Test sidedness:", "test_side", use_icon = TRUE),
+                    choices = c("Left (expression decrease)" = "left",
+                               "Right (expression increase)" = "right",
+                               "Both (increase or decrease)" = "both"),
                     selected = "left"),
 
         # Fixed value input for Expression threshold parameter (conditional)

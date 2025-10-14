@@ -24,33 +24,33 @@ get_tooltip_text <- function(element_id) {
     # ==========================================================================
 
     # Target Power
-    target_power = "The expected proportion of non-null pairs that are rejected.",
+    target_power = "Expected proportion of perturbation-gene effects that are detected.",
 
     # Cost Budget (Power + Cost workflows only)
     cost_budget = "Maximum budget constraint for your experiment (in dollars).",
 
     # Cost Parameters
-    cost_per_cell = "The cost to capture and prepare a single cell for sequencing (in dollars/cell).",
-    cost_per_million_reads = "The cost to generate one million sequencing reads (in $/million reads).",
+    cost_per_cell = "Library preparation cost per cell. Default value based on 2025 cost of 10x Genomics v4 3' kit.",
+    cost_per_million_reads = "Sequencing cost per million reads. Default value based on 2025 cost of Novaseq X 25B.",
 
     # ==========================================================================
     # Experimental Choices Section
     # ==========================================================================
 
     # Reference Expression Data
-    reference_expression_data = "Expression data used to calculate statistical power.",
+    reference_expression_data = "Tailor the power analysis to your biological system. Check documentation for link to data descriptions.",
 
     # Multiplicity of Infection (MOI)
-    moi = "The average number of sgRNA-carrying lentiviral particles that infect a single cell.",
+    moi = "Average number of gRNA-carrying lentiviral particles infecting each cell.",
 
     # Number of Targets
     num_targets = "The total number of genomic elements you plan to perturb in your screen.",
 
     # gRNAs per Target
-    grnas_per_target = "The number of different guide RNAs designed to perturb each target.",
+    grnas_per_target = "The number of different gRNAs designed to perturb each target.",
 
     # Non-targeting gRNAs
-    non_targeting_grnas = "The number of control guide RNAs that do not target any genomic element.",
+    non_targeting_grnas = "The number of non-targeting gRNAs (control gRNAs not targeting any genomic region).",
 
     # Cells per Target
     cells_per_target = "The averaged number of cells receiving gRNAs targeting the same element.",
@@ -66,7 +66,7 @@ get_tooltip_text <- function(element_id) {
     perturbation_gene_pairs = "Method to construct the analysis set of perturbation-gene pairs for power calculation.",
 
     # Test Side
-    test_side = "Sideness of the hypothesis test when inferring the perturbation effect.",
+    test_side = "The expected direction of the perturbation effect on gene expression.",
 
     # TPM Analysis Threshold
     tpm_threshold = "Transcripts per million, scale for expression threshold when Perturb-seq experiment is planned.",
@@ -79,26 +79,29 @@ get_tooltip_text <- function(element_id) {
     # ==========================================================================
 
     # Fold Change
-    fold_change = "The minimum effect size of interest, expressed as a multiplicative fold change in gene expression.",
+    fold_change = "The weakest perturbation impact of interest, expressed as a multiplicative change in mean gene expression induced by the perturbation.",
 
     # Proportion of Non-null Pairs
-    non_null_proportion = "The fraction of perturbation-gene pairs expected to have signal greater than the minimum effect size of interest.",
+    non_null_proportion = "The fraction of tested perturbation-gene pairs expected to have effect at least as strong as the weakest effect size of interest.",
 
     # ==========================================================================
     # Advanced Settings Section
     # ==========================================================================
 
     # gRNA Variability
-    grna_variability = "Effect size variability of multiple gRNAs targeting the same genomic element.",
+    grna_variability = "The variance of the per-gRNA fold changes for each target.",
 
     # Mapping Efficiency
-    mapping_efficiency = "The ratio of sequencing reads that map confidently to the genes of interest.",
+    mapping_efficiency = "The fraction of sequenced reads that map confidently to the genes of interest.",
 
     # Control Group
-    control_group = "The strategy used to construct control cells for baseline expression and statistical comparisons.",
+    control_group = "The strategy used to construct control cells for testing perturbation effects. See documentation for details.",
 
     # FDR Target Level
-    fdr_target = "Pre-specified level for false discovery rate control."
+    fdr_target = "The maximum tolerated expected proportion of discovered associations that are false positives.",
+
+    # Minimization Target
+    minimization_target = "See documentation for definitions of minimization targets."
   )
 
   # Return tooltip text or empty string if not found
