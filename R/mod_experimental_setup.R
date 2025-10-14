@@ -52,8 +52,8 @@ mod_experimental_setup_ui <- function(id) {
               tags$small(
                 tags$i(class = "fa fa-exclamation-triangle"),
                 " TAP-seq requires custom reference data. Need example data? ",
-                tags$a(href = "https://github.com/Katsevich-Lab/perturbplanApp/blob/main/inst/extdata/K562_Ray.rds",
-                      target = "_blank",
+                tags$a(href = "https://raw.githubusercontent.com/Katsevich-Lab/perturbplanApp/main/inst/extdata/K562_Ray.rds",
+                      download = "K562_Ray.rds",
                       style = "text-decoration: underline;",
                       "Download K562_Ray.rds")
               )
