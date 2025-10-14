@@ -366,9 +366,8 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
   # Get minimizing parameter from first solution (all solutions have same workflow)
   minimizing_param <- solutions_data[[1]]$minimizing_param
 
-  # Create two-row header (pass assay_type for assay-aware labels)
-  header_row1 <- create_header_row1(optimal_col_name, has_cost, minimizing_param)
-  header_row2 <- create_header_row2(has_cost, minimizing_param, assay_type)
+  # Create single-row header (pass assay_type for assay-aware labels)
+  header_row <- create_header_row_single(optimal_col_name, has_cost, minimizing_param, assay_type)
 
   # Create data rows for all solutions
   data_rows <- lapply(solutions_data, function(solution) {
@@ -383,8 +382,7 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
       class = "table table-striped table-hover",
       style = "margin-bottom: 0; font-size: 16px; width: 100%;",
       tags$thead(
-        header_row1,
-        header_row2
+        header_row
       ),
       tags$tbody(
         data_rows
@@ -393,117 +391,57 @@ create_clean_solutions_table_ui <- function(solutions_data, workflow_info) {
   )
 }
 
-#' Create Header Row 1 (Main Categories)
+#' Create Single Header Row
 #'
 #' @param optimal_col_name Display name for the optimal parameter column
 #' @param has_cost Logical indicating if workflow includes cost calculations
 #' @param minimizing_param Name of the parameter being minimized
+#' @param assay_type Assay type ("tap_seq" or "perturb_seq")
 #' @noRd
-create_header_row1 <- function(optimal_col_name, has_cost = NULL, minimizing_param = NULL) {
+create_header_row_single <- function(optimal_col_name, has_cost = NULL, minimizing_param = NULL, assay_type = NULL) {
 
-  # Base rowspan style for single columns that span both header rows
-  rowspan_style <- "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 12px; background-color: #f8f9fa;"
+  # Header cell style - darker gray background
+  header_style <- "text-align: center; font-weight: bold; vertical-align: middle; border-bottom: 1px solid #dee2e6; padding: 10px; background-color: #e9ecef;"
 
   cells <- list(
-    tags$th("Setting", rowspan = "2", style = rowspan_style),
-    tags$th("Power", rowspan = "2", style = rowspan_style)
+    tags$th("Setting", style = header_style),
+    tags$th("Power", style = header_style)
   )
 
   # Add cost column if workflow includes cost AND cost is not being minimized
   if (has_cost && minimizing_param != "cost") {
     cells <- append(cells, list(
-      tags$th("Cost", rowspan = "2", style = rowspan_style)
+      tags$th("Cost", style = header_style)
     ))
   }
 
-  # Add optimal parameter column (single column, rowspan)
+  # Add optimal parameter column
   cells <- append(cells, list(
-    tags$th(optimal_col_name, rowspan = "2", style = rowspan_style)
+    tags$th(optimal_col_name, style = header_style)
   ))
 
-  # Calculate experimental parameters colspan (5 minus any minimized experimental params)
-  exp_params_colspan <- 5
-  if (minimizing_param == "cells_per_target") exp_params_colspan <- exp_params_colspan - 1
-  if (minimizing_param == "reads_per_cell") exp_params_colspan <- exp_params_colspan - 1
-
-  # Add experimental parameters header if any columns remain (multi-column header)
-  if (exp_params_colspan > 0) {
-    cells <- append(cells, list(
-      tags$th("Experimental Parameters",
-              colspan = as.character(exp_params_colspan),
-              style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
-    ))
-  }
-
-  # Add TPM threshold if not being minimized (two-row structure)
-  if (minimizing_param != "TPM_threshold") {
-    cells <- append(cells, list(
-      tags$th("Analysis Parameter", style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
-    ))
-  }
-
-  # Calculate effect sizes colspan (2 minus fold change if minimized)
-  effect_sizes_colspan <- 2
-  if (minimizing_param == "minimum_fold_change") effect_sizes_colspan <- effect_sizes_colspan - 1
-
-  # Always add Effect Sizes header (even when fold change is minimized)
-  # When FC is minimized, there's still 1 sub-column (Non-null Prop), so we need row 1 + row 2 structure
+  # Add experimental parameter columns
   cells <- append(cells, list(
-    tags$th("Effect Sizes",
-            colspan = if (effect_sizes_colspan > 1) as.character(effect_sizes_colspan) else "1",
-            style = "text-align: center; font-weight: bold; border-bottom: 1px solid #dee2e6; padding: 8px; background-color: #e9ecef;")
+    tags$th("MOI", style = header_style),
+    tags$th("# Targets", style = header_style),
+    tags$th("gRNAs/Target", style = header_style)
   ))
-
-  tags$tr(cells)
-}
-
-#' Create Header Row 2 (Subcolumns)
-#'
-#' @param has_cost Logical indicating if workflow includes cost calculations
-#' @param minimizing_param Name of the parameter being minimized
-#' @noRd
-create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL, assay_type = NULL) {
-  # Row 2 only contains sub-columns for multi-column headers
-  # Single-row columns (with rowspan=2) don't appear in row 2
-
-  cells <- list()
-
-  # Sub-column style for row 2
-  subcolumn_style <- "text-align: center; font-size: 14px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
-
-  # Last sub-column in a group style (with right border)
-  last_subcolumn_style <- "text-align: center; font-size: 14px; border-top: none; border-bottom: 1px solid #dee2e6; border-right: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;"
-
-  # Add experimental parameter subcolumns (only if not being minimized)
-  cells <- append(cells, list(
-    tags$th("MOI", style = subcolumn_style),
-    tags$th("# Targets", style = subcolumn_style),
-    tags$th("gRNAs/Target", style = subcolumn_style)
-  ))
-
-  # Determine the last experimental parameter column
-  exp_params_remaining <- c()
-  if (minimizing_param != "cells_per_target") exp_params_remaining <- c(exp_params_remaining, "cells")
-  if (minimizing_param != "reads_per_cell") exp_params_remaining <- c(exp_params_remaining, "reads")
 
   # Add Cells/Target column only if not being minimized
   if (minimizing_param != "cells_per_target") {
-    # Use last_subcolumn_style if this is the last experimental parameter
-    style_to_use <- if ("reads" %in% exp_params_remaining) subcolumn_style else last_subcolumn_style
     cells <- append(cells, list(
-      tags$th("Cells/Target", style = style_to_use)
+      tags$th("Cells/Target", style = header_style)
     ))
   }
 
   # Add Reads/Cell column only if not being minimized
   if (minimizing_param != "reads_per_cell") {
-    # This is the last experimental parameter column, so use thick border to separate from Analysis Parameter
     cells <- append(cells, list(
-      tags$th("Reads/Cell", style = last_subcolumn_style)
+      tags$th("Reads/Cell", style = header_style)
     ))
   }
 
-  # Add Expression Threshold sub-column if not being minimized
+  # Add Expression Threshold column if not being minimized
   if (minimizing_param != "TPM_threshold") {
     # Assay-aware header label
     header_label <- if (!is.null(assay_type) && assay_type == "tap_seq") {
@@ -512,25 +450,20 @@ create_header_row2 <- function(has_cost = NULL, minimizing_param = NULL, assay_t
       "TPM threshold"
     }
     cells <- append(cells, list(
-      tags$th(header_label, style = last_subcolumn_style)
+      tags$th(header_label, style = header_style)
     ))
   }
 
-  # Calculate effect sizes colspan to determine if we need sub-columns
-  effect_sizes_colspan <- 2
-  if (minimizing_param == "minimum_fold_change") effect_sizes_colspan <- effect_sizes_colspan - 1
-
-  # Add Effect Sizes sub-columns
   # Add Fold Change column only if not being minimized
   if (minimizing_param != "minimum_fold_change") {
     cells <- append(cells, list(
-      tags$th("Fold Change", style = subcolumn_style)
+      tags$th("Fold Change", style = header_style)
     ))
   }
 
-  # Always add Non-null Prop (never minimized) - last column, no right border
+  # Always add Non-null Prop (never minimized)
   cells <- append(cells, list(
-    tags$th("Non-null Prop", style = "text-align: center; font-size: 14px; border-top: none; border-bottom: 1px solid #dee2e6; padding: 6px; background-color: #f8f9fa;")
+    tags$th("Non-null Prop", style = header_style)
   ))
 
   tags$tr(cells)
