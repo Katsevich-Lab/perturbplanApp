@@ -11,3 +11,11 @@ $run_dev.*
 ^rsconnect$
 ^\.rscignore$
 ^prd$
+^\.claude$
+^CLAUDE\.md$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^manifest\.json$
+^perturbplanapp\.md$
+^LICENSE\.md$
