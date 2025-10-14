@@ -77,7 +77,7 @@ mod_experimental_setup_ui <- function(id) {
 
         # Perturbation choices section (integrated from mod_perturbation_choices)
         tags$div(
-          style = "margin-top: 30px;",
+          style = "margin-top: 35px;",
 
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
