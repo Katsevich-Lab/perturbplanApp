@@ -65,15 +65,6 @@ perform_cost_minimization_analysis <- function(config, pilot_data) {
   # Use optimal_cost_power_df as the main data (this has the correct structure)
   power_data <- optimal_results$optimal_cost_power_df
 
-  # Standardize column names: raw_reads_per_cell → sequenced_reads_per_cell
-  if ("raw_reads_per_cell" %in% names(power_data)) {
-    power_data$sequenced_reads_per_cell <- power_data$raw_reads_per_cell
-    power_data$raw_reads_per_cell <- NULL
-  } else if ("reads_per_cell" %in% names(power_data)) {
-    power_data$sequenced_reads_per_cell <- power_data$reads_per_cell
-    power_data$reads_per_cell <- NULL
-  }
-
   # Find minimum cost point for target power
   target_power <- config$design_options$target_power
   power_tolerance <- 0.01
