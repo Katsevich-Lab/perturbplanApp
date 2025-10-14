@@ -77,6 +77,8 @@ mod_experimental_setup_ui <- function(id) {
 
         # Perturbation choices section (integrated from mod_perturbation_choices)
         tags$div(
+          style = "margin-top: 20px;",
+
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
                       add_tooltip("Multiplicity of infection (MOI):", "moi", use_icon = TRUE),
