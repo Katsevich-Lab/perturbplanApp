@@ -59,12 +59,16 @@ mod_analysis_choices_ui <- function(id) {
             htmlOutput(ns("gene_list_status"))
           )
         ),
-        selectInput(ns("side"),
-                      add_tooltip("Test sidedness:", "test_side", use_icon = TRUE),
-                    choices = c("Left (expression decrease)" = "left",
-                               "Right (expression increase)" = "right",
-                               "Both (increase or decrease)" = "both"),
-                    selected = "left"),
+
+        tags$div(
+          style = "margin-top: 30px;",
+          selectInput(ns("side"),
+                        add_tooltip("Test sidedness:", "test_side", use_icon = TRUE),
+                      choices = c("Left (expression decrease)" = "left",
+                                 "Right (expression increase)" = "right",
+                                 "Both (increase or decrease)" = "both"),
+                      selected = "left")
+        ),
 
         # Fixed value input for Expression threshold parameter (conditional)
         # CONSISTENT VARIABLE USAGE: Expression_threshold_fixed throughout
