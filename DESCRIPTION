@@ -10,11 +10,10 @@ Description: Golem-based Shiny application for constraint-driven
 License: MIT + file LICENSE
 Imports:
     config (>= 0.3.1),
-    digest,
     dplyr,
-    DT,
     ggplot2,
     golem (>= 0.3.5),
+    htmlwidgets,
     magrittr,
     openxlsx,
     perturbplan,
@@ -22,16 +21,14 @@ Imports:
     rlang,
     scales,
     shiny (>= 1.7.4),
-    shinyWidgets,
     shinycssloaders,
     shinydashboard,
     shinyjs,
+    shinyWidgets,
     stringr,
     tools,
     utils,
-    pkgload,
-    webshot,
-    htmlwidgets
+    webshot
 Suggests:
     knitr,
     rmarkdown,

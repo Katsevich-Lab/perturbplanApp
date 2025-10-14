@@ -15,6 +15,7 @@
 #' @importFrom stats rnorm median power complete.cases setNames
 #' @importFrom rlang .data
 #' @importFrom dplyr group_by slice_max slice_min ungroup arrange case_when
+#' @importFrom utils globalVariables
 NULL
 
 # Declare global variables to avoid R CMD check notes
