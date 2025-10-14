@@ -19,5 +19,10 @@ navbar:
       icon: fa-external-link-alt
       href: https://katsevich-lab-perturbplan.share.connect.posit.cloud/
 
+    github:
+      icon: fa-github
+      aria-label: "GitHub repository"
+      href: https://github.com/Katsevich-Lab/perturbplanApp
+
 # Exclude function reference
 reference: []

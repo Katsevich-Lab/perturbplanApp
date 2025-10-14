@@ -1,5 +1,5 @@
 Package: perturbplanapp
-Title: Constraint-Driven Experimental Design for CRISPR Perturb-seq
+Title: Perturb-seq Experimental Design
 Version: 0.1.0
 Authors@R:
     c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
