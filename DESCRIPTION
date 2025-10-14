@@ -1,4 +1,4 @@
-Package: perturbplanApp
+Package: perturbplanapp
 Title: Constraint-Driven Experimental Design for CRISPR Perturb-seq
 Version: 0.1.0
 Authors@R:

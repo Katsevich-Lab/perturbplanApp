@@ -50,7 +50,7 @@ create_navbar_links <- function() {
         class = "dropdown-menu",
         tags$li(
           tags$a(
-            href = "www/perturbplanapp.html",
+            href = "https://katsevich-lab.github.io/perturbplanApp/index.html",
             target = "_blank",
             tags$i(class = "fa fa-book"),
             " Documentation"

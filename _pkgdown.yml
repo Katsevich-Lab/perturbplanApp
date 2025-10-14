@@ -6,18 +6,18 @@ template:
 
 navbar:
   structure:
-    left: [intro, articles, news]
-    right: [github]
+    left: [articles, news, webapp]
+    right: [search, github]
   components:
     articles:
       text: Documentation
       href: articles/perturbplanapp.html
 
+    # Web App (external link)
+    webapp:
+      text: "Web App"
+      icon: fa-external-link-alt
+      href: https://katsevich-lab-perturbplan.share.connect.posit.cloud/
+
 # Exclude function reference
 reference: []
-
-articles:
-- title: Get started
-  navbar: Get started
-  contents:
-  - perturbplanapp

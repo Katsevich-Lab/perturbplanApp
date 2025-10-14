@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(perturbplanApp)
+library(perturbplanapp)
 
-test_check("perturbplanApp")
+test_check("perturbplanapp")
