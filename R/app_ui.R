@@ -59,7 +59,7 @@ golem_add_external_resources <- function() {
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "perturbplanApp"
+      app_title = "perturbplanapp"
     ),
     # Initialize shinyjs for JavaScript functionality
     useShinyjs()
