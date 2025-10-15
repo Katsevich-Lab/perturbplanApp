@@ -591,6 +591,14 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     )
 
   # Add legend elements ONLY to ggplot object for PDF export
+  # Create dummy data for shape legend (optimal solution)
+  dummy_shape <- data.frame(
+    cells_per_target = -Inf,
+    sequenced_reads_per_cell = -Inf,
+    shape_type = "Optimal solution",
+    stringsAsFactors = FALSE
+  )
+
   # Create dummy data for linetype legend (equi-power and equi-cost)
   dummy_line <- data.frame(
     cells_per_target = rep(-Inf, 2),
@@ -599,24 +607,33 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     stringsAsFactors = FALSE
   )
 
+  # Add points for optimal solution shape legend (outside plot range, only shows in legend)
+  p <- p +
+    geom_point(data = dummy_shape,
+               aes(x = cells_per_target, y = sequenced_reads_per_cell, shape = shape_type),
+               size = 3, color = "black") +
+    scale_shape_manual(
+      name = " ",  # Single space to group with linetype
+      values = c("Optimal solution" = 18),
+      labels = c("Optimal solution")
+    )
+
   # Add lines for equi-power and equi-cost linetype legend (outside plot range, only shows in legend)
   p <- p +
     geom_line(data = dummy_line,
               aes(x = cells_per_target, y = sequenced_reads_per_cell, linetype = line_type),
               color = "black", size = 0.8) +
     scale_linetype_manual(
-      name = "",
+      name = " ",  # Same single space to merge with shape legend
       values = c("Equi-power" = "solid", "Equi-cost" = "dashed"),
       labels = c("Equi-power", "Equi-cost")
     )
 
-  # Add annotation for optimal solution at (0.85, 0.9) using annotate with point and text
-  # Diamond symbol on the left, text on the right
-  p <- p +
-    annotate("text", x = Inf, y = Inf, label = "Optimal solution",
-             hjust = 1, vjust = 1.5, size = 3.5, color = "black") +
-    annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
-             hjust = 1, vjust = 1.5)
+  # Arrange legends: Row 1: Optimal solution + linetype, Row 2: Parameter Setting
+  p <- p + theme(
+    legend.box = "vertical",
+    legend.spacing.y = unit(0.5, "lines")
+  )
 
   return(list(
     interactive_plot = interactive_plot,
