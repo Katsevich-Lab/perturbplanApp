@@ -240,7 +240,8 @@ create_single_parameter_plots <- function(cached_results) {
             color = solution_label,
             text = tooltip_text),
         size = 2,
-        shape = 18  # Diamond shape for optimal points
+        shape = 18,  # Diamond shape for optimal points
+        show.legend = FALSE  # Don't create shape legend from actual points
       ))
     }
   }
@@ -292,7 +293,6 @@ create_single_parameter_plots <- function(cached_results) {
 
   # Add legend elements ONLY to ggplot object for PDF export
   # Create dummy data for shape legend (optimal solution)
-  # Use -Inf to place points outside plot range (invisible but creates legend entry)
   dummy_shape <- data.frame(
     parameter_value = -Inf,
     power = -Inf,
@@ -304,11 +304,12 @@ create_single_parameter_plots <- function(cached_results) {
   p <- p +
     suppressWarnings(geom_point(data = dummy_shape,
                aes(x = parameter_value, y = power, shape = shape_type),
-               size = 3, color = "black")) +
+               size = 3, color = "black", show.legend = TRUE)) +
     scale_shape_manual(
       name = "",
       values = c("Optimal solution" = 18),
-      labels = c("Optimal solution")
+      labels = c("Optimal solution"),
+      guide = guide_legend(override.aes = list(size = 3))
     ) +
     theme(legend.box = "vertical")
 
@@ -537,7 +538,8 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                                "Cost: $", scales::comma(total_cost, accuracy = 1, na_default = "N/A"), "<br>",
                                "Power: ", scales::percent(achieved_power, accuracy = 0.1, na_default = "N/A"))),
       size = 3,
-      shape = 18
+      shape = 18,
+      show.legend = FALSE  # Don't create shape legend from actual points
     ))
   }
 
@@ -828,7 +830,8 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     suppressWarnings(geom_point(data = optimal_points,
                aes(x = parameter_value, y = total_cost,
                    color = solution_label, text = point_tooltip),
-               size = 2, shape = 18)) +  # Diamond shape for optimal points
+               size = 2, shape = 18,  # Diamond shape for optimal points
+               show.legend = FALSE)) +  # Don't create shape legend from actual points
     # Add horizontal line for cost budget if available
     {if (!is.null(cost_budget) && !is.na(cost_budget))
       geom_hline(yintercept = cost_budget, linetype = "dashed", alpha = 0.7, color = "grey")
