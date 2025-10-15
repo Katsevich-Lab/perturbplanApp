@@ -255,7 +255,10 @@ create_single_parameter_plots <- function(cached_results) {
     theme_bw() +
     labs(color = "Parameter Setting") +
     theme(plot.title = element_text(hjust = 0.5),
-          legend.position = "bottom")
+          legend.position = "bottom") +
+    # Add annotation for optimal solution legend
+    annotate("text", x = Inf, y = Inf, label = "\u25c6 Optimal solution",
+             hjust = 1.02, vjust = 1.5, size = 3.5, color = "black")
 
   # Convert to interactive plotly
   p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
@@ -534,7 +537,11 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   ) +
   theme_bw() +
   theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
-        legend.position = "bottom")
+        legend.position = "bottom") +
+  # Add annotation for legend
+  annotate("text", x = Inf, y = Inf,
+           label = "\u25c6 Optimal solution   \u2500\u2500 Equi-power   \u22ef\u22ef Equi-cost",
+           hjust = 1.02, vjust = 1.5, size = 3.5, color = "black")
 
   # Create interactive plotly version
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
@@ -783,7 +790,10 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
          color = "Parameter Setting") +
     theme_bw() +
     theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
-          legend.position = "bottom")
+          legend.position = "bottom") +
+    # Add annotation for optimal solution legend
+    annotate("text", x = Inf, y = Inf, label = "\u25c6 Optimal solution",
+             hjust = 1.02, vjust = 1.5, size = 3.5, color = "black")
 
   # Set color scale for multiple solutions
   p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
