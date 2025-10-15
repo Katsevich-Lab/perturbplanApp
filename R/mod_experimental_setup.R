@@ -71,7 +71,7 @@ mod_experimental_setup_ui <- function(id) {
             ns = ns,
             tags$div(
               class = "file-upload-success status-success",
-              style = "margin-bottom: 30px;",
+              style = "margin-bottom: 35px;",
               tags$i(class = "fa fa-check-circle"),
               htmlOutput(ns("pilot_data_status"), inline = TRUE)
             )
