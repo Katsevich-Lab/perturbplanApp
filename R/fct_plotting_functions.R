@@ -611,12 +611,12 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     )
 
   # Add annotation for optimal solution at (0.85, 0.9) using annotate with point and text
-  # First add the diamond point, then add text next to it
+  # Diamond symbol on the left, text on the right
   p <- p +
-    annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
-             hjust = 8, vjust = -8) +
     annotate("text", x = Inf, y = Inf, label = "Optimal solution",
-             hjust = 1.05, vjust = 1.5, size = 3.5, color = "black")
+             hjust = 1, vjust = 1.5, size = 3.5, color = "black") +
+    annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
+             hjust = 1.8, vjust = 1.5)
 
   return(list(
     interactive_plot = interactive_plot,
