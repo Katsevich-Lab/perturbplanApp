@@ -9,6 +9,7 @@
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate geom_smooth geom_text
 #' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_x_continuous scale_linetype_discrete scale_color_viridis_c coord_cartesian
+#' @importFrom ggplot2 scale_shape_manual scale_linetype_manual guide_legend
 #' @importFrom plotly ggplotly layout config plot_ly
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma comma_format dollar_format
@@ -22,7 +23,7 @@ NULL
 # Declare global variables to avoid R CMD check notes
 if(getRversion() >= "2.15.1") utils::globalVariables(c(
   "hover_text", "parameter_value", "tooltip_text", "solution_label",
-  "solution_tooltip", "point_tooltip", "achieved_power"
+  "solution_tooltip", "point_tooltip", "achieved_power", "shape_type", "line_type"
 ))
 
 # ============================================================================
@@ -257,14 +258,9 @@ create_single_parameter_plots <- function(cached_results) {
     labs(color = "Parameter Setting") +
     theme(plot.title = element_text(hjust = 0.5),
           legend.position = "bottom",
-          plot.margin = unit(c(1, 3, 1, 1), "lines")) +  # Extra right margin for legend
-    # Add visual legend elements in top-right corner
-    annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
-             hjust = 1.5, vjust = 2) +
-    annotate("text", x = Inf, y = Inf, label = " Optimal solution",
-             hjust = 1, vjust = 2, size = 3.5, color = "black")
+          plot.margin = unit(c(1, 3, 1, 1), "lines"))  # Extra right margin for legend
 
-  # Convert to interactive plotly
+  # Convert to interactive plotly (without annotations - plotly has its own)
   p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
@@ -293,6 +289,28 @@ create_single_parameter_plots <- function(cached_results) {
       displaylogo = FALSE,
       modeBarButtonsToRemove = list("all")
     )
+
+  # Add legend elements ONLY to ggplot object for PDF export
+  # Create dummy data for shape legend (optimal solution)
+  # Use -Inf to place points outside plot range (invisible but creates legend entry)
+  dummy_shape <- data.frame(
+    parameter_value = -Inf,
+    power = -Inf,
+    shape_type = "Optimal solution",
+    stringsAsFactors = FALSE
+  )
+
+  # Add points for optimal solution shape legend (outside plot range, only shows in legend)
+  p <- p +
+    geom_point(data = dummy_shape,
+               aes(x = parameter_value, y = power, shape = shape_type),
+               size = 3, color = "black") +
+    scale_shape_manual(
+      name = "",
+      values = c("Optimal solution" = 18),
+      labels = c("Optimal solution")
+    ) +
+    theme(legend.box = "vertical")
 
   return(list(
     interactive_plot = p_interactive,
@@ -541,51 +559,10 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   ) +
   theme_bw() +
   theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
-        legend.position = "bottom",
-        plot.margin = unit(c(1, 3, 1, 1), "lines")) +  # Extra right margin for legend
-  coord_cartesian(clip = "off")  # Allow annotations outside plot area
+        legend.position = "bottom") +
+  coord_cartesian(clip = "off")
 
-  # Add visual legend in top-right corner using actual geom elements
-  # Get plot limits for positioning in log space
-  x_range <- range(c(combined_power_data$cells_per_target, combined_cost_data$cells_per_target, optimal_points$cells_per_target), na.rm = TRUE)
-  y_range <- range(c(combined_power_data$sequenced_reads_per_cell, combined_cost_data$sequenced_reads_per_cell, optimal_points$sequenced_reads_per_cell), na.rm = TRUE)
-
-  # Calculate positions in log space
-  log_x_range <- log10(x_range)
-  log_y_range <- log10(y_range)
-
-  # Legend positioning: right side, top area
-  legend_x_point <- 10^(log_x_range[2] + diff(log_x_range) * 0.12)
-  legend_x_line_start <- 10^(log_x_range[2] + diff(log_x_range) * 0.08)
-  legend_x_line_end <- 10^(log_x_range[2] + diff(log_x_range) * 0.16)
-  legend_x_text <- 10^(log_x_range[2] + diff(log_x_range) * 0.18)
-
-  # Vertical spacing
-  legend_y_top <- 10^(log_y_range[2] - diff(log_y_range) * 0.05)
-  legend_y_mid <- 10^(log_y_range[2] - diff(log_y_range) * 0.12)
-  legend_y_bot <- 10^(log_y_range[2] - diff(log_y_range) * 0.19)
-
-  # Add diamond point for optimal solution
-  p <- p + annotate("point", x = legend_x_point, y = legend_y_top,
-                   shape = 18, size = 3, color = "black") +
-          annotate("text", x = legend_x_text, y = legend_y_top,
-                   label = "Optimal solution", hjust = 0, size = 3.5, color = "black")
-
-  # Add solid line for equi-power
-  p <- p + annotate("segment", x = legend_x_line_start, xend = legend_x_line_end,
-                   y = legend_y_mid, yend = legend_y_mid,
-                   linetype = "solid", size = 0.8, color = "black") +
-          annotate("text", x = legend_x_text, y = legend_y_mid,
-                   label = "Equi-power", hjust = 0, size = 3.5, color = "black")
-
-  # Add dashed line for equi-cost
-  p <- p + annotate("segment", x = legend_x_line_start, xend = legend_x_line_end,
-                   y = legend_y_bot, yend = legend_y_bot,
-                   linetype = "dashed", size = 0.8, color = "black") +
-          annotate("text", x = legend_x_text, y = legend_y_bot,
-                   label = "Equi-cost", hjust = 0, size = 3.5, color = "black")
-
-  # Create interactive plotly version
+  # Create interactive plotly version (without annotations - plotly has its own)
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
     layout(
       title = list(
@@ -612,6 +589,50 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       displaylogo = FALSE,
       modeBarButtonsToRemove = list("all")
     )
+
+  # Add legend elements ONLY to ggplot object for PDF export
+  # Create dummy data for shape legend (optimal solution)
+  # Use -Inf to place points outside plot range (invisible but creates legend entry)
+  dummy_shape <- data.frame(
+    cells_per_target = -Inf,
+    sequenced_reads_per_cell = -Inf,
+    shape_type = "Optimal solution",
+    stringsAsFactors = FALSE
+  )
+
+  # Create dummy data for linetype legend (equi-power and equi-cost)
+  # Use -Inf to place lines outside plot range (invisible but creates legend entry)
+  dummy_line <- data.frame(
+    cells_per_target = rep(-Inf, 2),
+    sequenced_reads_per_cell = rep(-Inf, 2),
+    line_type = c("Equi-power", "Equi-cost"),
+    stringsAsFactors = FALSE
+  )
+
+  # Add points for optimal solution shape legend (outside plot range, only shows in legend)
+  p <- p +
+    geom_point(data = dummy_shape,
+               aes(x = cells_per_target, y = sequenced_reads_per_cell, shape = shape_type),
+               size = 3, color = "black") +
+    scale_shape_manual(
+      name = "",
+      values = c("Optimal solution" = 18),
+      labels = c("Optimal solution")
+    )
+
+  # Add lines for equi-power and equi-cost linetype legend (outside plot range, only shows in legend)
+  p <- p +
+    geom_line(data = dummy_line,
+              aes(x = cells_per_target, y = sequenced_reads_per_cell, linetype = line_type),
+              color = "black", size = 0.8) +
+    scale_linetype_manual(
+      name = "",
+      values = c("Equi-power" = "solid", "Equi-cost" = "dashed"),
+      labels = c("Equi-power", "Equi-cost")
+    )
+
+  # Organize legends horizontally
+  p <- p + theme(legend.box = "horizontal")
 
   return(list(
     interactive_plot = interactive_plot,
@@ -834,12 +855,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
           legend.position = "bottom",
           plot.margin = unit(c(1, 3, 1, 1), "lines")) +  # Extra right margin for legend
-    coord_cartesian(clip = "off") +  # Allow annotations outside plot area
-    # Add visual legend element in top-right corner
-    annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
-             hjust = 1.5, vjust = 2) +
-    annotate("text", x = Inf, y = Inf, label = " Optimal solution",
-             hjust = 1, vjust = 2, size = 3.5, color = "black")
+    coord_cartesian(clip = "off")  # Allow annotations outside plot area
 
   # Set color scale for multiple solutions
   p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
@@ -878,6 +894,28 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
       displaylogo = FALSE,
       modeBarButtonsToRemove = list("all")
     )
+
+  # Add legend elements ONLY to ggplot object for PDF export
+  # Create dummy data for shape legend (optimal solution)
+  # Use -Inf to place points outside plot range (invisible but creates legend entry)
+  dummy_shape <- data.frame(
+    parameter_value = -Inf,
+    total_cost = -Inf,
+    shape_type = "Optimal solution",
+    stringsAsFactors = FALSE
+  )
+
+  # Add points for optimal solution shape legend (outside plot range, only shows in legend)
+  p <- p +
+    geom_point(data = dummy_shape,
+               aes(x = parameter_value, y = total_cost, shape = shape_type),
+               size = 3, color = "black") +
+    scale_shape_manual(
+      name = "",
+      values = c("Optimal solution" = 18),
+      labels = c("Optimal solution")
+    ) +
+    theme(legend.box = "vertical")
 
   return(list(
     interactive_plot = interactive_plot,
