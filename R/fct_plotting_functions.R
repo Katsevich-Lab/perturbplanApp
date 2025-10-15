@@ -851,7 +851,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
       scale_x_continuous()
     }} +
     scale_y_log10(labels = scales::comma_format(accuracy = 1)) +
-    labs(title = paste(param_name, "vs Cost"),
+    labs(title = plot_title,  # Use same title as plotly version
          x = x_axis_label,
          y = "Total Cost ($)",
          color = "Parameter Setting") +
