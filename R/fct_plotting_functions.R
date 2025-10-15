@@ -591,15 +591,6 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     )
 
   # Add legend elements ONLY to ggplot object for PDF export
-  # Create dummy data for shape legend (optimal solution)
-  # Use -Inf to place points outside plot range (invisible but creates legend entry)
-  dummy_shape <- data.frame(
-    cells_per_target = -Inf,
-    sequenced_reads_per_cell = -Inf,
-    shape_type = "Optimal solution",
-    stringsAsFactors = FALSE
-  )
-
   # Create dummy data for linetype legend (equi-power and equi-cost)
   # Use -Inf to place lines outside plot range (invisible but creates legend entry)
   dummy_line <- data.frame(
@@ -609,35 +600,23 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     stringsAsFactors = FALSE
   )
 
-  # Add points for optimal solution shape legend (outside plot range, only shows in legend)
-  p <- p +
-    geom_point(data = dummy_shape,
-               aes(x = cells_per_target, y = sequenced_reads_per_cell, shape = shape_type),
-               size = 3, color = "black") +
-    scale_shape_manual(
-      name = " ",  # Single space to distinguish from color legend's empty name
-      values = c("Optimal solution" = 18),
-      labels = c("Optimal solution")
-    )
-
   # Add lines for equi-power and equi-cost linetype legend (outside plot range, only shows in legend)
   p <- p +
     geom_line(data = dummy_line,
               aes(x = cells_per_target, y = sequenced_reads_per_cell, linetype = line_type),
               color = "black", size = 0.8) +
     scale_linetype_manual(
-      name = " ",  # Same single space name to merge with shape legend
+      name = "",  # Empty name for cleaner legend
       values = c("Equi-power" = "solid", "Equi-cost" = "dashed"),
       labels = c("Equi-power", "Equi-cost")
     )
 
-  # Position legends at top-right (0.85, 0.9)
-  p <- p + theme(
-    legend.position = c(0.85, 0.9),
-    legend.box = "vertical",
-    legend.spacing.y = unit(0.5, "lines"),
-    legend.background = element_rect(fill = "white", color = "black", size = 0.3)
-  )
+  # Add annotation for optimal solution at position (0.85, 0.9)
+  p <- p +
+    annotate("text", x = Inf, y = Inf,
+             label = "\u25c6 Optimal solution",  # Diamond symbol
+             hjust = 1.05, vjust = 1.5,
+             size = 3.5, color = "black")
 
   return(list(
     interactive_plot = interactive_plot,
