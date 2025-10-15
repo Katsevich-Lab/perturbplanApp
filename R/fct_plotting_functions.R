@@ -304,12 +304,12 @@ create_single_parameter_plots <- function(cached_results) {
   p <- p +
     suppressWarnings(geom_point(data = dummy_shape,
                aes(x = parameter_value, y = power, shape = shape_type),
-               size = 3, color = "black", show.legend = TRUE)) +
+               size = 2, color = "black", show.legend = TRUE)) +
     scale_shape_manual(
       name = " ",  # Single space to separate from Parameter Setting legend
       values = c("Optimal solution" = 18),
       labels = c("Optimal solution"),
-      guide = guide_legend(override.aes = list(size = 3), order = 1)
+      guide = guide_legend(override.aes = list(size = 2), order = 1)
     ) +
     # Ensure Parameter Setting color legend comes second
     guides(color = guide_legend(order = 2)) +
@@ -616,7 +616,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   p <- p +
     suppressWarnings(geom_point(data = dummy_shape,
                aes(x = cells_per_target, y = sequenced_reads_per_cell, shape = shape_type),
-               size = 3, color = "black")) +
+               size = 2, color = "black")) +
     scale_shape_manual(
       name = " ",  # Single space to group with linetype
       values = c("Optimal solution" = 18),
@@ -916,7 +916,7 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
   p <- p +
     suppressWarnings(geom_point(data = dummy_shape,
                aes(x = parameter_value, y = total_cost, shape = shape_type),
-               size = 3, color = "black")) +
+               size = 2, color = "black")) +
     scale_shape_manual(
       name = "",
       values = c("Optimal solution" = 18),
