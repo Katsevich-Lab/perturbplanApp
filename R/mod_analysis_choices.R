@@ -200,7 +200,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
           # Compact success message with key statistics
           summary <- gene_data$summary
           HTML(paste0(
-            '<div class="file-upload-success" style="margin-bottom: 35px;">',
+            '<div class="file-upload-success" style="margin-bottom: 38px;">',
             '<i class="fa fa-check-circle" style="margin-right: 5px;"></i>',
             '<strong>Gene list loaded:</strong> ',
             summary$total_pairs, ' pairs, ',
@@ -212,7 +212,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
           # Error message
           error_list <- paste(gene_data$errors, collapse = "<br>\\u2022 ")
           HTML(paste0(
-            '<div class="upload-status status-error" style="background-color: rgba(200, 90, 90, 0.1); border: 1px solid #C85A5A; color: #8B3A3A; padding: 8px; border-radius: 4px; margin: 5px 0; margin-bottom: 35px;">',
+            '<div class="upload-status status-error" style="background-color: rgba(200, 90, 90, 0.1); border: 1px solid #C85A5A; color: #8B3A3A; padding: 8px; border-radius: 4px; margin: 5px 0; margin-bottom: 38px;">',
             '<i class="fa fa-exclamation-triangle" style="margin-right: 5px;"></i>',
             '<strong>Validation failed:</strong><br>\\u2022 ',
             error_list,
