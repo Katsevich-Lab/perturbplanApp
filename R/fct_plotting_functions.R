@@ -260,9 +260,9 @@ create_single_parameter_plots <- function(cached_results) {
           plot.margin = unit(c(1, 3, 1, 1), "lines")) +  # Extra right margin for legend
     # Add visual legend elements in top-right corner
     annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
-             hjust = 3.5, vjust = 2) +
-    annotate("text", x = Inf, y = Inf, label = "Optimal solution",
-             hjust = 1.05, vjust = 2, size = 3.5, color = "black")
+             hjust = 1.5, vjust = 2) +
+    annotate("text", x = Inf, y = Inf, label = " Optimal solution",
+             hjust = 1, vjust = 2, size = 3.5, color = "black")
 
   # Convert to interactive plotly
   p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
@@ -546,33 +546,43 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
   coord_cartesian(clip = "off")  # Allow annotations outside plot area
 
   # Add visual legend in top-right corner using actual geom elements
-  # Get plot limits for positioning
+  # Get plot limits for positioning in log space
   x_range <- range(c(combined_power_data$cells_per_target, combined_cost_data$cells_per_target, optimal_points$cells_per_target), na.rm = TRUE)
   y_range <- range(c(combined_power_data$sequenced_reads_per_cell, combined_cost_data$sequenced_reads_per_cell, optimal_points$sequenced_reads_per_cell), na.rm = TRUE)
 
-  # Position in log space (since we're using log scales)
-  legend_x_start <- 10^(log10(x_range[2]) * 1.15)
-  legend_y_top <- 10^(log10(y_range[2]) * 0.95)
-  legend_y_step <- 10^(log10(y_range[2]) * 0.12)  # Spacing between items
+  # Calculate positions in log space
+  log_x_range <- log10(x_range)
+  log_y_range <- log10(y_range)
+
+  # Legend positioning: right side, top area
+  legend_x_point <- 10^(log_x_range[2] + diff(log_x_range) * 0.12)
+  legend_x_line_start <- 10^(log_x_range[2] + diff(log_x_range) * 0.08)
+  legend_x_line_end <- 10^(log_x_range[2] + diff(log_x_range) * 0.16)
+  legend_x_text <- 10^(log_x_range[2] + diff(log_x_range) * 0.18)
+
+  # Vertical spacing
+  legend_y_top <- 10^(log_y_range[2] - diff(log_y_range) * 0.05)
+  legend_y_mid <- 10^(log_y_range[2] - diff(log_y_range) * 0.12)
+  legend_y_bot <- 10^(log_y_range[2] - diff(log_y_range) * 0.19)
 
   # Add diamond point for optimal solution
-  p <- p + annotate("point", x = legend_x_start, y = legend_y_top,
+  p <- p + annotate("point", x = legend_x_point, y = legend_y_top,
                    shape = 18, size = 3, color = "black") +
-          annotate("text", x = legend_x_start * 1.15, y = legend_y_top,
+          annotate("text", x = legend_x_text, y = legend_y_top,
                    label = "Optimal solution", hjust = 0, size = 3.5, color = "black")
 
   # Add solid line for equi-power
-  p <- p + annotate("segment", x = legend_x_start * 0.95, xend = legend_x_start * 1.05,
-                   y = legend_y_top / legend_y_step, yend = legend_y_top / legend_y_step,
+  p <- p + annotate("segment", x = legend_x_line_start, xend = legend_x_line_end,
+                   y = legend_y_mid, yend = legend_y_mid,
                    linetype = "solid", size = 0.8, color = "black") +
-          annotate("text", x = legend_x_start * 1.15, y = legend_y_top / legend_y_step,
+          annotate("text", x = legend_x_text, y = legend_y_mid,
                    label = "Equi-power", hjust = 0, size = 3.5, color = "black")
 
   # Add dashed line for equi-cost
-  p <- p + annotate("segment", x = legend_x_start * 0.95, xend = legend_x_start * 1.05,
-                   y = legend_y_top / (legend_y_step^2), yend = legend_y_top / (legend_y_step^2),
+  p <- p + annotate("segment", x = legend_x_line_start, xend = legend_x_line_end,
+                   y = legend_y_bot, yend = legend_y_bot,
                    linetype = "dashed", size = 0.8, color = "black") +
-          annotate("text", x = legend_x_start * 1.15, y = legend_y_top / (legend_y_step^2),
+          annotate("text", x = legend_x_text, y = legend_y_bot,
                    label = "Equi-cost", hjust = 0, size = 3.5, color = "black")
 
   # Create interactive plotly version
@@ -827,9 +837,9 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
     coord_cartesian(clip = "off") +  # Allow annotations outside plot area
     # Add visual legend element in top-right corner
     annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
-             hjust = 3.5, vjust = 2) +
-    annotate("text", x = Inf, y = Inf, label = "Optimal solution",
-             hjust = 1.05, vjust = 2, size = 3.5, color = "black")
+             hjust = 1.5, vjust = 2) +
+    annotate("text", x = Inf, y = Inf, label = " Optimal solution",
+             hjust = 1, vjust = 2, size = 3.5, color = "black")
 
   # Set color scale for multiple solutions
   p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
