@@ -6,7 +6,7 @@
 # Organized by plot type and workflow category.
 #
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_hline geom_vline geom_area
-#' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
+#' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank element_rect scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate geom_smooth geom_text
 #' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_x_continuous scale_linetype_discrete scale_color_viridis_c coord_cartesian
 #' @importFrom ggplot2 scale_shape_manual scale_linetype_manual guide_legend guides
@@ -631,10 +631,12 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       labels = c("Equi-power", "Equi-cost")
     )
 
-  # Organize legends: Parameter Setting on row 1, shape+linetype merged on row 2
+  # Position legends at top-right (0.85, 0.9)
   p <- p + theme(
+    legend.position = c(0.85, 0.9),
     legend.box = "vertical",
-    legend.spacing.y = unit(0.5, "lines")
+    legend.spacing.y = unit(0.5, "lines"),
+    legend.background = element_rect(fill = "white", color = "black", size = 0.3)
   )
 
   return(list(
