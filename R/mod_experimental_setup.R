@@ -71,6 +71,7 @@ mod_experimental_setup_ui <- function(id) {
             ns = ns,
             tags$div(
               class = "file-upload-success status-success",
+              style = "margin-bottom: 30px;",
               tags$i(class = "fa fa-check-circle"),
               htmlOutput(ns("pilot_data_status"), inline = TRUE)
             )
@@ -79,8 +80,6 @@ mod_experimental_setup_ui <- function(id) {
 
         # Perturbation choices section (integrated from mod_perturbation_choices)
         tags$div(
-          style = "margin-top: 35px;",
-
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
                       add_tooltip("Multiplicity of infection (MOI):", "moi", use_icon = TRUE),

@@ -60,15 +60,12 @@ mod_analysis_choices_ui <- function(id) {
           )
         ),
 
-        tags$div(
-          style = "margin-top: 35px;",
-          selectInput(ns("side"),
-                        add_tooltip("Test sidedness:", "test_side", use_icon = TRUE),
-                      choices = c("Left (expression decrease)" = "left",
-                                 "Right (expression increase)" = "right",
-                                 "Both (increase or decrease)" = "both"),
-                      selected = "left")
-        ),
+        selectInput(ns("side"),
+                      add_tooltip("Test sidedness:", "test_side", use_icon = TRUE),
+                    choices = c("Left (expression decrease)" = "left",
+                               "Right (expression increase)" = "right",
+                               "Both (increase or decrease)" = "both"),
+                    selected = "left"),
 
         # Fixed value input for Expression threshold parameter (conditional)
         # CONSISTENT VARIABLE USAGE: Expression_threshold_fixed throughout
@@ -203,7 +200,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
           # Compact success message with key statistics
           summary <- gene_data$summary
           HTML(paste0(
-            '<div class="file-upload-success">',
+            '<div class="file-upload-success" style="margin-bottom: 30px;">',
             '<i class="fa fa-check-circle" style="margin-right: 5px;"></i>',
             '<strong>Gene list loaded:</strong> ',
             summary$total_pairs, ' pairs, ',
@@ -215,7 +212,7 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
           # Error message
           error_list <- paste(gene_data$errors, collapse = "<br>\\u2022 ")
           HTML(paste0(
-            '<div class="upload-status status-error" style="background-color: rgba(200, 90, 90, 0.1); border: 1px solid #C85A5A; color: #8B3A3A; padding: 8px; border-radius: 4px; margin: 5px 0;">',
+            '<div class="upload-status status-error" style="background-color: rgba(200, 90, 90, 0.1); border: 1px solid #C85A5A; color: #8B3A3A; padding: 8px; border-radius: 4px; margin: 5px 0; margin-bottom: 30px;">',
             '<i class="fa fa-exclamation-triangle" style="margin-right: 5px;"></i>',
             '<strong>Validation failed:</strong><br>\\u2022 ',
             error_list,
