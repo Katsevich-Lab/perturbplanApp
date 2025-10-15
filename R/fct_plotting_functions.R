@@ -254,7 +254,8 @@ create_single_parameter_plots <- function(cached_results) {
     coord_cartesian(ylim = c(NA, 1)) +  # Ensure y-axis shows power = 1 as maximum
     theme_bw() +
     labs(color = "Parameter Setting") +
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(plot.title = element_text(hjust = 0.5),
+          legend.position = "bottom")
 
   # Convert to interactive plotly
   p_interactive <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
@@ -532,7 +533,8 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     color = "Parameter Setting"
   ) +
   theme_bw() +
-  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
+  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        legend.position = "bottom")
 
   # Create interactive plotly version
   interactive_plot <- suppressWarnings(ggplotly(p, tooltip = "text", height = 430)) %>%
@@ -780,7 +782,8 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
          y = "Total Cost ($)",
          color = "Parameter Setting") +
     theme_bw() +
-    theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5))
+    theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+          legend.position = "bottom")
 
   # Set color scale for multiple solutions
   p <- p + scale_color_manual(values = setNames(sapply(solutions_list, function(sol) sol$color),
