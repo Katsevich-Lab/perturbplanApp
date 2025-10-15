@@ -9,7 +9,7 @@
 #' @importFrom ggplot2 labs theme_minimal theme_bw theme element_text element_blank scale_color_manual
 #' @importFrom ggplot2 geom_abline scale_color_gradient2 scale_size_manual annotate geom_smooth geom_text
 #' @importFrom ggplot2 scale_x_log10 scale_y_log10 scale_x_continuous scale_linetype_discrete scale_color_viridis_c coord_cartesian
-#' @importFrom ggplot2 scale_shape_manual scale_linetype_manual guide_legend
+#' @importFrom ggplot2 scale_shape_manual scale_linetype_manual guide_legend guides
 #' @importFrom plotly ggplotly layout config plot_ly
 #' @importFrom magrittr %>%
 #' @importFrom scales percent_format comma comma_format dollar_format
@@ -631,8 +631,15 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
       labels = c("Equi-power", "Equi-cost")
     )
 
-  # Organize legends horizontally
-  p <- p + theme(legend.box = "horizontal")
+  # Organize legends: Parameter Setting on row 1, shape+linetype on row 2
+  p <- p + guides(
+    color = guide_legend(order = 1),
+    shape = guide_legend(order = 2),
+    linetype = guide_legend(order = 2)
+  ) + theme(
+    legend.box = "vertical",
+    legend.box.just = "left"
+  )
 
   return(list(
     interactive_plot = interactive_plot,
