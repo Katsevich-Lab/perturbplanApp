@@ -592,7 +592,6 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
 
   # Add legend elements ONLY to ggplot object for PDF export
   # Create dummy data for linetype legend (equi-power and equi-cost)
-  # Use -Inf to place lines outside plot range (invisible but creates legend entry)
   dummy_line <- data.frame(
     cells_per_target = rep(-Inf, 2),
     sequenced_reads_per_cell = rep(-Inf, 2),
@@ -606,17 +605,18 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
               aes(x = cells_per_target, y = sequenced_reads_per_cell, linetype = line_type),
               color = "black", size = 0.8) +
     scale_linetype_manual(
-      name = "",  # Empty name for cleaner legend
+      name = "",
       values = c("Equi-power" = "solid", "Equi-cost" = "dashed"),
       labels = c("Equi-power", "Equi-cost")
     )
 
-  # Add annotation for optimal solution at position (0.85, 0.9)
+  # Add annotation for optimal solution at (0.85, 0.9) using annotate with point and text
+  # First add the diamond point, then add text next to it
   p <- p +
-    annotate("text", x = Inf, y = Inf,
-             label = "\u25c6 Optimal solution",  # Diamond symbol
-             hjust = 1.05, vjust = 1.5,
-             size = 3.5, color = "black")
+    annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
+             hjust = 8, vjust = -8) +
+    annotate("text", x = Inf, y = Inf, label = "Optimal solution",
+             hjust = 1.05, vjust = 1.5, size = 3.5, color = "black")
 
   return(list(
     interactive_plot = interactive_plot,
