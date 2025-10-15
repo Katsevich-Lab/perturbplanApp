@@ -291,13 +291,16 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
         # Get the ggplot object and save as PDF
         if (!is.null(plots$plots$ggplot_object)) {
           # Save ggplot as PDF using ggsave
-          ggplot2::ggsave(
-            filename = file,
-            plot = plots$plots$ggplot_object,
-            width = 10,
-            height = 7,
-            units = "in",
-            dpi = 300
+          # Suppress warnings from -Inf dummy data used for legend entries
+          suppressWarnings(
+            ggplot2::ggsave(
+              filename = file,
+              plot = plots$plots$ggplot_object,
+              width = 10,
+              height = 7,
+              units = "in",
+              dpi = 300
+            )
           )
         } else {
           stop("No plot available for download")
