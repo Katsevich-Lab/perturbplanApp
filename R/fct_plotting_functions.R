@@ -306,12 +306,15 @@ create_single_parameter_plots <- function(cached_results) {
                aes(x = parameter_value, y = power, shape = shape_type),
                size = 3, color = "black", show.legend = TRUE)) +
     scale_shape_manual(
-      name = "",
+      name = " ",  # Single space to separate from Parameter Setting legend
       values = c("Optimal solution" = 18),
       labels = c("Optimal solution"),
-      guide = guide_legend(override.aes = list(size = 3))
+      guide = guide_legend(override.aes = list(size = 3), order = 1)
     ) +
-    theme(legend.box = "vertical")
+    # Ensure Parameter Setting color legend comes second
+    guides(color = guide_legend(order = 2)) +
+    theme(legend.box = "vertical",
+          legend.spacing.y = unit(0.5, "lines"))
 
   return(list(
     interactive_plot = p_interactive,
