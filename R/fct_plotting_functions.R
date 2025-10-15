@@ -615,7 +615,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
                aes(x = cells_per_target, y = sequenced_reads_per_cell, shape = shape_type),
                size = 3, color = "black") +
     scale_shape_manual(
-      name = "",
+      name = " ",  # Single space to distinguish from color legend's empty name
       values = c("Optimal solution" = 18),
       labels = c("Optimal solution")
     )
@@ -626,19 +626,15 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
               aes(x = cells_per_target, y = sequenced_reads_per_cell, linetype = line_type),
               color = "black", size = 0.8) +
     scale_linetype_manual(
-      name = "",
+      name = " ",  # Same single space name to merge with shape legend
       values = c("Equi-power" = "solid", "Equi-cost" = "dashed"),
       labels = c("Equi-power", "Equi-cost")
     )
 
-  # Organize legends: Parameter Setting on row 1, shape+linetype on row 2
-  p <- p + guides(
-    color = guide_legend(order = 1),
-    shape = guide_legend(order = 2),
-    linetype = guide_legend(order = 2)
-  ) + theme(
+  # Organize legends: Parameter Setting on row 1, shape+linetype merged on row 2
+  p <- p + theme(
     legend.box = "vertical",
-    legend.box.just = "left"
+    legend.spacing.y = unit(0.5, "lines")
   )
 
   return(list(
