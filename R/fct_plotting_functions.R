@@ -302,9 +302,9 @@ create_single_parameter_plots <- function(cached_results) {
 
   # Add points for optimal solution shape legend (outside plot range, only shows in legend)
   p <- p +
-    geom_point(data = dummy_shape,
+    suppressWarnings(geom_point(data = dummy_shape,
                aes(x = parameter_value, y = power, shape = shape_type),
-               size = 3, color = "black") +
+               size = 3, color = "black")) +
     scale_shape_manual(
       name = "",
       values = c("Optimal solution" = 18),
@@ -908,9 +908,9 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
 
   # Add points for optimal solution shape legend (outside plot range, only shows in legend)
   p <- p +
-    geom_point(data = dummy_shape,
+    suppressWarnings(geom_point(data = dummy_shape,
                aes(x = parameter_value, y = total_cost, shape = shape_type),
-               size = 3, color = "black") +
+               size = 3, color = "black")) +
     scale_shape_manual(
       name = "",
       values = c("Optimal solution" = 18),
