@@ -609,9 +609,9 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
 
   # Add points for optimal solution shape legend (outside plot range, only shows in legend)
   p <- p +
-    geom_point(data = dummy_shape,
+    suppressWarnings(geom_point(data = dummy_shape,
                aes(x = cells_per_target, y = sequenced_reads_per_cell, shape = shape_type),
-               size = 3, color = "black") +
+               size = 3, color = "black")) +
     scale_shape_manual(
       name = " ",  # Single space to group with linetype
       values = c("Optimal solution" = 18),
@@ -620,9 +620,9 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
 
   # Add lines for equi-power and equi-cost linetype legend (outside plot range, only shows in legend)
   p <- p +
-    geom_line(data = dummy_line,
+    suppressWarnings(geom_line(data = dummy_line,
               aes(x = cells_per_target, y = sequenced_reads_per_cell, linetype = line_type),
-              color = "black", size = 0.8) +
+              color = "black", size = 0.8)) +
     scale_linetype_manual(
       name = " ",  # Same single space to merge with shape legend
       values = c("Equi-power" = "solid", "Equi-cost" = "dashed"),
