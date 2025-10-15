@@ -616,7 +616,7 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     annotate("text", x = Inf, y = Inf, label = "Optimal solution",
              hjust = 1, vjust = 1.5, size = 3.5, color = "black") +
     annotate("point", x = Inf, y = Inf, shape = 18, size = 3, color = "black",
-             hjust = 1.9, vjust = 1.5)
+             hjust = 1, vjust = 1.5)
 
   return(list(
     interactive_plot = interactive_plot,
