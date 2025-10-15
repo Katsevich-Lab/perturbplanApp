@@ -286,7 +286,10 @@ create_single_parameter_plots <- function(cached_results) {
       modeBarButtonsToRemove = list("all")
     )
 
-  return(list(interactive_plot = p_interactive))
+  return(list(
+    interactive_plot = p_interactive,
+    ggplot_object = p
+  ))
 }
 
 
@@ -560,7 +563,8 @@ create_cost_minimization_plots <- function(solutions_list, workflow_info, metada
     )
 
   return(list(
-    interactive_plot = interactive_plot
+    interactive_plot = interactive_plot,
+    ggplot_object = p
   ))
 }
 
@@ -816,7 +820,10 @@ create_constrained_minimization_plots <- function(solutions_list, workflow_info,
       modeBarButtonsToRemove = list("all")
     )
 
-  return(list(interactive_plot = interactive_plot))
+  return(list(
+    interactive_plot = interactive_plot,
+    ggplot_object = p
+  ))
 }
 
 # ============================================================================

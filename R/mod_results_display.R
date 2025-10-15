@@ -40,7 +40,7 @@ mod_results_display_ui <- function(id) {
                   icon = icon("download"),
                   class = "btn btn-primary btn-sm",
                   style = "padding: 4px 8px; margin: 0;",
-                  title = "Download Interactive Plot"
+                  title = "Download Plot as PDF"
                 )
               )
             ),
@@ -281,35 +281,29 @@ mod_results_display_server <- function(id, plot_objects, cached_results, user_co
     # Plot download using downloadHandler
     output$export_plot <- downloadHandler(
       filename = function() {
-        paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".html")
+        paste0("perturbplan_plot_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".pdf")
       },
       content = function(file) {
         req(plot_objects())
 
         plots <- plot_objects()
 
-        # Get the interactive plotly version and save as HTML
-        if (!is.null(plots$plots$interactive_plot)) {
-          # Create a taller version by re-creating the interactive plot with proper height
-          taller_interactive_plot <- suppressWarnings(
-            plots$plots$interactive_plot %>%
-              plotly::layout(
-                height = 750,
-                margin = list(t = 60, b = 80, l = 80, r = 40))
-          )
-
-          # Save the plotly widget as interactive HTML file
-          htmlwidgets::saveWidget(
-            widget = plotly::as_widget(taller_interactive_plot),
-            file = file,
-            selfcontained = TRUE,
-            title = "PerturbPlan Interactive Plot"
+        # Get the ggplot object and save as PDF
+        if (!is.null(plots$plots$ggplot_object)) {
+          # Save ggplot as PDF using ggsave
+          ggplot2::ggsave(
+            filename = file,
+            plot = plots$plots$ggplot_object,
+            width = 10,
+            height = 7,
+            units = "in",
+            dpi = 300
           )
         } else {
           stop("No plot available for download")
         }
       },
-      contentType = "text/html"
+      contentType = "application/pdf"
     )
 
   })
