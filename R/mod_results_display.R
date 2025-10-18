@@ -116,7 +116,7 @@ mod_results_display_ui <- function(id) {
         column(
           width = 12,
           box(
-            title = "Summary Tables",
+            title = "Summary Table",
             status = "info",
             solidHeader = TRUE,
             width = NULL,

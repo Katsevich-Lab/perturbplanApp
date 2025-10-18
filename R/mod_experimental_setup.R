@@ -39,7 +39,7 @@ mod_experimental_setup_ui <- function(id) {
             class = "file-upload-info",
             tags$small(
               tags$i(class = "fa fa-info-circle"),
-              tags$strong("Format: "), "RDS file with baseline expression, saturation curve, and mapping efficiency."
+              tags$strong("Format: "), "RDS file with baseline expression, saturation curve, and mapping efficiency. See documentation for how to create this file."
             )
           ),
 
