@@ -37,9 +37,11 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="articles/perturbplanapp.html">Documentation</a></li>
-<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/"><span class="fa fa-external-link-alt"></span> Web App</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/perturbplanapp.html"><span class="fa fa-book"></span> Documentation</a></li>
+<li class="nav-item"><a class="nav-link" href="news/index.html"><span class="fa fa-history"></span> Changelog</a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://docs.google.com/forms/d/e/1FAIpQLScDJpWazsiUIYXlb--NW0FvP-wPtraqdfMHT6xlW35zIWc4yg/viewform?usp=header"><span class="fa fa-envelope"></span> Feedback</a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/Katsevich-Lab/perturbplan/discussions"><span class="fa fa-users"></span> Community</a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/"><span class="fa fa-rocket"></span> Launch App</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -58,8 +60,34 @@
 <img src="logo.png" class="logo" alt=""><h1 id="perturbplan-app">PerturbPlan App<a class="anchor" aria-label="anchor" href="#perturbplan-app"></a>
 </h1>
 </div>
-<p>PerturbPlan is a <a href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/" class="external-link">Shiny app</a> for Perturb-seq and TAP-seq experimental design. In both types of experiments, many genetic perturbations are introduced into a population of cells, and the transcriptomes of the perturbed cells are profiled using single-cell RNA-sequencing (for TAP-seq, only a set of pre-selected genes is sequenced). A key task for Perturb-seq and TAP-seq data analysis is to identify among a set of perturbation-gene pairs those where the perturbation has a significant effect on the expression of the gene.</p>
-<p>The key metrics for experimental design are <strong>power</strong> (the expected proportion of true perturbation-gene effects that are detected as significant) and <strong>cost</strong> (the total cost of the experiment, equal to the sum of library preparation and sequencing costs). There are a number of concrete design problems that arise when balancing power and cost. The PerturbPlan is structured around solving 11 commonly encountered design problems. The workflow of the app is as follows:</p>
+<style>
+.launch-button {
+  display: inline-block;
+  padding: 16px 16px;
+  background-color: #4472C4;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 24px;
+  border: 2px solid black;
+  transition: all 0.3s ease;
+}
+.launch-button:hover {
+  background-color: #365a9e;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+</style>
+<p>PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. It helps balance power and cost, with an emphasis on speed, flexibility, and interactivity.</p>
+<p align="center">
+<a href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/" class="external-link launch-button"> 🚀 Launch App </a>
+</p>
+<div class="section level2">
+<h2 id="interface-overview">Interface overview<a class="anchor" aria-label="anchor" href="#interface-overview"></a>
+</h2>
+<p align="center">
+<img src="reference/figures/schematic.png" alt="PerturbPlan App Schematic" width="100%"></p>
+<p>PerturbPlan is structured around solving 11 commonly encountered design problems. The workflow of the app is as follows:</p>
 <ol style="list-style-type: decimal">
 <li><p><strong>Select a design problem</strong>: Choose one of 11 predefined design problems that best matches your experimental goals.</p></li>
 <li><p><strong>Configure design parameters</strong>: Set the parameters for your experimental choices, analysis choices, expected effect sizes, and (optionally) advanced settings. Click “Plan”.</p></li>
@@ -69,6 +97,7 @@
 <li><p><strong>Start over.</strong> Click the “Restart” button to start from scratch.</p></li>
 </ol>
 <p>We elaborate on steps 1 and 2 in the <a href="articles/perturbplanapp.html">full documentation</a>.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>

@@ -6,17 +6,33 @@ template:
 
 navbar:
   structure:
-    left: [articles, news, webapp]
+    left: [articles, news, feedback, community, webapp]
     right: [search, github]
   components:
     articles:
       text: Documentation
+      icon: fa-book
       href: articles/perturbplanapp.html
 
-    # Web App (external link)
+    news:
+      text: Changelog
+      icon: fa-history
+      href: news/index.html
+
+    feedback:
+      text: Feedback
+      icon: fa-envelope
+      href: https://docs.google.com/forms/d/e/1FAIpQLScDJpWazsiUIYXlb--NW0FvP-wPtraqdfMHT6xlW35zIWc4yg/viewform?usp=header
+
+    community:
+      icon: fa-users
+      text: Community
+      href: https://github.com/Katsevich-Lab/perturbplan/discussions
+
+    # Launch App (external link)
     webapp:
-      text: "Web App"
-      icon: fa-external-link-alt
+      text: "Launch App"
+      icon: fa-rocket
       href: https://katsevich-lab-perturbplan.share.connect.posit.cloud/
 
     github:
