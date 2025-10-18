@@ -14,6 +14,7 @@
 #'       \item Questions and Feature Requests: Links to GitHub Discussions
 #'       \item Bug Reports: Links to GitHub Issues
 #'     }
+#'   \item Feedback: Links to Google Form for private feedback
 #'   \item GitHub: Links to the app repository (dev branch)
 #' }
 #'
@@ -72,6 +73,16 @@ create_navbar_links <- function() {
             " Bug Reports"
           )
         )
+      )
+    ),
+
+    # Feedback link
+    tags$li(
+      tags$a(
+        href = "https://docs.google.com/forms/d/e/1FAIpQLScDJpWazsiUIYXlb--NW0FvP-wPtraqdfMHT6xlW35zIWc4yg/viewform?usp=header",
+        target = "_blank",
+        tags$i(class = "fa fa-envelope-o"),
+        " Feedback"
       )
     ),
 

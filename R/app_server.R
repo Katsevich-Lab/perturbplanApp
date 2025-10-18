@@ -23,6 +23,39 @@ app_server <- function(input, output, session) {
   )
 
   # ========================================================================
+  # MOBILE DEVICE DETECTION AND WARNING
+  # ========================================================================
+  # Show modal warning when mobile phone is detected by JavaScript
+  observeEvent(input$mobile_device_detected, {
+    showModal(modalDialog(
+      title = tags$div(
+        style = "text-align: center; font-size: 20px; font-weight: 600;",
+        tags$span(style = "font-size: 48px; display: block; margin-bottom: 10px;", "\U0001F4F1"),
+        "Mobile Viewing Not Supported"
+      ),
+      tags$div(
+        style = "text-align: center; line-height: 1.6;",
+        tags$p("This application is not optimized for viewing on mobile phones."),
+        tags$p("For the best experience, please access the app from a computer."),
+        tags$p(
+          style = "margin-top: 20px;",
+          "Visit the ",
+          tags$a(
+            href = "https://katsevich-lab.github.io/perturbplanApp/index.html",
+            target = "_blank",
+            style = "color: #0066cc; text-decoration: underline;",
+            "PerturbPlan documentation site"
+          ),
+          " for more information."
+        )
+      ),
+      footer = NULL,
+      easyClose = FALSE,
+      size = "m"
+    ))
+  }, ignoreInit = TRUE)
+
+  # ========================================================================
   # MODULE 1: INPUT COLLECTION (Sidebar)
   # ========================================================================
   user_workflow_config <- mod_sidebar_server("sidebar", app_state)
