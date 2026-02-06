@@ -106,6 +106,21 @@ mod_effect_sizes_server <- function(id, design_config, app_state = NULL){
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+    # Clamp numeric inputs to defaults when user types non-numeric or out of range
+    # Triggered on blur (losing focus) so it doesn't interrupt typing
+    observeEvent(input$minimum_fold_change_fixed_blur, {
+      val <- input$minimum_fold_change_fixed
+      if (!is.null(val) && (is.na(val) || val < 0.3 || val > 2)) {
+        updateNumericInput(session, "minimum_fold_change_fixed", value = 0.8)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$prop_non_null_blur, {
+      val <- input$prop_non_null
+      if (!is.null(val) && (is.na(val) || val < 0.001 || val > 1)) {
+        updateNumericInput(session, "prop_non_null", value = 0.01)
+      }
+    }, ignoreInit = TRUE)
+
     return(effect_sizes_config)
   })
 }

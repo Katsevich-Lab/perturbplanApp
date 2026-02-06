@@ -184,6 +184,27 @@ mod_advanced_choices_server <- function(id, app_state = NULL, experimental_confi
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+    # Clamp numeric inputs to defaults when user types non-numeric or out of range
+    # Triggered on blur (losing focus) so it doesn't interrupt typing
+    observeEvent(input$gRNA_variability_blur, {
+      val <- input$gRNA_variability
+      if (!is.null(val) && (is.na(val) || val < 0.1 || val > 5)) {
+        updateNumericInput(session, "gRNA_variability", value = 0.15)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$mapping_efficiency_blur, {
+      val <- input$mapping_efficiency
+      if (!is.null(val) && (is.na(val) || val < 0.1 || val > 1.0)) {
+        updateNumericInput(session, "mapping_efficiency", value = 0.72)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$fdr_target_blur, {
+      val <- input$fdr_target
+      if (!is.null(val) && (is.na(val) || val < 0.001 || val > 0.5)) {
+        updateNumericInput(session, "fdr_target", value = 0.1)
+      }
+    }, ignoreInit = TRUE)
+
     return(advanced_choices_config)
   })
 }
