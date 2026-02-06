@@ -245,7 +245,13 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
         shinyjs::toggleState("gene_list_mode", condition = !inputs_disabled)
         shinyjs::toggleState("gene_list_file", condition = !inputs_disabled)
         shinyjs::toggleState("side", condition = !inputs_disabled)
-        shinyjs::toggleState("Expression_threshold_fixed", condition = !inputs_disabled)
+        # Use attribute selector to disable BOTH conditionalPanel copies of this input
+        # (jQuery '#id' only targets the first; '[id="..."]' targets all duplicates)
+        shinyjs::runjs(sprintf(
+          "$('[id=\"%s\"]').prop('disabled', %s)",
+          ns("Expression_threshold_fixed"),
+          tolower(inputs_disabled)
+        ))
 
         # Note: Section headers remain functional for collapse/expand
       }
