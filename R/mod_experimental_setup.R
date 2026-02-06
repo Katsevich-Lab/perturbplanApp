@@ -241,6 +241,45 @@ mod_experimental_setup_server <- function(id, design_config, app_state = NULL){
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+    # Clamp numeric inputs to defaults when user types non-numeric or out of range
+    # Triggered on blur (losing focus) so it doesn't interrupt typing
+    observeEvent(input$MOI_blur, {
+      val <- input$MOI
+      if (!is.null(val) && (is.na(val) || val < 1 || val > 30)) {
+        updateNumericInput(session, "MOI", value = 10)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$num_targets_blur, {
+      val <- input$num_targets
+      if (!is.null(val) && (is.na(val) || val < 50 || val > 12000)) {
+        updateNumericInput(session, "num_targets", value = 500)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$gRNAs_per_target_blur, {
+      val <- input$gRNAs_per_target
+      if (!is.null(val) && (is.na(val) || val < 1 || val > 20)) {
+        updateNumericInput(session, "gRNAs_per_target", value = 4)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$non_targeting_gRNAs_blur, {
+      val <- input$non_targeting_gRNAs
+      if (!is.null(val) && (is.na(val) || val < 0 || val > 100)) {
+        updateNumericInput(session, "non_targeting_gRNAs", value = 50)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$cells_fixed_blur, {
+      val <- input$cells_fixed
+      if (!is.null(val) && (is.na(val) || val < 20 || val > 2000)) {
+        updateNumericInput(session, "cells_fixed", value = 1000)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$reads_per_cell_fixed_blur, {
+      val <- input$reads_per_cell_fixed
+      if (!is.null(val) && (is.na(val) || val < 1000 || val > 150000)) {
+        updateNumericInput(session, "reads_per_cell_fixed", value = 20000)
+      }
+    }, ignoreInit = TRUE)
+
     return(experimental_config)
   })
 }
