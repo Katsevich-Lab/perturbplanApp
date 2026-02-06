@@ -153,6 +153,24 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
       }
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
+    # Clamp Expression_threshold_fixed to its minimum when user types a value below it
+    # Perturb-seq min: 1, TAP-seq min: 0.1
+    observeEvent(input$Expression_threshold_fixed, {
+      val <- input$Expression_threshold_fixed
+      if (!is.null(val) && !is.na(val)) {
+        assay_type <- design_config()$assay_type
+        min_val <- if (!is.null(assay_type) && assay_type == "tap_seq") 0.1 else 1
+        if (val < min_val) {
+          # Use attribute selector to update BOTH conditionalPanel copies
+          shinyjs::runjs(sprintf(
+            "$('[id=\"%s\"]').val(%s).trigger('change')",
+            ns("Expression_threshold_fixed"),
+            min_val
+          ))
+        }
+      }
+    }, ignoreInit = TRUE)
+
     # Gene list processing
     gene_list_data <- reactive({
       if (input$gene_list_mode == "custom" && !is.null(input$gene_list_file)) {
