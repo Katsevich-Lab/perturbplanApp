@@ -166,23 +166,28 @@ mod_design_options_server <- function(id, app_state = NULL){
     }, ignoreInit = TRUE)
 
     # Clamp cost parameters to default when user types non-numeric or below minimum
-    observeEvent(input$cost_per_cell, {
-      if (!is.null(input$cost_per_cell) && (is.na(input$cost_per_cell) || input$cost_per_cell < 0.001)) {
+    # Triggered on blur (losing focus) so it doesn't interrupt typing
+    observeEvent(input$cost_per_cell_blur, {
+      val <- input$cost_per_cell
+      if (!is.null(val) && (is.na(val) || val < 0.001)) {
         updateNumericInput(session, "cost_per_cell", value = 0.086)
       }
     }, ignoreInit = TRUE)
-    observeEvent(input$cost_per_million_reads, {
-      if (!is.null(input$cost_per_million_reads) && (is.na(input$cost_per_million_reads) || input$cost_per_million_reads < 0.001)) {
+    observeEvent(input$cost_per_million_reads_blur, {
+      val <- input$cost_per_million_reads
+      if (!is.null(val) && (is.na(val) || val < 0.001)) {
         updateNumericInput(session, "cost_per_million_reads", value = 0.374)
       }
     }, ignoreInit = TRUE)
-    observeEvent(input$cost_per_cell_min, {
-      if (!is.null(input$cost_per_cell_min) && (is.na(input$cost_per_cell_min) || input$cost_per_cell_min < 0.001)) {
+    observeEvent(input$cost_per_cell_min_blur, {
+      val <- input$cost_per_cell_min
+      if (!is.null(val) && (is.na(val) || val < 0.001)) {
         updateNumericInput(session, "cost_per_cell_min", value = 0.086)
       }
     }, ignoreInit = TRUE)
-    observeEvent(input$cost_per_million_reads_min, {
-      if (!is.null(input$cost_per_million_reads_min) && (is.na(input$cost_per_million_reads_min) || input$cost_per_million_reads_min < 0.001)) {
+    observeEvent(input$cost_per_million_reads_min_blur, {
+      val <- input$cost_per_million_reads_min
+      if (!is.null(val) && (is.na(val) || val < 0.001)) {
         updateNumericInput(session, "cost_per_million_reads_min", value = 0.374)
       }
     }, ignoreInit = TRUE)

@@ -154,8 +154,9 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
     # Clamp Expression_threshold_fixed to default when user types non-numeric or below minimum
+    # Triggered on blur (losing focus) so it doesn't interrupt typing
     # Perturb-seq: min=1, default=10; TAP-seq: min=0.1, default=1
-    observeEvent(input$Expression_threshold_fixed, {
+    observeEvent(input$Expression_threshold_fixed_blur, {
       val <- input$Expression_threshold_fixed
       if (!is.null(val)) {
         assay_type <- design_config()$assay_type
