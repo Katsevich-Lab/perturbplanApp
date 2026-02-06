@@ -164,6 +164,12 @@ mod_design_options_server <- function(id, app_state = NULL){
         updateNumericInput(session, "target_power", value = 0.8)
       }
     }, ignoreInit = TRUE)
+    observeEvent(input$cost_budget_blur, {
+      val <- input$cost_budget
+      if (!is.null(val) && (is.na(val) || val < 100 || val > 1000000)) {
+        updateNumericInput(session, "cost_budget", value = 10000)
+      }
+    }, ignoreInit = TRUE)
 
     # Clamp cost parameters to default when user types non-numeric or below minimum
     # Triggered on blur (losing focus) so it doesn't interrupt typing
