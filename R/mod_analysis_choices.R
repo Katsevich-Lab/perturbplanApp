@@ -153,19 +153,21 @@ mod_analysis_choices_server <- function(id, design_config, app_state = NULL){
       }
     }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
-    # Clamp Expression_threshold_fixed to its minimum when user types a value below it
-    # Perturb-seq min: 1, TAP-seq min: 0.1
+    # Clamp Expression_threshold_fixed to default when user types non-numeric or below minimum
+    # Perturb-seq: min=1, default=10; TAP-seq: min=0.1, default=1
     observeEvent(input$Expression_threshold_fixed, {
       val <- input$Expression_threshold_fixed
-      if (!is.null(val) && !is.na(val)) {
+      if (!is.null(val)) {
         assay_type <- design_config()$assay_type
-        min_val <- if (!is.null(assay_type) && assay_type == "tap_seq") 0.1 else 1
-        if (val < min_val) {
+        is_tap <- !is.null(assay_type) && assay_type == "tap_seq"
+        min_val <- if (is_tap) 0.1 else 1
+        default_val <- if (is_tap) 1 else 10
+        if (is.na(val) || val < min_val) {
           # Use attribute selector to update BOTH conditionalPanel copies
           shinyjs::runjs(sprintf(
             "$('[id=\"%s\"]').val(%s).trigger('change')",
             ns("Expression_threshold_fixed"),
-            min_val
+            default_val
           ))
         }
       }

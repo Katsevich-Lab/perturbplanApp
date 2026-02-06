@@ -65,9 +65,9 @@ mod_design_options_ui <- function(id) {
             numericInput(ns("cost_budget"), "Cost Budget ($):",
                         value = 10000, min = 100, max = 1000000, step = 500),
             numericInput(ns("cost_per_cell"), add_tooltip("Cost/cell ($):", "cost_per_cell", use_icon = TRUE),
-                        value = 0.086, min = 0, step = 0.001),
+                        value = 0.086, min = 0.001, step = 0.001),
             numericInput(ns("cost_per_million_reads"), add_tooltip("Cost/million reads ($):", "cost_per_million_reads", use_icon = TRUE),
-                        value = 0.374, min = 0, step = 0.001)
+                        value = 0.374, min = 0.001, step = 0.001)
           )
         ),
 
@@ -91,9 +91,9 @@ mod_design_options_ui <- function(id) {
             id = ns("cost_minimization_params"),
             style = "display: none;",
             numericInput(ns("cost_per_cell_min"), add_tooltip("Cost/cell ($):", "cost_per_cell", use_icon = TRUE),
-                        value = 0.086, min = 0, step = 0.001),
+                        value = 0.086, min = 0.001, step = 0.001),
             numericInput(ns("cost_per_million_reads_min"), add_tooltip("Cost/million reads ($):", "cost_per_million_reads", use_icon = TRUE),
-                        value = 0.374, min = 0, step = 0.001)
+                        value = 0.374, min = 0.001, step = 0.001)
           )
         ),
 
@@ -155,6 +155,28 @@ mod_design_options_server <- function(id, app_state = NULL){
         # Note: Section headers (#design-header) remain functional for collapse/expand
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
+
+    # Clamp cost parameters to default when user types non-numeric or below minimum
+    observeEvent(input$cost_per_cell, {
+      if (!is.null(input$cost_per_cell) && (is.na(input$cost_per_cell) || input$cost_per_cell < 0.001)) {
+        updateNumericInput(session, "cost_per_cell", value = 0.086)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$cost_per_million_reads, {
+      if (!is.null(input$cost_per_million_reads) && (is.na(input$cost_per_million_reads) || input$cost_per_million_reads < 0.001)) {
+        updateNumericInput(session, "cost_per_million_reads", value = 0.374)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$cost_per_cell_min, {
+      if (!is.null(input$cost_per_cell_min) && (is.na(input$cost_per_cell_min) || input$cost_per_cell_min < 0.001)) {
+        updateNumericInput(session, "cost_per_cell_min", value = 0.086)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$cost_per_million_reads_min, {
+      if (!is.null(input$cost_per_million_reads_min) && (is.na(input$cost_per_million_reads_min) || input$cost_per_million_reads_min < 0.001)) {
+        updateNumericInput(session, "cost_per_million_reads_min", value = 0.374)
+      }
+    }, ignoreInit = TRUE)
 
     # PHASE 3.1: Progressive State Reactive
     # Centralized state calculation for unified progressive disclosure controller
