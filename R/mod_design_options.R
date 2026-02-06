@@ -156,6 +156,15 @@ mod_design_options_server <- function(id, app_state = NULL){
       }
     }, ignoreInit = TRUE, ignoreNULL = TRUE)
 
+    # Clamp target_power to default when user types non-numeric or out of range
+    # Triggered on blur (losing focus) so it doesn't interrupt typing
+    observeEvent(input$target_power_blur, {
+      val <- input$target_power
+      if (!is.null(val) && (is.na(val) || val < 0.1 || val > 0.99)) {
+        updateNumericInput(session, "target_power", value = 0.8)
+      }
+    }, ignoreInit = TRUE)
+
     # Clamp cost parameters to default when user types non-numeric or below minimum
     observeEvent(input$cost_per_cell, {
       if (!is.null(input$cost_per_cell) && (is.na(input$cost_per_cell) || input$cost_per_cell < 0.001)) {

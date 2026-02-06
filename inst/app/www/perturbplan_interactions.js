@@ -115,6 +115,20 @@ window.SidebarCollapse = {
 
 
 // ========================================================================
+// NUMERIC INPUT BLUR EVENTS
+// ========================================================================
+// When any numeric input loses focus, send a "_blur" signal to R.
+// This allows server-side clamping to fire only when the user is done
+// typing, not on every keystroke.
+
+$(document).on('blur', 'input[type="number"]', function() {
+  var id = $(this).attr('id');
+  if (id) {
+    Shiny.setInputValue(id + '_blur', Date.now(), {priority: 'event'});
+  }
+});
+
+// ========================================================================
 // INITIALIZATION
 // ========================================================================
 
