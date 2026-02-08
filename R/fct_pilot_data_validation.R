@@ -79,12 +79,11 @@ validate_custom_pilot_data <- function(data, file_name = "uploaded file") {
   # Create summary message
   if (valid) {
     n_genes <- nrow(data$baseline_expression_stats)
-    umi_per_cell <- data$library_parameters$UMI_per_cell
-    variation <- data$library_parameters$variation
+    umi_sat <- data$library_parameters$UMI_per_cell_at_saturation
     mapping_eff <- data$mapping_efficiency
 
-    summary <- sprintf("Successfully loaded custom pilot data: %d genes, UMI/cell = %.0f, variation = %.3f, mapping eff. = %.2f",
-                      n_genes, umi_per_cell, variation, mapping_eff)
+    summary <- sprintf("Successfully loaded custom pilot data: %d genes, UMI at saturation = %.0f, mapping eff. = %.2f",
+                      n_genes, umi_sat, mapping_eff)
   } else {
     summary <- paste0("<em style='color:red;'>Validation failed</em>")
   }
@@ -194,43 +193,29 @@ validate_library_parameters <- function(library_params) {
     return(list(errors = errors, warnings = warnings))
   }
   
-  # Check required parameters
-  required_params <- c("UMI_per_cell", "variation")
+  # Check required parameters (library_estimation() output format)
+  required_params <- c("method_used", "reads_norm", "n_cells", "UMI_per_cell_at_saturation")
   missing_params <- setdiff(required_params, names(library_params))
-  
+
   if (length(missing_params) > 0) {
-    errors <- c(errors, paste("Missing required parameters in library_parameters:", 
-                             paste(missing_params, collapse = ", ")))
+    errors <- c(errors, paste("Missing required parameters in library_parameters:",
+                             paste(missing_params, collapse = ", "),
+                             "- library_parameters must be output from library_estimation()"))
   }
-  
-  # Validate UMI_per_cell
-  if ("UMI_per_cell" %in% names(library_params)) {
-    umi_val <- library_params$UMI_per_cell
-    
+
+  # Validate UMI_per_cell_at_saturation
+  if ("UMI_per_cell_at_saturation" %in% names(library_params)) {
+    umi_val <- library_params$UMI_per_cell_at_saturation
+
     if (!is.numeric(umi_val) || length(umi_val) != 1) {
-      errors <- c(errors, "UMI_per_cell must be a single numeric value")
+      errors <- c(errors, "UMI_per_cell_at_saturation must be a single numeric value")
     } else {
       if (umi_val <= 0) {
-        errors <- c(errors, "UMI_per_cell must be positive")
+        errors <- c(errors, "UMI_per_cell_at_saturation must be positive")
       } else if (umi_val < 1000) {
-        warnings <- c(warnings, sprintf("UMI_per_cell (%.0f) seems low for modern sequencing", umi_val))
-      } else if (umi_val > 200000) {
-        warnings <- c(warnings, sprintf("UMI_per_cell (%.0f) seems very high", umi_val))
-      }
-    }
-  }
-  
-  # Validate variation
-  if ("variation" %in% names(library_params)) {
-    var_val <- library_params$variation
-    
-    if (!is.numeric(var_val) || length(var_val) != 1) {
-      errors <- c(errors, "variation must be a single numeric value")
-    } else {
-      if (var_val <= 0) {
-        errors <- c(errors, "variation must be positive")
-      } else if (var_val > 2) {
-        warnings <- c(warnings, sprintf("variation (%.3f) seems high (typically 0.1-1.0)", var_val))
+        warnings <- c(warnings, sprintf("UMI_per_cell_at_saturation (%.0f) seems unusually low", umi_val))
+      } else if (umi_val > 100000) {
+        warnings <- c(warnings, sprintf("UMI_per_cell_at_saturation (%.0f) seems unusually high", umi_val))
       }
     }
   }
