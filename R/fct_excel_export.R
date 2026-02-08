@@ -343,14 +343,14 @@ create_pilot_data_sheet <- function(cached_results) {
 
   # TAP-seq: Replace relative_expression with UMIs_per_cell
   if (!is.null(assay_type) && assay_type == "tap_seq") {
-    if (!is.null(library_params$UMI_per_cell)) {
-      # Compute UMIs_per_cell = relative_expression * UMI_per_cell
-      combined_data$UMIs_per_cell <- baseline_stats$relative_expression * library_params$UMI_per_cell
+    if (!is.null(library_params$UMI_per_cell_at_saturation)) {
+      # Compute UMIs_per_cell = relative_expression * UMI_per_cell_at_saturation
+      combined_data$UMIs_per_cell <- baseline_stats$relative_expression * library_params$UMI_per_cell_at_saturation
       # Remove relative_expression column
       combined_data$relative_expression <- NULL
     } else {
-      # Fallback: keep relative_expression if UMI_per_cell missing
-      warning("UMI_per_cell not found in library parameters for TAP-seq data")
+      # Fallback: keep relative_expression if UMI_per_cell_at_saturation missing
+      warning("UMI_per_cell_at_saturation not found in library parameters for TAP-seq data")
     }
   }
   # Perturb-seq: Keep relative_expression as-is (no changes needed)

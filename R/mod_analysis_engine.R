@@ -134,10 +134,10 @@ generate_real_analysis <- function(config, workflow_info) {
     # TAP-seq: Convert UMIs/cell to TPM scale
     # TPM_threshold = UMIs_per_cell / total_UMI_per_cell * 1e6
     if (!is.null(config$analysis_choices$Expression_threshold_fixed) &&
-        !is.null(pilot_data$library_parameters$UMI_per_cell)) {
+        !is.null(pilot_data$library_parameters$UMI_per_cell_at_saturation)) {
 
       umis_per_cell_threshold <- config$analysis_choices$Expression_threshold_fixed
-      total_umi_per_cell <- pilot_data$library_parameters$UMI_per_cell
+      total_umi_per_cell <- pilot_data$library_parameters$UMI_per_cell_at_saturation
 
       # Create TPM_threshold_fixed for perturbplan (calculated from Expression_threshold_fixed)
       config$analysis_choices$TPM_threshold_fixed <- (umis_per_cell_threshold / total_umi_per_cell) * 1e6

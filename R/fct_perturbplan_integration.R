@@ -242,7 +242,7 @@ map_config_to_perturbplan_params <- function(config, workflow_info, pilot_data) 
 #'
 #' @param TPM_threshold Numeric TPM threshold value from perturbplan
 #' @param assay_type Character: "tap_seq" or "perturb_seq"
-#' @param pilot_data Pilot data containing library_parameters$UMI_per_cell
+#' @param pilot_data Pilot data containing library_parameters$UMI_per_cell_at_saturation
 #' @return Numeric Expression threshold value for display
 #' @noRd
 transform_TPM_to_Expression <- function(TPM_threshold, assay_type, pilot_data) {
@@ -252,9 +252,9 @@ transform_TPM_to_Expression <- function(TPM_threshold, assay_type, pilot_data) {
 
   if (!is.null(assay_type) && assay_type == "tap_seq") {
     # TAP-seq: Reverse transformation
-    # Expression_threshold = TPM_threshold * UMI_per_cell / 1e6
-    if (!is.null(pilot_data$library_parameters$UMI_per_cell)) {
-      total_umi_per_cell <- pilot_data$library_parameters$UMI_per_cell
+    # Expression_threshold = TPM_threshold * UMI_per_cell_at_saturation / 1e6
+    if (!is.null(pilot_data$library_parameters$UMI_per_cell_at_saturation)) {
+      total_umi_per_cell <- pilot_data$library_parameters$UMI_per_cell_at_saturation
       return((TPM_threshold * total_umi_per_cell) / 1e6)
     }
   }
