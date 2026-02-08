@@ -169,6 +169,14 @@ find_optimal_point_in_grouped_data <- function(grouped_data, minimization_config
   # Filter by cost constraint first
   power_feasible <- grouped_data[grouped_data$total_cost <= cost_constraint, ]
 
+  if (nrow(power_feasible) == 0) {
+    stop("No feasible designs found within the cost budget ($",
+         formatC(cost_constraint, format = "d", big.mark = ","),
+         "). The minimum cost design is $",
+         formatC(min(grouped_data$total_cost), format = "d", big.mark = ","),
+         ". Consider increasing the budget or reducing the number of targets.")
+  }
+
   # Apply minimization strategy based on type
   optimal_point <- switch(minimization_config$optimization_goal,
     "minimize" = power_feasible[which.min(power_feasible[[minimization_config$variable]]), ],
