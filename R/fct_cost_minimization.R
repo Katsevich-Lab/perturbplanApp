@@ -93,7 +93,8 @@ perform_cost_minimization_analysis <- function(config, pilot_data) {
     Expression_threshold = expression_threshold_display,
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,   # Correct column name
-    optimal_minimized_param = optimal_point$total_cost
+    optimal_minimized_param = optimal_point$total_cost,
+    num_captured_cells = optimal_point$num_captured_cells %||% NA
   )
 
   # Standardize column names in cost_data for UI compatibility

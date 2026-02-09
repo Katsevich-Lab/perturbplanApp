@@ -167,7 +167,8 @@ extract_experimental_parameters <- function(optimal, user_config, minimizing_par
     num_targets = get_param_value("num_targets", optimal, user_config, minimizing_param, workflow_info),
     grnas_per_target = get_param_value("gRNAs_per_target", optimal, user_config, minimizing_param, workflow_info),
     cells_per_target = get_param_value("cells_per_target", optimal, user_config, minimizing_param, workflow_info),
-    reads_per_cell = get_param_value("reads_per_cell", optimal, user_config, minimizing_param, workflow_info)
+    reads_per_cell = get_param_value("reads_per_cell", optimal, user_config, minimizing_param, workflow_info),
+    num_captured_cells = format_number(optimal$num_captured_cells %||% NA)
   )
 
   # Exclude minimizing parameter to avoid duplication with optimal column
@@ -441,6 +442,11 @@ create_header_row_single <- function(optimal_col_name, has_cost = NULL, minimizi
     ))
   }
 
+  # Total captured cells (always shown)
+  cells <- append(cells, list(
+    tags$th("Total Cells", style = header_style)
+  ))
+
   # Add Expression Threshold column if not being minimized
   if (minimizing_param != "TPM_threshold") {
     # Assay-aware header label
@@ -576,6 +582,11 @@ create_data_row <- function(solution_data, workflow_info) {
       tags$td(exp_params$reads_per_cell %||% "N/A", style = reads_style)
     ))
   }
+
+  # Total captured cells (always shown)
+  cells <- append(cells, list(
+    tags$td(exp_params$num_captured_cells %||% "N/A", style = "text-align: center; padding: 8px;")
+  ))
 
   # Add TPM threshold column only if not being minimized
   if (solution_data$minimizing_param != "TPM_threshold") {

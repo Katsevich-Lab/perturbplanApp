@@ -108,6 +108,7 @@ perform_constrained_minimization_analysis <- function(config, pilot_data) {
     Expression_threshold = expression_threshold_display,
     total_cost = optimal_point$total_cost,
     achieved_power = optimal_point$overall_power,  # Map overall_power to achieved_power
+    num_captured_cells = optimal_point$num_captured_cells %||% NA,
     optimal_minimized_param = if (minimization_config$variable == "TPM_threshold") {
       expression_threshold_display
     } else {

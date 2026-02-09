@@ -95,7 +95,8 @@ perform_standard_analysis <- function(config, pilot_data) {
     TPM_threshold = optimal_row$TPM_threshold %||% NA,
     Expression_threshold = expression_threshold_display,
     minimum_fold_change = optimal_row$minimum_fold_change %||% NA,
-    total_cost = optimal_row$total_cost %||% NA
+    total_cost = optimal_row$total_cost %||% NA,
+    num_captured_cells = optimal_row$num_captured_cells %||% NA
   )
 
   # Add parameter-specific field names for plotting compatibility (CRITICAL for reads_per_cell)
