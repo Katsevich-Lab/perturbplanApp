@@ -371,7 +371,7 @@ create_exporting_data <- function(perturbplan_results, config, workflow_info, pi
 
     # Experimental design
     "MOI", "num_targets", "gRNAs_per_target", "non_targeting_gRNAs",
-    "cells_per_target", "sequenced_reads_per_cell",
+    "cells_per_target", "num_captured_cells", "sequenced_reads_per_cell",
 
     # Analysis parameters
     "TPM_threshold", "fold_change", "side",
