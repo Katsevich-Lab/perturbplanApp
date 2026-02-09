@@ -206,3 +206,22 @@ add_tooltip_span <- function(label, tooltip_id, style = NULL) {
   )
 }
 
+#' Slider-Adjustable Badge
+#'
+#' @description Creates a small badge indicating a parameter can be
+#' fine-tuned via sliders after the initial analysis. Includes a
+#' hover tooltip explaining the feature.
+#'
+#' @return Shiny tag for inline badge with tooltip
+#' @noRd
+slider_adjustable_badge <- function() {
+  tags$span(
+    class = "slider-adjustable-badge",
+    "slider",
+    tags$span(
+      class = "tooltip-text",
+      "This parameter can be fine-tuned via a slider after the initial analysis."
+    )
+  )
+}
+

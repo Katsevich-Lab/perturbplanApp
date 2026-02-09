@@ -77,7 +77,10 @@ mod_analysis_choices_ui <- function(id) {
           conditionalPanel(
             condition = "input['sidebar-design_options-assay_type'] == 'tap_seq'",
             numericInput(ns("Expression_threshold_fixed"),
-                        add_tooltip("Expression threshold (UMIs/cell):", "umis_per_cell", use_icon = TRUE),
+                        tagList(
+                          add_tooltip("Expression threshold (UMIs/cell):", "umis_per_cell", use_icon = TRUE),
+                          slider_adjustable_badge()
+                        ),
                         value = 1, min = 0.1, max = 5, step = 0.02)
           ),
 
@@ -85,7 +88,10 @@ mod_analysis_choices_ui <- function(id) {
           conditionalPanel(
             condition = "input['sidebar-design_options-assay_type'] == 'perturb_seq'",
             numericInput(ns("Expression_threshold_fixed"),
-                        add_tooltip("TPM analysis threshold:", "tpm_threshold", use_icon = TRUE),
+                        tagList(
+                          add_tooltip("TPM analysis threshold:", "tpm_threshold", use_icon = TRUE),
+                          slider_adjustable_badge()
+                        ),
                         value = 10, min = 1, max = 200, step = 1)
           )
         )

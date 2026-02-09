@@ -82,7 +82,10 @@ mod_experimental_setup_ui <- function(id) {
         tags$div(
           # MOI (Multiplicity of Infection)
           numericInput(ns("MOI"),
-                      add_tooltip("Multiplicity of infection (MOI):", "moi", use_icon = TRUE),
+                      tagList(
+                        add_tooltip("Multiplicity of infection (MOI):", "moi", use_icon = TRUE),
+                        slider_adjustable_badge()
+                      ),
                       value = 10,
                       min = 1,
                       max = 30,
@@ -90,7 +93,10 @@ mod_experimental_setup_ui <- function(id) {
 
           # Number of perturbation targets
           numericInput(ns("num_targets"),
-                      add_tooltip("Number of perturbation targets:", "num_targets", use_icon = TRUE),
+                      tagList(
+                        add_tooltip("Number of perturbation targets:", "num_targets", use_icon = TRUE),
+                        slider_adjustable_badge()
+                      ),
                       value = 500,
                       min = 50,
                       max = 12000,
@@ -98,7 +104,10 @@ mod_experimental_setup_ui <- function(id) {
 
           # gRNAs per target
           numericInput(ns("gRNAs_per_target"),
-                      add_tooltip("gRNAs per target:", "grnas_per_target", use_icon = TRUE),
+                      tagList(
+                        add_tooltip("gRNAs per target:", "grnas_per_target", use_icon = TRUE),
+                        slider_adjustable_badge()
+                      ),
                       value = 4,
                       min = 1,
                       max = 20,
@@ -123,7 +132,10 @@ mod_experimental_setup_ui <- function(id) {
             id = ns("cells_fixed_div"),
             style = "display: none;",
             numericInput(ns("cells_fixed"),
-                        add_tooltip("Cells per target:", "cells_per_target", use_icon = TRUE),
+                        tagList(
+                          add_tooltip("Cells per target:", "cells_per_target", use_icon = TRUE),
+                          slider_adjustable_badge()
+                        ),
                         value = 1000, min = 20, max = 2000, step = 20)
           ),
 
@@ -132,7 +144,10 @@ mod_experimental_setup_ui <- function(id) {
             id = ns("reads_per_cell_fixed_div"),
             style = "display: none;",
             numericInput(ns("reads_per_cell_fixed"),
-                        add_tooltip("Sequenced reads per cell:", "sequenced_reads_per_cell", use_icon = TRUE),
+                        tagList(
+                          add_tooltip("Sequenced reads per cell:", "sequenced_reads_per_cell", use_icon = TRUE),
+                          slider_adjustable_badge()
+                        ),
                         value = 20000, min = 1000, max = 150000, step = 1000)
           )
         )

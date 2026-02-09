@@ -383,3 +383,54 @@
   border-radius: 2px;
 }
 
+/* ========================================
+   Slider-Adjustable Parameter Indicator
+   ======================================== */
+.slider-adjustable-badge {
+  display: inline-block;
+  position: relative;
+  background-color: #e8f1fa;
+  color: #2a6cb6;
+  font-size: 0.7em;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid #b8d4ee;
+  margin-left: 4px;
+  vertical-align: middle;
+  cursor: help;
+  transition: background-color 0.2s ease;
+}
+
+.slider-adjustable-badge:hover {
+  background-color: #d0e4f5;
+}
+
+.slider-adjustable-badge .tooltip-text {
+  visibility: hidden;
+  width: 170px;
+  background-color: #f9f9f9;
+  color: #333;
+  text-align: left;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  position: absolute;
+  z-index: 1000;
+  bottom: calc(100% + 5px);
+  right: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: normal;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  white-space: normal;
+}
+
+.slider-adjustable-badge:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+
