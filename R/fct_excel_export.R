@@ -108,6 +108,9 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
     column_headers <- c(column_headers, "Reads_per_Cell")
   }
 
+  # Total captured cells (always shown)
+  column_headers <- c(column_headers, "Total_Cells")
+
   # Add Expression Threshold if not being minimized (assay-aware column name)
   if (minimizing_param != "TPM_threshold") {
     # Assay-aware column header
@@ -183,6 +186,11 @@ convert_solutions_table_to_excel <- function(solutions_data, workflow_info) {
       }
       if (minimizing_param != "reads_per_cell" && "Reads_per_Cell" %in% column_headers) {
         row_data[["Reads_per_Cell"]] <- exp_params$reads_per_cell %||% "N/A"
+      }
+
+      # Total captured cells (always shown)
+      if ("Total_Cells" %in% column_headers) {
+        row_data[["Total_Cells"]] <- exp_params$num_captured_cells %||% "N/A"
       }
     }
 
