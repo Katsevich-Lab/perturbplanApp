@@ -131,8 +131,8 @@ create_single_parameter_plots <- function(cached_results) {
       y = "Power"
     )
 
-  # Add log scale for TPM_threshold (keep dynamic label)
-  if (varying_param == "TPM_threshold") {
+  # Add log scale for TPM_threshold, cells_per_target, and reads_per_cell
+  if (varying_param %in% c("TPM_threshold", "cells_per_target", "reads_per_cell")) {
     p <- p + scale_x_log10(labels = scales::comma_format())
   }
 
