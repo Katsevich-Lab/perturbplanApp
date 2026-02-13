@@ -4,7 +4,7 @@ PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. It h
 
 <p align="center">
   <a href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/">
-    <img src="https://img.shields.io/badge/🚀_Launch_App-4472C4?style=for-the-badge&logoColor=white" alt="Launch App"/>
+    <img src="man/figures/launch-button.svg" alt="Launch App"/>
   </a>
 </p>
 
