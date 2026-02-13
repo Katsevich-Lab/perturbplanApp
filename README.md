@@ -1,29 +1,10 @@
 # PerturbPlan App
 
-<style>
-.launch-button {
-  display: inline-block;
-  padding: 16px 16px;
-  background-color: #4472C4;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
-  font-size: 24px;
-  border: 2px solid black;
-  transition: all 0.3s ease;
-}
-.launch-button:hover {
-  background-color: #365a9e;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-</style>
-
 PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. It helps balance power and cost, with an emphasis on speed, flexibility, and interactivity.
 
 <p align="center">
-  <a href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/" class="launch-button">
-    🚀 Launch App
+  <a href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/">
+    <img src="https://img.shields.io/badge/🚀_Launch_App-4472C4?style=for-the-badge&logoColor=white" alt="Launch App"/>
   </a>
 </p>
 
@@ -47,4 +28,4 @@ PerturbPlan is structured around solving 11 commonly encountered design problems
 
 6. **Start over.** Click the "Restart" button to start from scratch.
 
-We elaborate on steps 1 and 2 in the [full documentation](articles/perturbplanapp.html).
+We elaborate on steps 1 and 2 in the [full documentation](https://katsevich-lab.github.io/perturbplanApp/articles/perturbplanapp.html).
