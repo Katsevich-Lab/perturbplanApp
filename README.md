@@ -8,31 +8,18 @@ PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. It h
   </a>
 </p>
 
-## Interface overview
-
-<p align="center">
-  <img src="man/figures/schematic.png" alt="PerturbPlan App Schematic" width="100%"/>
-</p>
-
-PerturbPlan is structured around solving 11 commonly encountered design problems. The workflow of the app is as follows:
-
-1. **Select a design problem**: Choose one of 11 predefined design problems that best matches your experimental goals. See the [Design problem overview](#design-problem-overview) below for details.
-
-2. **Configure design parameters**: Set the parameters for your experimental choices, analysis choices, expected effect sizes, and (optionally) advanced settings. Click "Plan".
-
-3. **View your analysis results**: The plot illustrates graphically how the design problem was solved, and the table below summarizes the optimal design parameters.
-
-4. **Explore parameter settings.** Use the sliders to adjust key parameters and see how they affect the optimal design. Pin parameter settings to compare multiple designs.
-
-5. **Export your results.** Click the export buttons to download the plot and a detailed Excel spreadsheet containing the results.
-
-6. **Start over.** Click the "Restart" button to start from scratch.
-
-We elaborate on steps 1 and 2 in the [full documentation](https://katsevich-lab.github.io/perturbplanApp/articles/perturbplanapp.html).
-
 ## Design problem overview
 
-The table below summarizes the 11 design problems supported by PerturbPlan. Each row specifies how power, cost, and the four key design parameters are treated in the optimization.
+PerturbPlan is structured around solving 11 commonly encountered design problems. Each design problem involves the following parameters:
+
+- **Power**: The expected proportion of perturbation-gene effects that are detected.
+- **Cost**: The total experimental cost, determined by the number of cells and sequencing reads.
+- **Cells / target**: The average number of cells receiving CRISPR perturbations of a given target.
+- **Reads / cell**: The average number of sequenced reads per cell.
+- **Expr. thresh.**: The expression threshold (in TPM or UMIs/cell) below which genes are excluded from the analysis.
+- **Fold change**: The weakest perturbation effect of interest, expressed as a multiplicative change in mean gene expression.
+
+The table below summarizes how each parameter is treated in each of the 11 design problems.
 
 **Key:** &ge; Constrain from below | &le; Constrain from above | = Fix at value | min Minimize | var Allow to vary | N/A Not involved
 
@@ -63,3 +50,25 @@ The table below summarizes the 11 design problems supported by PerturbPlan. Each
 <tr><td align="center">11</td><td align="center">&ge;</td><td align="center">&le;</td><td align="center">=</td><td align="center">var</td><td align="center">min</td><td align="center">=</td><td>Within a $20k budget, what value of reads/cell gives the smallest TPM threshold for which power to detect a 15% FC is at least 80%, assuming 500 cells/target?</td></tr>
 </tbody>
 </table>
+
+## Interface overview
+
+<p align="center">
+  <img src="man/figures/schematic.png" alt="PerturbPlan App Schematic" width="100%"/>
+</p>
+
+The workflow of the app is as follows:
+
+1. **Select a design problem**: Choose one of 11 predefined design problems that best matches your experimental goals. See the [Design problem overview](#design-problem-overview) above for details.
+
+2. **Configure design parameters**: Set the parameters for your experimental choices, analysis choices, expected effect sizes, and (optionally) advanced settings. Click "Plan".
+
+3. **View your analysis results**: The plot illustrates graphically how the design problem was solved, and the table below summarizes the optimal design parameters.
+
+4. **Explore parameter settings.** Use the sliders to adjust key parameters and see how they affect the optimal design. Pin parameter settings to compare multiple designs.
+
+5. **Export your results.** Click the export buttons to download the plot and a detailed Excel spreadsheet containing the results.
+
+6. **Start over.** Click the "Restart" button to start from scratch.
+
+We elaborate on steps 1 and 2 in the [full documentation](https://katsevich-lab.github.io/perturbplanApp/articles/perturbplanapp.html).
