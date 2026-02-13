@@ -101,7 +101,7 @@ get_tooltip_text <- function(element_id) {
     fdr_target = "The maximum tolerated expected proportion of discovered associations that are false positives.",
 
     # Minimization Target
-    minimization_target = "See documentation for definitions of minimization targets."
+    minimization_target = "The experimental parameter to optimize under your power (and optionally cost) constraints. Options: cells/target or reads/cell (reduce costs), expression threshold (include more genes), fold change (detect subtler effects), or total cost (cheapest configuration)."
   )
 
   # Return tooltip text or empty string if not found
