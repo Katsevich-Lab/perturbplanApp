@@ -816,43 +816,6 @@
         "Archs": "data_table.so.dSYM"
       }
     },
-    "desc": {
-      "Source": "CRAN",
-      "Repository": "https://packagemanager.posit.co/cran/latest",
-      "description": {
-        "Package": "desc",
-        "Title": "Manipulate DESCRIPTION Files",
-        "Version": "1.4.3",
-        "Authors@R": "c(\n    person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Kirill\", \"Müller\", role = \"aut\"),\n    person(\"Jim\", \"Hester\", , \"james.f.hester@gmail.com\", role = \"aut\"),\n    person(\"Maëlle\", \"Salmon\", role = \"ctb\",\n           comment = c(ORCID = \"0000-0002-2815-0399\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n  )",
-        "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
-        "Description": "Tools to read, write, create, and manipulate DESCRIPTION\n    files.  It is intended for packages that create or manipulate other\n    packages.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://desc.r-lib.org/, https://github.com/r-lib/desc",
-        "BugReports": "https://github.com/r-lib/desc/issues",
-        "Depends": "R (>= 3.4)",
-        "Imports": "cli, R6, utils",
-        "Suggests": "callr, covr, gh, spelling, testthat, whoami, withr",
-        "Config/Needs/website": "tidyverse/tidytemplate",
-        "Config/testthat/edition": "3",
-        "Encoding": "UTF-8",
-        "Language": "en-US",
-        "RoxygenNote": "7.2.3",
-        "Collate": "'assertions.R' 'authors-at-r.R' 'built.R' 'classes.R'\n'collate.R' 'constants.R' 'deps.R' 'desc-package.R'\n'description.R' 'encoding.R' 'find-package-root.R' 'latex.R'\n'non-oo-api.R' 'package-archives.R' 'read.R' 'remotes.R'\n'str.R' 'syntax_checks.R' 'urls.R' 'utils.R' 'validate.R'\n'version.R'",
-        "NeedsCompilation": "no",
-        "Packaged": "2023-12-10 11:07:50 UTC; gaborcsardi",
-        "Author": "Gábor Csárdi [aut, cre],\n  Kirill Müller [aut],\n  Jim Hester [aut],\n  Maëlle Salmon [ctb] (<https://orcid.org/0000-0002-2815-0399>),\n  Posit Software, PBC [cph, fnd]",
-        "Repository": "CRAN",
-        "Date/Publication": "2023-12-10 11:40:08 UTC",
-        "Built": "R 4.4.0; ; 2024-04-05 15:11:25 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "desc",
-        "RemoteRef": "desc",
-        "RemoteRepos": "https://cran.rstudio.com",
-        "RemoteReposName": "CRAN",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.4.3"
-      }
-    },
     "digest": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -1806,27 +1769,6 @@
         "RemoteSha": "0.13"
       }
     },
-    "minpack.lm": {
-      "Source": "CRAN",
-      "Repository": "https://packagemanager.posit.co/cran/latest",
-      "description": {
-        "Package": "minpack.lm",
-        "Version": "1.2-4",
-        "Title": "R Interface to the Levenberg-Marquardt Nonlinear Least-Squares\nAlgorithm Found in MINPACK, Plus Support for Bounds",
-        "Author": "Timur V. Elzhov, Katharine M. Mullen, Andrej-Nikolai Spiess, Ben Bolker",
-        "Maintainer": "Katharine M. Mullen <mullenkate@gmail.com>",
-        "Description": "The nls.lm function provides an R interface to lmder and lmdif from the MINPACK library, for solving nonlinear least-squares problems by a modification of the Levenberg-Marquardt algorithm, with support for lower and upper parameter bounds.  The implementation can be used via nls-like calls using the nlsLM function.  ",
-        "Suggests": "MASS",
-        "License": "GPL-3",
-        "Copyright": "inst/COPYRIGHTS",
-        "NeedsCompilation": "yes",
-        "Packaged": "2023-09-11 04:22:29 UTC; kmm-windog",
-        "Repository": "CRAN",
-        "Date/Publication": "2023-09-11 05:10:02 UTC",
-        "Built": "R 4.4.0; aarch64-apple-darwin20; 2024-04-05 15:13:19 UTC; unix",
-        "Archs": "minpack.lm.so.dSYM"
-      }
-    },
     "nlme": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -1925,35 +1867,36 @@
       "description": {
         "Package": "perturbplan",
         "Title": "Perturbplan: Power and Design Tools for CRISPR Screens",
-        "Version": "0.2.0",
+        "Version": "0.3.0",
         "Authors@R": "\n    c(person(\"Ziang\", \"Niu\", , \"ziangniu@wharton.upenn.edu\", role = c(\"aut\", \"cre\")),\n      person(\"Yihui\", \"He\", , \"yihuihe@wharton.upenn.edu\", role = c(\"aut\")),\n      person(\"Eugene\", \"Katsevich\", , \"ekatsevi@wharton.upenn.edu\", role = c(\"aut\"))\n    )",
         "Description": "Tools for pilot data preprocessing, power calculations, and design optimization for CRISPR perturbation experiments.",
         "License": "MIT + file LICENSE",
         "URL": "https://katsevich-lab.github.io/perturbplan",
-        "Imports": "Matrix,\nR.utils,\nRcpp,\ndata.table,\ndplyr,\nmethods,\nminpack.lm,\nparallel,\nrhdf5,\nstats,\ntidyr,\nutils",
-        "Suggests": "knitr,\nrmarkdown,\npkgdown,\ntestthat (>= 3.0.0),\nopenxlsx,\nggplot2,\nggside,\nscales",
+        "Imports": "Matrix, PoissonBinomial, R.utils, Rcpp, data.table, dplyr,\nmethods, parallel, preseqR, rhdf5, stats, tidyr, utils",
+        "Suggests": "covr, ggplot2, ggside, knitr, openxlsx, pkgdown, rmarkdown,\nscales, testthat (>= 3.0.0)",
         "VignetteBuilder": "knitr",
         "Config/testthat/edition": "3",
-        "LinkingTo": "BH,\nRcpp,\nRcppEigen,\nPoissonBinomial",
+        "LinkingTo": "BH, Rcpp, RcppEigen, PoissonBinomial",
         "Depends": "R (>= 3.5)",
         "LazyData": "true",
         "Encoding": "UTF-8",
         "Roxygen": "list(markdown = TRUE)",
         "RoxygenNote": "7.3.2",
-        "Author": "Ziang Niu [aut, cre],\n  Yihui He [aut],\n  Eugene Katsevich [aut]",
-        "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
-        "Built": "R 4.4.1; aarch64-apple-darwin20; 2025-10-13 20:57:05 UTC; unix",
         "RemoteType": "github",
         "RemoteHost": "api.github.com",
-        "RemoteUsername": "katsevich-lab",
         "RemoteRepo": "perturbplan",
+        "RemoteUsername": "Katsevich-Lab",
         "RemoteRef": "main",
-        "RemoteSha": "99e1b06fb540aac94f21a2ca2c04736f8eec24d8",
-        "GithubHost": "api.github.com",
+        "RemoteSha": "43232419fe26fc511e3e4d2d22caffe68b21bd90",
         "GithubRepo": "perturbplan",
-        "GithubUsername": "katsevich-lab",
+        "GithubUsername": "Katsevich-Lab",
         "GithubRef": "main",
-        "GithubSHA1": "99e1b06fb540aac94f21a2ca2c04736f8eec24d8"
+        "GithubSHA1": "43232419fe26fc511e3e4d2d22caffe68b21bd90",
+        "NeedsCompilation": "yes",
+        "Packaged": "2026-02-08 21:09:14 UTC; ziangniu",
+        "Author": "Ziang Niu [aut, cre],\n  Yihui He [aut],\n  Eugene Katsevich [aut]",
+        "Maintainer": "Ziang Niu <ziangniu@wharton.upenn.edu>",
+        "Built": "R 4.4.1; aarch64-apple-darwin20; 2026-02-08 21:09:15 UTC; unix"
       }
     },
     "pillar": {
@@ -1996,42 +1939,6 @@
         "RemoteSha": "1.11.0"
       }
     },
-    "pkgbuild": {
-      "Source": "CRAN",
-      "Repository": "https://packagemanager.posit.co/cran/latest",
-      "description": {
-        "Package": "pkgbuild",
-        "Title": "Find Tools Needed to Build R Packages",
-        "Version": "1.4.8",
-        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", role = \"aut\"),\n    person(\"Jim\", \"Hester\", role = \"aut\"),\n    person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
-        "Description": "Provides functions used to build R packages. Locates\n    compilers needed to build R packages on various platforms and ensures\n    the PATH is configured appropriately so R can use them.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://github.com/r-lib/pkgbuild, https://pkgbuild.r-lib.org",
-        "BugReports": "https://github.com/r-lib/pkgbuild/issues",
-        "Depends": "R (>= 3.5)",
-        "Imports": "callr (>= 3.2.0), cli (>= 3.4.0), desc, processx, R6",
-        "Suggests": "covr, cpp11, knitr, Rcpp, rmarkdown, testthat (>= 3.2.0),\nwithr (>= 2.3.0)",
-        "Config/Needs/website": "tidyverse/tidytemplate",
-        "Config/testthat/edition": "3",
-        "Config/usethis/last-upkeep": "2025-04-30",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.2",
-        "NeedsCompilation": "no",
-        "Packaged": "2025-05-26 10:36:48 UTC; gaborcsardi",
-        "Author": "Hadley Wickham [aut],\n  Jim Hester [aut],\n  Gábor Csárdi [aut, cre],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
-        "Maintainer": "Gábor Csárdi <csardi.gabor@gmail.com>",
-        "Repository": "RSPM",
-        "Date/Publication": "2025-05-26 14:10:06 UTC",
-        "Built": "R 4.4.0; ; 2025-05-27 04:51:43 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "pkgbuild",
-        "RemoteRef": "pkgbuild",
-        "RemoteRepos": "https://packagemanager.posit.co/cran/latest",
-        "RemoteReposName": "CRAN",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.4.8"
-      }
-    },
     "pkgconfig": {
       "Source": "CRAN",
       "Repository": "https://packagemanager.posit.co/cran/latest",
@@ -2054,43 +1961,6 @@
         "Repository": "RSPM",
         "Date/Publication": "2019-09-22 09:20:02 UTC",
         "Built": "R 4.4.0; ; 2025-03-06 09:01:58 UTC; unix"
-      }
-    },
-    "pkgload": {
-      "Source": "CRAN",
-      "Repository": "https://packagemanager.posit.co/cran/latest",
-      "description": {
-        "Package": "pkgload",
-        "Title": "Simulate Package Installation and Attach",
-        "Version": "1.4.0",
-        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", role = \"aut\"),\n    person(\"Winston\", \"Chang\", role = \"aut\"),\n    person(\"Jim\", \"Hester\", role = \"aut\"),\n    person(\"Lionel\", \"Henry\", , \"lionel@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")),\n    person(\"R Core team\", role = \"ctb\",\n           comment = \"Some namespace and vignette code extracted from base R\")\n  )",
-        "Description": "Simulates the process of installing a package and then\n    attaching it. This is a key part of the 'devtools' package as it\n    allows you to rapidly iterate while developing a package.",
-        "License": "GPL-3",
-        "URL": "https://github.com/r-lib/pkgload, https://pkgload.r-lib.org",
-        "BugReports": "https://github.com/r-lib/pkgload/issues",
-        "Depends": "R (>= 3.4.0)",
-        "Imports": "cli (>= 3.3.0), desc, fs, glue, lifecycle, methods, pkgbuild,\nprocessx, rlang (>= 1.1.1), rprojroot, utils, withr (>= 2.4.3)",
-        "Suggests": "bitops, jsonlite, mathjaxr, pak, Rcpp, remotes, rstudioapi,\ntestthat (>= 3.2.1.1), usethis",
-        "Config/Needs/website": "tidyverse/tidytemplate, ggplot2",
-        "Config/testthat/edition": "3",
-        "Config/testthat/parallel": "TRUE",
-        "Config/testthat/start-first": "dll",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.1",
-        "NeedsCompilation": "no",
-        "Packaged": "2024-06-28 10:36:56 UTC; lionel",
-        "Author": "Hadley Wickham [aut],\n  Winston Chang [aut],\n  Jim Hester [aut],\n  Lionel Henry [aut, cre],\n  Posit Software, PBC [cph, fnd],\n  R Core team [ctb] (Some namespace and vignette code extracted from base\n    R)",
-        "Maintainer": "Lionel Henry <lionel@posit.co>",
-        "Repository": "CRAN",
-        "Date/Publication": "2024-06-28 11:30:02 UTC",
-        "Built": "R 4.4.0; ; 2024-06-28 12:27:35 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "pkgload",
-        "RemoteRef": "pkgload",
-        "RemoteRepos": "https://cran.rstudio.com",
-        "RemoteReposName": "CRAN",
-        "RemotePkgPlatform": "aarch64-apple-darwin20",
-        "RemoteSha": "1.4.0"
       }
     },
     "plotly": {
@@ -2119,6 +1989,51 @@
         "Repository": "RSPM",
         "Date/Publication": "2025-06-19 18:30:02 UTC",
         "Built": "R 4.4.0; ; 2025-06-20 05:00:28 UTC; unix"
+      }
+    },
+    "polynom": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "polynom",
+        "Version": "1.4-1",
+        "Title": "A Collection of Functions to Implement a Class for Univariate\nPolynomial Manipulations",
+        "Authors@R": "c(person(\"Bill\", \"Venables\", role = c(\"aut\", \"cre\"),\n                    email = \"Bill.Venables@gmail.com\",\n                    comment = \"S original\"),\n             person(\"Kurt\", \"Hornik\", role = \"aut\",\n                    email = \"Kurt.Hornik@R-project.org\",\n                    comment = \"R port\"),\n             person(\"Martin\", \"Maechler\", role = \"aut\",\n                    email = \"maechler@stat.math.ethz.ch\",\n                    comment = \"R port\"))",
+        "Description": "A collection of functions to implement a class for univariate\n  polynomial manipulations.",
+        "Imports": "stats, graphics",
+        "License": "GPL-2",
+        "NeedsCompilation": "no",
+        "Author": "Bill Venables [aut, cre] (S original),\n  Kurt Hornik [aut] (R port),\n  Martin Maechler [aut] (R port)",
+        "Maintainer": "Bill Venables <Bill.Venables@gmail.com>",
+        "Suggests": "knitr, rmarkdown",
+        "VignetteBuilder": "knitr",
+        "Packaged": "2022-04-11 02:34:34 UTC; Bill",
+        "Repository": "RSPM",
+        "Date/Publication": "2022-04-11 03:00:02 UTC",
+        "Encoding": "UTF-8",
+        "Built": "R 4.4.0; ; 2024-04-25 19:45:36 UTC; unix"
+      }
+    },
+    "preseqR": {
+      "Source": "CRAN",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "preseqR",
+        "Type": "Package",
+        "Title": "Predicting Species Accumulation Curves",
+        "Version": "4.0.0",
+        "Date": "2018-06-27",
+        "Author": "Chao Deng, Timothy Daley and Andrew D. Smith",
+        "Maintainer": "Chao Deng <chaodeng@usc.edu>",
+        "Description": "Originally as an R version of Preseq <doi:10.1038/nmeth.2375>, the package has extended its functionality to predict the r-species accumulation curve (r-SAC), which is the number of species represented at least r times as a function of the sampling effort. When r = 1, the curve is known as the species accumulation curve, or the library complexity curve in high-throughput genomic sequencing. The package includes both parametric and nonparametric methods, as described by Deng C, et al. (2018) <arXiv:1607.02804v3>. ",
+        "License": "GPL-3",
+        "Imports": "polynom, graphics, stats",
+        "NeedsCompilation": "no",
+        "Packaged": "2018-06-27 10:02:27 UTC; JAKE",
+        "Repository": "RSPM",
+        "Date/Publication": "2018-06-27 10:52:56 UTC",
+        "Encoding": "UTF-8",
+        "Built": "R 4.4.0; ; 2024-04-25 05:37:40 UTC; unix"
       }
     },
     "processx": {
@@ -3237,16 +3152,16 @@
   },
   "files": {
     "_pkgdown.yml": {
-      "checksum": "5cd014a8334a26acddb4fabf0b2822d8"
+      "checksum": "66d5d2a687fe0e9297c6d9615a077895"
     },
     ".claude/settings.local.json": {
-      "checksum": "f016ef6268569fdd48f75a2aadebbb79"
+      "checksum": "e9415f028061d0eb93b5e6ab64b2c921"
     },
     ".Rbuildignore": {
       "checksum": "6c658b63160d19f7f1a5053a5a96fe8f"
     },
     ".Rprofile": {
-      "checksum": "a0cc80663b9bb654bccc0494c3eeb540"
+      "checksum": "65cda2eec7a8802624a8c54ff0671309"
     },
     "app.R": {
       "checksum": "e60c73a238489da1691af5f2e3700561"
@@ -3258,22 +3173,22 @@
       "checksum": "04e930e56dea3f231230772fc83ab4c1"
     },
     "docs/404.html": {
-      "checksum": "eafdd84dd895de1a10b28dd7614b871f"
+      "checksum": "6cdf80937df092c4f002d5bc957941df"
     },
     "docs/apple-touch-icon.png": {
       "checksum": "f7d725c1c2e67d8ef7e78582077ad0d2"
     },
     "docs/articles/index.html": {
-      "checksum": "4c19ea317a1c0c670cf3afeeb49ced4f"
+      "checksum": "652dd0471844c3bbd40145ab7ffb2a38"
     },
     "docs/articles/logo.png": {
       "checksum": "eafba6b4e717badf9c62b38e63eb3183"
     },
     "docs/articles/perturbplanapp.html": {
-      "checksum": "7d2f0b19c4f1dd25777d37b088502bf9"
+      "checksum": "2701f40f48d15e15828843392145f157"
     },
     "docs/authors.html": {
-      "checksum": "c4d6862b9b49d81b1a878f5e8c12c738"
+      "checksum": "4f1ab5bfa3655fd0f09c4a0a463fd8c0"
     },
     "docs/bootstrap-toc.css": {
       "checksum": "5eec6702c35b15a8c2c123301987735d"
@@ -3282,7 +3197,7 @@
       "checksum": "aaa610b29d895e1128447e76b9bc0076"
     },
     "docs/CLAUDE.html": {
-      "checksum": "78b402d0d6ae1b5b44722f4b32e001f0"
+      "checksum": "0d41863017fb812940eddb55e4ee0fe4"
     },
     "docs/deps/bootstrap-5.3.1/bootstrap.bundle.min.js": {
       "checksum": "e2b09c06f0e714b6144a6788a28e3950"
@@ -3378,16 +3293,16 @@
       "checksum": "cb298ac279147e4725cfb9dd01170bf7"
     },
     "docs/index.html": {
-      "checksum": "614df2f6530eec0d0a4fcaaba52e1fad"
+      "checksum": "643f19a5a79511ecf8d465f746efb62e"
     },
     "docs/katex-auto.js": {
       "checksum": "b6babfc10247cf9190b9fa172dde62b8"
     },
     "docs/LICENSE-text.html": {
-      "checksum": "4794e23c84c6ab9cda4e59ef1ccab4ba"
+      "checksum": "98f54da46266a31098ac670cd8c1ec7a"
     },
     "docs/LICENSE.html": {
-      "checksum": "39e990c22b8fedaa7f544aca1d82d4b5"
+      "checksum": "8f409ae557b18842ce28523f065e9b63"
     },
     "docs/lightswitch.js": {
       "checksum": "5806fcea81ccc70e1ffc453a7d9e12b5"
@@ -3399,10 +3314,10 @@
       "checksum": "eafba6b4e717badf9c62b38e63eb3183"
     },
     "docs/news/index.html": {
-      "checksum": "e052d3686f13f519ef5a899fc61b5549"
+      "checksum": "2a2cdbc08fba66d63434ece9c84b2116"
     },
     "docs/perturbplanapp.html": {
-      "checksum": "de3aeb799abb2dcce5bbca1134a38978"
+      "checksum": "e9e499ff3d1aef22fd19a7c4ef61d6f9"
     },
     "docs/pkgdown.css": {
       "checksum": "9cd7da30627ce8d0e18fd1cf1f48c83f"
@@ -3411,76 +3326,82 @@
       "checksum": "dca708c90eee1f2352a32f4754901a6a"
     },
     "docs/pkgdown.yml": {
-      "checksum": "8f13e2dabe99615657cf07ae9a3de3e5"
+      "checksum": "30173f0636611cd270c49c0cf3de7d17"
     },
     "docs/reference/CANONICAL_PARAMETER_NAMES.html": {
-      "checksum": "941a3e39cc831445a5e0be3a0e19cc12"
+      "checksum": "fb081966e0cd1c9c736f4e836e7240e0"
     },
     "docs/reference/cost-minimization.html": {
-      "checksum": "c0921d55894ba40923fcf5ef6428b3f7"
+      "checksum": "4a9f755b6b32b9e8d41d98e25904d2a1"
     },
     "docs/reference/create_empty_solutions_table.html": {
-      "checksum": "87822a193443fe62ecd1406b7e898a53"
+      "checksum": "925d396215377f8ddd8868086e71de98"
     },
     "docs/reference/create_enhanced_solutions_table.html": {
-      "checksum": "5b3fae8924c0f11d8aa8d925c11d4fd7"
+      "checksum": "2cc2b1008f41f4a49ad7841acc878eef"
     },
     "docs/reference/ESSENTIAL_CONVERSIONS.html": {
-      "checksum": "772500ffe7bc1cb244f2b842a27a2e07"
+      "checksum": "438e5d7f0566b282b136780a92c60bfb"
     },
     "docs/reference/extract_cached_solutions_data.html": {
-      "checksum": "ef2f0fc015f4e0bb2580c67643746db8"
+      "checksum": "372efef3b25bc575ee0d3a3e8f6c8908"
+    },
+    "docs/reference/figures/launch-button.svg": {
+      "checksum": "29c138ff8c557271c172f7d16ae79d3c"
     },
     "docs/reference/figures/logo.png": {
       "checksum": "eafba6b4e717badf9c62b38e63eb3183"
     },
+    "docs/reference/figures/schematic.png": {
+      "checksum": "474438e3ffdf68371e43318ac262c3f8"
+    },
     "docs/reference/file_upload_zone.html": {
-      "checksum": "71e282c24525c3cca0e981d0f9c80952"
+      "checksum": "d121b4f1018135e09c163a3755c3f97c"
     },
     "docs/reference/index.html": {
-      "checksum": "ef97c4fcf25fd4adbf35c74eda4d6ccb"
+      "checksum": "7c7b4c64c4fb8b238699ca94e99f0151"
     },
     "docs/reference/naming_standards.html": {
-      "checksum": "dc8e4f7ad04c17e3cd0d2e14f6d2f4d6"
+      "checksum": "e861bc99e49b307762f9400de9b671fd"
     },
     "docs/reference/PARAMETER_DISPLAY_NAMES.html": {
-      "checksum": "06d36ad004e0638588a53ecea8195cc8"
+      "checksum": "478ebed899c09ef5f50609d7bbac8eb5"
     },
     "docs/reference/parameter_matrix.html": {
-      "checksum": "d1af44a14828ffe83a1656fabd3e2538"
+      "checksum": "181dfde0b887a75468edf802f72fc7ba"
     },
     "docs/reference/perturbplan-integration.html": {
-      "checksum": "edd371e74f9eb34695f782c88706274b"
+      "checksum": "f4678d912aed681894224aac0d71dbd5"
     },
     "docs/reference/pilot-data-validation.html": {
-      "checksum": "42f118c6a3eb96e7f9d665bfac13f5ec"
+      "checksum": "d95c8c81a29e5d1aa60c512bcf5d557e"
     },
     "docs/reference/run_app.html": {
-      "checksum": "e442ebf69a8a2e4f8836f4a5c055c2ef"
+      "checksum": "e33d3ce9c02ec2f3c2bda8c0c7ce7010"
     },
     "docs/reference/step_container.html": {
-      "checksum": "bf761598233455e0e8e42269021633bd"
+      "checksum": "34d30c5bf2f6f924b3d9e74219c49491"
     },
     "docs/reference/tooltip-content.html": {
-      "checksum": "3c0092766262d59b64e943cc471af447"
+      "checksum": "f36a470994dbb6b28aac6b848007c4e3"
     },
     "docs/reference/ui_components.html": {
-      "checksum": "0bb681b246014019d93e9e8c4acf371f"
+      "checksum": "647f7702807b09592babd14a6f2c4282"
     },
     "docs/reference/ui-tooltips.html": {
-      "checksum": "9000d69b7c12d6a603bb6bb84510448a"
+      "checksum": "a631e8bf6e5e368e26adf8657187fbd5"
     },
     "docs/reference/unified-minimization.html": {
-      "checksum": "7d28e82daf8e1208d9d5efbf51fe997e"
+      "checksum": "26b0c8f35c47bf9d6b51a76a2d155a9c"
     },
     "docs/reference/univariate-optimization.html": {
-      "checksum": "a8556ddfd1a9bcbfdd499c2aad5cad60"
+      "checksum": "aa00e3fa2758e1efabde555bda229e9e"
     },
     "docs/reference/use_google_analytics.html": {
-      "checksum": "64c55a22e85dc5b5e0157bfd3ce6a82e"
+      "checksum": "4a2cc58adf449c7a7f891d65ebee2cf7"
     },
     "docs/search.json": {
-      "checksum": "4b0271beb589630ed1106c44361ba905"
+      "checksum": "4f083e4e40a36782fd0e3f92e3658c3f"
     },
     "docs/site.webmanifest": {
       "checksum": "aa2a240255534cbd81d92a24956916f5"
@@ -3501,13 +3422,19 @@
       "checksum": "061bb6a640c69da240863233266c1922"
     },
     "inst/app/www/components.css": {
-      "checksum": "4173d722dd05d420767df572ffa63050"
+      "checksum": "ca970eb41098d198261dc73a688fcdfe"
     },
     "inst/app/www/favicon.ico": {
       "checksum": "29a7742c7a74382da5e3b6a03ee421fd"
     },
     "inst/app/www/layout.css": {
       "checksum": "8df0e6c99de27107c281d3bc7de83f16"
+    },
+    "inst/app/www/mobile_detection.js": {
+      "checksum": "6179307c49e635ebbfa066310740a0a3"
+    },
+    "inst/app/www/mobile_modal.css": {
+      "checksum": "62cf76d5c2adef1d48d3f85587cd0d73"
     },
     "inst/app/www/navbar.css": {
       "checksum": "59f4b324c6b357ebb60248deb509dcf0"
@@ -3516,16 +3443,16 @@
       "checksum": "2abcf0bcad115a639813e099346487fb"
     },
     "inst/app/www/perturbplan_interactions.js": {
-      "checksum": "178736dc546b5ff8c72fb9c586718017"
+      "checksum": "ab897465f0b2153ca5daf0258ef3fb1d"
     },
     "inst/app/www/perturbplan_styles.css": {
-      "checksum": "3c9993adfcb55856072bbda06bf1cace"
+      "checksum": "fd51d4f395650855d2910e5658367ba7"
     },
     "inst/app/www/perturbplanapp.html": {
       "checksum": "c442a34f736c97970a1fbd55bd236ba8"
     },
     "inst/app/www/variables.css": {
-      "checksum": "816efffa5eb16eaa151576012bb5f012"
+      "checksum": "8b7585cf4ecbdacc6507fc578654b25b"
     },
     "inst/extdata/example_custom_gene_list.rds": {
       "checksum": "acbf8d2186970f6bec33264ecc1b9c6b"
@@ -3537,7 +3464,7 @@
       "checksum": "73f5afce11c2b0367e10c9ac6463a483"
     },
     "inst/extdata/K562_Ray.rds": {
-      "checksum": "beb4bae01bcbf4f1a60b81a7a040f72c"
+      "checksum": "c2fa92e282b9869049db008cb39fa0d8"
     },
     "inst/extdata/README.md": {
       "checksum": "9431095c5a6d674389ecb51eb0581472"
@@ -3546,7 +3473,7 @@
       "checksum": "9f1f901ef5942c710d7865b5f0ae17bf"
     },
     "NAMESPACE": {
-      "checksum": "3b80aa4d2021243014b849d5a4f93255"
+      "checksum": "8dbc5f257abce147839a97ad59451c28"
     },
     "perturbplanapp.md": {
       "checksum": "a690197e242694c1f1a5d783da2d2156"
@@ -3588,7 +3515,7 @@
       "checksum": "6d6d6a10c93b316d07b56d11e1f55549"
     },
     "R/app_server.R": {
-      "checksum": "1236eb36e60228077cd0d5d6aa2430b0"
+      "checksum": "57b86b97e18dab5c84a41b53d83c92a6"
     },
     "R/app_ui.R": {
       "checksum": "1ea11821b4d6853588fd61fa8e35cc53"
@@ -3597,7 +3524,7 @@
       "checksum": "cd92167141f5ee290eb2dc77a1491fab"
     },
     "R/fct_cost_minimization.R": {
-      "checksum": "697e9d4dffbd017cdfd34fc89078c429"
+      "checksum": "34de9017bf0e58a5f1b4cf54b7156b8b"
     },
     "R/fct_design_options.R": {
       "checksum": "3b87e3abd7a5a5c55741f80acf2ad5cd"
@@ -3606,7 +3533,7 @@
       "checksum": "e34bb4554e64d8b321237e0022ee3b28"
     },
     "R/fct_excel_export.R": {
-      "checksum": "fb92e9e40b2aac6df69b087280290412"
+      "checksum": "c11fdbb78ababd995162a90321f70a8e"
     },
     "R/fct_experimental_setup_ui.R": {
       "checksum": "2c15f93096cdcd8a98b97cc7174360b3"
@@ -3615,25 +3542,25 @@
       "checksum": "9df5212b4a342621abda7ea21b361781"
     },
     "R/fct_navbar.R": {
-      "checksum": "8b4a699e0f501b986525248ab7d11b27"
+      "checksum": "b452df1c4b10aaa6dd06e09843ed6ed5"
     },
     "R/fct_perturbplan_integration.R": {
-      "checksum": "ea0804f52455cbc10991d62fc085688e"
+      "checksum": "b7c0d8d01811e119fcfb21a94d41d0e6"
     },
     "R/fct_pilot_data_validation.R": {
-      "checksum": "399cc284a62068f9c9b41ac1981ae46f"
+      "checksum": "6184cfdb94e363cf6cd6c703b93ec3f8"
     },
     "R/fct_plotting_functions.R": {
-      "checksum": "d89be10c7934f9042b2c2dfa5281f787"
+      "checksum": "e420f0e28ff39303b30b89bbdef9a289"
     },
     "R/fct_solutions_table.R": {
-      "checksum": "d69649d281b90f543bc390ed349dbf1a"
+      "checksum": "b6765a9db946bc4a99e795b62eebbae5"
     },
     "R/fct_unified_minimization.R": {
-      "checksum": "5ceda2e3a796ef0b1c354732d7a034ae"
+      "checksum": "53add298a0378cd0721515e4951fe4a7"
     },
     "R/fct_univariate_optimization.R": {
-      "checksum": "8a09930b159f4eebb4ab9d2d2d324f3b"
+      "checksum": "cbe5b3e85e17d8efba5aaa6dd8f231e9"
     },
     "R/fct_workflow_detection.R": {
       "checksum": "69470daaff503ae323e48e261e656c68"
@@ -3642,22 +3569,22 @@
       "checksum": "3a647d3e46d2e5b56afc9c5391b50a00"
     },
     "R/mod_advanced_choices.R": {
-      "checksum": "8e22b186667f106a3b82545b1bd7070d"
+      "checksum": "429978c9163e80a029dafb7bf8509ac7"
     },
     "R/mod_analysis_choices.R": {
-      "checksum": "7611e7bd82ab28d6dd7639f2ac658661"
+      "checksum": "4ba8f48cba7b20f4259897be483cb425"
     },
     "R/mod_analysis_engine.R": {
-      "checksum": "9b1868ac0d339c38cf9cf13f477c2c2a"
+      "checksum": "df559b89685a1f602043fc9c0a759ac0"
     },
     "R/mod_design_options.R": {
-      "checksum": "d0460cece66f98720fbd5cf12743575a"
+      "checksum": "89b95c2666b07ac95cbc03f9a91b1569"
     },
     "R/mod_effect_sizes.R": {
-      "checksum": "88b217fd9205e639a2fc86e7f3b1e1b3"
+      "checksum": "d0a74851fffe65fe9b4c452e833a8dc6"
     },
     "R/mod_experimental_setup.R": {
-      "checksum": "475598c2df6b588facdbd0fa015c03bc"
+      "checksum": "1530556aba9f6eeb840e0e5b6876ab03"
     },
     "R/mod_parameter_sliders.R": {
       "checksum": "7b546357916845da430827b69b859e32"
@@ -3675,7 +3602,7 @@
       "checksum": "e4d702721724876e7e1e50906bf28a8f"
     },
     "R/mod_results_display.R": {
-      "checksum": "3126fababf7a9a008facd085200dda63"
+      "checksum": "a4ca28dfd4daa40ccdcc123953e271a1"
     },
     "R/mod_sidebar.R": {
       "checksum": "8aafe2edcb016e17e0c3241ae2a55c5b"
@@ -3693,7 +3620,7 @@
       "checksum": "476011bbc4ffefa824e5bfb8386d849b"
     },
     "R/tooltip_content.R": {
-      "checksum": "8a7826dc65e9e26399a16d86ccdaf980"
+      "checksum": "068b7fb7adf4efcbc5103951fedfadba"
     },
     "R/utils_analytics.R": {
       "checksum": "87142c12ab4776ccfe4c5b79e9620547"
@@ -3702,13 +3629,13 @@
       "checksum": "71fb10fd3b8be7634d96eebf0f7cb105"
     },
     "R/utils_ui_tooltips.R": {
-      "checksum": "52b81c07fcb30abd74708b8b962aabe5"
+      "checksum": "124f7954e32e1b8e8117b321aa3524b5"
     },
     "R/utils_validation.R": {
       "checksum": "5c66fa4c6d1b9cb23ef3791a74b2d924"
     },
     "renv.lock": {
-      "checksum": "12c2e75a915117ee8f7a1f1aa07f3aa7"
+      "checksum": "05248d9e440104665e27024002d1c982"
     }
   },
   "users": null
