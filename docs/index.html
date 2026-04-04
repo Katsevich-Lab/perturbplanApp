@@ -60,43 +60,35 @@
 <img src="logo.png" class="logo" alt=""><h1 id="perturbplan-app">PerturbPlan App<a class="anchor" aria-label="anchor" href="#perturbplan-app"></a>
 </h1>
 </div>
-<style>
-.launch-button {
-  display: inline-block;
-  padding: 16px 16px;
-  background-color: #4472C4;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
-  font-size: 24px;
-  border: 2px solid black;
-  transition: all 0.3s ease;
-}
-.launch-button:hover {
-  background-color: #365a9e;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-</style>
-<p>PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. It helps balance power and cost, with an emphasis on speed, flexibility, and interactivity.</p>
+<p>PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. It helps balance power and cost, with an emphasis on speed, flexibility, and interactivity. PerturbPlan is structured around solving 11 commonly encountered design problems involving power, cost, cells/target, reads/cell, expression threshold, and fold change.</p>
 <p align="center">
-<a href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/" class="external-link launch-button"> 🚀 Launch App </a>
+<a href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/" class="external-link"> <img src="reference/figures/launch-button.svg" alt="Launch App"></a>
 </p>
+<div class="section level2">
+<h2 id="examples-of-supported-design-problems">Examples of supported design problems<a class="anchor" aria-label="anchor" href="#examples-of-supported-design-problems"></a>
+</h2>
+<ul>
+<li>What is the smallest cells/target to achieve at least 80% power to detect 15% FC for genes with at least 1 TPM, assuming 10k reads per cell?</li>
+<li>What is the minimum-cost combination of cells/target and reads/cell achieving at least 80% power to detect 15% FC for genes with at least 1 TPM?</li>
+<li>Within a $20k budget, what combination of cells/target and reads/cell give the smallest TPM threshold for which power to detect a 15% FC is at least 80%?</li>
+</ul>
+<p>For a full list, see the <a href="https://katsevich-lab.github.io/perturbplanapp/articles/perturbplanapp.html#supported-design-problems">documentation</a>.</p>
+</div>
 <div class="section level2">
 <h2 id="interface-overview">Interface overview<a class="anchor" aria-label="anchor" href="#interface-overview"></a>
 </h2>
 <p align="center">
 <img src="reference/figures/schematic.png" alt="PerturbPlan App Schematic" width="100%"></p>
-<p>PerturbPlan is structured around solving 11 commonly encountered design problems. The workflow of the app is as follows:</p>
+<p>The workflow of the app is as follows:</p>
 <ol style="list-style-type: decimal">
-<li><p><strong>Select a design problem</strong>: Choose one of 11 predefined design problems that best matches your experimental goals.</p></li>
+<li><p><strong>Select a design problem</strong>: Choose one of 11 predefined design problems that best matches your experimental goals. See the <a href="#design-problem-overview">Design problem overview</a> above for details.</p></li>
 <li><p><strong>Configure design parameters</strong>: Set the parameters for your experimental choices, analysis choices, expected effect sizes, and (optionally) advanced settings. Click “Plan”.</p></li>
 <li><p><strong>View your analysis results</strong>: The plot illustrates graphically how the design problem was solved, and the table below summarizes the optimal design parameters.</p></li>
 <li><p><strong>Explore parameter settings.</strong> Use the sliders to adjust key parameters and see how they affect the optimal design. Pin parameter settings to compare multiple designs.</p></li>
 <li><p><strong>Export your results.</strong> Click the export buttons to download the plot and a detailed Excel spreadsheet containing the results.</p></li>
 <li><p><strong>Start over.</strong> Click the “Restart” button to start from scratch.</p></li>
 </ol>
-<p>We elaborate on steps 1 and 2 in the <a href="articles/perturbplanapp.html">full documentation</a>.</p>
+<p>We elaborate on steps 1 and 2 in the <a href="https://katsevich-lab.github.io/perturbplanApp/articles/perturbplanapp.html" class="external-link">full documentation</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">

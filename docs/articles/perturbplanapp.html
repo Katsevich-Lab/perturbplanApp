@@ -154,85 +154,361 @@ allows choosing whether to include a cost constraint as well. All
 supported combinations for optimization constraints, minimization
 targets, and other varying parameters are presented in the table
 below.</p>
+<p><strong>Key:</strong></p>
 <table class="table">
-<colgroup>
-<col width="2%">
-<col width="23%">
-<col width="33%">
-<col width="40%">
-</colgroup>
-<thead><tr class="header">
-<th></th>
-<th><strong>Constraints</strong></th>
-<th><strong>Minimization target</strong></th>
-<th><strong>Other varying parameters</strong></th>
+<tr>
+<td>
+<strong>≥</strong> Constrain from below
+</td>
+<td>
+<strong>≤</strong> Constrain from above
+</td>
+<td>
+<strong>=</strong> Fix at value
+</td>
+</tr>
+<tr>
+<td>
+<strong>min</strong> Minimize
+</td>
+<td>
+<strong>var</strong> Allow to vary
+</td>
+<td>
+<strong>N/A</strong> Not involved
+</td>
+</tr>
+</table>
+<table border="1" class="table">
+<thead><tr>
+<th width="3%" align="center">
+</th>
+<th width="6%" align="center">
+Power
+</th>
+<th width="6%" align="center">
+Cost
+</th>
+<th width="10%" align="center">
+Cells / target
+</th>
+<th width="10%" align="center">
+Reads / cell
+</th>
+<th width="10%" align="center">
+Expr. thresh.
+</th>
+<th width="10%" align="center">
+Fold change
+</th>
+<th width="45%">
+Example design problem
+</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td>1</td>
-<td>Power</td>
-<td>Cells/Target</td>
-<td>–</td>
+<tr>
+<td align="center">
+1
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+N/A
+</td>
+<td align="center">
+min
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td>
+Find the smallest cells/target to achieve at least 80% power to detect
+15% FC for genes with at least 1 TPM, assuming 10k reads per cell.
+</td>
 </tr>
-<tr class="even">
-<td>2</td>
-<td>Power</td>
-<td>Reads/Cell</td>
-<td>–</td>
+<tr>
+<td align="center">
+2
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+N/A
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+min
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td>
+Find the smallest reads/target to achieve at least 80% power to detect
+15% FC for genes with at least 1 TPM, assuming 500 cells/target.
+</td>
 </tr>
-<tr class="odd">
-<td>3</td>
-<td>Power</td>
-<td>Expression threshold</td>
-<td>–</td>
+<tr>
+<td align="center">
+3
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+N/A
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+min
+</td>
+<td>
+Find the smallest FC against which the power is at least 80% for genes
+with at least 1 TPM, assuming 500 cells/target and 10k reads/cell.
+</td>
 </tr>
-<tr class="even">
-<td>4</td>
-<td>Power</td>
-<td>Fold change</td>
-<td>–</td>
+<tr>
+<td align="center">
+4
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+N/A
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+min
+</td>
+<td align="center">
+=
+</td>
+<td>
+Find the smallest expression threshold for which power to detect 15% FC
+is at least 80%, assuming 500 cells/target and 10k reads/cell.
+</td>
 </tr>
-<tr class="odd">
-<td>5</td>
-<td>Power</td>
-<td>Total cost</td>
-<td>Cells/Target + Reads/Cell</td>
+<tr>
+<td align="center">
+5
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+min
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td>
+What is the minimum-cost combination of cells/target and reads/cell
+achieving at least 80% power to detect 15% FC for genes with at least 1
+TPM?
+</td>
 </tr>
-<tr class="even">
-<td>6</td>
-<td>Power + Cost</td>
-<td>Expression threshold</td>
-<td>Cells/Target</td>
+<tr>
+<td align="center">
+6
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+≤
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+min
+</td>
+<td>
+Within a $20k budget, what combination of cells/target and reads/cell
+give the minimum FC against which power is at least 80% for genes with
+at least 1 TPM?
+</td>
 </tr>
-<tr class="odd">
-<td>7</td>
-<td>Power + Cost</td>
-<td>Expression threshold</td>
-<td>Reads/Cell</td>
+<tr>
+<td align="center">
+7
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+≤
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+min
+</td>
+<td>
+Within a $20k budget, what value of cells/target gives the minimum FC
+against which power is at least 80% for genes with at least 1 TPM,
+assuming 10k reads/cell?
+</td>
 </tr>
-<tr class="even">
-<td>8</td>
-<td>Power + Cost</td>
-<td>Expression threshold</td>
-<td>Cells/Target + Reads/Cell</td>
+<tr>
+<td align="center">
+8
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+≤
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+min
+</td>
+<td>
+Within a $20k budget, what value of reads/cell gives the minimum FC
+against which power is at least 80% for genes with at least 1 TPM,
+assuming 500 cells/target?
+</td>
 </tr>
-<tr class="odd">
-<td>9</td>
-<td>Power + Cost</td>
-<td>Fold change</td>
-<td>Cells/Target</td>
+<tr>
+<td align="center">
+9
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+≤
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+min
+</td>
+<td align="center">
+=
+</td>
+<td>
+Within a $20k budget, what combination of cells/target and reads/cell
+give the smallest TPM threshold for which power to detect a 15% FC is at
+least 80%?
+</td>
 </tr>
-<tr class="even">
-<td>10</td>
-<td>Power + Cost</td>
-<td>Fold change</td>
-<td>Reads/Cell</td>
+<tr>
+<td align="center">
+10
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+≤
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+min
+</td>
+<td align="center">
+=
+</td>
+<td>
+Within a $20k budget, what value of cells/target gives the smallest TPM
+threshold for which power to detect a 15% FC is at least 80%, assuming
+10k reads/cell?
+</td>
 </tr>
-<tr class="odd">
-<td>11</td>
-<td>Power + Cost</td>
-<td>Fold change</td>
-<td>Cells/Target + Reads/Cell</td>
+<tr>
+<td align="center">
+11
+</td>
+<td align="center">
+≥
+</td>
+<td align="center">
+≤
+</td>
+<td align="center">
+=
+</td>
+<td align="center">
+var
+</td>
+<td align="center">
+min
+</td>
+<td align="center">
+=
+</td>
+<td>
+Within a $20k budget, what value of reads/cell gives the smallest TPM
+threshold for which power to detect a 15% FC is at least 80%, assuming
+500 cells/target?
+</td>
 </tr>
 </tbody>
 </table>
@@ -254,7 +530,7 @@ design parameters that define your screen. These parameters are grouped
 into four collapsible sections: <strong>experimental choices</strong>
 (how the data will be collected), <strong>analysis choices</strong> (how
 the data will be analyzed), <strong>effect sizes</strong> (the strength
-of the biological effects you wish you detect), and <strong>advanced
+of the biological effects you wish to detect), and <strong>advanced
 settings</strong> (optional additional settings).</p>
 <hr>
 <div class="section level4">
@@ -299,7 +575,7 @@ a single cell.</p>
 </h5>
 <p>The number of genomic elements (commonly, genes or enhancers) you
 plan to perturb in your screen. Not to be confused with the number of
-gene targeted for sequencing in a TAP-seq experiment.</p>
+genes targeted for sequencing in a TAP-seq experiment.</p>
 </div>
 <div class="section level5">
 <h5 id="grnas-per-target">gRNAs per target<a class="anchor" aria-label="anchor" href="#grnas-per-target"></a>
@@ -413,7 +689,7 @@ size of interest.</strong></p>
 <h5 id="proportion-of-non-null-pairs">Proportion of non-null pairs<a class="anchor" aria-label="anchor" href="#proportion-of-non-null-pairs"></a>
 </h5>
 <p>The fraction of tested perturbation-gene pairs expected to have
-signal at least a strong as the weakest effect size of interest. Higher
+signal at least as strong as the weakest effect size of interest. Higher
 proportions of non-null pairs increase power by reducing the impact of
 multiple testing corrections. Estimating this parameter for perturbation
 screens remains an open question, but the default value of 0.01 is a

@@ -19,3 +19,5 @@ $run_dev.*
 ^manifest\.json$
 ^perturbplanapp\.md$
 ^LICENSE\.md$
+^doc$
+^Meta$

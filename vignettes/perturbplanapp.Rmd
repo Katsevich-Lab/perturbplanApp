@@ -58,25 +58,54 @@ In some of the design problems, parameters in addition to that being minimized a
 
 PerturbPlan requires a power constraint for all design problems, and allows choosing whether to include a cost constraint as well. All supported combinations for optimization constraints, minimization targets, and other varying parameters are presented in the table below. 
 
-|  | **Constraints** | **Minimization target** | **Other varying parameters** |
-|--|------------------|--------------------------|-------------------------------|
-| 1 | Power | Cells/Target | – |
-| 2 | Power | Reads/Cell | – |
-| 3 | Power | Expression threshold | – |
-| 4 | Power | Fold change | – |
-| 5 | Power | Total cost | Cells/Target + Reads/Cell |
-| 6 | Power + Cost | Expression threshold | Cells/Target |
-| 7 | Power + Cost | Expression threshold | Reads/Cell |
-| 8 | Power + Cost | Expression threshold | Cells/Target + Reads/Cell |
-| 9 | Power + Cost | Fold change | Cells/Target |
-| 10 | Power + Cost | Fold change | Reads/Cell |
-| 11 | Power + Cost | Fold change | Cells/Target + Reads/Cell
+**Key:**
+
+<table>
+<tr>
+  <td><strong>&ge;</strong> Constrain from below</td>
+  <td><strong>&le;</strong> Constrain from above</td>
+  <td><strong>=</strong> Fix at value</td>
+</tr>
+<tr>
+  <td><strong>min</strong> Minimize</td>
+  <td><strong>var</strong> Allow to vary</td>
+  <td><strong>N/A</strong> Not involved</td>
+</tr>
+</table>
+
+<table border="1">
+<thead>
+<tr>
+<th width="3%" align="center"></th>
+<th width="6%" align="center">Power</th>
+<th width="6%" align="center">Cost</th>
+<th width="10%" align="center">Cells / target</th>
+<th width="10%" align="center">Reads / cell</th>
+<th width="10%" align="center">Expr. thresh.</th>
+<th width="10%" align="center">Fold change</th>
+<th width="45%">Example design problem</th>
+</tr>
+</thead>
+<tbody>
+<tr><td align="center">1</td><td align="center">&ge;</td><td align="center">N/A</td><td align="center">min</td><td align="center">=</td><td align="center">=</td><td align="center">=</td><td>Find the smallest cells/target to achieve at least 80% power to detect 15% FC for genes with at least 1 TPM, assuming 10k reads per cell.</td></tr>
+<tr><td align="center">2</td><td align="center">&ge;</td><td align="center">N/A</td><td align="center">=</td><td align="center">min</td><td align="center">=</td><td align="center">=</td><td>Find the smallest reads/target to achieve at least 80% power to detect 15% FC for genes with at least 1 TPM, assuming 500 cells/target.</td></tr>
+<tr><td align="center">3</td><td align="center">&ge;</td><td align="center">N/A</td><td align="center">=</td><td align="center">=</td><td align="center">=</td><td align="center">min</td><td>Find the smallest FC against which the power is at least 80% for genes with at least 1 TPM, assuming 500 cells/target and 10k reads/cell.</td></tr>
+<tr><td align="center">4</td><td align="center">&ge;</td><td align="center">N/A</td><td align="center">=</td><td align="center">=</td><td align="center">min</td><td align="center">=</td><td>Find the smallest expression threshold for which power to detect 15% FC is at least 80%, assuming 500 cells/target and 10k reads/cell.</td></tr>
+<tr><td align="center">5</td><td align="center">&ge;</td><td align="center">min</td><td align="center">var</td><td align="center">var</td><td align="center">=</td><td align="center">=</td><td>What is the minimum-cost combination of cells/target and reads/cell achieving at least 80% power to detect 15% FC for genes with at least 1 TPM?</td></tr>
+<tr><td align="center">6</td><td align="center">&ge;</td><td align="center">&le;</td><td align="center">var</td><td align="center">var</td><td align="center">=</td><td align="center">min</td><td>Within a $20k budget, what combination of cells/target and reads/cell give the minimum FC against which power is at least 80% for genes with at least 1 TPM?</td></tr>
+<tr><td align="center">7</td><td align="center">&ge;</td><td align="center">&le;</td><td align="center">var</td><td align="center">=</td><td align="center">=</td><td align="center">min</td><td>Within a $20k budget, what value of cells/target gives the minimum FC against which power is at least 80% for genes with at least 1 TPM, assuming 10k reads/cell?</td></tr>
+<tr><td align="center">8</td><td align="center">&ge;</td><td align="center">&le;</td><td align="center">=</td><td align="center">var</td><td align="center">=</td><td align="center">min</td><td>Within a $20k budget, what value of reads/cell gives the minimum FC against which power is at least 80% for genes with at least 1 TPM, assuming 500 cells/target?</td></tr>
+<tr><td align="center">9</td><td align="center">&ge;</td><td align="center">&le;</td><td align="center">var</td><td align="center">var</td><td align="center">min</td><td align="center">=</td><td>Within a $20k budget, what combination of cells/target and reads/cell give the smallest TPM threshold for which power to detect a 15% FC is at least 80%?</td></tr>
+<tr><td align="center">10</td><td align="center">&ge;</td><td align="center">&le;</td><td align="center">var</td><td align="center">=</td><td align="center">min</td><td align="center">=</td><td>Within a $20k budget, what value of cells/target gives the smallest TPM threshold for which power to detect a 15% FC is at least 80%, assuming 10k reads/cell?</td></tr>
+<tr><td align="center">11</td><td align="center">&ge;</td><td align="center">&le;</td><td align="center">=</td><td align="center">var</td><td align="center">min</td><td align="center">=</td><td>Within a $20k budget, what value of reads/cell gives the smallest TPM threshold for which power to detect a 15% FC is at least 80%, assuming 500 cells/target?</td></tr>
+</tbody>
+</table>
 
 Design problems 1-4 are the simplest: they determine the minimum value of one parameter required to attain the desired power, while holding all other parameters fixed. Design problem 5 allows cells/target and reads/cell to vary, finding the lowest-cost combination to achieve a target power. The remainder of the design problems involve constraining both cost and power, allowing the minimization of either expression threshold or fold change, while allowing one or both of cells/target and reads/cell to vary.
 
 # Design parameters
 
-Once you have selected your design problem, you need to specify the design parameters that define your screen. These parameters are grouped into four collapsible sections: **experimental choices** (how the data will be collected), **analysis choices** (how the data will be analyzed), **effect sizes** (the strength of the biological effects you wish you detect), and **advanced settings** (optional additional settings).
+Once you have selected your design problem, you need to specify the design parameters that define your screen. These parameters are grouped into four collapsible sections: **experimental choices** (how the data will be collected), **analysis choices** (how the data will be analyzed), **effect sizes** (the strength of the biological effects you wish to detect), and **advanced settings** (optional additional settings).
 
 ---
 
@@ -96,7 +125,7 @@ The average number of gRNA-carrying lentiviral particles that infect a single ce
 
 #### Number of perturbation targets
 
-The number of genomic elements (commonly, genes or enhancers) you plan to perturb in your screen. Not to be confused with the number of gene targeted for sequencing in a TAP-seq experiment.
+The number of genomic elements (commonly, genes or enhancers) you plan to perturb in your screen. Not to be confused with the number of genes targeted for sequencing in a TAP-seq experiment.
 
 #### gRNAs per target
 
@@ -112,7 +141,7 @@ The average number of cells receiving CRISPR perturbations of a given target, eq
 
 #### Reads per cell: 
 
-The average number of sequenced reads per cell. More sequenced reads gives rise to more unique molecular identifiers (UMIs) per cell, which leads to less noisy gene expressions and therefore higher power. 
+The average number of sequenced reads per cell. More sequenced reads gives rise to more unique molecular identifiers (UMIs) per cell, which leads to less noisy gene expressions and therefore higher power.
 
 ### Analysis Choices
 
@@ -160,7 +189,7 @@ For a conservative power estimate, specify the **weakest effect size of interest
 
 #### Proportion of non-null pairs 
 
-The fraction of tested perturbation-gene pairs expected to have signal at least a strong as the weakest effect size of interest. Higher proportions of non-null pairs increase power by reducing the impact of multiple testing corrections. Estimating this parameter for perturbation screens remains an open question, but the default value of 0.01 is a reasonable starting point.
+The fraction of tested perturbation-gene pairs expected to have signal at least as strong as the weakest effect size of interest. Higher proportions of non-null pairs increase power by reducing the impact of multiple testing corrections. Estimating this parameter for perturbation screens remains an open question, but the default value of 0.01 is a reasonable starting point.
 
 ### Advanced settings
 
@@ -189,4 +218,3 @@ For more on this choice, see the [sceptre documentation](https://timothy-barry.g
 #### FDR target level 
 
 The maximum tolerated expected proportion of discovered associations that are false positives. The FDR target level of 0.1 is the most common choice.
-
