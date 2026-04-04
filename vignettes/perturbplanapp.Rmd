@@ -209,7 +209,7 @@ The fraction of sequencing reads that map confidently to the genes of interest. 
 
 The strategy used to construct control cells for testing perturbation effects.
   
-- **Non-targeting cells**: Cells that receive only non-targeting gRNAs. This is the default choice for low-MOI screens (MOI > 1).
+- **Non-targeting cells**: Cells that receive only non-targeting gRNAs. This is the default choice for low-MOI screens (MOI = 1).
   
 - **Complement cells**: Cells that do not receive the perturbation being tested, but may receive other perturbations. This is the required choice for high-MOI experiments (MOI > 1), since few cells will have exclusively non-targeting gRNAs.
   
