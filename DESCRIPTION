@@ -1,6 +1,6 @@
 Package: perturbplanapp
 Title: Perturb-seq Experimental Design
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
       person("Yihui", "He", , "yihuihe@wharton.upenn.edu", role = c("aut")),
