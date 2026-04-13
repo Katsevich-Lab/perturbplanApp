@@ -6,7 +6,6 @@
 * Updated custom pilot data validation to match `library_estimation()` format.
 * Fixed deployment issue where `pkgload`, `desc`, and `pkgbuild` were dropped from manifest.
 * Updated 15 dependency packages to latest versions.
-* Improved README with design problem overview table and parameter descriptions.
 
 # perturbplanApp 0.1.0
 
