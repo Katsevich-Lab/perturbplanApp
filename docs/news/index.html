@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">perturbplanapp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,10 +35,66 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0" id="perturbplanapp-010">perturbplanApp 0.1.0<a class="anchor" aria-label="anchor" href="#perturbplanapp-010"></a></h2>
-<p>First stable version of the web app.</p>
+<h2 class="pkg-version" data-toc-text="0.1.1" id="perturbplanapp-011">perturbplanApp 0.1.1<a class="anchor" aria-label="anchor" href="#perturbplanapp-011"></a></h2>
+<div class="section level3">
+<h3 id="changes-0-1-1">Changes<a class="anchor" aria-label="anchor" href="#changes-0-1-1"></a></h3>
+<ul><li>Updated <code>perturbplan</code> dependency from v0.3.0 to v0.3.1.</li>
+<li>Updated custom pilot data validation to match <code>library_estimation()</code> format.</li>
+<li>Fixed deployment issue where <code>pkgload</code>, <code>desc</code>, and <code>pkgbuild</code> were dropped from manifest.</li>
+<li>Updated 15 dependency packages to latest versions.</li>
+</ul></div>
 </div>
-  </main></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="perturbplanapp-010">perturbplanApp 0.1.0<a class="anchor" aria-label="anchor" href="#perturbplanapp-010"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-1-0"></a></h3>
+<ul><li>Full integration with <code>perturbplan</code> package (v0.3.1) for real-time power analysis and experimental optimization.</li>
+<li>Constraint-driven workflow supporting 11 design scenarios: 5 power-only and 6 power+cost optimization workflows.</li>
+<li>Three analysis engines: standard power analysis, cost minimization, and constrained optimization.</li>
+<li>Interactive Plotly visualizations for all workflow scenarios with log-scale axes for cells and reads parameters.</li>
+<li>Dual-workflow architecture: sidebar-based configuration (Phase 1) with slider overrides for real-time parameter adjustment (Phase 2).</li>
+<li>Support for both Perturb-seq and TAP-seq assay types with assay-aware parameter labels and transformations.</li>
+<li>Custom pilot data upload with validation for Perturb-seq experiments (RDS format).</li>
+<li>Built-in K562 reference expression data for quick-start analysis.</li>
+<li>Custom gene list upload functionality.</li>
+<li>Excel export of analysis results including parameter settings and pilot data.</li>
+<li>PDF export for publication-ready plots with legend annotations.</li>
+<li>Comprehensive tooltip system providing parameter descriptions and guidance.</li>
+<li>Progressive disclosure UI with collapsible sidebar sections.</li>
+<li>pkgdown documentation site with launch button and app schematic.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="ui-improvements-0-1-0">UI improvements<a class="anchor" aria-label="anchor" href="#ui-improvements-0-1-0"></a></h3>
+<ul><li>Slider-adjustable badges on sidebar inputs with widened sidebar layout.</li>
+<li>Two-row slider layout with responsive design for parameter adjustment.</li>
+<li>Solution table with bold formatting for varying and optimizing parameters.</li>
+<li>Diamond annotations marking optimal solutions on plots.</li>
+<li>Cost budget horizontal lines on constrained optimization plots.</li>
+<li>Blur-based input clamping for all numeric parameters.</li>
+<li>MOI=1 control group logic with explanatory text.</li>
+<li>Assay-aware Expression threshold labeling (TPM for Perturb-seq, UMIs/cell for TAP-seq).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-1-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-0"></a></h3>
+<ul><li>Fixed Expression threshold not freezing in Phase 2 sidebar.</li>
+<li>Fixed app crash when MOI field is cleared.</li>
+<li>Fixed fold change selection logic to choose value closest to 1.</li>
+<li>Fixed constrained minimization plot to use points instead of duplicate lines.</li>
+<li>Corrected MOI value in control group description.</li>
+<li>Fixed layout issue causing results panels to shift to bottom.</li>
+<li>Added informative error when no designs meet cost budget in constrained minimization.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="infrastructure-0-1-0">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-0-1-0"></a></h3>
+<ul><li>Golem framework architecture with modular Shiny components.</li>
+<li>5-layer parameter naming standardization (UI, Config, API, Processing, Display).</li>
+<li>Component library with 283 semantic CSS components.</li>
+<li>118 passing tests with comprehensive coverage.</li>
+<li>Deployment via Posit Connect Cloud with auto-deployment from <code>dev</code> branch.</li>
+</ul></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
