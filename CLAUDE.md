@@ -521,9 +521,31 @@ When committing changes:
 
 ### Branch Management
 
-- **main**: Stable releases
+- **main**: Stable releases (also the GitHub Pages source — `docs/` is served from `main`)
 - **dev**: Development work
 - **feature/***: Specific feature development
+
+### Required Workflow: Always Work on `dev` First
+
+**Never edit `main` directly.** All changes — including source edits, content updates, *and* pkgdown rebuilds — must flow through `dev` and be merged into `main`. Do not commit to `main` directly even for "small" or "generated" changes.
+
+Standard sequence for every work session:
+
+1. **Sync `dev` to `main` before starting** so the two branches are aligned:
+   ```bash
+   git checkout dev
+   git merge --ff-only main   # fast-forward dev to main
+   git push origin dev
+   ```
+2. **Do all work on `dev`**: edit, build (including `pkgdown::build_site()`), commit, push, verify.
+3. **Merge `dev` → `main` once verified**:
+   ```bash
+   git checkout main
+   git merge --ff-only dev    # should be a clean fast-forward
+   git push origin main
+   ```
+
+**Why the sync step (1) matters**: pkgdown rebuilds regenerate `docs/` against the current state of the branch. If `dev` lags behind `main`, a rebuild on `dev` produces output keyed to an older state, which conflicts messily when merging back. Keeping `dev = main` at the start of each session prevents this.
 
 ## File Naming Conventions
 
