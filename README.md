@@ -14,7 +14,7 @@ PerturbPlan is a Shiny app for Perturb-seq and TAP-seq experimental design. It h
 - What is the minimum-cost combination of cells/target and reads/cell achieving at least 80% power to detect 15% FC for genes with at least 1 TPM?
 - Within a $20k budget, what combination of cells/target and reads/cell give the smallest TPM threshold for which power to detect a 15% FC is at least 80%?
 
-For a full list, see the [documentation](https://katsevich-lab.github.io/perturbplanapp/articles/perturbplanapp.html#supported-design-problems).
+For a full list, see the [documentation](https://katsevich-lab.github.io/perturbplanApp/articles/perturbplanapp.html#supported-design-problems).
 
 ## Interface overview
 

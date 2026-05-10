@@ -1,5 +1,5 @@
 # Site-level options
-url: https://katsevich-lab.github.io/perturbplanapp
+url: https://katsevich-lab.github.io/perturbplanApp
 
 template:
   bootstrap: 5
