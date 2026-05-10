@@ -1,9 +1,9 @@
-pandoc: 3.1.11.1
+pandoc: 3.8.2
 pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   perturbplanapp: perturbplanapp.html
-last_built: 2026-04-13T18:05Z
+last_built: 2026-05-10T20:13Z
 urls:
-  reference: https://katsevich-lab.github.io/perturbplanapp/reference
-  article: https://katsevich-lab.github.io/perturbplanapp/articles
+  reference: https://katsevich-lab.github.io/perturbplanApp/reference
+  article: https://katsevich-lab.github.io/perturbplanApp/articles

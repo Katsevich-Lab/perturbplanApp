@@ -11,7 +11,7 @@ Description: Golem-based Shiny application for constraint-driven
     experiments. Provides intuitive interface for optimization objectives,
     parameter constraints, and workflow-specific analysis.
 License: MIT + file LICENSE
-URL: https://katsevich-lab.github.io/perturbplanapp
+URL: https://katsevich-lab.github.io/perturbplanApp
 Depends: R (>= 3.5.0)
 Imports:
     config (>= 0.3.1),
