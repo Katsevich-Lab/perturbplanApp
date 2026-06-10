@@ -26,7 +26,7 @@
 #   authors = person(
 #     given = "Ziang",
 #     family = "Niu", 
-#     email = "zniu@wharton.upenn.edu",
+#     email = "ziangniu@wharton.upenn.edu",
 #     role = c("aut", "cre")
 #   ),
 #   repo_url = "https://github.com/Katsevich-Lab/perturbplanApp",
